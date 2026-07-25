@@ -46,3 +46,7 @@ nul
 
 # build
 /dist/
+
+# working notes, studies & ledgers — never committed
+/docs/
+/.claude/
