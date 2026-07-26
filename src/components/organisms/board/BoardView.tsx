@@ -37,6 +37,7 @@ import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs } fr
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
+import { useBoardTools } from '@/hooks/board/useBoardTools';
 
 // -- Component Imports --
 import { BoardItemBox } from './BoardItemBox';
@@ -67,7 +68,7 @@ import { useDrawerStore } from '@/lib/stores/drawerStore';
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
-import type { ActiveTool, BoardGridType, BoardItem, BoardItemContent, BoardItemKind, BrushKind, ConnectionStyle, PortalBoardContent, PortalStyle, PortalTarget, Stroke } from '@/lib/types/board';
+import type { BoardGridType, BoardItem, BoardItemContent, BoardItemKind, BrushKind, ConnectionStyle, PortalBoardContent, PortalStyle, PortalTarget, Stroke } from '@/lib/types/board';
 import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 import type { Point } from '@/lib/board/boardConnections';
 import type { Card } from '@/lib/types/character';
@@ -209,25 +210,27 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // The in-progress connect drag (preview line follows the cursor in world coords).
    const [connectPreview, setConnectPreview] = useState<{ fromId: string; cursor: Point } | null>(null);
 
-   // The active pointer TOOL and the current drawing LAYER strokes append to - both ephemeral (same
-   // family as the selection), never persisted or routed through commands. `select` is the default
-   // (click-through overlay); every other value is a Draw gesture that owns the pointer. Only freehand +
-   // eraser are wired today. A first stroke with no active layer mints one.
-   const [activeTool, setActiveTool] = useState<ActiveTool>('select');
-   // The last Draw gesture chosen, so re-entering Draw from Select restores it (default freehand). Ephemeral.
-   const lastDrawToolRef = useRef<Exclude<ActiveTool, 'select'>>('freehand');
-   /** Enters a Draw gesture and remembers it, so leaving to Select and clicking Draw returns to that gesture. */
-   const chooseDrawTool = useCallback((tool: Exclude<ActiveTool, 'select'>) => {
-      lastDrawToolRef.current = tool;
-      setActiveTool(tool);
-   }, []);
-   const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
-   // The regular polygon's side count, read at press time by its center-out drag. Ephemeral tool setting.
-   const [polygonSides, setPolygonSides] = useState(5);
-   // The pen/highlighter settings (brush, ink, per-brush widths), persisted in app settings. Every new
-   // stroke and the live preview read the CURRENT values, so the pickers actually drive the ink.
-   const penSettings = useAppSettingsStore((state) => state.penSettings);
-   const { setPenBrush, setPenColor, setPenWidth, setShapeBase, setShapeFilled, toggleLayersPanel, setLayersPanelOpen } = useAppSettingsActions();
+   // The tool mode + drawing settings: the active tool, the sticky last-Draw gesture, the active drawing
+   // layer, the regular-polygon side count, and the persisted pen settings the toolbar reads. `resetForBoard`
+   // clears the tool/layer half on a board switch (orchestrated with the drawing-state reset below).
+   const {
+      activeTool,
+      setActiveTool,
+      lastDrawToolRef,
+      chooseDrawTool,
+      activeLayerId,
+      setActiveLayerId,
+      polygonSides,
+      setPolygonSides,
+      penSettings,
+      setPenBrush,
+      setPenColor,
+      setPenWidth,
+      setShapeBase,
+      setShapeFilled,
+      resetForBoard,
+   } = useBoardTools();
+   const { toggleLayersPanel, setLayersPanelOpen } = useAppSettingsActions();
    // Space and Alt each arm a mode-independent pan while held; the flags drive the cursor and the Space ref
    // twin is read live by the pointer handlers. Both clear on a window blur so an alt-tab leaves no stuck pan.
    const { spaceHeld, spaceHeldRef, altHeld } = useBoardPanKeys();
@@ -252,12 +255,11 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // leak across boards; reset them when the loaded board id changes.
    const boardId = useStore(store, (state) => state.boardId);
    useEffect(() => {
-      setActiveTool('select');
-      setActiveLayerId(null);
+      resetForBoard();
       setPendingErase(EMPTY_STROKE_IDS);
       polygonRef.current = null;
       setPolygonPreview(null);
-   }, [boardId]);
+   }, [boardId, resetForBoard]);
 
    // Paint order is the scope-relative tree flatten (root items by z, each zone immediately followed by
    // its members), NOT a global z-sort - so a zone's members band contiguously with it. Connections
@@ -702,7 +704,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
          });
          setActiveLayerId(id);
       },
-      [actions, activeLayerId, store, penSettings],
+      [actions, activeLayerId, store, penSettings, setActiveLayerId],
    );
 
    /**
@@ -813,7 +815,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       };
       window.addEventListener('keydown', onKeyDown);
       return () => window.removeEventListener('keydown', onKeyDown);
-   }, [activeTool, commitPolygon]);
+   }, [activeTool, commitPolygon, setActiveTool]);
 
    /**
     * Freehand-overlay pointerdown: the pan escape hatch first (middle / Space+drag), then a primary-button
@@ -1020,7 +1022,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
          await actions.eraseStrokes(erasures);
          if (activeLayerId && !store.getState().items[activeLayerId]) setActiveLayerId(null);
       },
-      [actions, activeLayerId, store],
+      [actions, activeLayerId, store, setActiveLayerId],
    );
 
    /**
@@ -1403,7 +1405,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    useEffect(() => {
       if (!soleSelectedId) return;
       if (store.getState().items[soleSelectedId]?.content.kind === 'drawing') setActiveLayerId(soleSelectedId);
-   }, [soleSelectedId, store]);
+   }, [soleSelectedId, store, setActiveLayerId]);
 
    // Editing exits the moment its item stops being the sole selection - clicking away, selecting another
    // item, multi-selecting, or the item's deletion all flow through here (the editor's own falling-edge
