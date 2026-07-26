@@ -10,13 +10,11 @@ import toast from 'react-hot-toast';
 import cuid from 'cuid';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, LayoutGrid, Maximize, MousePointer2, PenTool, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, Maximize, MousePointer2, PenTool, Trash2 } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { centerViewport, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, zoomToCursor } from '@/lib/board/boardCoordinates';
-import { gridBackground } from '@/lib/board/gridStyle';
-import { hexTile } from '@/lib/board/hexGrid';
+import { centerViewport, fitViewport, itemsInMarquee, screenDeltaToWorld, screenToWorld, zoomToCursor } from '@/lib/board/boardCoordinates';
 import { DEFAULT_CONNECTION_STYLE } from '@/lib/board/boardConnections';
 import { zoneContaining, zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
@@ -51,10 +49,11 @@ import { BoardPortalEditor } from './items/BoardPortalEditor';
 import { StrokeShape } from './items/BoardDrawingItem';
 import { BoardFloatingWindow, PORTAL_WINDOW_WIDTH, PORTAL_EDITOR_WIDTH, BOARD_WINDOW_MARGIN } from './windows/BoardFloatingWindow';
 import { BoardCardCreationWindow } from './windows/BoardCardCreationWindow';
-import { BoardNameField } from './fields/BoardNameField';
 import { BoardCoordinateField } from './fields/BoardCoordinateField';
+import { BoardGridLayer } from './layers/BoardGridLayer';
 import { ToolbarButton } from './toolbar/ToolbarButton';
 import { ToolToggleButton } from './toolbar/ToolToggleButton';
+import { BoardNamePill } from './toolbar/BoardNamePill';
 
 // -- Store Imports --
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
@@ -1788,45 +1787,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
          // now, so it no longer signals "grab an element"); eraser keeps its cell, every other draw its crosshair.
          className={cn('absolute inset-0 overflow-hidden bg-muted/10', isPanning ? 'cursor-grabbing' : marquee ? 'cursor-crosshair' : spaceHeld || altHeld ? 'cursor-grab' : activeTool === 'select' ? 'cursor-default' : activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair')}
       >
-         {/* Grid layer: a screen-space CSS background behind everything. Never interactive,
-             so it can't eat a pan or a click. The subtle text color feeds `currentColor`. */}
-         <div className="pointer-events-none absolute inset-0 text-foreground/15" style={gridBackground(grid, gridSpacing(viewport.zoom), viewport)} />
-
-         {/* Hex hive: the honeycomb has no CSS form, so it rides a screen-space SVG pattern instead. The
-             tile size tracks zoom (via the adaptive spacing) and the pattern transform tracks pan, so it
-             moves exactly like the CSS grids; the 1px stroke stays constant on screen. */}
-         {grid.type === 'hex' && (() => {
-            const tile = hexTile(gridSpacing(viewport.zoom));
-            // Full-strength ink + element opacity (not a translucent stroke): the tile double-draws shared
-            // edges, and element opacity flattens the overlaps to one uniform weight.
-            return (
-               <svg className="pointer-events-none absolute inset-0 h-full w-full text-foreground opacity-[0.15]">
-                  <defs>
-                     <pattern
-                        id={hexPatternId}
-                        patternUnits="userSpaceOnUse"
-                        width={tile.width}
-                        height={tile.height}
-                        patternTransform={`translate(${viewport.x} ${viewport.y})`}
-                     >
-                        <path d={tile.path} fill="none" stroke="currentColor" strokeWidth={1} />
-                     </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill={`url(#${hexPatternId})`} />
-               </svg>
-            );
-         })()}
-
-         {/* Empty-board cue: a quiet, screen-centered hint so a blank canvas reads as "ready",
-             not "broken". Screen-space (not the world layer), so it stays put under pan/zoom, and
-             inert so it never eats a pan, a background click, or a drawer drop. Gone at one item. */}
-         {Object.keys(items).length === 0 && (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-muted-foreground">
-               <LayoutGrid className="h-10 w-10 opacity-50" />
-               <p className="text-sm font-medium">{t('BoardView.emptyTitle')}</p>
-               <p className="max-w-xs text-xs opacity-80">{t('BoardView.emptyHint')}</p>
-            </div>
-         )}
+         <BoardGridLayer grid={grid} viewport={viewport} hexPatternId={hexPatternId} itemCount={Object.keys(items).length} />
 
          {/* World layer: a single transform maps world coords to screen. */}
          <div className="absolute left-0 top-0" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`, transformOrigin: '0 0' }}>
@@ -1961,20 +1922,13 @@ function BoardCanvas({ store }: { store: BoardStore }) {
             />
          )}
 
-         {/* Board name pill: identity, not a tool, so it sits in its own top-center frame rather than crowding
-             the tool bar. Same frosted chrome; stops the pointer so editing the title never pans, and grows
-             to fit the title (capped at the canvas width) via the field's own auto-size mirror. */}
-         <div
-            onPointerDown={(event) => event.stopPropagation()}
-            style={{ marginLeft: layersPanelOpen ? -(LAYERS_PANEL_WIDTH / 2) : 0 }}
-            className={cn(
-               'absolute left-1/2 top-3 z-40 flex -translate-x-1/2 items-center overflow-hidden rounded-md border border-border bg-card/90 p-1.5 shadow-sm backdrop-blur-sm transition-[margin-left] duration-300 ease-out',
-               // Slide out of the layers panel's column and cap the width to the free region, like the tool bar.
-               layersPanelOpen ? 'max-w-[calc(100%-1.5rem-16rem)]' : 'max-w-[calc(100%-1.5rem)]',
-            )}
-         >
-            <BoardNameField name={name} placeholder={t('BoardView.boardNamePlaceholder')} onCommit={(value) => void actions.renameBoard(value)} />
-         </div>
+         <BoardNamePill
+            name={name}
+            placeholder={t('BoardView.boardNamePlaceholder')}
+            onCommit={(value) => void actions.renameBoard(value)}
+            layersPanelOpen={layersPanelOpen}
+            layersPanelWidth={LAYERS_PANEL_WIDTH}
+         />
 
          {/* Bottom-center tool bar: the mode segment, the contextual creation/drawing section, then the view
              controls + positioning cluster. It grows to fit its contents and, when they exceed the canvas,
