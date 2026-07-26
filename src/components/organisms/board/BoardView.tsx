@@ -1,5 +1,5 @@
 // -- React Imports --
-import { forwardRef, useCallback, useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import cuid from 'cuid';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, LayoutGrid, Maximize, MousePointer2, PenTool, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, LayoutGrid, Maximize, MousePointer2, PenTool, Trash2 } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -35,7 +35,6 @@ import { makePortalContent, portalTargetFromInsert } from '@/lib/creation/portal
 import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
 import { EMPTY_STROKE_IDS, PendingEraseContext } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
-import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
 import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
 
 // -- Component Imports --
@@ -47,19 +46,21 @@ import { BoardRadialMenu, type RadialNode } from './BoardRadialMenu';
 import { BoardAddMenu } from './BoardAddMenu';
 import { BoardGridMenu } from './BoardGridMenu';
 import { LayersPanel } from './LayersPanel';
-import { CardCreationForm } from '@/components/organisms/cards/CardCreationForm';
 import { LinkTargetList } from '@/components/molecules/links/LinkTargetList';
 import { BoardPortalEditor } from './items/BoardPortalEditor';
 import { StrokeShape } from './items/BoardDrawingItem';
+import { BoardFloatingWindow, PORTAL_WINDOW_WIDTH, PORTAL_EDITOR_WIDTH, BOARD_WINDOW_MARGIN } from './windows/BoardFloatingWindow';
+import { BoardCardCreationWindow } from './windows/BoardCardCreationWindow';
+import { BoardNameField } from './fields/BoardNameField';
+import { BoardCoordinateField } from './fields/BoardCoordinateField';
+import { ToolbarButton } from './toolbar/ToolbarButton';
+import { ToolToggleButton } from './toolbar/ToolToggleButton';
 
 // -- Store Imports --
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import { useDrawerStore } from '@/lib/stores/drawerStore';
-
-// -- React Imports --
-import type { ReactNode } from 'react';
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
@@ -2173,294 +2174,5 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       )}
       </DrawingFocusContext.Provider>
       </PendingEraseContext.Provider>
-   );
-}
-
-/** Panel width for the card-creation window; mirrors the `w-96` footprint so the drag clamp knows it. */
-const CARD_WINDOW_WIDTH = 384;
-/** Panel width for the portal-picker window; mirrors the picker's `w-[28rem]` footprint. */
-const PORTAL_WINDOW_WIDTH = 448;
-/** Panel width for the portal restyle editor window. */
-const PORTAL_EDITOR_WIDTH = 340;
-/** Screen-px margin a floating window keeps from the board edges (drag clamp + max-height). */
-const BOARD_WINDOW_MARGIN = 16;
-
-/**
- * A draggable, non-modal window floating over the board canvas. It lives OUTSIDE the clip div (fixed,
- * clip-relative coords) and owns a `{x,y}` position seeded from `initialScreen`; the header is the drag
- * handle. The whole panel stops pointer-down propagation so dragging or using it never pans the canvas,
- * and the position is clamped to the board rect (parameterized by `width`) so it can't be dragged off-screen.
- * A tall body scrolls inside (max-height capped to the space below the panel). No backdrop and no
- * outside-click dismiss - it closes on the X button or Escape only. Chrome is app-token only; the body is
- * unpadded, so each consumer owns its own padding.
- */
-function BoardFloatingWindow({
-   initialScreen,
-   clipRect,
-   width,
-   title,
-   onClose,
-   children,
-}: {
-   initialScreen: { x: number; y: number };
-   clipRect: { left: number; top: number; width: number; height: number };
-   width: number;
-   title: string;
-   onClose: () => void;
-   children: ReactNode;
-}) {
-   const { t } = useTranslation();
-   const panelRef = useRef<HTMLDivElement | null>(null);
-
-   /** Clamps a desired top-left so the panel stays fully within the board rect (its live height read from the DOM). */
-   const clamp = useCallback(
-      (x: number, y: number) => {
-         const height = panelRef.current?.offsetHeight ?? 0;
-         const minX = clipRect.left + BOARD_WINDOW_MARGIN;
-         const minY = clipRect.top + BOARD_WINDOW_MARGIN;
-         const maxX = Math.max(minX, clipRect.left + clipRect.width - width - BOARD_WINDOW_MARGIN);
-         const maxY = Math.max(minY, clipRect.top + clipRect.height - height - BOARD_WINDOW_MARGIN);
-         return { x: Math.min(Math.max(x, minX), maxX), y: Math.min(Math.max(y, minY), maxY) };
-      },
-      [clipRect, width],
-   );
-
-   // Seed the position from the initial anchor, clamped horizontally + off the top edge. Height is
-   // unknown on the first render, so the vertical clamp settles once the panel measures (below).
-   const [position, setPosition] = useState(() => {
-      const minX = clipRect.left + BOARD_WINDOW_MARGIN;
-      const maxX = Math.max(minX, clipRect.left + clipRect.width - width - BOARD_WINDOW_MARGIN);
-      return { x: Math.min(Math.max(initialScreen.x, minX), maxX), y: Math.max(initialScreen.y, clipRect.top + BOARD_WINDOW_MARGIN) };
-   });
-
-   // Escape closes the window (it's non-modal, so no outside-click dismiss to lean on).
-   useEffect(() => {
-      const onKeyDown = (event: KeyboardEvent) => {
-         if (event.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', onKeyDown);
-      return () => window.removeEventListener('keydown', onKeyDown);
-   }, [onClose]);
-
-   /** Header drag: pointer on the header background repositions the whole panel (clamped). The X button
-    *  and any header controls opt out via `closest('button')`, so pressing them never starts a drag. */
-   const handleHeaderPointerDown = (event: ReactPointerEvent) => {
-      if (event.button !== 0) return;
-      if (event.target instanceof Element && event.target.closest('button')) return;
-      const startX = event.clientX;
-      const startY = event.clientY;
-      const origin = position;
-      const onMove = (moveEvent: PointerEvent) => {
-         setPosition(clamp(origin.x + (moveEvent.clientX - startX), origin.y + (moveEvent.clientY - startY)));
-      };
-      const onUp = () => {
-         window.removeEventListener('pointermove', onMove);
-         window.removeEventListener('pointerup', onUp);
-      };
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-   };
-
-   // Grow downward from the panel's top; a tall body scrolls inside rather than spilling past the board.
-   const maxHeight = clipRect.height > 0 ? clipRect.top + clipRect.height - position.y - BOARD_WINDOW_MARGIN : undefined;
-
-   return (
-      <div
-         ref={panelRef}
-         onPointerDown={(event) => event.stopPropagation()}
-         style={{ left: position.x, top: position.y, width, maxHeight }}
-         className="fixed z-50 flex flex-col overflow-hidden rounded-lg border border-border bg-popover/95 shadow-lg backdrop-blur-sm"
-      >
-         {/* Header doubles as the drag handle. Styled from app tokens only, so it follows the chosen theme palette. */}
-         <div
-            onPointerDown={handleHeaderPointerDown}
-            className="flex shrink-0 cursor-move select-none items-center justify-between border-b border-border bg-muted/40 px-4 py-2.5"
-         >
-            <span className="text-sm font-semibold text-foreground">{title}</span>
-            <button
-               type="button"
-               title={t('Common.close')}
-               aria-label={t('Common.close')}
-               onClick={onClose}
-               className="flex items-center justify-center rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-            >
-               <X className="h-4 w-4" />
-            </button>
-         </div>
-         {/* Body scrolls inside the panel (height capped to the space below it); padding is the consumer's. */}
-         <div className="min-h-0 overflow-y-auto">{children}</div>
-      </div>
-   );
-}
-
-/**
- * The board's card-creation panel: a `BoardFloatingWindow` wrapping the card-creation form. The card it
- * makes keeps its game look; this creation chrome is app-token (via the shared window shell).
- */
-function BoardCardCreationWindow({
-   game,
-   initialScreen,
-   clipRect,
-   onConfirm,
-   onClose,
-}: {
-   game: GameSystem;
-   initialScreen: { x: number; y: number };
-   clipRect: { left: number; top: number; width: number; height: number };
-   onConfirm: (options: CreateCardOptions) => void;
-   onClose: () => void;
-}) {
-   const { t } = useTranslation();
-   return (
-      <BoardFloatingWindow
-         initialScreen={initialScreen}
-         clipRect={clipRect}
-         width={CARD_WINDOW_WIDTH}
-         title={t('CreateCardDialog.title')}
-         onClose={onClose}
-      >
-         <div className="px-4 pb-3">
-            <CardCreationForm game={game} mode="create" allowCharacterCard onConfirm={onConfirm} />
-         </div>
-      </BoardFloatingWindow>
-   );
-}
-
-
-/**
- * The board name, living as the leading element of the top-left bar: click to edit, commit on
- * blur/Enter, revert on Escape. Controlled, with the buffer resyncing when `name` changes externally
- * (undo elsewhere, a fresh hydrate) via adjust-state-during-render. It auto-sizes to its content - a
- * hidden mirror span (same font/padding) measures the text (or placeholder when empty) and drives the
- * input width - so the title always shows fully and the bar grows to fit it; no truncation.
- */
-function BoardNameField({ name, placeholder, onCommit }: { name: string; placeholder: string; onCommit: (value: string) => void }) {
-   const [text, setText] = useState(name);
-   const [synced, setSynced] = useState(name);
-   if (name !== synced) {
-      setSynced(name);
-      setText(name);
-   }
-
-   const commit = () => {
-      const trimmed = text.trim();
-      if (trimmed && trimmed !== name) onCommit(trimmed);
-      else setText(name); // empty or unchanged -> revert to the stored name
-   };
-
-   // A tab switch unmounts the board without a blur; flush the buffered name so it isn't lost.
-   useCommitOnUnmount(commit);
-
-   return (
-      <div className="relative shrink-0">
-         {/* Invisible mirror: its width (text or the placeholder when empty) sizes the field. */}
-         <span aria-hidden className="invisible block whitespace-pre px-2.5 text-base font-semibold">{text || placeholder}</span>
-         <input
-            type="text"
-            value={text}
-            placeholder={placeholder}
-            onChange={(event) => setText(event.target.value)}
-            onPointerDown={(event) => event.stopPropagation()}
-            onBlur={commit}
-            onKeyDown={(event) => {
-               if (event.key === 'Enter') event.currentTarget.blur();
-               else if (event.key === 'Escape') {
-                  setText(name);
-                  event.currentTarget.blur();
-               }
-            }}
-            className="pointer-events-auto absolute inset-0 h-full w-full rounded bg-transparent px-2.5 text-base font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/60 hover:bg-muted/60 focus:bg-muted/50"
-         />
-      </div>
-   );
-}
-
-/**
- * One axis of the view-center coordinate (X or Y) in the positioning cluster: shows the rounded world
- * value the view is centered on, editable to recenter the viewport on that axis. Controlled buffer,
- * commit on blur/Enter, revert on Escape; the buffer resyncs when the value changes externally (a pan /
- * zoom / fit) via adjust-state-during-render. A non-numeric or unchanged entry reverts. Stops the pointer
- * so editing never pans; the X field forwards its ref so the palette's jump command can focus it.
- */
-const BoardCoordinateField = forwardRef<HTMLInputElement, { prefix: string; label: string; value: number; onCommit: (value: number) => void }>(
-   function BoardCoordinateField({ prefix, label, value, onCommit }, ref) {
-      const [text, setText] = useState(String(value));
-      const [synced, setSynced] = useState(value);
-      if (value !== synced) {
-         setSynced(value);
-         setText(String(value));
-      }
-
-      const commit = () => {
-         const parsed = Number.parseInt(text, 10);
-         if (Number.isFinite(parsed) && parsed !== value) onCommit(parsed);
-         else setText(String(value)); // invalid or unchanged -> revert to the live value
-      };
-
-      return (
-         <label className="flex items-center gap-0.5">
-            <span aria-hidden className="font-mono text-md text-muted-foreground">{prefix}</span>
-            <input
-               ref={ref}
-               type="text"
-               inputMode="numeric"
-               value={text}
-               aria-label={label}
-               title={label}
-               onChange={(event) => setText(event.target.value)}
-               onPointerDown={(event) => event.stopPropagation()}
-               onBlur={commit}
-               onKeyDown={(event) => {
-                  if (event.key === 'Enter') event.currentTarget.blur();
-                  else if (event.key === 'Escape') {
-                     setText(String(value));
-                     event.currentTarget.blur();
-                  }
-               }}
-               className="h-6 w-12 rounded bg-transparent px-1 text-center font-mono text-xs tabular-nums text-foreground outline-none hover:bg-muted/60 focus:bg-muted/50"
-            />
-         </label>
-      );
-   },
-);
-
-/** A button in the canvas palette/view toolbar. `active` gives it a pressed-toggle state (aria-pressed + tint). */
-function ToolbarButton({ title, onClick, active, dataTutorial, children }: { title: string; onClick: () => void; active?: boolean; dataTutorial?: string; children: React.ReactNode }) {
-   return (
-      <button
-         type="button"
-         onClick={onClick}
-         title={title}
-         aria-label={title}
-         aria-pressed={active}
-         data-tutorial={dataTutorial}
-         className={cn(
-            'flex size-6 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',
-            active && 'bg-muted ring-1 ring-primary/40',
-         )}
-      >
-         {children}
-      </button>
-   );
-}
-
-/** A sticky, pressed-state toggle in the mode segment (Elements / Drawing). Carries a text label beside its
-    stable icon so the modes read distinct from the icon-only clusters below. Chrome is app tokens only. */
-function ToolToggleButton({ title, label, active, onClick, children }: { title: string; label: string; active: boolean; onClick: () => void; children: React.ReactNode }) {
-   return (
-      <button
-         type="button"
-         onClick={onClick}
-         title={title}
-         aria-label={title}
-         aria-pressed={active}
-         className={cn(
-            'flex h-6 shrink-0 items-center justify-center gap-1.5 rounded px-2.5 text-sm hover:bg-muted cursor-pointer',
-            active ? 'bg-muted text-foreground ring-1 ring-primary/40' : 'text-foreground',
-         )}
-      >
-         {children}
-         <span>{label}</span>
-      </button>
    );
 }
