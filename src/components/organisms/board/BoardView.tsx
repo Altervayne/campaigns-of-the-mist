@@ -36,6 +36,7 @@ import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
+import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
 
 // -- Component Imports --
 import { BoardItemBox } from './BoardItemBox';
@@ -56,6 +57,7 @@ import { BoardGridLayer } from './layers/BoardGridLayer';
 import { ToolbarButton } from './toolbar/ToolbarButton';
 import { ToolToggleButton } from './toolbar/ToolToggleButton';
 import { BoardNamePill } from './toolbar/BoardNamePill';
+import { isEditableTarget } from './boardCanvasConstants';
 
 // -- Store Imports --
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
@@ -106,11 +108,6 @@ const RIGHT_PAN_THRESHOLD = 8;
  *  already-selected one) promotes it to editing (focused editor). Every other kind has no editing state. */
 const TEXT_EDITABLE_KINDS = new Set<BoardItemKind>(['post-it', 'journal', 'text']);
 const isTextEditableKind = (kind: BoardItemKind | undefined): boolean => kind !== undefined && TEXT_EDITABLE_KINDS.has(kind);
-
-/** True when the target is a live text field / editor, so board pointer gestures defer to it (native menu, typing). */
-function isEditableTarget(target: EventTarget | null): boolean {
-   return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
-}
 
 /**
  * Screen-px the selected item's toolbar keeps below the clip's top edge. When the item's top runs above
@@ -231,13 +228,9 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // stroke and the live preview read the CURRENT values, so the pickers actually drive the ink.
    const penSettings = useAppSettingsStore((state) => state.penSettings);
    const { setPenBrush, setPenColor, setPenWidth, setShapeBase, setShapeFilled, toggleLayersPanel, setLayersPanelOpen } = useAppSettingsActions();
-   // Space arms a mode-independent pan (mirrored to a ref for the pointer handlers, and to state for the
-   // cursor). The pen overlay + a Space/middle-drag can all start a pan, so the trigger is mode-agnostic.
-   const [spaceHeld, setSpaceHeld] = useState(false);
-   const spaceHeldRef = useRef(false);
-   // Alt likewise arms a pan (Alt+left-drag). Only the cursor needs it in state - the pointerdown reads
-   // `event.altKey` live - so there's no ref twin; keyup / blur disarm it, mirroring Space.
-   const [altHeld, setAltHeld] = useState(false);
+   // Space and Alt each arm a mode-independent pan while held; the flags drive the cursor and the Space ref
+   // twin is read live by the pointer handlers. Both clear on a window blur so an alt-tab leaves no stuck pan.
+   const { spaceHeld, spaceHeldRef, altHeld } = useBoardPanKeys();
    // The in-flight pen stroke's WORLD points (captured in screen, painted in world) + its live preview.
    // The cleanup ref tears the window listeners down on unmount so a mid-stroke tab switch can't leak them.
    const currentStrokeRef = useRef<{ points: number[] } | null>(null);
@@ -506,38 +499,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       window.addEventListener('keydown', onKeyDown);
       return () => window.removeEventListener('keydown', onKeyDown);
    }, [selectedIds, handleDeleteSelection, handleDuplicateSelection]);
-
-   // ==================
-   //  Pan + Space-to-pan (mode-independent: middle-drag / Space+drag pan in any tool)
-   // ==================
-   // Space and Alt each arm a pan while held, cleared on keyup or a window blur (no stuck arm after an
-   // alt-tab). Space is ignored while editing text on the board (a post-it/journal/text field) so typing
-   // a space never arms it; Alt isn't a typing key, so it needs no such guard.
-   useEffect(() => {
-      const clearSpace = () => { spaceHeldRef.current = false; setSpaceHeld(false); };
-      const onKeyDown = (event: KeyboardEvent) => {
-         if (event.code === 'Space') {
-            if (isEditableTarget(event.target)) return;
-            if (!spaceHeldRef.current) { spaceHeldRef.current = true; setSpaceHeld(true); }
-            event.preventDefault(); // stop the page from scrolling on Space
-         } else if (event.key === 'Alt') {
-            setAltHeld(true);
-         }
-      };
-      const onKeyUp = (event: KeyboardEvent) => {
-         if (event.code === 'Space') clearSpace();
-         else if (event.key === 'Alt') setAltHeld(false);
-      };
-      const clearAll = () => { clearSpace(); setAltHeld(false); };
-      window.addEventListener('keydown', onKeyDown);
-      window.addEventListener('keyup', onKeyUp);
-      window.addEventListener('blur', clearAll);
-      return () => {
-         window.removeEventListener('keydown', onKeyDown);
-         window.removeEventListener('keyup', onKeyUp);
-         window.removeEventListener('blur', clearAll);
-      };
-   }, []);
 
    // A bare `L` toggles the layers panel. Ignored while editing text (a board field / the panel's rename)
    // and when a modifier is held (so browser shortcuts like Ctrl+L stay intact).
