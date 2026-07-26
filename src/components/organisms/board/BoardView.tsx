@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, Maximize, MousePoin
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { centerViewport, fitViewport, itemsInMarquee, screenDeltaToWorld, screenToWorld, zoomToCursor } from '@/lib/board/boardCoordinates';
+import { centerViewport, fitViewport, itemsInMarquee, screenDeltaToWorld, screenToWorld } from '@/lib/board/boardCoordinates';
 import { DEFAULT_CONNECTION_STYLE } from '@/lib/board/boardConnections';
 import { zoneContaining, zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
@@ -35,6 +35,7 @@ import { EMPTY_STROKE_IDS, PendingEraseContext } from '@/lib/board/PendingEraseC
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
+import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 
 // -- Component Imports --
 import { BoardItemBox } from './BoardItemBox';
@@ -64,7 +65,7 @@ import { useDrawerStore } from '@/lib/stores/drawerStore';
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
-import type { ActiveTool, BoardGridType, BoardItem, BoardItemContent, BoardItemKind, BrushKind, ConnectionStyle, PortalBoardContent, PortalStyle, PortalTarget, Stroke, Viewport } from '@/lib/types/board';
+import type { ActiveTool, BoardGridType, BoardItem, BoardItemContent, BoardItemKind, BrushKind, ConnectionStyle, PortalBoardContent, PortalStyle, PortalTarget, Stroke } from '@/lib/types/board';
 import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 import type { Point } from '@/lib/board/boardConnections';
 import type { Card } from '@/lib/types/character';
@@ -90,9 +91,6 @@ function buildConnectionContent(item: BoardItem | undefined, style: ConnectionSt
    return { kind: 'connection', from, to, style };
 }
 
-/** Wheel-to-zoom sensitivity: a typical notch (~100 deltaY) is a gentle step. */
-const ZOOM_SENSITIVITY = 0.0015;
-
 /** Screen-px radius around a freeform polygon's first vertex where a click closes the shape (>= 3 vertices). */
 const POLYGON_CLOSE_THRESHOLD = 12;
 
@@ -114,8 +112,6 @@ function isEditableTarget(target: EventTarget | null): boolean {
    return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }
 
-/** Screen-px margin fit-to-content leaves around the framed items. */
-const FIT_PADDING = 64;
 /**
  * Screen-px the selected item's toolbar keeps below the clip's top edge. When the item's top runs above
  * the canvas (a tall drawing/zone pushes the bar out of reach), the bar is clamped down to this line so it
@@ -146,12 +142,29 @@ export function BoardView() {
 
 function BoardCanvas({ store }: { store: BoardStore }) {
    const { t } = useTranslation();
-   const viewport = useStore(store, (state) => state.viewport);
    const grid = useStore(store, (state) => state.grid);
    const hexPatternId = useId();
    const name = useStore(store, (state) => state.name);
    const items = useStore(store, (state) => state.items);
    const actions = useStore(store, (state) => state.actions);
+
+   // The camera: viewport subscription + ref mirror, the clip ref + its live box, pan, wheel zoom, and the
+   // world-coordinate / view-center helpers. The clip ref is returned plain so it composes with the droppable.
+   const {
+      clipRef,
+      viewport,
+      viewportRef,
+      viewCenter,
+      clipRect,
+      isPanning,
+      beginPan,
+      cursorToWorld,
+      originViewport,
+      jumpToViewCenter,
+      currentViewCenter,
+      handleFitToContent,
+      jumpXRef,
+   } = useBoardViewport(store, actions, items);
 
    // Selection lives in the board store as ephemeral state (shared with the layers panel), never
    // persisted or routed through commands. Read here; mutated via the store's selection actions.
@@ -159,7 +172,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // The hovered item drives a canvas highlight for a layers-panel row hover (row -> canvas only). Discrete
    // enter/leave, so subscribing here re-renders on a boundary crossing, never per pointer move.
    const hoveredId = useStore(store, (state) => state.hoveredId);
-   const [isPanning, setIsPanning] = useState(false);
    // A Shift+background marquee (null when idle); a plain drag pans instead. Corners are in
    // client coords; the clip origin is captured at start so the overlay + world math never
    // read a ref during render.
@@ -188,50 +200,14 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // with the sheet drop zones on a character tab. The drop is routed by `handleDragEnd`.
    const { setNodeRef: setDroppableRef } = useDroppable({ id: 'board-drop-zone', data: { type: 'board-drop-zone' } });
 
-   const clipRef = useRef<HTMLDivElement | null>(null);
    // Compose the droppable node ref with the local clip ref (used for the wheel listener
    // and screen->world math, and read by the drop handler via `data-board-clip`).
    const setClipRefs = (node: HTMLDivElement | null) => {
       clipRef.current = node;
       setDroppableRef(node);
    };
-   // Mirror the live viewport into a ref so the native wheel listener and pan handlers
-   // read the current value without re-subscribing.
-   const viewportRef = useRef(viewport);
-   useEffect(() => {
-      viewportRef.current = viewport;
-   }, [viewport]);
-   const panStart = useRef<{ x: number; y: number; origX: number; origY: number; zoom: number } | null>(null);
-
-   // The clip's live box (size + viewport offset), so the corner readout and the card popover read it
-   // from state, never via the ref during render. The observer captures the rect (in its callback, not
-   // the effect body) and fires on observe(), so the first measure lands without a synchronous setState.
-   const [clipRect, setClipRect] = useState({ left: 0, top: 0, width: 0, height: 0 });
-   useEffect(() => {
-      const el = clipRef.current;
-      if (!el) return;
-      const observer = new ResizeObserver(() => {
-         const box = el.getBoundingClientRect();
-         setClipRect({ left: box.left, top: box.top, width: box.width, height: box.height });
-      });
-      observer.observe(el);
-      return () => observer.disconnect();
-   }, []);
-   // The world point at the clip's center, for the positioning cluster. Origin cancels for the centre, so
-   // it derives from the live viewport + clip size alone (no layout read during render).
-   const viewCenter = screenToWorld(clipRect.width / 2, clipRect.height / 2, { left: 0, top: 0 }, viewport);
-   // Reset-view places the world origin at the clip's center (so the cluster reads 0, 0), not the
-   // top-left corner that a zero offset would give.
-   const originViewport = (): Viewport => centerViewport({ x: 0, y: 0 }, clipRect, 1);
-   // Recenters the viewport on a world point (keeping zoom): the coordinate cluster's jump. Same centering
-   // as fit-to-content / reset-view; routed through the debounced, non-undoable camera setter.
-   const jumpToViewCenter = (world: Point) => actions.setViewport(centerViewport(world, clipRect, viewport.zoom));
 
    const layersPanelOpen = useAppSettingsStore((state) => state.layersPanelOpen);
-
-   // The positioning cluster's X input, focused by the palette's jump command (it can't carry a coordinate
-   // through the one-shot bridge, so it focuses the field and lets the user type).
-   const jumpXRef = useRef<HTMLInputElement | null>(null);
 
    // The in-progress connect drag (preview line follows the cursor in world coords).
    const [connectPreview, setConnectPreview] = useState<{ fromId: string; cursor: Point } | null>(null);
@@ -325,14 +301,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // The bottom-bar overflow-scroll UX (wheel scrolls, hidden scrollbar, edge arrows).
    const { barScrollRef, barContentRef, barCanScrollLeft, barCanScrollRight, scrollBarBy } = useBoardBarScroll(activeTool);
 
-   /** Converts an absolute cursor point to world coords via the live clip rect + viewport. */
-   const cursorToWorld = useCallback((clientX: number, clientY: number): Point | null => {
-      const el = clipRef.current;
-      if (!el) return null;
-      const rect = el.getBoundingClientRect();
-      return screenToWorld(clientX, clientY, { left: rect.left, top: rect.top }, viewportRef.current);
-   }, []);
-
    /** Deletes one item plus the connections referencing it (cascade + dedupe), as one undo step. */
    const handleDelete = useCallback(
       (id: string) => {
@@ -368,7 +336,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       const rect = el.getBoundingClientRect();
       const center = { x: item.x + item.width / 2, y: item.y + item.height / 2 };
       actions.setViewport(centerViewport(center, { width: rect.width, height: rect.height }, viewportRef.current.zoom));
-   }, [store, actions]);
+   }, [store, actions, clipRef, viewportRef]);
 
    /** Layers panel: commit a row rename (or clear the label with `undefined`) as one undoable edit. */
    const handleLayerCommitLabel = useCallback((id: string, label: string | undefined) => void actions.setItemLabel(id, label), [actions]);
@@ -455,7 +423,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
          window.addEventListener('pointermove', onMove);
          window.addEventListener('pointerup', onUp);
       },
-      [actions, selectedIds, store],
+      [actions, selectedIds, store, viewportRef],
    );
 
    /**
@@ -518,27 +486,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    );
 
    // ==================
-   //  Zoom (native, non-passive wheel so it can preventDefault the page scroll)
-   // ==================
-   useEffect(() => {
-      const el = clipRef.current;
-      if (!el) return;
-      const onWheel = (event: WheelEvent) => {
-         // A selected, scrollable note (post-it/journal) marks its body for native scroll: let the wheel
-         // scroll it instead of zooming the board - no preventDefault, so the textarea scrolls natively.
-         const target = event.target;
-         if (target instanceof Element && target.closest('[data-board-wheel-scroll]')) return;
-         const rect = el.getBoundingClientRect();
-         const vp = viewportRef.current;
-         const factor = Math.exp(-event.deltaY * ZOOM_SENSITIVITY);
-         actions.setViewport(zoomToCursor(vp, { left: rect.left, top: rect.top }, event.clientX, event.clientY, vp.zoom * factor));
-         event.preventDefault();
-      };
-      el.addEventListener('wheel', onWheel, { passive: false });
-      return () => el.removeEventListener('wheel', onWheel);
-   }, [actions]);
-
-   // ==================
    //  Keyboard: delete / duplicate the selection (ignored while editing text)
    // ==================
    useEffect(() => {
@@ -563,33 +510,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // ==================
    //  Pan + Space-to-pan (mode-independent: middle-drag / Space+drag pan in any tool)
    // ==================
-   /**
-    * Starts a pan from a screen point via WINDOW listeners (not element pointer-capture), so the pen
-    * overlay - or a Space/middle-drag anywhere - can begin one and the move/up still land off the clip.
-    * The pan math is raw screen px (the world translate applies before the scale).
-    */
-   const beginPan = useCallback(
-      (clientX: number, clientY: number) => {
-         const vp = viewportRef.current;
-         panStart.current = { x: clientX, y: clientY, origX: vp.x, origY: vp.y, zoom: vp.zoom };
-         setIsPanning(true);
-         const onMove = (moveEvent: PointerEvent) => {
-            const start = panStart.current;
-            if (!start) return;
-            actions.setViewport({ x: start.origX + (moveEvent.clientX - start.x), y: start.origY + (moveEvent.clientY - start.y), zoom: start.zoom });
-         };
-         const onUp = () => {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            panStart.current = null;
-            setIsPanning(false);
-         };
-         window.addEventListener('pointermove', onMove);
-         window.addEventListener('pointerup', onUp);
-      },
-      [actions],
-   );
-
    // Space and Alt each arm a pan while held, cleared on keyup or a window blur (no stuck arm after an
    // alt-tab). Space is ignored while editing text on the board (a post-it/journal/text field) so typing
    // a space never arms it; Alt isn't a typing key, so it needs no such guard.
@@ -680,7 +600,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
-   }, [store, actions]);
+   }, [store, actions, clipRef, viewportRef]);
 
    /**
     * An item's body press (deferred, shared with the grip). Plain: a drag past the threshold moves it
@@ -1478,14 +1398,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       createItemAt(kind, currentViewCenter());
    };
 
-   /** The current view's world center + the clip's center screen point (for a menu-driven create/anchor). */
-   const currentViewCenter = (): Point => {
-      const el = clipRef.current;
-      if (!el) return viewCenter;
-      const rect = el.getBoundingClientRect();
-      return screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, { left: rect.left, top: rect.top }, viewportRef.current);
-   };
-
    /**
     * The "Add Game Element" menu's card row: open the card creation window for `game`. The drop still
     * lands at the view center on confirm, but the window opens near the toolbar (upper-left) rather than
@@ -1515,14 +1427,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       event.preventDefault();
       const itemId = event.target instanceof Element ? event.target.closest('[data-board-item-id]')?.getAttribute('data-board-item-id') ?? null : null;
       openRadial(itemId, event.clientX, event.clientY);
-   };
-
-   /** Frames every spatial item, centered and zoom-clamped (origin when the board is empty). */
-   const handleFitToContent = () => {
-      const el = clipRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      actions.setViewport(fitViewport(Object.values(items), { width: rect.width, height: rect.height }, FIT_PADDING));
    };
 
    // Derived selection chrome. One selected -> the per-item toolbar; the live group-move
