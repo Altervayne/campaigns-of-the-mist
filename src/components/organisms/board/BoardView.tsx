@@ -38,6 +38,7 @@ import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
 import { useBoardTools } from '@/hooks/board/useBoardTools';
+import { useBoardSelection } from '@/hooks/board/useBoardSelection';
 
 // -- Component Imports --
 import { BoardItemBox } from './BoardItemBox';
@@ -164,9 +165,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       jumpXRef,
    } = useBoardViewport(store, actions, items);
 
-   // Selection lives in the board store as ephemeral state (shared with the layers panel), never
-   // persisted or routed through commands. Read here; mutated via the store's selection actions.
-   const selectedIds = useStore(store, (state) => state.selectedIds);
    // The hovered item drives a canvas highlight for a layers-panel row hover (row -> canvas only). Discrete
    // enter/leave, so subscribing here re-renders on a boundary crossing, never per pointer move.
    const hoveredId = useStore(store, (state) => state.hoveredId);
@@ -176,10 +174,22 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number; clipLeft: number; clipTop: number } | null>(null);
    // The live group move: the moving id set + a shared world delta (null when idle).
    const [groupDrag, setGroupDrag] = useState<{ ids: Set<string>; delta: { x: number; y: number } } | null>(null);
-   // The item in its text-edit sub-state (post-it / journal / text), or null. Ephemeral canvas state,
-   // decoupled from selection: a text item is selected first, then a body click promotes it to editing
-   // (a focused editor). Cleared when it stops being the sole selection or on Escape (see the effects below).
-   const [editingId, setEditingId] = useState<string | null>(null);
+   // The live group-move delta applies to every item in the active drag.
+   const moveDeltaFor = (id: string) => (groupDrag && groupDrag.ids.has(id) ? groupDrag.delta : null);
+
+   // Selection + text-editing sub-state: the delete/duplicate handlers, the sole-selection derivation, and
+   // the multi-select group bbox. Subscribes to selectedIds in the store; the group bbox tracks a live move
+   // via `moveDeltaFor`. Editing exits on Escape or when its item stops being the sole selection.
+   const {
+      selectedIds,
+      editingId,
+      setEditingId,
+      soleSelectedId,
+      groupBbox,
+      handleDelete,
+      handleDeleteSelection,
+      handleDuplicateSelection,
+   } = useBoardSelection(store, actions, items, moveDeltaFor);
 
    /** Opens the portal restyle editor for `itemId`, anchored at the Edit click. Stable so it never breaks
     *  the item box memoization (every box would otherwise re-render on each pan). */
@@ -295,29 +305,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
 
    // The bottom-bar overflow-scroll UX (wheel scrolls, hidden scrollbar, edge arrows).
    const { barScrollRef, barContentRef, barCanScrollLeft, barCanScrollRight, scrollBarBy } = useBoardBarScroll(activeTool);
-
-   /** Deletes one item plus the connections referencing it (cascade + dedupe), as one undo step. */
-   const handleDelete = useCallback(
-      (id: string) => {
-         void actions.deleteItems([id]);
-         actions.deselectItem(id);
-      },
-      [actions],
-   );
-
-   /** Deletes the whole selection (with connection cascade) as one undo step, then clears it. */
-   const handleDeleteSelection = useCallback(() => {
-      if (selectedIds.size === 0) return;
-      void actions.deleteItems([...selectedIds]);
-      actions.clearSelection();
-   }, [actions, selectedIds]);
-
-   /** Duplicates the selection (copies + in-selection connections, offset), then selects the copies. */
-   const handleDuplicateSelection = useCallback(async () => {
-      if (selectedIds.size === 0) return;
-      const newIds = await actions.duplicateItems([...selectedIds]);
-      actions.setSelection(newIds);
-   }, [actions, selectedIds]);
 
    /** Layers panel: a plain click selects just that row (no pan); Shift/Ctrl-click toggles it in the selection. */
    const handleLayerSelect = useCallback((id: string, additive: boolean) => actions.selectItem(id, additive), [actions]);
@@ -607,7 +594,7 @@ function BoardCanvas({ store }: { store: BoardStore }) {
             },
          });
       },
-      [actions, beginMarquee, handleMoveStart, store],
+      [actions, beginMarquee, handleMoveStart, setEditingId, store],
    );
 
    const handleBackgroundPointerDown = (event: ReactPointerEvent) => {
@@ -1392,10 +1379,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       openRadial(itemId, event.clientX, event.clientY);
    };
 
-   // Derived selection chrome. One selected -> the per-item toolbar; the live group-move
-   // delta applies to every item in the active drag.
-   const soleSelectedId = selectedIds.size === 1 ? [...selectedIds][0] : null;
-   const moveDeltaFor = (id: string) => (groupDrag && groupDrag.ids.has(id) ? groupDrag.delta : null);
    // Any live canvas gesture (pan / marquee / move) suppresses the item hover ring, so it never flickers
    // on items the cursor sweeps past mid-drag.
    const interacting = isPanning || marquee !== null || groupDrag !== null;
@@ -1406,40 +1389,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       if (!soleSelectedId) return;
       if (store.getState().items[soleSelectedId]?.content.kind === 'drawing') setActiveLayerId(soleSelectedId);
    }, [soleSelectedId, store, setActiveLayerId]);
-
-   // Editing exits the moment its item stops being the sole selection - clicking away, selecting another
-   // item, multi-selecting, or the item's deletion all flow through here (the editor's own falling-edge
-   // and unmount flushes then commit the buffer). Editing is only ever the sole selection.
-   useEffect(() => {
-      if (editingId && editingId !== soleSelectedId) setEditingId(null);
-   }, [editingId, soleSelectedId]);
-
-   // Escape leaves editing (back to a plain selection) without deleting anything; the editor's falling-edge
-   // flush commits the buffer as it unmounts. Armed only while editing, so it never shadows other Escape uses.
-   useEffect(() => {
-      if (!editingId) return;
-      const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setEditingId(null); };
-      window.addEventListener('keydown', onKeyDown);
-      return () => window.removeEventListener('keydown', onKeyDown);
-   }, [editingId]);
-
-   // Two+ selected spatial items -> a group toolbar over their bounding box (shifted live
-   // during a group move). Connections (zero-size) don't anchor it.
-   const groupBbox = (() => {
-      if (selectedIds.size < 2) return null;
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, count = 0;
-      for (const id of selectedIds) {
-         const item = items[id];
-         if (!item || item.kind === 'connection') continue;
-         const delta = moveDeltaFor(id) ?? { x: 0, y: 0 };
-         minX = Math.min(minX, item.x + delta.x);
-         minY = Math.min(minY, item.y + delta.y);
-         maxX = Math.max(maxX, item.x + item.width + delta.x);
-         maxY = Math.max(maxY, item.y + item.height + delta.y);
-         count++;
-      }
-      return count >= 2 ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY } : null;
-   })();
 
    // Every non-connection item renders in ONE stable pass; selection raises an item via z-index, not
    // a DOM re-order, so its React instance is preserved (no remount -> edits commit on blur, images
