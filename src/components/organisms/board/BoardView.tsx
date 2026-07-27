@@ -5,17 +5,14 @@ import { useTranslation } from 'react-i18next';
 // -- Other Library Imports --
 import { useStore } from 'zustand';
 import { useDroppable } from '@dnd-kit/core';
-import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, Maximize, MousePointer2, PenTool, Trash2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { centerViewport, fitViewport } from '@/lib/board/boardCoordinates';
-import { zoneContentMinSize } from '@/lib/board/zoneMembership';
-import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
 import { flattenBoardOrder } from '@/lib/board/boardTree';
 import { isMergeableSelection } from '@/lib/board/layersReorder';
 import { isAppendTool } from '@/lib/board/drawingStyle';
@@ -23,7 +20,6 @@ import { GAME_VISUALS, GAME_CARD_OPTIONS, CHALLENGE_GAME_OPTIONS } from '@/lib/c
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { CREATION_TAXONOMY } from '@/lib/creation/creationTaxonomy';
-import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
 import { PendingEraseContext } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
@@ -36,23 +32,15 @@ import { useBoardDrawing } from '@/hooks/board/useBoardDrawing';
 import { useBoardCreation } from '@/hooks/board/useBoardCreation';
 
 // -- Component Imports --
-import { BoardItemBox } from './BoardItemBox';
-import { BoardConnectionsLayer } from './BoardConnectionsLayer';
-import { BoardToolSettingsBar } from './BoardToolSettingsBar';
-import { BoardGroupToolbar } from './BoardGroupToolbar';
 import { BoardRadialMenu, type RadialNode } from './BoardRadialMenu';
-import { BoardAddMenu } from './BoardAddMenu';
-import { BoardGridMenu } from './BoardGridMenu';
 import { LayersPanel } from './LayersPanel';
 import { LinkTargetList } from '@/components/molecules/links/LinkTargetList';
 import { BoardPortalEditor } from './items/BoardPortalEditor';
-import { StrokeShape } from './items/BoardDrawingItem';
 import { BoardFloatingWindow, PORTAL_WINDOW_WIDTH, PORTAL_EDITOR_WIDTH } from './windows/BoardFloatingWindow';
 import { BoardCardCreationWindow } from './windows/BoardCardCreationWindow';
-import { BoardCoordinateField } from './fields/BoardCoordinateField';
 import { BoardGridLayer } from './layers/BoardGridLayer';
-import { ToolbarButton } from './toolbar/ToolbarButton';
-import { ToolToggleButton } from './toolbar/ToolToggleButton';
+import { BoardItemsLayer } from './layers/BoardItemsLayer';
+import { BoardToolbar } from './toolbar/BoardToolbar';
 import { BoardNamePill } from './toolbar/BoardNamePill';
 import { isEditableTarget, isTextEditableKind, MOVE_THRESHOLD, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
 
@@ -63,7 +51,7 @@ import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSett
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
-import type { BoardGridType, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, PortalBoardContent } from '@/lib/types/board';
+import type { BoardGridType, BoardItem, BrushKind, PortalBoardContent } from '@/lib/types/board';
 import type { Point } from '@/lib/board/boardConnections';
 import type { ChallengeGame } from '@/lib/types/common';
 
@@ -76,35 +64,8 @@ import type { ChallengeGame } from '@/lib/types/common';
  */
 
 
-/** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
- *  the full set (width + color + dash), so any single-facet edit keeps the others. */
-function buildConnectionContent(item: BoardItem | undefined, style: ConnectionStyle): BoardItemContent {
-   const content = item?.content;
-   const from = content?.kind === 'connection' ? content.from : '';
-   const to = content?.kind === 'connection' ? content.to : '';
-   return { kind: 'connection', from, to, style };
-}
-
-/**
- * Screen-px the selected item's toolbar keeps below the clip's top edge. When the item's top runs above
- * the canvas (a tall drawing/zone pushes the bar out of reach), the bar is clamped down to this line so it
- * stays visible. Covers the bar's own height (it grows upward from the box top) plus a small margin.
- */
-const TOOLBAR_TOP_CLEARANCE = 48;
-
-/**
- * The top-bar scroll arrow: a frosted square overlaid on a scroll edge so the bar's contents slide
- * underneath it. Centered vertically via `my-auto` (not a transform) so framer-motion owns `x` for
- * the slide-in/out; the side (`left-0.5`/`right-0.5`) is appended per arrow.
- */
-const BAR_ARROW_CLASS =
-   'absolute top-0 bottom-0 z-10 my-auto flex size-6 items-center justify-center rounded border border-border bg-popover/95 text-popover-foreground shadow-md backdrop-blur-sm hover:bg-muted cursor-pointer';
-
 /** The layers panel's fixed width (matches its `w-64`), used to inset the bottom bar when it's open. */
 const LAYERS_PANEL_WIDTH = 256;
-
-/** Screen-px the bottom-center tool bar keeps from the canvas floor. */
-const BAR_EDGE_GAP = 12;
 
 /** The canvas; renders nothing when no board tab is active. */
 export function BoardView() {
@@ -621,57 +582,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // "fresh layer pending - the next stroke mints one" is legible. Un-arms the instant a layer becomes active.
    const newLayerArmed = isAppendTool(activeTool) && activeLayerId === null;
 
-   /**
-    * World-px to push the sole-selected item's toolbar down so it clears the clip's top edge; undefined
-    * when the item sits low enough to need no clamp (a stable prop, so an unclamped box still skips a pan
-    * re-render). Only the toolbar-bearing sole selection is measured. `item.y` includes any live move.
-    */
-   const toolbarClampFor = (item: BoardItem): number | undefined => {
-      if (item.id !== soleSelectedId) return undefined;
-      const topScreen = viewport.y + (item.y + (moveDeltaFor(item.id)?.y ?? 0)) * viewport.zoom;
-      const overshoot = TOOLBAR_TOP_CLEARANCE - topScreen;
-      return overshoot > 0 ? overshoot / viewport.zoom : undefined;
-   };
-
-   /** Renders one item box. Shared by the non-zone and zone passes; a zone paints its own tinted frame inline. */
-   const renderBox = (item: BoardItem) => {
-      // A zone carries its member count (collapsed-bar badge) and a resize floor (the extent of its
-      // members), so it can't be dragged smaller than it encloses; other kinds floor at MIN_ITEM_SIZE.
-      const members = item.kind === 'zone' ? Object.values(items).filter((other) => other.zoneId === item.id) : null;
-      return (
-         <BoardItemBox
-            key={item.id}
-            item={item}
-            isSelected={selectedIds.has(item.id)}
-            soleSelected={item.id === soleSelectedId}
-            isEditing={item.id === editingId}
-            toolbarClamp={toolbarClampFor(item)}
-            zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount)}
-            memberCount={members?.length}
-            resizeMin={members ? zoneContentMinSize(item, members) : item.kind === 'portal' ? PORTAL_MIN_SIZE : undefined}
-            zoom={viewport.zoom}
-            moveDelta={moveDeltaFor(item.id)}
-            interacting={interacting}
-            onSelect={actions.selectItem}
-            onItemPointerDown={handleItemPointerDown}
-            onDeepAction={handleItemDoubleClick}
-            onMoveStart={handleMoveStart}
-            onResize={actions.resizeItem}
-            onSyncSize={actions.syncItemSize}
-            onUpdateContent={actions.updateItemContent}
-            onCacheLastKnown={actions.cacheReferenceLastKnown}
-            onAdoptSource={actions.adoptItemDrawerSource}
-            onBringToFront={actions.bringToFront}
-            onSendToBack={actions.sendToBack}
-            onDelete={handleDelete}
-            onConnectStart={handleConnectStart}
-            onRequestEditPortal={handleRequestEditPortal}
-            onRequestRelinkPortal={handleRequestRelinkPortal}
-            onCachePortalName={actions.cachePortalLastKnown}
-         />
-      );
-   };
-
    // The radial's node tree: the three creation groups (Basic / Rich / Game) as flat root branches,
    // each opening straight to its leaves, plus duplicate + delete leaves at the root when something is
    // selected. Built only while the menu is open, from the same taxonomy the Add popover reads.
@@ -764,100 +674,40 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       >
          <BoardGridLayer grid={grid} viewport={viewport} hexPatternId={hexPatternId} itemCount={Object.keys(items).length} />
 
-         {/* World layer: a single transform maps world coords to screen. */}
-         <div className="absolute left-0 top-0" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`, transformOrigin: '0 0' }}>
-            {/* All non-connection items in ONE pass (never split by selection - no remount). Each box
-                carries its z-index band: unselected below the connection layer, selected above it. A
-                zone's tinted frame paints inline at the zone's band, behind its own members. */}
-            {nonZoneItems.map(renderBox)}
-            {zoneItems.map(renderBox)}
-
-            {/* Group toolbar over the multi-selection's bounding box (per-item bars suppressed). It
-                tops every band so it floats above its members and the connection layer. */}
-            {groupBbox && (
-               <div className="absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
-                  <BoardGroupToolbar
-                     zoom={viewport.zoom}
-                     onMoveStart={(event) => {
-                        const anchor = [...selectedIds][0];
-                        if (anchor) handleMoveStart(anchor, event);
-                     }}
-                     onDuplicate={() => void handleDuplicateSelection()}
-                     onDelete={handleDeleteSelection}
-                  />
-               </div>
-            )}
-
-            {/* Connections (+ the connect-drag preview) sit at the connection band (z N+1): above every
-                unselected item, below every selected one - so a string to a selected item runs behind
-                its face. Highlighted only when it is the sole selection (groups are about spatial items). */}
-            <BoardConnectionsLayer
-               items={items}
-               connections={connectionItems}
-               selectedId={soleSelectedId}
-               zoom={viewport.zoom}
-               moving={groupDrag}
-               collapsedZoneIds={collapsedZoneIds}
-               connectPreview={connectPreview}
-               zIndex={connectionsZIndex(layerCount)}
-               onSelect={(id) => actions.selectItem(id, false)}
-               onUpdateStyle={(id, style) => void actions.updateItemContent(id, buildConnectionContent(items[id], style))}
-               onDelete={handleDelete}
-            />
-
-            {/* In-flight pen stroke: painted in the WORLD layer (its points are world coords), so it tracks
-                the cursor under pan/zoom while the overlay captures in screen. Tops the layer so it draws
-                over the items; inert, and gone the instant the stroke commits. */}
-            {penPreview && (
-               <svg className="pointer-events-none absolute left-0 top-0 overflow-visible" width="1" height="1" style={{ zIndex: groupToolbarZIndex(layerCount) }} aria-hidden>
-                  {/* Same paint path as the committed stroke: geometric for a shape gesture, freehand otherwise. */}
-                  <StrokeShape stroke={{ brush: penSettings.brush, color: penSettings.color, width: penSettings.width, points: penPreview, shape: activeTool === 'line' ? 'line' : activeTool === 'regularPolygon' ? 'polygon' : activeTool === 'shape' ? (penSettings.shapeBase === 'circle' ? 'ellipse' : 'rect') : undefined, filled: activeTool === 'shape' || activeTool === 'regularPolygon' ? penSettings.shapeFilled : undefined }} />
-               </svg>
-            )}
-
-            {/* In-progress freeform polygon: the committed vertices plus a rubber band to the cursor, painted
-                OPEN and geometric in the active brush (it only closes once committed). Same inert world-layer
-                overlay as the pen preview. */}
-            {polygonPreview && (
-               <svg className="pointer-events-none absolute left-0 top-0 overflow-visible" width="1" height="1" style={{ zIndex: groupToolbarZIndex(layerCount) }} aria-hidden>
-                  <StrokeShape stroke={{ brush: penSettings.brush, color: penSettings.color, width: penSettings.width, points: polygonPreview, shape: 'line' }} />
-               </svg>
-            )}
-
-            {/* Active drawing-layer cue: a dashed accent outline around the layer the next stroke appends to,
-                shown only while a drawing gesture is armed. Dashed (not the solid selection ring), so it reads
-                as "the active layer" rather than a selected element. Inert; theme tokens only. */}
-            {focusLayer && (
-               <div
-                  className="pointer-events-none absolute rounded-sm border-dashed border-primary/70"
-                  style={{
-                     left: focusLayer.x + (moveDeltaFor(focusLayer.id)?.x ?? 0),
-                     top: focusLayer.y + (moveDeltaFor(focusLayer.id)?.y ?? 0),
-                     width: focusLayer.width,
-                     height: focusLayer.height,
-                     // Counter-scale the dashed stroke so it holds a constant on-screen weight at any zoom.
-                     borderWidth: 2 / viewport.zoom,
-                     zIndex: groupToolbarZIndex(layerCount),
-                  }}
-               />
-            )}
-
-            {/* Layers-panel hover cue: a soft outline around the element a panel row is hovering, so probing
-                the list points it out on the board. Inert; theme tokens only; hidden once the item is selected. */}
-            {hoveredItem && hoveredItem.kind !== 'connection' && !selectedIds.has(hoveredItem.id) && (
-               <div
-                  className="pointer-events-none absolute rounded-sm border border-primary/50"
-                  style={{
-                     left: hoveredItem.x + (moveDeltaFor(hoveredItem.id)?.x ?? 0),
-                     top: hoveredItem.y + (moveDeltaFor(hoveredItem.id)?.y ?? 0),
-                     width: hoveredItem.width,
-                     height: hoveredItem.height,
-                     borderWidth: 2 / viewport.zoom,
-                     zIndex: groupToolbarZIndex(layerCount),
-                  }}
-               />
-            )}
-         </div>
+         <BoardItemsLayer
+            viewport={viewport}
+            items={items}
+            nonZoneItems={nonZoneItems}
+            zoneItems={zoneItems}
+            connectionItems={connectionItems}
+            collapsedZoneIds={collapsedZoneIds}
+            selectedIds={selectedIds}
+            soleSelectedId={soleSelectedId}
+            editingId={editingId}
+            layerRank={layerRank}
+            layerCount={layerCount}
+            moveDeltaFor={moveDeltaFor}
+            interacting={interacting}
+            groupBbox={groupBbox}
+            groupDrag={groupDrag}
+            connectPreview={connectPreview}
+            penPreview={penPreview}
+            polygonPreview={polygonPreview}
+            penSettings={penSettings}
+            activeTool={activeTool}
+            focusLayer={focusLayer}
+            hoveredItem={hoveredItem}
+            actions={actions}
+            handleItemPointerDown={handleItemPointerDown}
+            handleItemDoubleClick={handleItemDoubleClick}
+            handleMoveStart={handleMoveStart}
+            handleDelete={handleDelete}
+            handleConnectStart={handleConnectStart}
+            handleRequestEditPortal={handleRequestEditPortal}
+            handleRequestRelinkPortal={handleRequestRelinkPortal}
+            handleDuplicateSelection={handleDuplicateSelection}
+            handleDeleteSelection={handleDeleteSelection}
+         />
 
          {/* Draw capture overlay: a screen-space gesture surface above the world layer. Interactive ONLY in a
              Draw gesture (select stays fully click-through, so item boxes never see the pointerdown). It routes
@@ -905,132 +755,44 @@ function BoardCanvas({ store }: { store: BoardStore }) {
             layersPanelWidth={LAYERS_PANEL_WIDTH}
          />
 
-         {/* Bottom-center tool bar: the mode segment, the contextual creation/drawing section, then the view
-             controls + positioning cluster. It grows to fit its contents and, when they exceed the canvas,
-             scrolls horizontally inside (capped at the canvas width minus its margins) - the wheel scrolls it,
-             the scrollbar is hidden, and edge arrows appear per side (like the tab strip). Stops the pointer so
-             editing a field or scrolling the bar never pans. Holds its floor spot (z-40, above the board content
-             but below the floating windows / radial); the app-wide dice tray (z-50) simply overlays it when open
-             rather than shoving it up. `overflow-x-clip` clips a slide-out arrow at the card edge. */}
-         <div
-            data-tutorial="board-toolbar"
-            onPointerDown={(event) => event.stopPropagation()}
-            style={{ bottom: BAR_EDGE_GAP, marginLeft: layersPanelOpen ? -(LAYERS_PANEL_WIDTH / 2) : 0 }}
-            className={cn(
-               'absolute left-1/2 z-40 flex w-fit -translate-x-1/2 items-center overflow-x-clip rounded-md border border-border bg-card/90 shadow-sm backdrop-blur-sm transition-[margin-left] duration-300 ease-out',
-               // Slide the bar out from under the panel and cap its width to the free region so it never underlaps.
-               layersPanelOpen ? 'max-w-[calc(100%-1.5rem-16rem)]' : 'max-w-[calc(100%-1.5rem)]',
-            )}
-         >
-            <AnimatePresence>
-               {barCanScrollLeft && (
-                  <motion.button
-                     key="bar-scroll-left"
-                     type="button"
-                     onClick={() => scrollBarBy(-1)}
-                     aria-label={t('BoardView.scrollLeft')}
-                     title={t('BoardView.scrollLeft')}
-                     className={cn(BAR_ARROW_CLASS, 'left-1.5')}
-                     initial={{ opacity: 0, x: -12 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: -12 }}
-                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                     <ChevronLeft className="h-4 w-4" />
-                  </motion.button>
-               )}
-            </AnimatePresence>
-
-            {/* The only scrollable element: capped to the card width (min-w-0) and scrolls; the wheel
-                handler maps a vertical wheel to horizontal scroll, so the hidden scrollbar shows nothing. */}
-            <div ref={barScrollRef} className="min-w-0 overflow-x-auto overscroll-x-contain scrollbar-hide">
-               <div ref={barContentRef} className="flex w-max items-center gap-1.5 p-1.5">
-                  {/* Sticky mode segment (Elements / Drawing): labeled toggles with a stable icon per mode, so
-                      the modes read as distinct from the icon-only clusters below. The Drawing glyph never
-                      tracks the active gesture; the specific gesture lives in the settings bar. Drawing is
-                      pressed for any drawing gesture and re-enters the last one - exit via Elements, Esc, or V. */}
-                  <div data-tutorial="board-mode-segment" className="flex shrink-0 items-center gap-0.5">
-                     <ToolToggleButton active={activeTool === 'select'} title={t('BoardView.toolSelect')} label={t('BoardView.toolSelect')} onClick={() => setActiveTool('select')}>
-                        <MousePointer2 className="h-4 w-4" />
-                     </ToolToggleButton>
-                     <ToolToggleButton active={activeTool !== 'select'} title={t('BoardView.toolDraw')} label={t('BoardView.toolDraw')} onClick={() => chooseDrawTool(lastDrawToolRef.current)}>
-                        <PenTool className="h-4 w-4" />
-                     </ToolToggleButton>
-                  </div>
-                  {/* The contextual second section swaps by mode: Select shows the element-creation cluster;
-                      Draw shows the drawing-tool settings (gesture axis / brush / size / ink / new layer). The
-                      mode segment above and the view controls below stay visible in both modes. */}
-                  {activeTool === 'select' ? (
-                     <>
-                        <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
-                        <BoardAddMenu
-                           onAddItem={handleAddItem}
-                           onOpenPortalPicker={openPortalPickerAtViewCenter}
-                           onAddTracker={(trackerType) => createTrackerAt(trackerType, currentViewCenter())}
-                           onPickCardGame={handlePickCardGame}
-                           onAddChallenge={(game) => createChallengeAt(game, currentViewCenter())}
-                        />
-                     </>
-                  ) : (
-                     <BoardToolSettingsBar
-                        tool={activeTool}
-                        onSetTool={chooseDrawTool}
-                        penSettings={penSettings}
-                        onSetBrush={setPenBrush}
-                        onSetColor={setPenColor}
-                        onSetWidth={setPenWidth}
-                        onNewLayer={() => setActiveLayerId(null)}
-                        newLayerArmed={newLayerArmed}
-                        sides={polygonSides}
-                        onSetSides={setPolygonSides}
-                        shapeBase={penSettings.shapeBase}
-                        onSetShapeBase={setShapeBase}
-                        shapeFilled={penSettings.shapeFilled}
-                        onSetShapeFilled={setShapeFilled}
-                     />
-                  )}
-                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
-                  <BoardGridMenu grid={grid} onSelect={(type) => void actions.setGrid({ ...grid, type })} />
-                  <ToolbarButton title={t('LayersPanel.toggle')} active={layersPanelOpen} onClick={toggleLayersPanel} dataTutorial="board-layers-toggle">
-                     <Layers className="h-4 w-4" />
-                  </ToolbarButton>
-                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
-                  {/* Positioning cluster: the recenter button, the center on contents button, the live zoom %, then the world point
-                  the view is CENTERED on as two editable fields - typing + Enter recenters on that point (keeping zoom). */}
-                  <ToolbarButton title={t('BoardView.fitToContent')} onClick={handleFitToContent}>
-                     <Maximize className="h-4 w-4" />
-                  </ToolbarButton>
-                  <ToolbarButton title={t('BoardView.returnToOrigin')} onClick={() => actions.setViewport(originViewport())}>
-                     <Crosshair className="h-4 w-4" />
-                  </ToolbarButton>
-                  <div className="flex shrink-0 items-center gap-1.5 px-0.5">
-                     <span className="text-xs tabular-nums text-muted-foreground mr-2 ml-1">{Math.round(viewport.zoom * 100)}%</span>
-                     {/* Separates the read-only zoom from the editable view-center fields, so the % never reads as an input. */}
-                     <BoardCoordinateField ref={jumpXRef} prefix="x:" label={t('BoardView.coordinateX')} value={Math.round(viewCenter.x)} onCommit={(x) => jumpToViewCenter({ x, y: Math.round(viewCenter.y) })} />
-                     <BoardCoordinateField prefix="y:" label={t('BoardView.coordinateY')} value={Math.round(viewCenter.y)} onCommit={(y) => jumpToViewCenter({ x: Math.round(viewCenter.x), y })} />
-                  </div>
-               </div>
-            </div>
-
-            <AnimatePresence>
-               {barCanScrollRight && (
-                  <motion.button
-                     key="bar-scroll-right"
-                     type="button"
-                     onClick={() => scrollBarBy(1)}
-                     aria-label={t('BoardView.scrollRight')}
-                     title={t('BoardView.scrollRight')}
-                     className={cn(BAR_ARROW_CLASS, 'right-1.5')}
-                     initial={{ opacity: 0, x: 12 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: 12 }}
-                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                     <ChevronRight className="h-4 w-4" />
-                  </motion.button>
-               )}
-            </AnimatePresence>
-         </div>
+         <BoardToolbar
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            chooseDrawTool={chooseDrawTool}
+            lastDrawToolRef={lastDrawToolRef}
+            handleAddItem={handleAddItem}
+            openPortalPickerAtViewCenter={openPortalPickerAtViewCenter}
+            createTrackerAt={createTrackerAt}
+            currentViewCenter={currentViewCenter}
+            handlePickCardGame={handlePickCardGame}
+            createChallengeAt={createChallengeAt}
+            penSettings={penSettings}
+            setPenBrush={setPenBrush}
+            setPenColor={setPenColor}
+            setPenWidth={setPenWidth}
+            setActiveLayerId={setActiveLayerId}
+            newLayerArmed={newLayerArmed}
+            polygonSides={polygonSides}
+            setPolygonSides={setPolygonSides}
+            setShapeBase={setShapeBase}
+            setShapeFilled={setShapeFilled}
+            grid={grid}
+            actions={actions}
+            toggleLayersPanel={toggleLayersPanel}
+            layersPanelOpen={layersPanelOpen}
+            layersPanelWidth={LAYERS_PANEL_WIDTH}
+            handleFitToContent={handleFitToContent}
+            originViewport={originViewport}
+            viewport={viewport}
+            viewCenter={viewCenter}
+            jumpToViewCenter={jumpToViewCenter}
+            jumpXRef={jumpXRef}
+            barScrollRef={barScrollRef}
+            barContentRef={barContentRef}
+            barCanScrollLeft={barCanScrollLeft}
+            barCanScrollRight={barCanScrollRight}
+            scrollBarBy={scrollBarBy}
+         />
 
          {/* Layers panel: a frosted right-edge overlay inside the clip (screen-space, never in the pan/zoom
              transform). Subscribes to items/selection/hover only, so a pan never re-renders it. */}
