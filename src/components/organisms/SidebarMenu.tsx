@@ -6,9 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
-// -- Basic UI Imports --
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
 // -- Icon Imports --
 import { Edit, Dices, BookUser, Waypoints, Save, Download, Upload, Layers, Trash2, PanelLeftOpen, PanelLeftClose, Settings, LifeBuoy, Sparkles, SaveAll, SquareMenu, RefreshCw, FileUp } from 'lucide-react';
 
@@ -21,6 +18,8 @@ import { BoardUndoRedoControls } from '../molecules/BoardUndoRedoControls';
 import { NoteUndoRedoControls } from '../molecules/NoteUndoRedoControls';
 import { SidebarButton } from '../molecules/SidebarButton';
 import { ClearBoardControl } from '../molecules/ClearBoardControl';
+import { SidebarFileInputs } from './sidebar/SidebarFileInputs';
+import { SidebarUpdateDialogs } from './sidebar/SidebarUpdateDialogs';
 
 // -- Store and Hook Imports --
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
@@ -344,127 +343,50 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
             </div>
 
 
-            <form ref={characterFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={characterImportInputRef}
-                  onChange={handleCharacterFileSelected}
-                  accept=".cotm,application/json"
-               />
-            </form>
-            <form ref={componentFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={componentImportInputRef}
-                  onChange={handleComponentFileSelected}
-                  accept=".cotm,application/json"
-               />
-            </form>
-            <form ref={boardFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={boardImportInputRef}
-                  onChange={handleBoardFileSelected}
-                  accept=".cotm,application/json"
-               />
-            </form>
-            <form ref={characterUpdateFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={characterUpdateInputRef}
-                  onChange={handleCharacterUpdateFileSelected}
-                  accept=".cotm,application/json"
-               />
-            </form>
-            <form ref={boardUpdateFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={boardUpdateInputRef}
-                  onChange={handleBoardUpdateFileSelected}
-                  accept=".cotm,application/json"
-               />
-            </form>
-            <form ref={noteFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={noteImportInputRef}
-                  onChange={handleNoteFileSelected}
-                  accept=".cotm,application/json,.md,.markdown,text/markdown"
-               />
-            </form>
-            <form ref={noteUpdateFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={noteUpdateInputRef}
-                  onChange={handleNoteUpdateFileSelected}
-                  accept=".cotm,application/json,.md,.markdown,text/markdown"
-               />
-            </form>
-            <form ref={workspaceFormRef} className="hidden">
-               <input
-                  type="file"
-                  ref={workspaceImportInputRef}
-                  onChange={handleWorkspaceFileSelected}
-                  accept=".cotm,application/json,.md,.markdown,text/markdown"
-               />
-            </form>
+            <SidebarFileInputs
+               characterImportInputRef={characterImportInputRef}
+               characterFormRef={characterFormRef}
+               componentImportInputRef={componentImportInputRef}
+               componentFormRef={componentFormRef}
+               boardImportInputRef={boardImportInputRef}
+               boardFormRef={boardFormRef}
+               characterUpdateInputRef={characterUpdateInputRef}
+               characterUpdateFormRef={characterUpdateFormRef}
+               boardUpdateInputRef={boardUpdateInputRef}
+               boardUpdateFormRef={boardUpdateFormRef}
+               noteImportInputRef={noteImportInputRef}
+               noteFormRef={noteFormRef}
+               noteUpdateInputRef={noteUpdateInputRef}
+               noteUpdateFormRef={noteUpdateFormRef}
+               workspaceImportInputRef={workspaceImportInputRef}
+               workspaceFormRef={workspaceFormRef}
+               onCharacterFileSelected={handleCharacterFileSelected}
+               onComponentFileSelected={handleComponentFileSelected}
+               onBoardFileSelected={handleBoardFileSelected}
+               onCharacterUpdateFileSelected={handleCharacterUpdateFileSelected}
+               onBoardUpdateFileSelected={handleBoardUpdateFileSelected}
+               onNoteFileSelected={handleNoteFileSelected}
+               onNoteUpdateFileSelected={handleNoteUpdateFileSelected}
+               onWorkspaceFileSelected={handleWorkspaceFileSelected}
+            />
          </div>
 
 
 
-         <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-            <AlertDialogContent>
-               <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.resetConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                     {t('CharacterSheetPage.SidebarMenu.resetConfirmDescription')}
-                  </AlertDialogDescription>
-               </AlertDialogHeader>
-               <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.resetConfirmCancelButton')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={handleResetCharacter}>{t('CharacterSheetPage.SidebarMenu.resetConfirmButton')}</AlertDialogAction>
-               </AlertDialogFooter>
-            </AlertDialogContent>
-         </AlertDialog>
-
-         <AlertDialog open={pendingCharacterUpdate !== null} onOpenChange={(open) => { if (!open) setPendingCharacterUpdate(null); }}>
-            <AlertDialogContent>
-               <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmDescription')}</AlertDialogDescription>
-               </AlertDialogHeader>
-               <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.updateConfirmCancelButton')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmCharacterUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
-               </AlertDialogFooter>
-            </AlertDialogContent>
-         </AlertDialog>
-
-         <AlertDialog open={pendingBoardUpdate !== null} onOpenChange={(open) => { if (!open) setPendingBoardUpdate(null); }}>
-            <AlertDialogContent>
-               <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateBoardConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateBoardConfirmDescription')}</AlertDialogDescription>
-               </AlertDialogHeader>
-               <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.updateConfirmCancelButton')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmBoardUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
-               </AlertDialogFooter>
-            </AlertDialogContent>
-         </AlertDialog>
-
-         <AlertDialog open={pendingNoteUpdate !== null} onOpenChange={(open) => { if (!open) setPendingNoteUpdate(null); }}>
-            <AlertDialogContent>
-               <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
-               </AlertDialogHeader>
-               <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.updateConfirmCancelButton')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmNoteUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
-               </AlertDialogFooter>
-            </AlertDialogContent>
-         </AlertDialog>
+         <SidebarUpdateDialogs
+            isResetDialogOpen={isResetDialogOpen}
+            setIsResetDialogOpen={setIsResetDialogOpen}
+            onResetCharacter={handleResetCharacter}
+            pendingCharacterUpdate={pendingCharacterUpdate}
+            setPendingCharacterUpdate={setPendingCharacterUpdate}
+            pendingBoardUpdate={pendingBoardUpdate}
+            setPendingBoardUpdate={setPendingBoardUpdate}
+            pendingNoteUpdate={pendingNoteUpdate}
+            setPendingNoteUpdate={setPendingNoteUpdate}
+            onConfirmCharacterUpdate={confirmCharacterUpdate}
+            onConfirmBoardUpdate={confirmBoardUpdate}
+            onConfirmNoteUpdate={confirmNoteUpdate}
+         />
       </aside>
    );
 }
