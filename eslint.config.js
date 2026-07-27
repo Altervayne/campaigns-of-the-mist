@@ -70,6 +70,16 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
+  // Same guard for the decomposed DiceTray: the tray's section leaves and its extracted hooks stay small.
+  {
+    files: [
+      'src/components/molecules/dice/**/*.{ts,tsx}',
+      'src/hooks/dice/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
   // The workspace file-I/O engine legitimately exceeds the cap (import + export + update-in-place as one
   // concern); exempt it like useBoardDrawing. A future consolidation pass may split it.
   {

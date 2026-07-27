@@ -2,29 +2,19 @@
 import { useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// -- Icon Imports --
-import { Dices, Plus } from 'lucide-react';
-
-// -- Basic UI Imports --
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
 // -- Utils Imports --
-import { cn } from '@/lib/utils';
-import { QUICK_PICK, migrateDiceTrayContent } from '@/lib/dice/diceTray';
-import { signed } from '@/lib/dice/diceFormat';
+import { migrateDiceTrayContent } from '@/lib/dice/diceTray';
 
 // -- Hook Imports --
 import { useDiceTrayEdits } from '@/hooks/dice/useDiceTrayEdits';
 import { useDiceTrayRoll } from '@/hooks/dice/useDiceTrayRoll';
 
 // -- Component Imports --
-import { DieShape } from './DieShape';
-import { CommandPopover } from './tray/CommandPopover';
-import { CustomSidesAdder } from './tray/CustomSidesAdder';
+import { DiceRow } from './tray/DiceRow';
 import { DiceTrayTitleInput } from './tray/DiceTrayTitleInput';
-import { DieCell } from './tray/DieCell';
 import { DieContextMenu } from './tray/DieContextMenu';
-import { ModifierRow } from './tray/ModifierRow';
+import { ModifierSection } from './tray/ModifierSection';
+import { RollFooter } from './tray/RollFooter';
 import { RollHistory } from './tray/RollHistory';
 
 // -- Type Imports --
@@ -77,7 +67,6 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
    const modifiers = tray.modifiers;
    const modifierTotal = modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
 
-   const [pickerOpen, setPickerOpen] = useState(false);
    // Mobile only: the die whose context menu is open, plus the finger point it anchors to. Long-press a
    // die (touch has no hover) to open a positioned menu with its penalty/remove actions.
    const [menuDieId, setMenuDieId] = useState<string | null>(null);
@@ -113,8 +102,6 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
       clearHistory,
    } = useDiceTrayEdits(tray, onChange, onCacheRoll);
 
-   const addDieFromPicker = (sides: number) => { addDie(sides); setPickerOpen(false); };
-
    // The die whose mobile context menu is open (mobile only); undefined once it is removed or dismissed.
    const menuDie = menuDieId ? dice.find((die) => die.id === menuDieId) : undefined;
 
@@ -132,112 +119,29 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
          )}
 
          <div className="flex flex-col">
-            {/* The dice, each as its shape, plus the add-die picker. */}
-            <div className="flex flex-wrap content-start gap-1.5 p-2">
-               {dice.map((die) => (
-                  <DieCell
-                     key={die.id}
-                     die={die}
-                     face={faceOf(die.id)}
-                     editable={editable}
-                     isMobile={isMobile}
-                     penaltyLabel={t('BoardView.diceToggleNegative')}
-                     removeLabel={t('BoardView.diceRemoveDie')}
-                     stopDrag={stopDrag}
-                     onToggleNegative={toggleNegative}
-                     onRemoveDie={removeDie}
-                     onLongPress={openDieMenu}
-                  />
-               ))}
+            <DiceRow
+               dice={dice}
+               editable={editable}
+               isMobile={isMobile}
+               stopDrag={stopDrag}
+               faceOf={faceOf}
+               onAddDie={addDie}
+               onToggleNegative={toggleNegative}
+               onRemoveDie={removeDie}
+               onLongPress={openDieMenu}
+               onApplyCommand={applyCommand}
+            />
 
-               <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                  <PopoverTrigger asChild>
-                     <button
-                        type="button"
-                        title={t('BoardView.diceAddDie')}
-                        aria-label={t('BoardView.diceAddDie')}
-                        onPointerDown={stopDrag}
-                        className={cn('flex h-11 w-11 items-center justify-center rounded-md border-2 border-dashed border-border text-muted-foreground hover:border-foreground hover:text-foreground cursor-pointer', isMobile && 'h-13 w-13')}
-                     >
-                        <Plus className={isMobile ? 'h-6 w-6' : 'h-5 w-5'} />
-                     </button>
-                  </PopoverTrigger>
-                  {/* Above the app-modal overlay band (z-60) so the picker clears a host sheet (the mobile
-                      dice tray sits in a bottom sheet); already top-most on desktop/board, so no change there. */}
-                  <PopoverContent align="start" sideOffset={6} className="z-[70] w-auto p-2">
-                     <div className="grid grid-cols-4 gap-1">
-                        {QUICK_PICK.map((sides) => (
-                           <button
-                              key={sides}
-                              type="button"
-                              title={`d${sides}`}
-                              aria-label={`d${sides}`}
-                              onClick={() => addDieFromPicker(sides)}
-                              className="flex h-12 w-12 flex-col items-center justify-center rounded hover:bg-muted cursor-pointer"
-                           >
-                              <div className="h-7 w-7"><DieShape sides={sides} value={null} /></div>
-                              <span className="font-mono text-[0.6rem] text-muted-foreground">d{sides}</span>
-                           </button>
-                        ))}
-                     </div>
-                     {/* Custom sides: add any dN by hand (any integer >= 2 -> a weird die). */}
-                     <CustomSidesAdder
-                        placeholder={t('BoardView.diceCustomSidesPlaceholder')}
-                        addLabel={t('BoardView.diceAddCustomDie')}
-                        onAdd={addDieFromPicker}
-                        isMobile={isMobile}
-                     />
-                  </PopoverContent>
-               </Popover>
-
-               {/* Build the whole tray from a typed formula like 1d6+2d12+4-2. Always rendered, like the
-                   add-die picker, so the dice row's layout is identical whether or not the tray is selected
-                   (a board item gates `editable` on selection - a conditional in-flow control would reflow). */}
-               <CommandPopover
-                  triggerLabel={t('BoardView.diceCommandLabel')}
-                  placeholder={t('BoardView.diceCommandPlaceholder')}
-                  applyLabel={t('BoardView.diceCommandApply')}
-                  errorLabel={t('BoardView.diceCommandError')}
-                  stopDrag={stopDrag}
-                  onApply={applyCommand}
-                  isMobile={isMobile}
-               />
-            </div>
-
-            {/* Modifiers: a labeled list, each row one undoable change. */}
-            <div className="border-t border-border p-2">
-               <div className="mb-1 flex items-center justify-between px-0.5">
-                  <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t('BoardView.diceModifiers')}</span>
-                  {modifiers.length > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{signed(modifierTotal)}</span>}
-               </div>
-               <div className="flex flex-col gap-1">
-                  {modifiers.map((modifier) => (
-                     <ModifierRow
-                        key={modifier.id}
-                        modifier={modifier}
-                        placeholder={t('BoardView.diceModifierPlaceholder')}
-                        removeLabel={t('BoardView.diceRemoveModifier')}
-                        stopDrag={stopDrag}
-                        onChangeValue={(value) => setModifierValue(modifier.id, value)}
-                        onChangeLabel={(label) => setModifierLabel(modifier.id, label)}
-                        onRemove={() => removeModifier(modifier.id)}
-                        isMobile={isMobile}
-                     />
-                  ))}
-                  <button
-                     type="button"
-                     onPointerDown={stopDrag}
-                     onClick={addModifier}
-                     className={cn(
-                        'flex items-center justify-center gap-1 rounded border border-dashed border-border py-1 text-xs text-muted-foreground hover:border-foreground hover:text-foreground cursor-pointer',
-                        isMobile && 'py-2.5 text-sm',
-                     )}
-                  >
-                     <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
-                     {t('BoardView.diceAddModifier')}
-                  </button>
-               </div>
-            </div>
+            <ModifierSection
+               modifiers={modifiers}
+               modifierTotal={modifierTotal}
+               isMobile={isMobile}
+               stopDrag={stopDrag}
+               onAddModifier={addModifier}
+               onRemoveModifier={removeModifier}
+               onChangeValue={setModifierValue}
+               onChangeLabel={setModifierLabel}
+            />
          </div>
 
          {/* Roll history: a tucked, collapsed-by-default log of recent rolls; click one to restore its setup. */}
@@ -259,36 +163,13 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
              its height minus this spacer). Only the canvas-resizable host renders it. */}
          {growToFill && <div data-board-fill-spacer className="min-h-0 flex-1" />}
 
-         {/* Roll + the breakdown + total. */}
-         <div className="flex shrink-0 flex-col gap-1 border-t border-border p-2">
-            {displayTotal !== null && displayModifiers.length > 0 && (
-               <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[0.65rem] text-muted-foreground">
-                  {displayModifiers.map((modifier, index) => (
-                     <span key={index} className="font-mono">{modifier.label ? `${modifier.label} ${signed(modifier.value)}` : signed(modifier.value)}</span>
-                  ))}
-               </div>
-            )}
-            <div className="flex items-center gap-2">
-               <button
-                  type="button"
-                  onPointerDown={stopDrag}
-                  onClick={roll}
-                  className={cn(
-                     'flex flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 cursor-pointer',
-                     isMobile && 'gap-2 py-2 text-base',
-                  )}
-               >
-                  <Dices className={isMobile ? 'h-5 w-5' : 'h-4 w-4'} />
-                  {t('BoardView.diceRoll')}
-               </button>
-               {displayTotal !== null && (
-                  <div className="shrink-0 text-right">
-                     <span className="text-[0.6rem] uppercase tracking-wide text-muted-foreground">{t('BoardView.diceTotal')}</span>
-                     <div className="font-mono text-xl font-bold leading-none tabular-nums">{displayTotal}</div>
-                  </div>
-               )}
-            </div>
-         </div>
+         <RollFooter
+            displayTotal={displayTotal}
+            displayModifiers={displayModifiers}
+            isMobile={isMobile}
+            stopDrag={stopDrag}
+            onRoll={roll}
+         />
 
          {/* Mobile: a positioned per-die context menu, anchored where the finger long-pressed. A labeled
              penalty toggle and a separated destructive Remove, clamped on-screen. Mobile-only - never
