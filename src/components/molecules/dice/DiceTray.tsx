@@ -2,9 +2,6 @@
 import { useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// -- Library Imports --
-import cuid from 'cuid';
-
 // -- Icon Imports --
 import { Dices, Plus } from 'lucide-react';
 
@@ -14,24 +11,24 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { QUICK_PICK, migrateDiceTrayContent } from '@/lib/dice/diceTray';
-import { parseDiceCommand } from '@/lib/dice/diceCommand';
 import { signed } from '@/lib/dice/diceFormat';
 
 // -- Hook Imports --
-import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
+import { useDiceTrayEdits } from '@/hooks/dice/useDiceTrayEdits';
 import { useDiceTrayRoll } from '@/hooks/dice/useDiceTrayRoll';
 
 // -- Component Imports --
 import { DieShape } from './DieShape';
 import { CommandPopover } from './tray/CommandPopover';
 import { CustomSidesAdder } from './tray/CustomSidesAdder';
+import { DiceTrayTitleInput } from './tray/DiceTrayTitleInput';
 import { DieCell } from './tray/DieCell';
 import { DieContextMenu } from './tray/DieContextMenu';
 import { ModifierRow } from './tray/ModifierRow';
 import { RollHistory } from './tray/RollHistory';
 
 // -- Type Imports --
-import type { DiceTrayContent, RollEntry } from '@/lib/dice/diceTrayTypes';
+import type { DiceTrayContent } from '@/lib/dice/diceTrayTypes';
 import type { Position } from '@/hooks/mobile/useLongPress';
 
 /*
@@ -80,14 +77,6 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
    const modifiers = tray.modifiers;
    const modifierTotal = modifiers.reduce((sum, modifier) => sum + modifier.value, 0);
 
-   // Title is held locally and committed on blur, like the other text bodies.
-   const [title, setTitle] = useState(tray.title ?? '');
-   const [syncedTitle, setSyncedTitle] = useState(tray.title ?? '');
-   if ((tray.title ?? '') !== syncedTitle) {
-      setSyncedTitle(tray.title ?? '');
-      setTitle(tray.title ?? '');
-   }
-
    const [pickerOpen, setPickerOpen] = useState(false);
    // Mobile only: the die whose context menu is open, plus the finger point it anchors to. Long-press a
    // die (touch has no hover) to open a positioned menu with its penalty/remove actions.
@@ -111,49 +100,20 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
 
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
 
-   const commitTitle = () => {
-      const trimmed = title.trim();
-      if (trimmed !== (tray.title ?? '')) onChange({ ...tray, title: trimmed });
-   };
+   const {
+      addDie,
+      removeDie,
+      toggleNegative,
+      applyCommand,
+      addModifier,
+      removeModifier,
+      setModifierValue,
+      setModifierLabel,
+      restoreEntry,
+      clearHistory,
+   } = useDiceTrayEdits(tray, onChange, onCacheRoll);
 
-   // The board host unmounts on a tab switch without a blur; flush the buffered title so it isn't lost.
-   useCommitOnUnmount(commitTitle);
-
-   const addDie = (sides: number) => {
-      onChange({ ...tray, dice: [...dice, { id: cuid(), sides }] });
-      setPickerOpen(false);
-   };
-   const removeDie = (id: string) => onChange({ ...tray, dice: dice.filter((die) => die.id !== id) });
-   // A penalty die: its rolled value subtracts. Toggled per die in editable mode.
-   const toggleNegative = (id: string) =>
-      onChange({ ...tray, dice: dice.map((die) => (die.id === id ? { ...die, negative: !die.negative } : die)) });
-
-   // A typed/pasted formula REPLACES the tray's dice + modifiers (a command describes a full setup). One
-   // onChange = one undoable edit on the board, persisted directly on the app tray. A bad parse is a no-op.
-   const applyCommand = (raw: string): boolean => {
-      const result = parseDiceCommand(raw);
-      if ('error' in result) return false;
-      onChange({ ...tray, dice: result.dice, modifiers: result.modifiers });
-      return true;
-   };
-
-   const addModifier = () => onChange({ ...tray, modifiers: [...modifiers, { id: cuid(), label: '', value: 0 }] });
-   const removeModifier = (id: string) => onChange({ ...tray, modifiers: modifiers.filter((m) => m.id !== id) });
-   const setModifierValue = (id: string, value: number) =>
-      onChange({ ...tray, modifiers: modifiers.map((m) => (m.id === id ? { ...m, value: Math.max(-999, Math.min(999, value)) } : m)) });
-   const setModifierLabel = (id: string, label: string) =>
-      onChange({ ...tray, modifiers: modifiers.map((m) => (m.id === id ? { ...m, label } : m)) });
-
-   // Clicking a history entry RESTORES its setup (dice + modifiers, fresh ids) into the tray - a normal,
-   // undoable-on-board edit. It loads the configuration, not the past random result.
-   const restoreEntry = (entry: RollEntry) => onChange({
-      ...tray,
-      dice: entry.dice.map((die) => (die.negative ? { id: cuid(), sides: die.sides, negative: true } : { id: cuid(), sides: die.sides })),
-      modifiers: entry.modifiers.map((modifier) => ({ id: cuid(), label: modifier.label, value: modifier.value })),
-   });
-
-   // Clearing history is roll-cache management, not a config edit - non-undoable, like the appends.
-   const clearHistory = () => onCacheRoll({ ...tray, history: [] });
+   const addDieFromPicker = (sides: number) => { addDie(sides); setPickerOpen(false); };
 
    // The die whose mobile context menu is open (mobile only); undefined once it is removed or dismissed.
    const menuDie = menuDieId ? dice.find((die) => die.id === menuDieId) : undefined;
@@ -161,18 +121,13 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
    return (
       <div className="flex min-h-0 w-full flex-1 flex-col bg-card text-card-foreground">
          {showTitle && (
-            <input
-               type="text"
-               value={title}
-               onChange={(event) => setTitle(event.target.value)}
-               onFocus={onTitleFocus}
-               onBlur={commitTitle}
-               onPointerDown={stopDrag}
+            <DiceTrayTitleInput
+               title={tray.title}
+               editable={editable}
                placeholder={t('BoardView.diceTitlePlaceholder')}
-               className={cn(
-                  'shrink-0 border-b border-border bg-transparent px-2 py-1.5 text-sm font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground/60',
-                  editable ? 'pointer-events-auto' : 'pointer-events-none',
-               )}
+               stopDrag={stopDrag}
+               onCommit={(next) => onChange({ ...tray, title: next })}
+               onFocus={onTitleFocus}
             />
          )}
 
@@ -217,7 +172,7 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
                               type="button"
                               title={`d${sides}`}
                               aria-label={`d${sides}`}
-                              onClick={() => addDie(sides)}
+                              onClick={() => addDieFromPicker(sides)}
                               className="flex h-12 w-12 flex-col items-center justify-center rounded hover:bg-muted cursor-pointer"
                            >
                               <div className="h-7 w-7"><DieShape sides={sides} value={null} /></div>
@@ -229,7 +184,7 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
                      <CustomSidesAdder
                         placeholder={t('BoardView.diceCustomSidesPlaceholder')}
                         addLabel={t('BoardView.diceAddCustomDie')}
-                        onAdd={addDie}
+                        onAdd={addDieFromPicker}
                         isMobile={isMobile}
                      />
                   </PopoverContent>
