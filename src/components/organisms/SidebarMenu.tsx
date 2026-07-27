@@ -7,26 +7,24 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { Edit, Dices, BookUser, Waypoints, Save, Download, Upload, Layers, Trash2, PanelLeftOpen, PanelLeftClose, Settings, LifeBuoy, Sparkles, SaveAll, SquareMenu, RefreshCw, FileUp } from 'lucide-react';
+import { Edit, Save, Download, Upload, Layers, Trash2, SaveAll, RefreshCw, FileUp } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
 // -- Component Imports --
-import { CharacterUndoRedoControls } from '../molecules/CharacterUndoRedoControls';
-import { BoardUndoRedoControls } from '../molecules/BoardUndoRedoControls';
-import { NoteUndoRedoControls } from '../molecules/NoteUndoRedoControls';
 import { SidebarButton } from '../molecules/SidebarButton';
 import { ClearBoardControl } from '../molecules/ClearBoardControl';
+import { SidebarHeader } from './sidebar/SidebarHeader';
+import { SidebarSubmenuToggles } from './sidebar/SidebarSubmenuToggles';
+import { SidebarBottomActions } from './sidebar/SidebarBottomActions';
 import { SidebarFileInputs } from './sidebar/SidebarFileInputs';
 import { SidebarUpdateDialogs } from './sidebar/SidebarUpdateDialogs';
 
 // -- Store and Hook Imports --
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
-import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import { useSaveToDrawer } from '@/hooks/useSaveToDrawer';
-import { useHasUnreadPatchNotes } from '@/hooks/useHasUnreadPatchNotes';
 import { useSidebarFileIO } from '@/hooks/sidebar/useSidebarFileIO';
 
 
@@ -55,17 +53,6 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
    const character = useCharacterStore((state) => state.character);
    const { resetCharacter } = useCharacterActions();
    const { deactivate } = useTabManagerActions();
-
-   // The app-wide dice tray toggles a bottom panel (reachable from any window).
-   const isDiceTrayOpen = useAppSettingsStore((state) => state.diceTray.isOpen);
-   const { toggleDiceTray } = useAppSettingsActions();
-
-   // The Navigator toggles a left slide-over that crawls the portal graph (reachable from any window).
-   const navigatorOpen = useAppSettingsStore((state) => state.navigatorOpen);
-   const { toggleNavigator } = useAppSettingsActions();
-
-   // The New! dot rides the What's-new door until the user opens that section.
-   const hasUnreadPatchNotes = useHasUnreadPatchNotes();
 
    // Save-to-drawer (Save + Save-As, character + board + note) lives in a shared hook so the sidebar and
    // the command palette drive one implementation.
@@ -141,57 +128,11 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
          }}
       >
          <div className="flex flex-col justify-between w-full h-full">
-            {/* Header */}
-            <motion.section layout transition={{ duration: 0.2 }} className="w-full">
-               <motion.div layout className={cn(
-                  "flex w-full items-center px-2",
-                  isCollapsed ? "justify-center" : "justify-between",
-                  activeWindow === 'MAIN_MENU' && "pb-2 border-b-2 border-border"
-               )}>
-                  {!isCollapsed && <h2 className="text-lg font-bold">{t('CharacterSheetPage.SidebarMenu.sidebarTitle')}</h2>}
-
-                  <div data-tutorial="menu-collapse-button" onClick={onToggleCollapse} className="rounded p-2 hover:bg-muted cursor-pointer">
-                     {isCollapsed ? <PanelLeftOpen className="h-6 w-6" /> : <PanelLeftClose className="h-6 w-6" />}
-                  </div>
-               </motion.div>
-
-               { activeWindow === 'PLAY_AREA' &&
-                  <div className="py-2 border-b-2 border-border">
-                     <CharacterUndoRedoControls isCollapsed={isCollapsed} />
-                  </div>
-               }
-
-               { activeWindow === 'BOARD' &&
-                  <div className="py-2 border-b-2 border-border">
-                     <BoardUndoRedoControls isCollapsed={isCollapsed} />
-                  </div>
-               }
-
-               { activeWindow === 'NOTE' &&
-                  <div className="py-2 border-b-2 border-border">
-                     <NoteUndoRedoControls isCollapsed={isCollapsed} />
-                  </div>
-               }
-            </motion.section>
+            <SidebarHeader isCollapsed={isCollapsed} activeWindow={activeWindow} onToggleCollapse={onToggleCollapse} />
 
             {/* Context-specific scrollable buttons */}
             <div className="flex flex-col grow w-full min-h-0 overflow-y-auto overscroll-contain">
-               {/* Submenus: the panel toggles (Drawer + Dice Tray + Navigator) lead every context, side by side
-                   and identical wherever you are. Each goes muted while its panel is open. */}
-               <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                  "flex flex-col items-center gap-2 py-2 bg-popover border-b border-border",
-                  isCollapsed ? "px-0" : "px-2"
-               )}>
-                  <SidebarButton data-tutorial="drawer-toggle" isCollapsed={isCollapsed} onClick={onToggleDrawer} variant={isDrawerOpen ? 'secondary' : 'default'} Icon={BookUser}>
-                     {t('CharacterSheetPage.SidebarMenu.drawer')}
-                  </SidebarButton>
-                  <SidebarButton data-tutorial="dice-tray-button" isCollapsed={isCollapsed} onClick={toggleDiceTray} variant={isDiceTrayOpen ? 'secondary' : 'default'} Icon={Dices}>
-                     {t('CharacterSheetPage.SidebarMenu.diceTray')}
-                  </SidebarButton>
-                  <SidebarButton data-tutorial="navigator-button" isCollapsed={isCollapsed} onClick={toggleNavigator} variant={navigatorOpen ? 'secondary' : 'default'} Icon={Waypoints}>
-                     {t('CharacterSheetPage.SidebarMenu.navigator')}
-                  </SidebarButton>
-               </motion.section>
+               <SidebarSubmenuToggles isCollapsed={isCollapsed} isDrawerOpen={isDrawerOpen} onToggleDrawer={onToggleDrawer} />
 
                { activeWindow === 'PLAY_AREA' &&
                   <>
@@ -304,43 +245,14 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
                }
             </div>
 
-            {/* Bottom-aligned sub-menu buttons */}
-            <div className="flex flex-col shrink-0 w-full">
-               {/* "Open menu" is a navigation action (leave the sheet/board, go home), set
-                   apart from the meta utilities below by a divider. It has nowhere to go
-                   from the main menu itself, so it shows in the play area and on a board. */}
-               { (activeWindow === 'PLAY_AREA' || activeWindow === 'BOARD' || activeWindow === 'NOTE') &&
-                  <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                     "flex flex-col items-center gap-2 p-2 bg-card border-t-2 border-b border-border"
-                  )}>
-                     <SidebarButton data-tutorial="open-menu-button" isCollapsed={isCollapsed} onClick={handleOpenMenu} Icon={SquareMenu}>
-                        {t('CharacterSheetPage.SidebarMenu.openMenu')}
-                     </SidebarButton>
-                  </motion.section>
-               }
-               {/* The trio anchors the bottom region with the top border when the Open-menu
-                   section above is hidden. */}
-               <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                  "flex flex-col items-center gap-2 p-2 bg-card",
-                  activeWindow === 'MAIN_MENU' && "border-t-2 border-border"
-               )}>
-                  <SidebarButton data-tutorial="settings-button" isCollapsed={isCollapsed} onClick={onOpenSettings} Icon={Settings}>
-                     {t('CharacterSheetPage.SidebarMenu.settings')}
-                  </SidebarButton>
-                  {/* What's new carries the New! dot in its corner until the section is opened. */}
-                  <div className="relative">
-                     <SidebarButton data-tutorial="whats-new-button" isCollapsed={isCollapsed} onClick={onOpenWhatsNew} Icon={Sparkles}>
-                        {t('CharacterSheetPage.SidebarMenu.whatsNew')}
-                     </SidebarButton>
-                     {hasUnreadPatchNotes && (
-                        <span className="pointer-events-none absolute right-2 top-2 size-2 rounded-full bg-primary" aria-hidden />
-                     )}
-                  </div>
-                  <SidebarButton data-tutorial="help-button" isCollapsed={isCollapsed} onClick={onOpenHelp} Icon={LifeBuoy}>
-                     {t('CharacterSheetPage.SidebarMenu.help')}
-                  </SidebarButton>
-               </motion.section>
-            </div>
+            <SidebarBottomActions
+               isCollapsed={isCollapsed}
+               activeWindow={activeWindow}
+               onOpenMenu={handleOpenMenu}
+               onOpenSettings={onOpenSettings}
+               onOpenWhatsNew={onOpenWhatsNew}
+               onOpenHelp={onOpenHelp}
+            />
 
 
             <SidebarFileInputs
