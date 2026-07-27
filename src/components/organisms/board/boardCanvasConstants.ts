@@ -7,3 +7,8 @@
 export function isEditableTarget(target: EventTarget | null): boolean {
    return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }
+
+/** Screen-px a pointer must travel before a drag arms a move/marquee; a sub-threshold press dispatches nothing. */
+export const MOVE_THRESHOLD = 5;
+/** Screen-px a right-drag must travel to pan instead of opening the radial (larger so a jittery right-click still opens it). */
+export const RIGHT_PAN_THRESHOLD = 8;

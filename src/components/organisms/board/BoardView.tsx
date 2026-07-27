@@ -14,8 +14,7 @@ import { ChevronLeft, ChevronRight, Copy, Crosshair, Layers, Maximize, MousePoin
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { centerViewport, fitViewport, itemsInMarquee, screenDeltaToWorld, screenToWorld } from '@/lib/board/boardCoordinates';
-import { DEFAULT_CONNECTION_STYLE } from '@/lib/board/boardConnections';
+import { centerViewport, fitViewport, screenToWorld } from '@/lib/board/boardCoordinates';
 import { zoneContaining, zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
 import { flattenBoardOrder, nextScopeZ } from '@/lib/board/boardTree';
@@ -39,6 +38,7 @@ import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
 import { useBoardTools } from '@/hooks/board/useBoardTools';
 import { useBoardSelection } from '@/hooks/board/useBoardSelection';
+import { useBoardPointerInteraction } from '@/hooks/board/useBoardPointerInteraction';
 import { useBoardDrawing } from '@/hooks/board/useBoardDrawing';
 
 // -- Component Imports --
@@ -60,7 +60,7 @@ import { BoardGridLayer } from './layers/BoardGridLayer';
 import { ToolbarButton } from './toolbar/ToolbarButton';
 import { ToolToggleButton } from './toolbar/ToolToggleButton';
 import { BoardNamePill } from './toolbar/BoardNamePill';
-import { isEditableTarget } from './boardCanvasConstants';
+import { isEditableTarget, MOVE_THRESHOLD, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
 
 // -- Store Imports --
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
@@ -73,7 +73,6 @@ import type { BoardStore } from '@/lib/stores/boardStore';
 import type { BoardGridType, BoardItem, BoardItemContent, BoardItemKind, BrushKind, ConnectionStyle, PortalBoardContent, PortalStyle, PortalTarget } from '@/lib/types/board';
 import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 import type { Point } from '@/lib/board/boardConnections';
-import type { Card } from '@/lib/types/character';
 import type { GameSystem } from '@/lib/types/drawer';
 import type { ChallengeGame } from '@/lib/types/common';
 import type { CreateCardOptions } from '@/lib/types/creation';
@@ -95,11 +94,6 @@ function buildConnectionContent(item: BoardItem | undefined, style: ConnectionSt
    const to = content?.kind === 'connection' ? content.to : '';
    return { kind: 'connection', from, to, style };
 }
-
-/** Screen-px a pointer must travel before a drag arms a move/marquee; a sub-threshold press dispatches nothing. */
-const MOVE_THRESHOLD = 5;
-/** Screen-px a right-drag must travel to pan instead of opening the radial (larger so a jittery right-click still opens it). */
-const RIGHT_PAN_THRESHOLD = 8;
 
 /** The kinds with a text-edit sub-state: a body click selects, then a second click (or a click on an
  *  already-selected one) promotes it to editing (focused editor). Every other kind has no editing state. */
@@ -163,14 +157,21 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    // The hovered item drives a canvas highlight for a layers-panel row hover (row -> canvas only). Discrete
    // enter/leave, so subscribing here re-renders on a boundary crossing, never per pointer move.
    const hoveredId = useStore(store, (state) => state.hoveredId);
-   // A Shift+background marquee (null when idle); a plain drag pans instead. Corners are in
-   // client coords; the clip origin is captured at start so the overlay + world math never
-   // read a ref during render.
-   const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number; clipLeft: number; clipTop: number } | null>(null);
-   // The live group move: the moving id set + a shared world delta (null when idle).
-   const [groupDrag, setGroupDrag] = useState<{ ids: Set<string>; delta: { x: number; y: number } } | null>(null);
-   // The live group-move delta applies to every item in the active drag.
-   const moveDeltaFor = (id: string) => (groupDrag && groupDrag.ids.has(id) ? groupDrag.delta : null);
+
+   // Item pointer interaction: the group move, the connect drag, the item double-click deep action, and the
+   // marquee. Owns the live move / connect-preview / marquee state and `moveDeltaFor` (handed to the selection
+   // hook below so its group bbox tracks a live move). Runs BEFORE the selection hook so it can provide
+   // `moveDeltaFor` without a cycle; it subscribes to `selectedIds` directly rather than through selection.
+   const {
+      marquee,
+      groupDrag,
+      connectPreview,
+      moveDeltaFor,
+      handleMoveStart,
+      handleItemDoubleClick,
+      handleConnectStart,
+      beginMarquee,
+   } = useBoardPointerInteraction({ store, actions, cursorToWorld, clipRef, viewportRef });
 
    // Selection + text-editing sub-state: the delete/duplicate handlers, the sole-selection derivation, and
    // the multi-select group bbox. Subscribes to selectedIds in the store; the group bbox tracks a live move
@@ -211,9 +212,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
    };
 
    const layersPanelOpen = useAppSettingsStore((state) => state.layersPanelOpen);
-
-   // The in-progress connect drag (preview line follows the cursor in world coords).
-   const [connectPreview, setConnectPreview] = useState<{ fromId: string; cursor: Point } | null>(null);
 
    // The tool mode + drawing settings: the active tool, the sticky last-Draw gesture, the active drawing
    // layer, the regular-polygon side count, and the persisted pen settings the toolbar reads. `resetForBoard`
@@ -358,129 +356,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       void actions.updateItemContent(id, { ...zone.content, collapsed: !zone.content.collapsed });
    }, [store, actions]);
 
-   /**
-    * Starts a group move from an item's move grip or its body (canvas-owned, like the connect drag). The
-    * move arms only once the pointer clears `MOVE_THRESHOLD`, measured from the down origin so the item
-    * never jumps; a sub-threshold release is a click - it dispatches no move and runs `onClickNoMove`
-    * instead (the body passes a select there; the grip passes nothing, so a grip click is a no-op). The
-    * whole selection moves if the grabbed item is in it; otherwise it selects just that item and moves it
-    * alone. A shared world delta renders live; one compound command on release.
-    */
-   const handleMoveStart = useCallback(
-      (id: string, event: ReactPointerEvent, options?: { onClickNoMove?: () => void }) => {
-         if (event.button !== 0) return; // right-click is for the radial menu, not a move
-         const startX = event.clientX;
-         const startY = event.clientY;
-         const zoom = viewportRef.current.zoom;
-         const wasSelected = selectedIds.has(id);
-         // Null until the move arms: the move set + the membership to re-evaluate on release. While null the
-         // gesture is still a candidate click.
-         let ids: Set<string> | null = null;
-         let reevaluate: string[] = [];
-         let delta = { x: 0, y: 0 };
-
-         // Arms the (group-aware) move on the first past-threshold sample. Expand the set with every member
-         // of any zone in it so a zone carries its contents; `reevaluate` is the directly-grabbed non-zone
-         // items (their membership recomputed on release), members pulled in by a moved zone excluded.
-         const arm = (moveEvent: PointerEvent) => {
-            const liveItems = store.getState().items;
-            const base = wasSelected ? new Set(selectedIds) : new Set([id]);
-            if (!wasSelected) actions.setSelection([id]);
-            const set = new Set(base);
-            for (const baseId of base) {
-               if (liveItems[baseId]?.kind !== 'zone') continue;
-               for (const candidate of Object.values(liveItems)) if (candidate.zoneId === baseId) set.add(candidate.id);
-            }
-            ids = set;
-            reevaluate = [...base].filter((baseId) => liveItems[baseId] && liveItems[baseId].kind !== 'zone');
-            delta = screenDeltaToWorld(moveEvent.clientX - startX, moveEvent.clientY - startY, zoom);
-            setGroupDrag({ ids, delta });
-         };
-
-         const onMove = (moveEvent: PointerEvent) => {
-            if (!ids) {
-               if (Math.abs(moveEvent.clientX - startX) < MOVE_THRESHOLD && Math.abs(moveEvent.clientY - startY) < MOVE_THRESHOLD) return;
-               arm(moveEvent);
-               return;
-            }
-            delta = screenDeltaToWorld(moveEvent.clientX - startX, moveEvent.clientY - startY, zoom);
-            setGroupDrag({ ids, delta });
-         };
-         const onUp = () => {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            if (ids) {
-               setGroupDrag(null);
-               if (delta.x !== 0 || delta.y !== 0) void actions.moveItems([...ids], delta, reevaluate);
-            } else {
-               options?.onClickNoMove?.();
-            }
-         };
-         window.addEventListener('pointermove', onMove);
-         window.addEventListener('pointerup', onUp);
-      },
-      [actions, selectedIds, store, viewportRef],
-   );
-
-   /**
-    * A double-click's deep action for the kinds that own one: a challenge card copy toggles its expanded
-    * display mode (persisted on the card copy). Note tiles + character elements open their tab from their
-    * own double-click, so they aren't routed here.
-    */
-   const handleItemDoubleClick = useCallback(
-      (id: string) => {
-         const item = store.getState().items[id];
-         if (!item || item.content.kind !== 'card' || item.content.mode !== 'copy') return;
-         const card = item.content.data as Card;
-         if (card.cardType !== 'CHALLENGE_CARD') return;
-         void actions.updateItemContent(id, { ...item.content, data: { ...card, expanded: !(card.expanded === true) } });
-      },
-      [store, actions],
-   );
-
-   /**
-    * Starts a connect drag from an item's connect handle: a preview line follows the
-    * cursor, and a release over a different item creates a connection (otherwise cancel).
-    * Custom pointer handling (window listeners), not dnd-kit.
-    */
-   const handleConnectStart = useCallback(
-      (fromId: string, event: ReactPointerEvent) => {
-         if (event.button !== 0) return; // right-click is for the radial menu, not a connect drag
-         const start = cursorToWorld(event.clientX, event.clientY);
-         setConnectPreview({ fromId, cursor: start ?? { x: 0, y: 0 } });
-
-         const onMove = (moveEvent: PointerEvent) => {
-            const world = cursorToWorld(moveEvent.clientX, moveEvent.clientY);
-            if (world) setConnectPreview({ fromId, cursor: world });
-         };
-         const onUp = (upEvent: PointerEvent) => {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            setConnectPreview(null);
-
-            const hit = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-            const targetId = hit instanceof Element ? hit.closest('[data-board-item-id]')?.getAttribute('data-board-item-id') ?? null : null;
-            const liveItems = store.getState().items;
-            if (targetId && targetId !== fromId) {
-               const target = liveItems[targetId];
-               if (target && target.kind !== 'connection') {
-                  const zValues = Object.values(liveItems).map((item) => item.z);
-                  const z = zValues.length > 0 ? Math.max(...zValues) + 1 : 0;
-                  void actions.addItem({
-                     id: cuid(),
-                     kind: 'connection',
-                     x: 0, y: 0, width: 0, height: 0, z,
-                     content: { kind: 'connection', from: fromId, to: targetId, style: { ...DEFAULT_CONNECTION_STYLE } },
-                  });
-               }
-            }
-         };
-         window.addEventListener('pointermove', onMove);
-         window.addEventListener('pointerup', onUp);
-      },
-      [cursorToWorld, store, actions],
-   );
-
    // ==================
    //  Keyboard: delete / duplicate the selection (ignored while editing text)
    // ==================
@@ -527,44 +402,6 @@ function BoardCanvas({ store }: { store: BoardStore }) {
       if (!world) return;
       setRadial({ screen: { x: clientX, y: clientY }, world });
    }, [store, actions, cursorToWorld]);
-
-   /**
-    * Starts a marquee from a screen point via WINDOW listeners (mirroring beginPan): the rectangle grows
-    * with the cursor and, on release past the move threshold, selects the framed items - `additive` keeps
-    * the current selection (adds the hits), otherwise it replaces it. The clip origin is captured up front
-    * so the overlay + world math never read a ref during render.
-    */
-   const beginMarquee = useCallback((clientX: number, clientY: number, { additive }: { additive: boolean }) => {
-      const el = clipRef.current;
-      if (!el) return;
-      const clip = el.getBoundingClientRect();
-      setMarquee({ x0: clientX, y0: clientY, x1: clientX, y1: clientY, clipLeft: clip.left, clipTop: clip.top });
-      const onMove = (moveEvent: PointerEvent) => {
-         setMarquee((current) => (current ? { ...current, x1: moveEvent.clientX, y1: moveEvent.clientY } : null));
-      };
-      const onUp = (upEvent: PointerEvent) => {
-         window.removeEventListener('pointermove', onMove);
-         window.removeEventListener('pointerup', onUp);
-         // Ignore a sub-threshold press (no real drag) so it never selects under the point.
-         const dragged = Math.abs(upEvent.clientX - clientX) >= MOVE_THRESHOLD || Math.abs(upEvent.clientY - clientY) >= MOVE_THRESHOLD;
-         if (dragged) {
-            const origin = { left: clip.left, top: clip.top };
-            const a = screenToWorld(clientX, clientY, origin, viewportRef.current);
-            const b = screenToWorld(upEvent.clientX, upEvent.clientY, origin, viewportRef.current);
-            const hits = itemsInMarquee(Object.values(store.getState().items), {
-               minX: Math.min(a.x, b.x),
-               minY: Math.min(a.y, b.y),
-               maxX: Math.max(a.x, b.x),
-               maxY: Math.max(a.y, b.y),
-            });
-            if (additive) actions.addToSelection(hits);
-            else actions.setSelection(hits);
-         }
-         setMarquee(null);
-      };
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-   }, [store, actions, clipRef, viewportRef]);
 
    /**
     * An item's body press (deferred, shared with the grip). Plain: a drag past the threshold moves it
