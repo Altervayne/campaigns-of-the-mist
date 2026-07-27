@@ -3,20 +3,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-
-// -- Icon Imports --
-import { Edit, Save, Download, Upload, Layers, Trash2, SaveAll, RefreshCw, FileUp } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
 // -- Component Imports --
-import { SidebarButton } from '../molecules/SidebarButton';
-import { ClearBoardControl } from '../molecules/ClearBoardControl';
 import { SidebarHeader } from './sidebar/SidebarHeader';
 import { SidebarSubmenuToggles } from './sidebar/SidebarSubmenuToggles';
+import { SidebarPlayAreaActions } from './sidebar/SidebarPlayAreaActions';
+import { SidebarBoardActions } from './sidebar/SidebarBoardActions';
+import { SidebarNoteActions } from './sidebar/SidebarNoteActions';
+import { SidebarMainMenuActions } from './sidebar/SidebarMainMenuActions';
 import { SidebarBottomActions } from './sidebar/SidebarBottomActions';
 import { SidebarFileInputs } from './sidebar/SidebarFileInputs';
 import { SidebarUpdateDialogs } from './sidebar/SidebarUpdateDialogs';
@@ -47,7 +45,6 @@ interface SidebarMenuProps {
 }
 
 export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow, onExportNoteMarkdown, onImportNoteMarkdownFile, onToggleEditing, onToggleDrawer, onToggleCollapse, onOpenSettings, onOpenWhatsNew, onOpenHelp }: SidebarMenuProps) {
-   const { t } = useTranslation();
    const { t: tNotifications } = useTranslation();
 
    const character = useCharacterStore((state) => state.character);
@@ -135,113 +132,46 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
                <SidebarSubmenuToggles isCollapsed={isCollapsed} isDrawerOpen={isDrawerOpen} onToggleDrawer={onToggleDrawer} />
 
                { activeWindow === 'PLAY_AREA' &&
-                  <>
-                     <motion.section data-tutorial="menu-edit-drawer-buttons" layout transition={{ duration: 0.2 }} className={cn(
-                        "flex flex-col items-center gap-2 py-2 bg-popover border-b border-border",
-                        isCollapsed ? "px-0" : "px-2"
-                     )}>
-                        <SidebarButton data-tutorial="edit-mode-toggle" isCollapsed={isCollapsed} onClick={onToggleEditing} variant={isEditing ? 'secondary' : 'default'} Icon={Edit}>
-                           {t('CharacterSheetPage.SidebarMenu.editMode')}
-                        </SidebarButton>
-                     </motion.section>
-
-                     <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                        "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
-                     )}>
-                        <SidebarButton data-tutorial="save-character-button" isCollapsed={isCollapsed} onClick={saveCharacterToDrawer} Icon={Save}>
-                           {t('CharacterSheetPage.SidebarMenu.saveToDrawer')}
-                        </SidebarButton>
-                        <SidebarButton data-tutorial="save-character-as-button" isCollapsed={isCollapsed} onClick={saveCharacterAsToDrawer} Icon={SaveAll}>
-                           {t('CharacterSheetPage.SidebarMenu.saveToDrawerAs')}
-                        </SidebarButton>
-                        <SidebarButton data-tutorial="export-character-button" isCollapsed={isCollapsed} onClick={handleExportCharacter} Icon={Upload}>
-                           {t('CharacterSheetPage.SidebarMenu.exportCharacter')}
-                        </SidebarButton>
-                        <SidebarButton data-tutorial="import-character-button" isCollapsed={isCollapsed} onClick={() => characterImportInputRef.current?.click()} Icon={Download}>
-                           {t('CharacterSheetPage.SidebarMenu.importCharacter')}
-                        </SidebarButton>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={() => characterUpdateInputRef.current?.click()} Icon={RefreshCw}>
-                           {t('CharacterSheetPage.SidebarMenu.updateCharacter')}
-                        </SidebarButton>
-                        <SidebarButton data-tutorial="import-component-button" isCollapsed={isCollapsed} onClick={() => componentImportInputRef.current?.click()} Icon={Layers}>
-                           {t('CharacterSheetPage.SidebarMenu.importComponent')}
-                        </SidebarButton>
-                     </motion.section>
-
-                     <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                        "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
-                     )}>
-                        <SidebarButton data-tutorial="reset-character-button" disabled={!character} variant="destructive" isCollapsed={isCollapsed} onClick={() => setIsResetDialogOpen(true)} Icon={Trash2}>
-                           {t('CharacterSheetPage.SidebarMenu.resetCharacter')}
-                        </SidebarButton>
-                     </motion.section>
-                  </>
+                  <SidebarPlayAreaActions
+                     isCollapsed={isCollapsed}
+                     isEditing={isEditing}
+                     canReset={!!character}
+                     onToggleEditing={onToggleEditing}
+                     saveCharacterToDrawer={saveCharacterToDrawer}
+                     saveCharacterAsToDrawer={saveCharacterAsToDrawer}
+                     onExportCharacter={handleExportCharacter}
+                     characterImportInputRef={characterImportInputRef}
+                     characterUpdateInputRef={characterUpdateInputRef}
+                     componentImportInputRef={componentImportInputRef}
+                     onOpenResetDialog={() => setIsResetDialogOpen(true)}
+                  />
                }
 
                { activeWindow === 'BOARD' &&
-                  <>
-                     <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                        "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
-                     )}>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={saveBoardToDrawer} Icon={Save}>
-                           {t('CharacterSheetPage.SidebarMenu.saveBoardToDrawer')}
-                        </SidebarButton>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={saveBoardAsToDrawer} Icon={SaveAll}>
-                           {t('CharacterSheetPage.SidebarMenu.saveBoardToDrawerAs')}
-                        </SidebarButton>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={handleExportBoard} Icon={Upload}>
-                           {t('CharacterSheetPage.SidebarMenu.exportBoard')}
-                        </SidebarButton>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={() => boardImportInputRef.current?.click()} Icon={Download}>
-                           {t('CharacterSheetPage.SidebarMenu.importBoard')}
-                        </SidebarButton>
-                        <SidebarButton isCollapsed={isCollapsed} onClick={() => boardUpdateInputRef.current?.click()} Icon={RefreshCw}>
-                           {t('CharacterSheetPage.SidebarMenu.updateBoard')}
-                        </SidebarButton>
-                     </motion.section>
-
-                     <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                        "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
-                     )}>
-                        <ClearBoardControl isCollapsed={isCollapsed} />
-                     </motion.section>
-                  </>
+                  <SidebarBoardActions
+                     isCollapsed={isCollapsed}
+                     saveBoardToDrawer={saveBoardToDrawer}
+                     saveBoardAsToDrawer={saveBoardAsToDrawer}
+                     onExportBoard={handleExportBoard}
+                     boardImportInputRef={boardImportInputRef}
+                     boardUpdateInputRef={boardUpdateInputRef}
+                  />
                }
 
                { activeWindow === 'NOTE' &&
-                  <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                     "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
-                  )}>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={saveNoteToDrawer} Icon={Save}>
-                        {t('CharacterSheetPage.SidebarMenu.saveNoteToDrawer')}
-                     </SidebarButton>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={saveNoteAsToDrawer} Icon={SaveAll}>
-                        {t('CharacterSheetPage.SidebarMenu.saveNoteToDrawerAs')}
-                     </SidebarButton>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={handleExportNote} Icon={Upload}>
-                        {t('CharacterSheetPage.SidebarMenu.exportNote')}
-                     </SidebarButton>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={() => noteImportInputRef.current?.click()} Icon={Download}>
-                        {t('CharacterSheetPage.SidebarMenu.importNote')}
-                     </SidebarButton>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={onExportNoteMarkdown} Icon={FileUp}>
-                        {t('CharacterSheetPage.SidebarMenu.exportNoteMarkdown')}
-                     </SidebarButton>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={() => noteUpdateInputRef.current?.click()} Icon={RefreshCw}>
-                        {t('CharacterSheetPage.SidebarMenu.updateNote')}
-                     </SidebarButton>
-                  </motion.section>
+                  <SidebarNoteActions
+                     isCollapsed={isCollapsed}
+                     saveNoteToDrawer={saveNoteToDrawer}
+                     saveNoteAsToDrawer={saveNoteAsToDrawer}
+                     onExportNote={handleExportNote}
+                     onExportNoteMarkdown={onExportNoteMarkdown}
+                     noteImportInputRef={noteImportInputRef}
+                     noteUpdateInputRef={noteUpdateInputRef}
+                  />
                }
 
                { activeWindow === 'MAIN_MENU' &&
-                  <motion.section layout transition={{ duration: 0.2 }} className={cn(
-                     "flex flex-col items-center gap-2 py-2 bg-popover border-b border-border",
-                     isCollapsed ? "px-0" : "px-2"
-                  )}>
-                     <SidebarButton isCollapsed={isCollapsed} onClick={() => workspaceImportInputRef.current?.click()} Icon={FileUp}>
-                        {t('CharacterSheetPage.SidebarMenu.importWorkspace')}
-                     </SidebarButton>
-                  </motion.section>
+                  <SidebarMainMenuActions isCollapsed={isCollapsed} workspaceImportInputRef={workspaceImportInputRef} />
                }
             </div>
 
