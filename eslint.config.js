@@ -58,4 +58,24 @@ export default defineConfig([
       'max-lines': 'off',
     },
   },
+  // Same guard for the decomposed SidebarMenu: the extracted sidebar hook + section leaves stay small.
+  // Scoped to this refactor's output only.
+  {
+    files: [
+      'src/hooks/sidebar/**/*.{ts,tsx}',
+      'src/components/organisms/sidebar/**/*.{ts,tsx}',
+      'src/components/organisms/SidebarMenu.tsx',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
+  // The workspace file-I/O engine legitimately exceeds the cap (import + export + update-in-place as one
+  // concern); exempt it like useBoardDrawing. A future consolidation pass may split it.
+  {
+    files: ['src/hooks/sidebar/useSidebarFileIO.ts'],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
 ])

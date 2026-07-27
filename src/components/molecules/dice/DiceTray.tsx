@@ -1,12 +1,12 @@
 // -- React Imports --
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Library Imports --
 import cuid from 'cuid';
 
 // -- Icon Imports --
-import { ChevronDown, CornerDownLeft, Dices, History, Minus, Plus, Terminal, Trash2, X } from 'lucide-react';
+import { Dices, Plus } from 'lucide-react';
 
 // -- Basic UI Imports --
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,20 +15,22 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { QUICK_PICK, appendRollEntry, migrateDiceTrayContent, rollDiceTray } from '@/lib/dice/diceTray';
 import { parseDiceCommand } from '@/lib/dice/diceCommand';
-import { formatRelativeItemDate } from '@/lib/drawer/itemDateDisplay';
+import { signed } from '@/lib/dice/diceFormat';
 
 // -- Hook Imports --
-import { useLongPress } from '@/hooks/mobile/useLongPress';
 import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
-
-// -- Utils Imports --
-import { readSafeAreaInsetBottom } from '@/lib/utils/safeArea';
 
 // -- Component Imports --
 import { DieShape } from './DieShape';
+import { CommandPopover } from './tray/CommandPopover';
+import { CustomSidesAdder } from './tray/CustomSidesAdder';
+import { DieCell } from './tray/DieCell';
+import { DieContextMenu } from './tray/DieContextMenu';
+import { ModifierRow } from './tray/ModifierRow';
+import { RollHistory } from './tray/RollHistory';
 
 // -- Type Imports --
-import type { DiceTrayContent, DiceTrayDie, DiceTrayModifier, RollEntry } from '@/lib/dice/diceTrayTypes';
+import type { DiceTrayContent, RollEntry } from '@/lib/dice/diceTrayTypes';
 import type { Position } from '@/hooks/mobile/useLongPress';
 
 /*
@@ -46,9 +48,6 @@ import type { Position } from '@/hooks/mobile/useLongPress';
 /** How long (ms) the first die shuffles before settling; each later die settles a touch after. */
 const ROLL_BASE_MS = 450;
 const ROLL_STAGGER_MS = 90;
-
-/** Formats a signed modifier value for display (`+2` / `-1`). */
-const signed = (value: number): string => (value >= 0 ? `+${value}` : `${value}`);
 
 interface DiceTrayProps {
    content: DiceTrayContent;
@@ -421,404 +420,5 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
             />
          )}
       </div>
-   );
-}
-
-/**
- * A positioned per-die context menu on mobile, anchored at the finger. Mirrors the drawer's floating
- * menu: it measures its own rendered rect and clamps left/top inside the viewport (allowing for the
- * bottom safe area) before paint, so a die near an edge still opens fully on-screen. A transparent
- * full-screen catcher dismisses on an outside tap. Sits above the app-modal band so it clears the host
- * sheet.
- */
-function DieContextMenu({ die, position, makePenaltyLabel, makeNormalLabel, removeLabel, onToggle, onRemove, onClose }: {
-   die: DiceTrayDie;
-   position: Position;
-   makePenaltyLabel: string;
-   makeNormalLabel: string;
-   removeLabel: string;
-   onToggle: () => void;
-   onRemove: () => void;
-   onClose: () => void;
-}) {
-   const menuRef = useRef<HTMLDivElement>(null);
-   const [clamped, setClamped] = useState<{ left: number; top: number } | null>(null);
-
-   useLayoutEffect(() => {
-      if (!menuRef.current) return;
-      const rect = menuRef.current.getBoundingClientRect();
-      const safeBottom = readSafeAreaInsetBottom();
-      const maxLeft = window.innerWidth - rect.width;
-      const maxTop = window.innerHeight - rect.height - safeBottom;
-      setClamped({ left: Math.max(0, Math.min(position.x, maxLeft)), top: Math.max(0, Math.min(position.y, maxTop)) });
-   }, [position]);
-
-   // Before the clamp measures, anchor at the raw finger point (size is position-independent, so the
-   // pre-clamp rect is still accurate); the layout effect then nudges it fully on-screen.
-   const style: CSSProperties = { position: 'fixed', left: `${clamped ? clamped.left : position.x}px`, top: `${clamped ? clamped.top : position.y}px` };
-
-   return (
-      <>
-         <div className="fixed inset-0 z-[70]" onClick={onClose} />
-         <div ref={menuRef} style={style} className="z-[71] min-w-44 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg">
-            <div className="flex flex-col p-1">
-               <button
-                  type="button"
-                  onClick={onToggle}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm hover:bg-muted cursor-pointer"
-               >
-                  {die.negative ? <Plus className="h-5 w-5 shrink-0" /> : <Minus className="h-5 w-5 shrink-0" />}
-                  {die.negative ? makeNormalLabel : makePenaltyLabel}
-               </button>
-               <div className="my-1 h-px bg-border" />
-               <button
-                  type="button"
-                  onClick={onRemove}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-left text-sm text-destructive hover:bg-destructive/10 cursor-pointer"
-               >
-                  <Trash2 className="h-5 w-5 shrink-0" />
-                  {removeLabel}
-               </button>
-            </div>
-         </div>
-      </>
-   );
-}
-
-/**
- * One die in the tray. Desktop keeps its hover-gated penalty/remove buttons; mobile shows a clean face
- * and opens a context menu on long-press (touch has no hover), with a subtle press-down cue. The
- * long-press hook is touch-only, so it is inert on desktop; it is still gated to mobile anyway.
- */
-function DieCell({ die, face, editable, isMobile, penaltyLabel, removeLabel, stopDrag, onToggleNegative, onRemoveDie, onLongPress }: {
-   die: DiceTrayDie;
-   face: number | null;
-   editable: boolean;
-   isMobile: boolean;
-   penaltyLabel: string;
-   removeLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onToggleNegative: (id: string) => void;
-   onRemoveDie: (id: string) => void;
-   onLongPress: (id: string, position: Position) => void;
-}) {
-   const { isPressing, handlers } = useLongPress({ onLongPress: (pos) => onLongPress(die.id, pos) });
-   const touchHandlers = isMobile && editable ? handlers : undefined;
-
-   return (
-      <div
-         className={cn('group/die relative h-11 w-11', isMobile && 'h-13 w-13 transition-transform', isMobile && isPressing && 'scale-95')}
-         {...touchHandlers}
-      >
-         <DieShape sides={die.sides} value={face} negative={die.negative} />
-         {editable && !isMobile && (
-            <>
-               {/* Penalty toggle (top-left): flips the die negative so its value subtracts. Reveals on hover. */}
-               <button
-                  type="button"
-                  title={penaltyLabel}
-                  aria-label={penaltyLabel}
-                  onPointerDown={stopDrag}
-                  onClick={() => onToggleNegative(die.id)}
-                  className="absolute -left-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-secondary text-secondary-foreground group-hover/die:flex cursor-pointer"
-               >
-                  {die.negative ? <Plus className="h-2.5 w-2.5" /> : <Minus className="h-2.5 w-2.5" />}
-               </button>
-               {/* Remove (top-right). */}
-               <button
-                  type="button"
-                  title={removeLabel}
-                  aria-label={removeLabel}
-                  onPointerDown={stopDrag}
-                  onClick={() => onRemoveDie(die.id)}
-                  className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground group-hover/die:flex cursor-pointer"
-               >
-                  <X className="h-2.5 w-2.5" />
-               </button>
-            </>
-         )}
-      </div>
-   );
-}
-
-/** One modifier row: a label (commit on blur) + a signed value stepper + remove. */
-function ModifierRow({
-   modifier,
-   placeholder,
-   removeLabel,
-   stopDrag,
-   onChangeValue,
-   onChangeLabel,
-   onRemove,
-   isMobile = false,
-}: {
-   modifier: DiceTrayModifier;
-   placeholder: string;
-   removeLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onChangeValue: (value: number) => void;
-   onChangeLabel: (label: string) => void;
-   onRemove: () => void;
-   isMobile?: boolean;
-}) {
-   const [label, setLabel] = useState(modifier.label ?? '');
-   const [synced, setSynced] = useState(modifier.label ?? '');
-   if ((modifier.label ?? '') !== synced) {
-      setSynced(modifier.label ?? '');
-      setLabel(modifier.label ?? '');
-   }
-   const commit = () => {
-      const trimmed = label.trim();
-      if (trimmed !== (modifier.label ?? '')) onChangeLabel(trimmed);
-   };
-
-   // The board host unmounts on a tab switch without a blur; flush the buffered label so it isn't lost.
-   useCommitOnUnmount(commit);
-
-   return (
-      <div className="flex items-center gap-1">
-         <input
-            type="text"
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-            onBlur={commit}
-            onPointerDown={stopDrag}
-            placeholder={placeholder}
-            className={cn(
-               'min-w-0 flex-1 rounded border border-border bg-transparent px-1.5 py-0.5 text-xs outline-none placeholder:text-muted-foreground/60',
-               isMobile && 'h-9 px-2 text-sm',
-            )}
-         />
-         <div className={cn('flex shrink-0 items-center gap-0.5 rounded border border-border px-1 py-0.5', isMobile && 'h-9 gap-1 px-1.5 py-0')}>
-            <StepButton onPointerDown={stopDrag} onClick={() => onChangeValue(modifier.value - 1)} isMobile={isMobile}><Minus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} /></StepButton>
-            <span className={cn('w-6 text-center font-mono text-xs tabular-nums', isMobile && 'w-8 text-sm')}>{signed(modifier.value)}</span>
-            <StepButton onPointerDown={stopDrag} onClick={() => onChangeValue(modifier.value + 1)} isMobile={isMobile}><Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} /></StepButton>
-         </div>
-         <button
-            type="button"
-            title={removeLabel}
-            aria-label={removeLabel}
-            onPointerDown={stopDrag}
-            onClick={onRemove}
-            className={cn(
-               'flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-destructive hover:text-destructive-foreground cursor-pointer',
-               isMobile && 'h-9 w-9',
-            )}
-         >
-            <X className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
-         </button>
-      </div>
-   );
-}
-
-/** A compact one-line summary of a past roll, e.g. `2d6 -1d8 +3` (dice grouped by sides + sign, then mods). */
-function summarizeRoll(entry: RollEntry): string {
-   const groups: { sides: number; negative: boolean; count: number }[] = [];
-   for (const die of entry.dice) {
-      const group = groups.find((g) => g.sides === die.sides && g.negative === !!die.negative);
-      if (group) group.count += 1;
-      else groups.push({ sides: die.sides, negative: !!die.negative, count: 1 });
-   }
-   const parts = [
-      ...groups.map((g) => `${g.negative ? '-' : ''}${g.count}d${g.sides}`),
-      ...entry.modifiers.map((m) => signed(m.value)),
-   ];
-   return parts.length > 0 ? parts.join(' ') : '—';
-}
-
-/**
- * The tucked roll history: a collapsed-by-default toggle that expands to a scrollable list of recent rolls
- * (newest first - result + relative time). Clicking an entry restores its setup (editable only); a clear
- * affordance empties the log. Reading the log is always allowed; restoring / clearing gate on `editable`.
- */
-function RollHistory({ entries, editable, label, emptyLabel, restoreLabel, clearLabel, stopDrag, onRestore, onClear, isMobile = false }: {
-   entries: RollEntry[];
-   editable: boolean;
-   label: string;
-   emptyLabel: string;
-   restoreLabel: string;
-   clearLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onRestore: (entry: RollEntry) => void;
-   onClear: () => void;
-   isMobile?: boolean;
-}) {
-   const [open, setOpen] = useState(false);
-   return (
-      <div className="shrink-0 border-t border-border">
-         <button
-            type="button"
-            onPointerDown={stopDrag}
-            onClick={() => setOpen((value) => !value)}
-            className={cn(
-               'flex w-full items-center justify-between px-2 py-1.5 text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground cursor-pointer',
-               isMobile && 'px-3 py-3 text-xs',
-            )}
-         >
-            <span className="flex items-center gap-1"><History className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />{label}{entries.length > 0 && ` (${entries.length})`}</span>
-            <ChevronDown className={cn('transition-transform', isMobile ? 'h-4 w-4' : 'h-3.5 w-3.5', open && 'rotate-180')} />
-         </button>
-         {open && (
-            <div className="max-h-40 overflow-y-auto px-2 pb-2">
-               {entries.length === 0 ? (
-                  <p className={cn('px-0.5 py-1 text-xs text-muted-foreground', isMobile && 'py-2 text-sm')}>{emptyLabel}</p>
-               ) : (
-                  <div className="flex flex-col gap-0.5">
-                     {entries.map((entry) => (
-                        <button
-                           key={entry.id}
-                           type="button"
-                           disabled={!editable}
-                           title={editable ? restoreLabel : undefined}
-                           onPointerDown={stopDrag}
-                           onClick={() => onRestore(entry)}
-                           className={cn('flex items-start justify-between gap-2 rounded px-1.5 py-1 text-left', isMobile && 'px-2 py-2.5', editable ? 'hover:bg-muted cursor-pointer' : 'cursor-default')}
-                        >
-                           {/* The summary wraps (a big roll stays fully readable); the timestamp aligns to its first line. */}
-                           <span className={cn('min-w-0 flex-1 break-words font-mono text-xs', isMobile && 'text-sm')}>
-                              <span className="text-muted-foreground">{summarizeRoll(entry)} = </span>
-                              <span className="font-bold tabular-nums">{entry.total}</span>
-                           </span>
-                           <span className={cn('shrink-0 text-[0.6rem] text-muted-foreground', isMobile && 'text-xs')}>{formatRelativeItemDate(entry.at)}</span>
-                        </button>
-                     ))}
-                  </div>
-               )}
-               {editable && entries.length > 0 && (
-                  <button
-                     type="button"
-                     onPointerDown={stopDrag}
-                     onClick={onClear}
-                     className={cn(
-                        'mt-1 flex w-full items-center justify-center gap-1 rounded py-1 text-[0.65rem] text-muted-foreground hover:text-destructive cursor-pointer',
-                        isMobile && 'py-2.5 text-xs',
-                     )}
-                  >
-                     <Trash2 className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />{clearLabel}
-                  </button>
-               )}
-            </div>
-         )}
-      </div>
-   );
-}
-
-/**
- * The tucked dice-command entry: a small icon that opens a field where a formula (e.g. `1d6+2d12+4`)
- * REPLACES the tray. `onApply` returns false on a bad parse, which surfaces a subtle inline error and
- * leaves the tray untouched (the popover stays open so the typo can be fixed).
- */
-function CommandPopover({ triggerLabel, placeholder, applyLabel, errorLabel, stopDrag, onApply, isMobile = false }: {
-   triggerLabel: string;
-   placeholder: string;
-   applyLabel: string;
-   errorLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onApply: (raw: string) => boolean;
-   isMobile?: boolean;
-}) {
-   const [open, setOpen] = useState(false);
-   const [value, setValue] = useState('');
-   const [error, setError] = useState(false);
-   const submit = () => {
-      if (onApply(value.trim())) {
-         setValue('');
-         setError(false);
-         setOpen(false);
-      } else {
-         setError(true);
-      }
-   };
-   return (
-      <Popover open={open} onOpenChange={(next) => { setOpen(next); if (!next) setError(false); }}>
-         <PopoverTrigger asChild>
-            <button
-               type="button"
-               title={triggerLabel}
-               aria-label={triggerLabel}
-               onPointerDown={stopDrag}
-               className={cn('flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer', isMobile && 'h-13 w-13')}
-            >
-               <Terminal className={isMobile ? 'h-6 w-6' : 'h-5 w-5'} />
-            </button>
-         </PopoverTrigger>
-         <PopoverContent align="start" sideOffset={6} className="z-[70] w-64 p-2">
-            <div className="flex items-center gap-1">
-               <input
-                  type="text"
-                  autoFocus
-                  value={value}
-                  onChange={(event) => { setValue(event.target.value); setError(false); }}
-                  onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); submit(); } }}
-                  onPointerDown={stopDrag}
-                  placeholder={placeholder}
-                  className={cn(
-                     'min-w-0 flex-1 rounded border bg-transparent px-1.5 py-1 font-mono text-xs outline-none placeholder:font-sans placeholder:text-muted-foreground/60',
-                     isMobile && 'py-2 text-sm',
-                     error ? 'border-destructive' : 'border-border',
-                  )}
-               />
-               <button
-                  type="button"
-                  title={applyLabel}
-                  aria-label={applyLabel}
-                  onPointerDown={stopDrag}
-                  onClick={submit}
-                  className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer', isMobile && 'h-9 w-9')}
-               >
-                  <CornerDownLeft className={isMobile ? 'h-5 w-5' : 'h-4 w-4'} />
-               </button>
-            </div>
-            {error && <p className="mt-1 px-0.5 text-[0.65rem] text-destructive">{errorLabel}</p>}
-         </PopoverContent>
-      </Popover>
-   );
-}
-
-/** A number field for adding a die with any side count (>= 2): the by-hand path to a weird die. */
-function CustomSidesAdder({ placeholder, addLabel, onAdd, isMobile = false }: { placeholder: string; addLabel: string; onAdd: (sides: number) => void; isMobile?: boolean }) {
-   const [raw, setRaw] = useState('');
-   const submit = () => {
-      const sides = parseInt(raw, 10);
-      if (Number.isFinite(sides) && sides >= 2) {
-         onAdd(sides);
-         setRaw('');
-      }
-   };
-   return (
-      <div className="mt-2 flex items-center gap-1 border-t border-border pt-2">
-         <span className={cn('font-mono text-xs text-muted-foreground', isMobile && 'text-sm')}>d</span>
-         <input
-            type="number"
-            min={2}
-            value={raw}
-            onChange={(event) => setRaw(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); submit(); } }}
-            placeholder={placeholder}
-            className={cn('w-16 rounded border border-border bg-transparent px-1.5 py-0.5 text-xs outline-none placeholder:text-muted-foreground/60', isMobile && 'w-20 px-2 py-1.5 text-sm')}
-         />
-         <button
-            type="button"
-            title={addLabel}
-            aria-label={addLabel}
-            onClick={submit}
-            className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer', isMobile && 'h-9 w-9')}
-         >
-            <Plus className={isMobile ? 'h-5 w-5' : 'h-4 w-4'} />
-         </button>
-      </div>
-   );
-}
-
-function StepButton({ onClick, onPointerDown, children, isMobile = false }: { onClick: () => void; onPointerDown: (event: ReactPointerEvent) => void; children: React.ReactNode; isMobile?: boolean }) {
-   return (
-      <button
-         type="button"
-         onPointerDown={onPointerDown}
-         onClick={onClick}
-         className={cn('flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer', isMobile && 'h-8 w-8')}
-      >
-         {children}
-      </button>
    );
 }
