@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Library Imports --
@@ -13,12 +13,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { QUICK_PICK, appendRollEntry, migrateDiceTrayContent, rollDiceTray } from '@/lib/dice/diceTray';
+import { QUICK_PICK, migrateDiceTrayContent } from '@/lib/dice/diceTray';
 import { parseDiceCommand } from '@/lib/dice/diceCommand';
 import { signed } from '@/lib/dice/diceFormat';
 
 // -- Hook Imports --
 import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
+import { useDiceTrayRoll } from '@/hooks/dice/useDiceTrayRoll';
 
 // -- Component Imports --
 import { DieShape } from './DieShape';
@@ -44,10 +45,6 @@ import type { Position } from '@/hooks/mobile/useLongPress';
  * (the board canvas needs it; a fixed-size host does not). Every control stops pointer propagation -
  * harmless off-canvas, needed on the board so editing never starts a drag.
  */
-
-/** How long (ms) the first die shuffles before settling; each later die settles a touch after. */
-const ROLL_BASE_MS = 450;
-const ROLL_STAGGER_MS = 90;
 
 interface DiceTrayProps {
    content: DiceTrayContent;
@@ -98,10 +95,19 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
    const [menuPos, setMenuPos] = useState<Position | null>(null);
    const openDieMenu = (id: string, position: Position) => { setMenuDieId(id); setMenuPos(position); };
    const closeDieMenu = () => { setMenuDieId(null); setMenuPos(null); };
-   // The cycling faces during a roll reveal; null when resting (then faces come from lastRoll).
-   const [liveFaces, setLiveFaces] = useState<Record<string, number> | null>(null);
-   const rafRef = useRef<number | null>(null);
-   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+
+   // The roll itself: the staggered reveal, the settled cache write, and the external roll handshake.
+   // `onRollStart` dismisses an open per-die menu, so an externally requested roll dismisses it too.
+   const { roll, faceOf, displayTotal, displayModifiers } = useDiceTrayRoll({
+      tray,
+      dice,
+      modifiers,
+      modifierTotal,
+      onCacheRoll,
+      onRollStart: closeDieMenu,
+      pendingRoll,
+      onPendingRollHandled,
+   });
 
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
 
@@ -138,24 +144,6 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
    const setModifierLabel = (id: string, label: string) =>
       onChange({ ...tray, modifiers: modifiers.map((m) => (m.id === id ? { ...m, label } : m)) });
 
-   // ==================
-   //  Roll + animated reveal
-   // ==================
-   const settle = (faces: Record<string, number>, breakdown: { label?: string; value: number }[], total: number) => {
-      setLiveFaces(null); // rest from the cached lastRoll, not stale animation state
-      // Record the roll in history alongside the live lastRoll - both via the non-undoable cache path, so a
-      // roll never becomes undo steps. The entry is self-contained (config + faces in dice order + total).
-      const entry: RollEntry = {
-         id: cuid(),
-         at: Date.now(),
-         dice: dice.map((die) => (die.negative ? { sides: die.sides, negative: true } : { sides: die.sides })),
-         modifiers: breakdown,
-         faces: dice.map((die) => faces[die.id] ?? 0),
-         total,
-      };
-      onCacheRoll({ ...tray, lastRoll: { faces, modifiers: breakdown, total }, history: appendRollEntry(tray.history ?? [], entry) });
-   };
-
    // Clicking a history entry RESTORES its setup (dice + modifiers, fresh ids) into the tray - a normal,
    // undoable-on-board edit. It loads the configuration, not the past random result.
    const restoreEntry = (entry: RollEntry) => onChange({
@@ -166,63 +154,6 @@ export function DiceTray({ content, editable, onChange, onCacheRoll, growToFill 
 
    // Clearing history is roll-cache management, not a config edit - non-undoable, like the appends.
    const clearHistory = () => onCacheRoll({ ...tray, history: [] });
-
-   const roll = () => {
-      closeDieMenu(); // rolling dismisses an open per-die menu (no-op on desktop)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      const result = rollDiceTray(dice, modifiers);
-      const finalFaces: Record<string, number> = {};
-      for (const face of result.faces) finalFaces[face.id] = face.value;
-
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (dice.length === 0 || reduceMotion) {
-         settle(finalFaces, result.modifiers, result.total);
-         return;
-      }
-
-      const start = performance.now();
-      const settleAt = new Map(dice.map((die, index) => [die.id, ROLL_BASE_MS + index * ROLL_STAGGER_MS]));
-      const tick = (now: number) => {
-         const elapsed = now - start;
-         const faces: Record<string, number> = {};
-         let allDone = true;
-         for (const die of dice) {
-            if (elapsed >= (settleAt.get(die.id) ?? 0)) {
-               faces[die.id] = finalFaces[die.id];
-            } else {
-               faces[die.id] = 1 + Math.floor(Math.random() * die.sides);
-               allDone = false;
-            }
-         }
-         setLiveFaces(faces);
-         if (allDone) {
-            rafRef.current = null;
-            settle(finalFaces, result.modifiers, result.total);
-         } else {
-            rafRef.current = requestAnimationFrame(tick);
-         }
-      };
-      rafRef.current = requestAnimationFrame(tick);
-   };
-
-   // Honor an external roll request (the app-wide tray's palette command). A ref keeps the latest `roll`
-   // closure without pulling it into the roll effect's deps, so the one-shot fires only when `pendingRoll`
-   // flips - freshly mounted with a request, or flipped while already open - and rolls the current setup
-   // once. The sync effect is declared first, so the ref is fresh before the roll effect reads it.
-   const rollRef = useRef(roll);
-   useEffect(() => { rollRef.current = roll; });
-   useEffect(() => {
-      if (!pendingRoll) return;
-      rollRef.current();
-      onPendingRollHandled?.();
-   }, [pendingRoll, onPendingRollHandled]);
-
-   // Resting faces/breakdown come from the cached lastRoll; during a roll, from the live state.
-   const faceOf = (id: string): number | null => (liveFaces ? liveFaces[id] ?? null : tray.lastRoll?.faces[id] ?? null);
-   const displayTotal = liveFaces
-      ? dice.reduce((sum, die) => { const v = liveFaces[die.id] ?? 0; return sum + (die.negative ? -v : v); }, 0) + modifierTotal
-      : tray.lastRoll?.total ?? null;
-   const displayModifiers = liveFaces ? modifiers.map((m) => ({ label: m.label, value: m.value })) : tray.lastRoll?.modifiers ?? [];
 
    // The die whose mobile context menu is open (mobile only); undefined once it is removed or dismissed.
    const menuDie = menuDieId ? dice.find((die) => die.id === menuDieId) : undefined;
