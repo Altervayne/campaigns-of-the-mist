@@ -12,6 +12,7 @@ import { useCharacterSheetUndoRedo } from '@/hooks/character-sheet/useCharacterS
 import { useCardDialogState } from '@/hooks/character-sheet/useCardDialogState';
 import { importBoardView, importNoteView, usePrefetchTabChunks } from '@/hooks/character-sheet/useLazyTabViews';
 import { useNavigatorShortcut } from '@/hooks/character-sheet/useNavigatorShortcut';
+import { useSheetChromeState } from '@/hooks/character-sheet/useSheetChromeState';
 
 // -- Other Library Imports --
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -55,8 +56,6 @@ import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
 import { useIsBootHydrating } from '@/lib/character/characterPersistence';
 import { useActiveSheetZoom, useTabManagerStore } from '@/lib/character/tabManagerStore';
-import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
-import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useCommandPaletteActions } from '@/hooks/useCommandPaletteActions';
 import { useNoteMarkdownIO } from '@/hooks/useNoteMarkdownIO';
 
@@ -84,7 +83,6 @@ function DesktopWorkspacePage() {
    const activeNote = useActiveNoteInstance();
    const isBootHydrating = useIsBootHydrating();
    const { updateCharacterName, addStatus, addStoryTag, addPortrait, addJournal } = useCharacterActions();
-   const isCompactDrawer = useAppSettingsStore((state) => state.isCompactDrawer);
 
    // Per-tab sheet zoom: a plain content scale, remembered per character tab. The scroll `<main>`
    // hosts the Ctrl/Cmd+wheel gesture; the control + shortcuts drive it (character tabs only).
@@ -95,23 +93,22 @@ function DesktopWorkspacePage() {
    // ==================
    //  General App Stores
    // ==================
-   const isTrackersAlwaysEditable = useAppSettingsStore((state) => state.isTrackersAlwaysEditable)
-   const isDrawerOpen = useAppGeneralStateStore((state) => state.isDrawerOpen);
-   const isDrawerExpanded = useAppGeneralStateStore((state) => state.isDrawerExpanded);
-   const isSidebarCollapsed = useAppSettingsStore((state) => state.isSidebarCollapsed);
-   const navigatorOpen = useAppSettingsStore((state) => state.navigatorOpen);
-   const isEditing = useAppGeneralStateStore((state) => state.isEditing);
-   const isSettingsOpen = useAppGeneralStateStore((state) => state.isSettingsOpen);
-   const { setDrawerOpen, setIsEditing, setSettingsOpen, setSettingsInitialSection } = useAppGeneralStateActions();
-   const { toggleSidebarCollapsed, toggleNavigator } = useAppSettingsActions();
-
-   // The three sidebar doors all open the one hub, each deep-linked to its section (Settings lands on the default).
-   const openSettingsHub = (section: 'general' | 'whatsNew' | 'learn') => {
-      setSettingsInitialSection(section === 'general' ? null : section);
-      setSettingsOpen(true);
-   };
-
-   const areTrackersEditable = isEditing || isTrackersAlwaysEditable;
+   const {
+      isCompactDrawer,
+      isDrawerOpen,
+      isDrawerExpanded,
+      isSidebarCollapsed,
+      navigatorOpen,
+      isEditing,
+      isSettingsOpen,
+      setDrawerOpen,
+      setIsEditing,
+      setSettingsOpen,
+      toggleSidebarCollapsed,
+      toggleNavigator,
+      openSettingsHub,
+      areTrackersEditable,
+   } = useSheetChromeState();
 
    useNavigatorShortcut(toggleNavigator);
 

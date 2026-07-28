@@ -3,7 +3,7 @@
 // -- Library Imports --
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 // -- Component Imports --
 import WorkspacePage from './WorkspacePage';
@@ -39,6 +39,9 @@ const mocks = vi.hoisted(() => {
       character: null as { id: string; name: string; game: string } | null,
       activeBoard: null as object | null,
       activeNote: null as object | null,
+      // Renders of the shell, counted from the sidebar mock (an unmemoized direct child of the shell, so
+      // it renders once per shell render). The chrome-subscription cases below read it.
+      shellRenders: 0,
       commits,
       commitFor: (id: string) => {
          const known = commits.get(id);
@@ -148,9 +151,13 @@ vi.mock('@/components/organisms/TrackersSection', () => ({ TrackersSection: () =
 vi.mock('@/components/organisms/CardsSection', () => ({ CardsSection: () => <div data-testid="cards-section" /> }));
 vi.mock('@/components/organisms/SheetMainDropZone', () => ({ SheetMainDropZone: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 
-// The sidebar records the `activeWindow` it is handed, which is the second copy of the precedence chain.
+// The sidebar records the `activeWindow` it is handed, which is the second copy of the precedence chain,
+// and doubles as the shell's render probe.
 vi.mock('@/components/organisms/SidebarMenu', () => ({
-   SidebarMenu: ({ activeWindow }: { activeWindow: string }) => <div data-testid="sidebar" data-active-window={activeWindow} />,
+   SidebarMenu: ({ activeWindow }: { activeWindow: string }) => {
+      mocks.shellRenders += 1;
+      return <div data-testid="sidebar" data-active-window={activeWindow} />;
+   },
 }));
 
 // The remaining shell chrome: mounted on every render, irrelevant to the switch.
@@ -190,6 +197,7 @@ const typeName = (value: string) =>
 beforeEach(() => {
    setSurface({});
    mocks.commits.clear();
+   mocks.shellRenders = 0;
    useAppGeneralStateStore.setState({ isDrawerOpen: false, isDrawerExpanded: false, isEditing: false, isSettingsOpen: false });
    useAppSettingsStore.setState({ isSidebarCollapsed: false, navigatorOpen: false, isCompactDrawer: false, isTrackersAlwaysEditable: false });
 });
@@ -280,5 +288,43 @@ describe('WorkspacePage name flush across a switch', () => {
       rerender(<WorkspacePage />);
 
       expect(mocks.commitFor('char-a')).not.toHaveBeenCalled();
+   });
+});
+
+/*
+ * Pins the shell's chrome subscriptions to one selector per value. Widening them - a selector returning an
+ * object, or the whole store state - fails nothing and lints clean; it just re-renders the entire shell on
+ * every unrelated settings write, which is felt only as jank mid-drag. The two negative cases below are the
+ * only thing that catches it; the positive case proves the probe actually counts.
+ */
+describe('WorkspacePage chrome subscriptions', () => {
+   const renderShell = () => {
+      setSurface({ char: character('char-a', 'Alice') });
+      render(<WorkspacePage />);
+      return mocks.shellRenders;
+   };
+
+   it('does not re-render on an app-settings write the shell does not read', () => {
+      const before = renderShell();
+
+      act(() => { useAppSettingsStore.setState({ layersPanelOpen: true, isNoteOutlineOpen: true }); });
+
+      expect(mocks.shellRenders).toBe(before);
+   });
+
+   it('does not re-render on a general-state write the shell does not read', () => {
+      const before = renderShell();
+
+      act(() => { useAppGeneralStateStore.setState({ isDrawerReceded: true, lastModifiedStore: 'board' }); });
+
+      expect(mocks.shellRenders).toBe(before);
+   });
+
+   it('re-renders once on a chrome write the shell does read', () => {
+      const before = renderShell();
+
+      act(() => { useAppSettingsStore.setState({ isSidebarCollapsed: true }); });
+
+      expect(mocks.shellRenders).toBe(before + 1);
    });
 });
