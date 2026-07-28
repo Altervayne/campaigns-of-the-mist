@@ -88,4 +88,16 @@ export default defineConfig([
       'max-lines': 'off',
     },
   },
+  // Same guard for the decomposed JournalItem: its section leaves and primitives stay small. Scoped to the
+  // journal output only - the other board items are not decomposed yet and are deliberately not covered.
+  // Its extracted hooks live under `src/hooks/board/**`, already guarded by the board block above.
+  {
+    files: [
+      'src/components/organisms/board/items/journal/**/*.{ts,tsx}',
+      'src/components/organisms/board/items/JournalItem.tsx',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
 ])

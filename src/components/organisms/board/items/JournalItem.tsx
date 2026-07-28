@@ -1,28 +1,20 @@
 // -- React Imports --
-import { useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useMemo, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
-
-// -- Library Imports --
-import cuid from 'cuid';
-
-// -- Icon Imports --
-import { Bookmark, BookmarkMinus, BookMarked, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
 
 // -- Utils Imports --
-import { migrateJournalContent, orderedBookmarkTabs, withPageInserted, withPagesReordered, withPageRemoved } from '@/lib/board/journalContent';
+import { migrateJournalContent, orderedBookmarkTabs } from '@/lib/board/journalContent';
 
 // -- Component Imports --
-import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { BookmarkListRow } from './journal/BookmarkListRow';
-import { BookmarkTab } from './journal/BookmarkTab';
-import { JournalControlButton } from './journal/JournalControlButton';
-import { JournalTitle } from './journal/JournalTitle';
-import { PagesReorderPopover } from './journal/PagesReorderPopover';
+import { BookmarkTabs } from './journal/BookmarkTabs';
+import { JournalNavBar } from './journal/JournalNavBar';
+import { JournalPageBody } from './journal/JournalPageBody';
+import { JournalTitleBar } from './journal/JournalTitleBar';
+import { JournalToolbarActions } from './journal/JournalToolbarActions';
 
 // -- Hook Imports --
 import { useBoardMentionMint } from '@/hooks/board/useBoardMentionMint';
+import { useJournalActions } from '@/hooks/board/useJournalActions';
 import { useJournalPageBuffer } from '@/hooks/board/useJournalPageBuffer';
 import { useJournalPageIndex } from '@/hooks/board/useJournalPageIndex';
 import { useJournalTitleBuffer } from '@/hooks/board/useJournalTitleBuffer';
@@ -79,7 +71,6 @@ interface JournalItemProps {
 }
 
 export function JournalItem({ item, content, isSelected, isEditing, autoFocusEditor = false, toolbarSlot, sideSlot, toolbarControlClassName, bookmarkMode = 'side-tabs', onMentionClick, onContentChange, onRequestSelect }: JournalItemProps) {
-   const { t } = useTranslation();
    // A tapped `{mention}` mints a board-native tracker beside the journal (create-only, board scope); a host
    // that supplies its own handler (the sheet journal → create-or-raise on the character) overrides it.
    const boardMint = useBoardMentionMint(item);
@@ -103,280 +94,78 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
 
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
 
-   const goPrev = () => { commit(); setIndex(Math.max(0, pageIndex - 1)); };
-   const goNext = () => { commit(); setIndex(Math.min(pages.length - 1, pageIndex + 1)); };
-
-   // Insert a blank page at `at` (clamped), keeping the current edit, and jump to the new page. Page ids are
-   // stable and bookmarks reference pageId, so inserting never strands a tab. Append (`at = length`) is the
-   // toolbar's Add-page; the bottom bar inserts immediately before/after the current page.
-   const insertPage = (at: number) => {
-      const kept = pages.map((page) => (page.id === activePage.id ? { ...page, text } : page));
-      const { journal: next, pageId } = withPageInserted({ ...journal, pages: kept }, at);
-      commitJournal(next);
-      setIndex(next.pages.findIndex((page) => page.id === pageId));
-   };
-   const addPage = () => insertPage(pages.length);
-
-   const removePage = () => {
-      const result = withPageRemoved({ ...journal, pages }, activePage.id);
-      commitJournal(result);
-      setIndex(Math.min(pageIndex, result.pages.length - 1));
-   };
-
-   // Drag-reorder pages from the overview popover. Page ids stay stable (bookmarks reference pageId, so a
-   // reorder never strands a tab), the current edit is kept, and the view follows the current page BY ID -
-   // it re-derives the active page's new index so the reader lands on the same page, not the same slot.
-   const reorderPages = (activeId: string, overId: string) => {
-      const kept = pages.map((page) => (page.id === activePage.id ? { ...page, text } : page));
-      const next = withPagesReordered({ ...journal, pages: kept }, activeId, overId);
-      commitJournal(next);
-      setIndex(next.pages.findIndex((page) => page.id === activePage.id));
-   };
-
-   // The page indicator's current number is click-to-edit: a typed page (1..M) jumps there on Enter/blur,
-   // anything else is ignored. Ephemeral view state, so it lives here, not on the journal aggregate.
-   const [pageNumEditing, setPageNumEditing] = useState(false);
-   const [pageNumText, setPageNumText] = useState('');
-   const startEditPageNum = () => { setPageNumText(String(pageIndex + 1)); setPageNumEditing(true); };
-   const commitPageNum = () => {
-      const target = Number.parseInt(pageNumText, 10);
-      if (Number.isFinite(target) && target >= 1 && target <= pages.length) { commit(); setIndex(target - 1); }
-      setPageNumEditing(false);
-   };
-
-   const isBookmarked = bookmarks.some((bookmark) => bookmark.pageId === activePage.id);
-   const toggleBookmark = () => {
-      const next = isBookmarked
-         ? bookmarks.filter((bookmark) => bookmark.pageId !== activePage.id)
-         : [...bookmarks, { id: cuid(), pageId: activePage.id, label: '' }];
-      commitJournal({ ...journal, bookmarks: next });
-   };
-   const removeBookmark = (id: string) => commitJournal({ ...journal, bookmarks: bookmarks.filter((bookmark) => bookmark.id !== id) });
-   const setBookmarkLabel = (id: string, label: string) =>
-      commitJournal({ ...journal, bookmarks: bookmarks.map((bookmark) => (bookmark.id === id ? { ...bookmark, label } : bookmark)) });
-
-   const jumpToPage = (pageId: string) => {
-      const target = pages.findIndex((page) => page.id === pageId);
-      if (target < 0) return;
-      commit();
-      setIndex(target);
-   };
+   const { goPrev, goNext, insertPage, addPage, removePage, reorderPages, goToPageNumber, isBookmarked, toggleBookmark, removeBookmark, setBookmarkLabel, jumpToPage } =
+      useJournalActions({ journal, pages, activePage, bookmarks, pageIndex, setIndex, text, commit, commitJournal });
 
    const tabs = orderedBookmarkTabs(pages, bookmarks);
 
    return (
       <div className="relative flex h-full w-full flex-col bg-paper-background text-paper-foreground">
-         {/* Title bar (top): the notebook's multiline markdown heading - an auto-growing textarea while
-             editing (Enter adds a line, never commits), inline-rendered markdown at rest (wraps, clamped
-             to a few lines so a long title can't eat the journal). A body click on it falls through to select. */}
-         <div className="flex shrink-0 items-start border-b border-paper-border bg-paper-primary text-paper-primary-foreground px-1.5 py-1">
-            {isEditing ? (
-               <textarea
-                  ref={titleAreaRef}
-                  value={titleText}
-                  onChange={(event) => setTitleText(event.target.value)}
-                  onFocus={onRequestSelect}
-                  onBlur={commitTitle}
-                  onPointerDown={(event) => event.stopPropagation()}
-                  placeholder={t('BoardView.journalTitlePlaceholder')}
-                  rows={1}
-                  // Editing -> the board's wheel listener skips this so the wheel scrolls the title, not zoom.
-                  data-board-wheel-scroll
-                  className="max-h-24 w-full resize-none overflow-y-auto bg-transparent text-sm font-semibold leading-snug outline-none placeholder:text-paper-primary-foreground/50 cursor-text"
-               />
-            ) : (
-               <div className="line-clamp-3 w-full whitespace-pre-wrap break-words text-sm font-semibold leading-snug">
-                  {journal.title.trim()
-                     ? <JournalTitle content={journal.title} />
-                     : <span className="text-paper-primary-foreground/50">{t('BoardView.journalTitlePlaceholder')}</span>}
-               </div>
-            )}
-         </div>
+         <JournalTitleBar
+            isEditing={isEditing}
+            storedTitle={journal.title}
+            titleText={titleText}
+            titleAreaRef={titleAreaRef}
+            onTitleChange={setTitleText}
+            onCommitTitle={commitTitle}
+            onRequestSelect={onRequestSelect}
+         />
 
          {/* Structural actions live in the selection toolbar. */}
          {isSelected && toolbarSlot && createPortal(
-            <>
-               <JournalControlButton title={t('BoardView.addPage')} onPointerDown={stopDrag} onClick={addPage} toolbarClassName={toolbarControlClassName} appChrome>
-                  <Plus className="h-4 w-4" />
-               </JournalControlButton>
-               <JournalControlButton
-                  title={t('BoardView.removePage')}
-                  disabled={pages.length === 1 && (pages[0]?.text ?? '') === '' && text === ''}
-                  onPointerDown={stopDrag}
-                  onClick={removePage}
-                  toolbarClassName={toolbarControlClassName}
-                  appChrome
-               >
-                  <Minus className="h-4 w-4" />
-               </JournalControlButton>
-               <JournalControlButton title={isBookmarked ? t('BoardView.journalRemoveBookmark') : t('BoardView.journalBookmark')} onPointerDown={stopDrag} onClick={toggleBookmark} toolbarClassName={toolbarControlClassName} appChrome>
-                  {isBookmarked ? <BookmarkMinus className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-               </JournalControlButton>
-            </>,
+            <JournalToolbarActions
+               isBookmarked={isBookmarked}
+               removeDisabled={pages.length === 1 && (pages[0]?.text ?? '') === '' && text === ''}
+               toolbarControlClassName={toolbarControlClassName}
+               stopDrag={stopDrag}
+               onAddPage={addPage}
+               onRemovePage={removePage}
+               onToggleBookmark={toggleBookmark}
+            />,
             toolbarSlot,
          )}
 
-         {/* Editing -> edit the page's raw Markdown; otherwise -> render it (inheriting the theme color).
-             The rendered block is pointer-transparent, so a body click falls through to select (then edit). */}
-         {isEditing ? (
-            <textarea
-               ref={pageAreaRef}
-               value={text}
-               onChange={(event) => setText(event.target.value)}
-               onFocus={onRequestSelect}
-               onBlur={commit}
-               onPointerDown={(event) => event.stopPropagation()}
-               placeholder={t('BoardView.journalPlaceholder')}
-               // Editing -> the board's wheel listener skips this so the wheel scrolls the page, not zoom.
-               data-board-wheel-scroll
-               className="min-h-0 flex-1 resize-none border-0 bg-transparent p-2 text-sm leading-snug outline-none placeholder:text-muted-foreground/50 cursor-text"
-            />
-         ) : (
-            // Clip at rest (no scrollbar on a resting page); the textarea scrolls while editing.
-            <div className="min-h-0 flex-1 overflow-hidden p-2">
-               {text.trim() ? <NoteMarkdown content={text} onMentionClick={handleMentionClick} /> : null}
-            </div>
-         )}
+         <JournalPageBody
+            isEditing={isEditing}
+            text={text}
+            pageAreaRef={pageAreaRef}
+            onTextChange={setText}
+            onCommit={commit}
+            onRequestSelect={onRequestSelect}
+            onMentionClick={handleMentionClick}
+         />
 
-         {/* Page navigation (bottom): the prev/next arrows sit at the far edges; a middle cluster carries the
-             insert-before/after glyphs (edit-only) around the click-to-edit page number. */}
-         <div className="flex shrink-0 items-center justify-between gap-0.5 border-t border-paper-border bg-paper-primary text-paper-primary-foreground px-1.5 py-1 text-xs">
-            <JournalControlButton title={t('BoardView.prevPage')} disabled={pageIndex === 0} onPointerDown={stopDrag} onClick={goPrev}>
-               <ChevronLeft className="h-3.5 w-3.5" />
-            </JournalControlButton>
-
-            <div className="flex items-center gap-0.5">
-               {isSelected && (
-                  <JournalControlButton title={t('BoardView.journalInsertPageBefore')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex)}>
-                     <Plus className="h-3 w-3" />
-                  </JournalControlButton>
-               )}
-               {/* The current page number is click-to-edit; the total stays static. Both numbers carry the
-                   same width / centering / weight so `N / M` reads as a balanced pair. */}
-               {pageNumEditing ? (
-                  <input
-                     type="text"
-                     inputMode="numeric"
-                     value={pageNumText}
-                     autoFocus
-                     onChange={(event) => setPageNumText(event.target.value.replace(/[^0-9]/g, ''))}
-                     onFocus={(event) => event.target.select()}
-                     onKeyDown={(event) => { if (event.key === 'Enter') commitPageNum(); else if (event.key === 'Escape') setPageNumEditing(false); }}
-                     onBlur={commitPageNum}
-                     onPointerDown={stopDrag}
-                     aria-label={t('BoardView.journalGoToPage')}
-                     // The editable number reads as a small parchment inset on the header band (the current-page indicator).
-                     className="w-7 rounded bg-paper-background px-1 text-center tabular-nums text-paper-foreground outline-none"
-                  />
-               ) : (
-                  <button
-                     type="button"
-                     title={t('BoardView.journalGoToPage')}
-                     aria-label={t('BoardView.journalGoToPage')}
-                     onPointerDown={stopDrag}
-                     onClick={startEditPageNum}
-                     className="min-w-7 rounded px-1 text-center tabular-nums text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer"
-                  >
-                     {pageIndex + 1}
-                  </button>
-               )}
-               <span className="text-paper-primary-foreground/70">/</span>
-               <span className="min-w-7 px-1 text-center tabular-nums text-paper-primary-foreground/80">{pages.length}</span>
-               {isSelected && (
-                  <JournalControlButton title={t('BoardView.journalInsertPageAfter')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex + 1)}>
-                     <Plus className="h-3 w-3" />
-                  </JournalControlButton>
-               )}
-            </div>
-
-            <div className="flex items-center gap-0.5">
-               {/* Pages overview (edit-only): a body-portaled popover listing every page (number + a first-line
-                   snippet) that drags to reorder. Reordering shuffles the pages array; page ids stay stable so
-                   bookmarks never strand and the reader follows the current page by id. */}
-               {isSelected && (
-                  <PagesReorderPopover
-                     pages={pages}
-                     activePageId={activePage.id}
-                     triggerTitle={t('BoardView.journalReorderPages')}
-                     pageLabel={(n) => t('BoardView.journalPageLabel', { number: n })}
-                     emptyPageLabel={t('BoardView.journalEmptyPage')}
-                     reorderLabel={t('BoardView.journalReorderPages')}
-                     stopDrag={stopDrag}
-                     onReorder={reorderPages}
-                     onJump={jumpToPage}
-                  />
-               )}
-               {/* Popover-mode (the sheet) puts the bookmark LIST in the always-visible nav row - the side
-                   tabs are a reading affordance, so their replacement stays visible too. A body-portaled
-                   popover floats above flex-wrap neighbours (no z-fighting). Always clickable, so the empty
-                   state is reachable. */}
-               {bookmarkMode === 'popover' && (
-                  <Popover>
-                     <PopoverTrigger asChild>
-                        <button
-                           type="button"
-                           title={t('BoardView.journalBookmarks')}
-                           aria-label={t('BoardView.journalBookmarks')}
-                           onPointerDown={stopDrag}
-                           className="flex items-center justify-center rounded p-0.5 text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer"
-                        >
-                           <BookMarked className="h-3.5 w-3.5" />
-                        </button>
-                     </PopoverTrigger>
-                     <PopoverContent align="end" className="w-60 p-1.5" onOpenAutoFocus={(event) => event.preventDefault()}>
-                        {tabs.length === 0 ? (
-                           <div className="rounded-md border-2 border-dashed border-border bg-muted/50 px-3 py-4 text-center text-xs text-muted-foreground">
-                              {t('BoardView.journalNoBookmarks')}
-                           </div>
-                        ) : (
-                        <div className="flex flex-col gap-0.5">
-                           {tabs.map(({ bookmark, page }) => (
-                              <BookmarkListRow
-                                 key={bookmark.id}
-                                 label={bookmark.label}
-                                 pageNumber={page + 1}
-                                 active={page === pageIndex}
-                                 editable={isSelected}
-                                 placeholder={t('BoardView.journalBookmarkPlaceholder')}
-                                 removeLabel={t('BoardView.journalRemoveBookmark')}
-                                 onJump={() => jumpToPage(bookmark.pageId)}
-                                 onRemove={() => removeBookmark(bookmark.id)}
-                                 onLabelCommit={(value) => setBookmarkLabel(bookmark.id, value)}
-                              />
-                           ))}
-                        </div>
-                        )}
-                     </PopoverContent>
-                  </Popover>
-               )}
-               <JournalControlButton title={t('BoardView.nextPage')} disabled={pageIndex === pages.length - 1} onPointerDown={stopDrag} onClick={goNext}>
-                  <ChevronRight className="h-3.5 w-3.5" />
-               </JournalControlButton>
-            </div>
-         </div>
+         <JournalNavBar
+            pages={pages}
+            activePageId={activePage.id}
+            pageIndex={pageIndex}
+            isSelected={isSelected}
+            bookmarkMode={bookmarkMode}
+            tabs={tabs}
+            stopDrag={stopDrag}
+            onPrev={goPrev}
+            onNext={goNext}
+            onInsertPage={insertPage}
+            onGoToPageNumber={goToPageNumber}
+            onReorderPages={reorderPages}
+            onJumpToPage={jumpToPage}
+            onRemoveBookmark={removeBookmark}
+            onSetBookmarkLabel={setBookmarkLabel}
+         />
 
          {/* Bookmark side tabs (board default): portaled into the box's non-clipped side slot so they
-             protrude past the right edge (the body keeps clipping its text). Still body-scaled + in page
-             order. The wrapper stops the pointer so a tab miss never starts a canvas pan. The sheet uses
+             protrude past the right edge (the body keeps clipping its text). The sheet uses
              `bookmarkMode='popover'` instead (the protruding tabs z-bury under flex-wrap neighbours). */}
          {bookmarkMode === 'side-tabs' && sideSlot && tabs.length > 0 && createPortal(
-            <div onPointerDown={stopDrag} className="mt-9 flex flex-col items-start gap-1">
-               {tabs.map(({ bookmark, page }) => (
-                  <BookmarkTab
-                     key={bookmark.id}
-                     label={bookmark.label}
-                     pageNumber={page + 1}
-                     active={page === pageIndex}
-                     editable={isSelected}
-                     placeholder={t('BoardView.journalBookmarkPlaceholder')}
-                     removeLabel={t('BoardView.journalRemoveBookmark')}
-                     stopDrag={stopDrag}
-                     onJump={() => jumpToPage(bookmark.pageId)}
-                     onRemove={() => removeBookmark(bookmark.id)}
-                     onLabelCommit={(value) => setBookmarkLabel(bookmark.id, value)}
-                  />
-               ))}
-            </div>,
+            <BookmarkTabs
+               tabs={tabs}
+               pageIndex={pageIndex}
+               editable={isSelected}
+               stopDrag={stopDrag}
+               onJump={jumpToPage}
+               onRemove={removeBookmark}
+               onLabelCommit={setBookmarkLabel}
+            />,
             sideSlot,
          )}
       </div>
