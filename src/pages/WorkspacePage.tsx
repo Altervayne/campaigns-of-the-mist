@@ -23,10 +23,7 @@ import { customCollisionDetection } from '@/lib/utils/dnd';
 import { resolveActiveWindow } from '@/lib/character/activeWindow';
 
 // -- Component Imports --
-import { TrackersSection } from '@/components/organisms/TrackersSection';
-import { CardsSection } from '@/components/organisms/CardsSection';
-import { SheetMainDropZone } from '@/components/organisms/SheetMainDropZone';
-import { CharacterNameHeader } from '@/components/molecules/CharacterNameHeader';
+import { CharacterSheetSurface } from '@/components/organisms/character-sheet/CharacterSheetSurface';
 import { WorkspaceContentOverlays } from '@/components/organisms/workspace/WorkspaceContentOverlays';
 import { WorkspaceDrawerRegion } from '@/components/organisms/workspace/WorkspaceDrawerRegion';
 import { WorkspaceDialogStack } from '@/components/organisms/workspace/WorkspaceDialogStack';
@@ -281,47 +278,27 @@ function DesktopWorkspacePage() {
                         <BoardView />
                      </Suspense>
                   ) : activeWindow === 'PLAY_AREA' && character ? (
-                     <main ref={sheetScrollRef} data-tutorial="character-sheet" className="absolute w-full h-full flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
-                        <CharacterNameHeader
-                           key={character.id}
-                           name={character.name}
-                           onCommit={updateCharacterName}
-                           placeholder={t('CharacterSheetPage.characterNamePlaceholder')}
-                        />
-
-                        {/* Zoom layer: CSS `zoom` scales the trackers + cards AND grows the scroll box with
-                            them (a transform would clip the bottom). The name header above stays unscaled. */}
-                        <div className="flex-1 p-4 md:p-8" style={sheetZoom === 1 ? undefined : { zoom: sheetZoom }}>
-                           <SheetMainDropZone>
-                              <TrackersSection
-                                 character={character}
-                                 isEditing={isEditing}
-                                 areTrackersEditable={areTrackersEditable}
-                                 onExport={handleExportComponent}
-                                 onAddStatus={addStatus}
-                                 onAddStoryTag={addStoryTag}
-                                 statusIds={statusIds}
-                                 storyTagIds={storyTagIds}
-                                 storyThemeIds={storyThemeIds}
-                                 isDropTarget={sheetHighlight === 'trackers'}
-                                 scale={sheetZoom}
-                              />
-
-                              <CardsSection
-                                 character={character}
-                                 isEditing={isEditing}
-                                 onExport={handleExportComponent}
-                                 onEditCard={handleEditCard}
-                                 onAddCard={handleAddCardClick}
-                                 onAddPortrait={addPortrait}
-                                 onAddChallenge={handleCreateChallenge}
-                                 onAddJournal={addJournal}
-                                 isDropTarget={sheetHighlight === 'cards'}
-                                 scale={sheetZoom}
-                              />
-                           </SheetMainDropZone>
-                        </div>
-                     </main>
+                     <CharacterSheetSurface
+                        scrollRef={sheetScrollRef}
+                        character={character}
+                        namePlaceholder={t('CharacterSheetPage.characterNamePlaceholder')}
+                        onCommitName={updateCharacterName}
+                        sheetZoom={sheetZoom}
+                        isEditing={isEditing}
+                        areTrackersEditable={areTrackersEditable}
+                        onExportComponent={handleExportComponent}
+                        onAddStatus={addStatus}
+                        onAddStoryTag={addStoryTag}
+                        statusIds={statusIds}
+                        storyTagIds={storyTagIds}
+                        storyThemeIds={storyThemeIds}
+                        onEditCard={handleEditCard}
+                        onAddCard={handleAddCardClick}
+                        onAddPortrait={addPortrait}
+                        onAddChallenge={handleCreateChallenge}
+                        onAddJournal={addJournal}
+                        sheetHighlight={sheetHighlight}
+                     />
                   )           : (
                      <MainMenu />
                   )}

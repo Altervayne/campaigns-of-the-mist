@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => {
       // Renders of the shell, counted from the sidebar mock (an unmemoized direct child of the shell, so
       // it renders once per shell render). The chrome-subscription cases below read it.
       shellRenders: 0,
+      sheetZoom: 1,
       commits,
       commitFor: (id: string) => {
          const known = commits.get(id);
@@ -75,7 +76,7 @@ vi.mock('@/lib/board/ActiveBoardStoreContext', () => ({ useActiveBoardInstance: 
 vi.mock('@/lib/notes/ActiveNoteStoreContext', () => ({ useActiveNoteInstance: () => mocks.activeNote }));
 vi.mock('@/lib/character/characterPersistence', () => ({ useIsBootHydrating: () => false }));
 vi.mock('@/lib/character/tabManagerStore', () => ({
-   useActiveSheetZoom: () => 1,
+   useActiveSheetZoom: () => mocks.sheetZoom,
    useTabManagerStore: (selector: (state: { activeTabId: string }) => unknown) => selector({ activeTabId: 'tab-1' }),
 }));
 
@@ -190,6 +191,9 @@ const setSurface = ({ char = null, board = null, note = null }: { char?: Charact
 };
 
 const sheet = () => document.querySelector('[data-tutorial="character-sheet"]');
+// Read through the CSSOM, not the `style` attribute: jsdom's serializer drops `zoom` as unknown, so
+// the attribute reads empty whether or not React set the property.
+const zoomLayer = () => sheet()?.querySelector<HTMLElement>('.flex-1') ?? null;
 const activeWindow = () => screen.getByTestId('sidebar').getAttribute('data-active-window');
 const typeName = (value: string) =>
    fireEvent.change(screen.getByPlaceholderText('CharacterSheetPage.characterNamePlaceholder'), { target: { value } });
@@ -198,6 +202,7 @@ beforeEach(() => {
    setSurface({});
    mocks.commits.clear();
    mocks.shellRenders = 0;
+   mocks.sheetZoom = 1;
    useAppGeneralStateStore.setState({ isDrawerOpen: false, isDrawerExpanded: false, isEditing: false, isSettingsOpen: false });
    useAppSettingsStore.setState({ isSidebarCollapsed: false, navigatorOpen: false, isCompactDrawer: false, isTrackersAlwaysEditable: false });
 });
@@ -288,6 +293,42 @@ describe('WorkspacePage name flush across a switch', () => {
       rerender(<WorkspacePage />);
 
       expect(mocks.commitFor('char-a')).not.toHaveBeenCalled();
+   });
+});
+
+/*
+ * Pins the two silent failure modes of the sheet surface. Both lint clean, typecheck clean and look
+ * correct in a diff: a `key` on the surface swaps the scroll container for a fresh element while the
+ * zoom hook's wheel listener stays bound to the old one (Ctrl+wheel simply stops working), and an
+ * unconditional `zoom` style feeds dnd-kit a scaled measuring path at 100% (reorder gaps drift).
+ */
+describe('WorkspacePage sheet surface', () => {
+   it('keeps the same scroll container across a character switch, so the bound wheel listener survives', () => {
+      setSurface({ char: character('char-a', 'Alice') });
+      const { rerender } = render(<WorkspacePage />);
+      const before = sheet();
+
+      setSurface({ char: character('char-b', 'Bob') });
+      rerender(<WorkspacePage />);
+
+      expect(sheet()).not.toBeNull();
+      expect(sheet()).toBe(before);
+   });
+
+   it('leaves the zoom layer without an inline zoom at 100%', () => {
+      setSurface({ char: character('char-a', 'Alice') });
+      render(<WorkspacePage />);
+
+      expect(zoomLayer()).not.toBeNull();
+      expect(zoomLayer()?.style.zoom).toBeFalsy();
+   });
+
+   it('applies the inline zoom when the tab is not at 100%', () => {
+      mocks.sheetZoom = 1.5;
+      setSurface({ char: character('char-a', 'Alice') });
+      render(<WorkspacePage />);
+
+      expect(zoomLayer()?.style.zoom).toBe('1.5');
    });
 });
 
