@@ -13,12 +13,12 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 //   implementation onto the global scope before any test runs, so Dexie has a
 //   backing store without a browser.
 // - `include`: the framework-agnostic layers (the drawer/board lib and the pure-logic hooks)
-//   plus the component tests, which carry their own jsdom pragma.
+//   plus the component and page tests, which carry their own jsdom pragma.
 export default defineConfig({
    plugins: [tsconfigPaths()],
    test: {
       environment: 'node',
       setupFiles: ['fake-indexeddb/auto'],
-      include: ['src/lib/**/*.test.ts', 'src/hooks/**/*.test.ts', 'src/components/**/*.test.tsx'],
+      include: ['src/lib/**/*.test.ts', 'src/hooks/**/*.test.ts', 'src/components/**/*.test.tsx', 'src/pages/**/*.test.tsx'],
    },
 });
