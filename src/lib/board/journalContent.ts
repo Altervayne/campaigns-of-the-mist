@@ -65,3 +65,19 @@ export function withPageRemoved(journal: Journal, pageId: string): Journal {
    const bookmarks = journal.bookmarks.filter((bookmark) => bookmark.pageId !== pageId);
    return { ...journal, pages: finalPages, bookmarks };
 }
+
+/** First non-blank line of a page's text, trimmed - the reorder row's snippet. */
+export function pageSnippet(text: string): string {
+   return text.split('\n').find((line) => line.trim().length > 0)?.trim() ?? '';
+}
+
+/**
+ * Bookmarks paired with their page's current index, in page order; a bookmark to a missing page
+ * (shouldn't happen - removal drops it) is skipped. The shape the side tabs and the popover list render.
+ */
+export function orderedBookmarkTabs(pages: JournalPage[], bookmarks: JournalBookmark[]): { bookmark: JournalBookmark; page: number }[] {
+   return bookmarks
+      .map((bookmark) => ({ bookmark, page: pages.findIndex((page) => page.id === bookmark.pageId) }))
+      .filter((tab) => tab.page >= 0)
+      .sort((a, b) => a.page - b.page);
+}

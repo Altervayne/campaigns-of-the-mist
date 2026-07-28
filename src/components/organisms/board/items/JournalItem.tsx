@@ -5,26 +5,21 @@ import { useTranslation } from 'react-i18next';
 
 // -- Library Imports --
 import cuid from 'cuid';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Icon Imports --
-import { Bookmark, BookmarkMinus, BookMarked, ChevronLeft, ChevronRight, GripVertical, ListOrdered, Minus, Plus, X } from 'lucide-react';
+import { Bookmark, BookmarkMinus, BookMarked, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
 
 // -- Utils Imports --
-import { cn } from '@/lib/utils';
-import { migrateJournalContent, withPageInserted, withPagesReordered, withPageRemoved } from '@/lib/board/journalContent';
-import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/theme/themeReorderModifiers';
-import { DRAG_TYPES } from '@/lib/constants/dragDrop';
+import { migrateJournalContent, orderedBookmarkTabs, withPageInserted, withPagesReordered, withPageRemoved } from '@/lib/board/journalContent';
 
 // -- Component Imports --
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
-import { proseMarkdownComponents } from '@/components/molecules/markdown/markdownComponents';
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Sortable, DragStaticWrapper } from '@/components/dnd';
+import { BookmarkListRow } from './journal/BookmarkListRow';
+import { BookmarkTab } from './journal/BookmarkTab';
+import { JournalControlButton } from './journal/JournalControlButton';
+import { JournalTitle } from './journal/JournalTitle';
+import { PagesReorderPopover } from './journal/PagesReorderPopover';
 
 // -- Hook Imports --
 import { useBoardMentionMint } from '@/hooks/board/useBoardMentionMint';
@@ -34,10 +29,7 @@ import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
 import { useJournalViewStore } from '@/lib/stores/journalViewStore';
 
 // -- Type Imports --
-import type { DragEndEvent } from '@dnd-kit/core';
-import type { SortableChildProps } from '@/components/dnd';
-import type { Components } from 'react-markdown';
-import type { BoardItem, BoardItemContent, JournalBoardContent, JournalPage } from '@/lib/types/board';
+import type { BoardItem, BoardItemContent, JournalBoardContent } from '@/lib/types/board';
 import type { MentionSegment } from '@/lib/challenge/parseMentions';
 
 /*
@@ -68,7 +60,7 @@ interface JournalItemProps {
    /**
     * When set, the portaled structural controls (add/remove page, bookmark) render as the host's toolbar
     * `<Button>` with this className, so a sheet journal's grip toolbar is pixel-identical to a card's.
-    * The board leaves it undefined and keeps the compact `ControlButton` in its own selection toolbar.
+    * The board leaves it undefined and keeps the compact `JournalControlButton` in its own selection toolbar.
     */
    toolbarControlClassName?: string;
    /**
@@ -240,11 +232,7 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
       setIndex(target);
    };
 
-   // Tabs in page order; a bookmark to a missing page (shouldn't happen - removal drops it) is skipped.
-   const tabs = bookmarks
-      .map((bookmark) => ({ bookmark, page: pages.findIndex((page) => page.id === bookmark.pageId) }))
-      .filter((tab) => tab.page >= 0)
-      .sort((a, b) => a.page - b.page);
+   const tabs = orderedBookmarkTabs(pages, bookmarks);
 
    return (
       <div className="relative flex h-full w-full flex-col bg-paper-background text-paper-foreground">
@@ -278,10 +266,10 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
          {/* Structural actions live in the selection toolbar. */}
          {isSelected && toolbarSlot && createPortal(
             <>
-               <ControlButton title={t('BoardView.addPage')} onPointerDown={stopDrag} onClick={addPage} toolbarClassName={toolbarControlClassName} appChrome>
+               <JournalControlButton title={t('BoardView.addPage')} onPointerDown={stopDrag} onClick={addPage} toolbarClassName={toolbarControlClassName} appChrome>
                   <Plus className="h-4 w-4" />
-               </ControlButton>
-               <ControlButton
+               </JournalControlButton>
+               <JournalControlButton
                   title={t('BoardView.removePage')}
                   disabled={pages.length === 1 && (pages[0]?.text ?? '') === '' && text === ''}
                   onPointerDown={stopDrag}
@@ -290,10 +278,10 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
                   appChrome
                >
                   <Minus className="h-4 w-4" />
-               </ControlButton>
-               <ControlButton title={isBookmarked ? t('BoardView.journalRemoveBookmark') : t('BoardView.journalBookmark')} onPointerDown={stopDrag} onClick={toggleBookmark} toolbarClassName={toolbarControlClassName} appChrome>
+               </JournalControlButton>
+               <JournalControlButton title={isBookmarked ? t('BoardView.journalRemoveBookmark') : t('BoardView.journalBookmark')} onPointerDown={stopDrag} onClick={toggleBookmark} toolbarClassName={toolbarControlClassName} appChrome>
                   {isBookmarked ? <BookmarkMinus className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-               </ControlButton>
+               </JournalControlButton>
             </>,
             toolbarSlot,
          )}
@@ -323,15 +311,15 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
          {/* Page navigation (bottom): the prev/next arrows sit at the far edges; a middle cluster carries the
              insert-before/after glyphs (edit-only) around the click-to-edit page number. */}
          <div className="flex shrink-0 items-center justify-between gap-0.5 border-t border-paper-border bg-paper-primary text-paper-primary-foreground px-1.5 py-1 text-xs">
-            <ControlButton title={t('BoardView.prevPage')} disabled={pageIndex === 0} onPointerDown={stopDrag} onClick={goPrev}>
+            <JournalControlButton title={t('BoardView.prevPage')} disabled={pageIndex === 0} onPointerDown={stopDrag} onClick={goPrev}>
                <ChevronLeft className="h-3.5 w-3.5" />
-            </ControlButton>
+            </JournalControlButton>
 
             <div className="flex items-center gap-0.5">
                {isSelected && (
-                  <ControlButton title={t('BoardView.journalInsertPageBefore')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex)}>
+                  <JournalControlButton title={t('BoardView.journalInsertPageBefore')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex)}>
                      <Plus className="h-3 w-3" />
-                  </ControlButton>
+                  </JournalControlButton>
                )}
                {/* The current page number is click-to-edit; the total stays static. Both numbers carry the
                    same width / centering / weight so `N / M` reads as a balanced pair. */}
@@ -365,9 +353,9 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
                <span className="text-paper-primary-foreground/70">/</span>
                <span className="min-w-7 px-1 text-center tabular-nums text-paper-primary-foreground/80">{pages.length}</span>
                {isSelected && (
-                  <ControlButton title={t('BoardView.journalInsertPageAfter')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex + 1)}>
+                  <JournalControlButton title={t('BoardView.journalInsertPageAfter')} onPointerDown={stopDrag} onClick={() => insertPage(pageIndex + 1)}>
                      <Plus className="h-3 w-3" />
-                  </ControlButton>
+                  </JournalControlButton>
                )}
             </div>
 
@@ -431,9 +419,9 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
                      </PopoverContent>
                   </Popover>
                )}
-               <ControlButton title={t('BoardView.nextPage')} disabled={pageIndex === pages.length - 1} onPointerDown={stopDrag} onClick={goNext}>
+               <JournalControlButton title={t('BoardView.nextPage')} disabled={pageIndex === pages.length - 1} onPointerDown={stopDrag} onClick={goNext}>
                   <ChevronRight className="h-3.5 w-3.5" />
-               </ControlButton>
+               </JournalControlButton>
             </div>
          </div>
 
@@ -462,414 +450,5 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
             sideSlot,
          )}
       </div>
-   );
-}
-
-/*
- * The journal title rendered as INLINE, single-line markdown: it reuses the shared prose accents but
- * collapses the paragraph to a span, so bold/italic/strike/code/link show inline and the whole thing
- * truncates as one line (no block flow, no mentions - a heading, not an article).
- */
-const TITLE_MARKDOWN_COMPONENTS: Components = {
-   ...proseMarkdownComponents,
-   p: ({ ...props }) => <span {...props} />,
-};
-
-function JournalTitle({ content }: { content: string }) {
-   return (
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={TITLE_MARKDOWN_COMPONENTS}>
-         {content}
-      </ReactMarkdown>
-   );
-}
-
-/** First non-blank line of a page's text, trimmed - the reorder row's snippet. */
-function pageSnippet(text: string): string {
-   return text.split('\n').find((line) => line.trim().length > 0)?.trim() ?? '';
-}
-
-/**
- * The pages overview: a bar button that opens a body-portaled popover listing every page (its number + a
- * first-line snippet) as a drag-to-reorder list. Reuses the app's list-reorder pattern (a LOCAL dnd-kit
- * context, `verticalListSortingStrategy`, the vertical/parent modifiers) - never the board's own DnD. A
- * row body clicks to jump to that page; the grip carries the drag. Chrome stays app-theme (the popover
- * lives outside the paper surface).
- */
-function PagesReorderPopover({
-   pages,
-   activePageId,
-   triggerTitle,
-   pageLabel,
-   emptyPageLabel,
-   reorderLabel,
-   stopDrag,
-   onReorder,
-   onJump,
-}: {
-   pages: JournalPage[];
-   activePageId: string;
-   triggerTitle: string;
-   pageLabel: (n: number) => string;
-   emptyPageLabel: string;
-   reorderLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onReorder: (activeId: string, overId: string) => void;
-   onJump: (pageId: string) => void;
-}) {
-   // A small activation distance lets a plain click (jump) fire without starting a drag on the grip.
-   const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-      useSensor(KeyboardSensor),
-   );
-   const handleDragEnd = (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (over && active.id !== over.id) onReorder(String(active.id), String(over.id));
-   };
-
-   return (
-      <Popover>
-         <PopoverTrigger asChild>
-            <button
-               type="button"
-               title={triggerTitle}
-               aria-label={triggerTitle}
-               onPointerDown={stopDrag}
-               className="flex items-center justify-center rounded p-0.5 text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer"
-            >
-               <ListOrdered className="h-3.5 w-3.5" />
-            </button>
-         </PopoverTrigger>
-         <PopoverContent align="end" className="w-64 p-1.5" onOpenAutoFocus={(event) => event.preventDefault()}>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={handleDragEnd}>
-               <SortableContext items={pages.map((page) => page.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
-                     {pages.map((page, index) => (
-                        <Sortable key={page.id} id={page.id} data={{ type: DRAG_TYPES.JOURNAL_PAGE, item: page }}>
-                           {({ dragAttributes, dragListeners, isBeingDragged }) => (
-                              <DragStaticWrapper isBeingDragged={isBeingDragged}>
-                                 <PageReorderRow
-                                    label={pageLabel(index + 1)}
-                                    snippet={pageSnippet(page.text)}
-                                    emptyLabel={emptyPageLabel}
-                                    reorderLabel={reorderLabel}
-                                    active={page.id === activePageId}
-                                    dragAttributes={dragAttributes}
-                                    dragListeners={dragListeners}
-                                    onJump={() => onJump(page.id)}
-                                 />
-                              </DragStaticWrapper>
-                           )}
-                        </Sortable>
-                     ))}
-                  </div>
-               </SortableContext>
-            </DndContext>
-         </PopoverContent>
-      </Popover>
-   );
-}
-
-/**
- * One row in the pages overview: a hover-revealed grip that carries the drag listeners, then the page's
- * number + first-line snippet as a jump button. Click jumps to the page; the grip's click is swallowed so
- * a grip tap never doubles as a jump.
- */
-function PageReorderRow({
-   label,
-   snippet,
-   emptyLabel,
-   reorderLabel,
-   active,
-   dragAttributes,
-   dragListeners,
-   onJump,
-}: {
-   label: string;
-   snippet: string;
-   emptyLabel: string;
-   reorderLabel: string;
-   active: boolean;
-   dragAttributes?: SortableChildProps['dragAttributes'];
-   dragListeners?: SortableChildProps['dragListeners'];
-   onJump: () => void;
-}) {
-   return (
-      <div className={cn('flex items-center rounded-sm', active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted')}>
-         <button
-            type="button"
-            {...dragAttributes}
-            {...dragListeners}
-            onClick={(event) => event.stopPropagation()}
-            title={reorderLabel}
-            aria-label={reorderLabel}
-            className="flex h-7 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
-         >
-            <GripVertical className="h-4 w-4" />
-         </button>
-         <button type="button" onClick={onJump} className="flex min-w-0 flex-1 items-center gap-2 py-1 pr-2 text-left cursor-pointer">
-            <span className="shrink-0 text-xs font-medium tabular-nums">{label}</span>
-            <span className={cn('min-w-0 flex-1 truncate text-xs', snippet ? 'text-muted-foreground' : 'italic text-muted-foreground/60')}>
-               {snippet || emptyLabel}
-            </span>
-         </button>
-      </div>
-   );
-}
-
-/**
- * One side tab. Click jumps to its page (and makes it active); when the journal is selected
- * and this tab is the active page, its label becomes an inline input (commit on blur). A
- * small remove (x) shows while selected.
- */
-function BookmarkTab({
-   label,
-   pageNumber,
-   active,
-   editable,
-   placeholder,
-   removeLabel,
-   stopDrag,
-   onJump,
-   onRemove,
-   onLabelCommit,
-}: {
-   label?: string;
-   pageNumber: number;
-   active: boolean;
-   editable: boolean;
-   placeholder: string;
-   removeLabel: string;
-   stopDrag: (event: ReactPointerEvent) => void;
-   onJump: () => void;
-   onRemove: () => void;
-   onLabelCommit: (value: string) => void;
-}) {
-   const [value, setValue] = useState(label ?? '');
-   const [synced, setSynced] = useState(label ?? '');
-   if ((label ?? '') !== synced) {
-      setSynced(label ?? '');
-      setValue(label ?? '');
-   }
-   const commit = () => {
-      const trimmed = value.trim();
-      if (trimmed !== (label ?? '')) onLabelCommit(trimmed);
-   };
-
-   // A tab switch unmounts the tab without a blur; flush the label buffer so it isn't lost.
-   useCommitOnUnmount(commit);
-   // Deselecting the journal drops `editable` and swaps the <input> for the <button> in place, WITHOUT
-   // unmounting the tab - so neither onBlur nor useCommitOnUnmount fires and a label typed right before
-   // deselecting is stranded in the buffer. Flush on that falling edge; the commit re-renders the tab
-   // with the new label immediately (dirty-guarded, so a normal blur-then-deselect no-ops).
-   const wasEditable = useRef(editable);
-   useEffect(() => {
-      const was = wasEditable.current;
-      wasEditable.current = editable;
-      if (was && !editable) commit();
-   });
-
-   return (
-      <div
-         className={cn(
-            // Attached to the page's right edge (rounded on the outer side), protruding rightward. A paper
-            // document tab: the header-band tone at rest, the paper accent when it marks the current page.
-            'flex items-center gap-0.5 rounded-r-md border border-l-0 border-paper-border py-0.5 text-[0.65rem] shadow-sm',
-            active ? 'bg-paper-accent text-paper-primary-foreground pl-3' : 'bg-paper-primary text-paper-primary-foreground pl-1.5',
-            editable ? 'pr-0.5' : 'pr-1.5',
-         )}
-      >
-         {active && editable ? (
-            <input
-               type="text"
-               value={value}
-               onChange={(event) => setValue(event.target.value)}
-               onBlur={commit}
-               onPointerDown={stopDrag}
-               placeholder={placeholder}
-               className="w-32 bg-transparent outline-none placeholder:text-current/50"
-            />
-         ) : (
-            // Auto-widths to the label up to a max; a long label truncates and expands on hover
-            // (growing rightward, so it never shoves the stacked tabs). `title` is the fallback.
-            <button
-               type="button"
-               title={label && label.length > 0 ? label : undefined}
-               onPointerDown={stopDrag}
-               onClick={onJump}
-               className="max-w-[150px] truncate text-left transition-[max-width] duration-150 hover:max-w-[320px] cursor-pointer"
-            >
-               {label && label.length > 0 ? label : pageNumber}
-            </button>
-         )}
-         {editable && (
-            <button
-               type="button"
-               title={removeLabel}
-               aria-label={removeLabel}
-               onPointerDown={stopDrag}
-               onClick={onRemove}
-               className="shrink-0 rounded ml-1 p-0.5 hover:bg-background/30 cursor-pointer"
-            >
-               <X className="h-2.5 w-2.5" />
-            </button>
-         )}
-      </div>
-   );
-}
-
-/**
- * One row in the sheet journal's Bookmarks popover list: the same functionality the side tab gives (jump
- * to its page, an editable label while editing, a remove control), laid out as a horizontal list row
- * inside a body-portaled popover so it floats above flex-wrap neighbours instead of z-burying under them.
- */
-function BookmarkListRow({
-   label,
-   pageNumber,
-   active,
-   editable,
-   placeholder,
-   removeLabel,
-   onJump,
-   onRemove,
-   onLabelCommit,
-}: {
-   label?: string;
-   pageNumber: number;
-   active: boolean;
-   editable: boolean;
-   placeholder: string;
-   removeLabel: string;
-   onJump: () => void;
-   onRemove: () => void;
-   onLabelCommit: (value: string) => void;
-}) {
-   const [value, setValue] = useState(label ?? '');
-   const [synced, setSynced] = useState(label ?? '');
-   if ((label ?? '') !== synced) {
-      setSynced(label ?? '');
-      setValue(label ?? '');
-   }
-   const commit = () => {
-      const trimmed = value.trim();
-      if (trimmed !== (label ?? '')) onLabelCommit(trimmed);
-   };
-   // A remount (tab switch / popover close) flushes the label buffer so an edit isn't lost.
-   useCommitOnUnmount(commit);
-   // Deselecting while the popover stays open drops `editable` and removes the <input> in place without
-   // unmounting the row - the same stranded-buffer gap the side tab has; flush on that falling edge.
-   const wasEditable = useRef(editable);
-   useEffect(() => {
-      const was = wasEditable.current;
-      wasEditable.current = editable;
-      if (was && !editable) commit();
-   });
-
-   return (
-      <div className={cn(
-         'flex items-center gap-1 rounded-sm px-1.5 py-1 text-xs',
-         active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
-      )}>
-         {/* The page badge doubles as the jump target, so a labelled row still shows (and jumps to) its page. */}
-         <button
-            type="button"
-            aria-label={String(pageNumber)}
-            onClick={onJump}
-            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded bg-muted px-1 tabular-nums text-[0.65rem] text-muted-foreground hover:bg-primary hover:text-primary-foreground cursor-pointer"
-         >
-            {pageNumber}
-         </button>
-         {editable ? (
-            <input
-               type="text"
-               value={value}
-               onChange={(event) => setValue(event.target.value)}
-               onBlur={commit}
-               placeholder={placeholder}
-               className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50"
-            />
-         ) : (
-            <button
-               type="button"
-               title={label && label.length > 0 ? label : undefined}
-               onClick={onJump}
-               className="min-w-0 flex-1 truncate text-left cursor-pointer"
-            >
-               {label && label.length > 0 ? label : placeholder}
-            </button>
-         )}
-         {editable && (
-            <button
-               type="button"
-               title={removeLabel}
-               aria-label={removeLabel}
-               onClick={onRemove}
-               className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-background/50 hover:text-destructive cursor-pointer"
-            >
-               <X className="h-3 w-3" />
-            </button>
-         )}
-      </div>
-   );
-}
-
-/**
- * A small icon control in the journal's bar; stops the drag and fires its click. The default is a compact
- * transparent button tinted for the paper HEADER band it sits on (the footer pages bar); a host that hosts
- * these in its own card toolbar passes `toolbarClassName`, which switches to the shared
- * `<Button variant="outline" size="icon">` with that className so the control is pixel-identical to the
- * toolbar's other buttons (grip / delete / flip).
- */
-function ControlButton({
-   title,
-   disabled = false,
-   onClick,
-   onPointerDown,
-   toolbarClassName,
-   appChrome = false,
-   children,
-}: {
-   title: string;
-   disabled?: boolean;
-   onClick: () => void;
-   onPointerDown: (event: ReactPointerEvent) => void;
-   toolbarClassName?: string;
-   /** Board-only fallback: color for the app-chrome selection toolbar (vs the default paper-band footer). */
-   appChrome?: boolean;
-   children: React.ReactNode;
-}) {
-   if (toolbarClassName) {
-      return (
-         <Button
-            variant="outline"
-            size="icon"
-            title={title}
-            aria-label={title}
-            disabled={disabled}
-            onPointerDown={onPointerDown}
-            onClick={onClick}
-            className={toolbarClassName}
-         >
-            {children}
-         </Button>
-      );
-   }
-   return (
-      <button
-         type="button"
-         title={title}
-         aria-label={title}
-         disabled={disabled}
-         onPointerDown={onPointerDown}
-         onClick={onClick}
-         className={cn(
-            'flex items-center justify-center rounded p-0.5 disabled:opacity-40 disabled:cursor-default cursor-pointer',
-            // Toolbar-slot actions portal into the board's app-chrome bar; the footer nav/insert buttons sit on the paper band.
-            appChrome
-               ? 'text-popover-foreground hover:bg-muted'
-               : 'text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground',
-         )}
-      >
-         {children}
-      </button>
    );
 }

@@ -1,0 +1,55 @@
+// -- Icon Imports --
+import { GripVertical } from 'lucide-react';
+
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
+// -- Type Imports --
+import type { SortableChildProps } from '@/components/dnd';
+
+/**
+ * One row in the pages overview: a hover-revealed grip that carries the drag listeners, then the page's
+ * number + first-line snippet as a jump button. Click jumps to the page; the grip's click is swallowed so
+ * a grip tap never doubles as a jump.
+ */
+export function PageReorderRow({
+   label,
+   snippet,
+   emptyLabel,
+   reorderLabel,
+   active,
+   dragAttributes,
+   dragListeners,
+   onJump,
+}: {
+   label: string;
+   snippet: string;
+   emptyLabel: string;
+   reorderLabel: string;
+   active: boolean;
+   dragAttributes?: SortableChildProps['dragAttributes'];
+   dragListeners?: SortableChildProps['dragListeners'];
+   onJump: () => void;
+}) {
+   return (
+      <div className={cn('flex items-center rounded-sm', active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted')}>
+         <button
+            type="button"
+            {...dragAttributes}
+            {...dragListeners}
+            onClick={(event) => event.stopPropagation()}
+            title={reorderLabel}
+            aria-label={reorderLabel}
+            className="flex h-7 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+         >
+            <GripVertical className="h-4 w-4" />
+         </button>
+         <button type="button" onClick={onJump} className="flex min-w-0 flex-1 items-center gap-2 py-1 pr-2 text-left cursor-pointer">
+            <span className="shrink-0 text-xs font-medium tabular-nums">{label}</span>
+            <span className={cn('min-w-0 flex-1 truncate text-xs', snippet ? 'text-muted-foreground' : 'italic text-muted-foreground/60')}>
+               {snippet || emptyLabel}
+            </span>
+         </button>
+      </div>
+   );
+}

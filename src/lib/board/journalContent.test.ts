@@ -2,10 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { migrateJournalContent, withPageInserted, withPagesReordered, withPageRemoved } from './journalContent';
+import { migrateJournalContent, orderedBookmarkTabs, pageSnippet, withPageInserted, withPagesReordered, withPageRemoved } from './journalContent';
 
 // -- Type Imports --
-import type { Journal } from '@/lib/types/board';
+import type { Journal, JournalBookmark, JournalPage } from '@/lib/types/board';
 
 /*
  * Tests for the journal page/bookmark helpers: the legacy string-pages migration and the
@@ -113,5 +113,33 @@ describe('withPageRemoved', () => {
       expect(result.pages).toHaveLength(1);
       expect(result.pages[0].text).toBe('');
       expect(result.bookmarks).toEqual([]);
+   });
+});
+
+describe('pageSnippet', () => {
+   it('takes the first non-blank line, trimmed', () => {
+      expect(pageSnippet('\n   \n  # A heading  \nsecond line')).toBe('# A heading');
+   });
+
+   it('is empty for a blank page', () => {
+      expect(pageSnippet('')).toBe('');
+      expect(pageSnippet('\n   \n\t\n')).toBe('');
+   });
+});
+
+describe('orderedBookmarkTabs', () => {
+   const pages: JournalPage[] = [{ id: 'p1', text: 'a' }, { id: 'p2', text: 'b' }, { id: 'p3', text: 'c' }];
+
+   it('pairs each bookmark with its page index and sorts by page order', () => {
+      const bookmarks: JournalBookmark[] = [{ id: 'b3', pageId: 'p3' }, { id: 'b1', pageId: 'p1' }];
+      expect(orderedBookmarkTabs(pages, bookmarks)).toEqual([
+         { bookmark: bookmarks[1], page: 0 },
+         { bookmark: bookmarks[0], page: 2 },
+      ]);
+   });
+
+   it('skips a bookmark whose page is gone', () => {
+      const bookmarks: JournalBookmark[] = [{ id: 'b1', pageId: 'p1' }, { id: 'bx', pageId: 'gone' }];
+      expect(orderedBookmarkTabs(pages, bookmarks)).toEqual([{ bookmark: bookmarks[0], page: 0 }]);
    });
 });
