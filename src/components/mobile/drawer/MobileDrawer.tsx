@@ -15,14 +15,9 @@ import MobileDrawerItem from '@/components/mobile/drawer/MobileDrawerItem';
 import MobileDrawerContextMenu from '@/components/mobile/drawer/MobileDrawerContextMenu';
 import MobileAddFolderSheet from '@/components/mobile/drawer/MobileAddFolderSheet';
 import MobileDrawerToolbar from '@/components/mobile/drawer/MobileDrawerToolbar';
+import MobileDrawerSearchResults from '@/components/mobile/drawer/MobileDrawerSearchResults';
+import MobileDrawerDragOverlay from '@/components/mobile/drawer/MobileDrawerDragOverlay';
 import { DrawerSearchBar } from '@/components/molecules/drawer/DrawerSearchBar';
-import { DrawerListRow } from '@/components/molecules/drawer/DrawerListRow';
-import { DrawerItemPreview } from '@/components/organisms/drawer/DrawerItemPreview';
-import { GameTag } from '@/components/molecules/GameTag';
-import { FolderCountLabel } from '@/components/mobile/shared/FolderCountLabel';
-
-// -- Icon Imports --
-import { Folder as FolderIcon, MoreHorizontal } from 'lucide-react';
 
 // -- Store Imports --
 import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
@@ -36,13 +31,10 @@ import { useMobileDrawerDragReorder } from '@/hooks/mobile/useMobileDrawerDragRe
 import { useDrawerUndoRedo } from '@/hooks/drawer/useDrawerUndoRedo';
 
 // -- Utils Imports --
-import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/utils/haptics';
-import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 
 // -- Type Imports --
 import type { DrawerItem } from '@/lib/types/drawer';
-import type { DrawerFolderRecord } from '@/lib/drawer/drawerRecords';
 import type { DrawerItemSummary } from '@/lib/drawer/drawerRepository';
 
 // -- Constants Imports --
@@ -61,70 +53,6 @@ import { DRAG_TYPES } from '@/lib/constants/dragDrop';
  * `@dnd-kit/modifiers` (not installed; do not add).
  */
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
-
-/**
- * Render an overlay snapshot of a folder row that follows the pointer during a
- * drag. Presentational copy of `MobileFolderItem`'s body with the corner
- * context-menu button drawn in its handedness-leading position. Kept inline so
- * the overlay is self-contained.
- */
-const renderFolderOverlay = (folder: DrawerFolderRecord, folderCount: number, itemCount: number, isLeftHanded: boolean) => (
-   <div className={cn(
-      "flex items-center rounded-lg border border-border bg-card shadow-2xl overflow-hidden",
-      isLeftHanded && "flex-row-reverse"
-   )}>
-      <div className="flex flex-1 min-w-0">
-         <div className="flex flex-1 min-w-0 items-center gap-2 p-2 min-h-11">
-            <FolderIcon className="w-6 h-6 text-primary shrink-0" />
-            <div className="flex-1 min-w-0">
-               <p className="font-medium text-foreground break-words">{folder.name}</p>
-               <FolderCountLabel folders={folderCount} items={itemCount} />
-            </div>
-         </div>
-      </div>
-      <div className="flex shrink-0 items-center justify-center h-11 w-11 text-muted-foreground">
-         <MoreHorizontal className="w-5 h-5" />
-      </div>
-   </div>
-);
-
-/**
- * Render an overlay snapshot of a drawer-item row that follows the pointer
- * during a drag. Mirrors `MobileDrawerItem`'s compact / rich shapes with the
- * inline context-menu button on the handedness-leading edge.
- */
-const renderItemOverlay = (item: DrawerItem, isCompact: boolean, isLeftHanded: boolean) => {
-   const Icon = getItemTypeIconComponent(item.type);
-   return (
-      <div className={cn(
-         "flex rounded-lg border border-border bg-card shadow-2xl overflow-hidden",
-         isCompact ? "items-center" : "items-start",
-         isLeftHanded && "flex-row-reverse"
-      )}>
-         <div className="flex flex-1 min-w-0">
-            {isCompact ? (
-               <div className="flex flex-1 min-w-0 items-center gap-2 p-2 min-h-11">
-                  <Icon className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                     <p className="font-medium text-foreground break-words">{item.name}</p>
-                     <div className="flex items-center gap-2 mt-1">
-                        {/* NEUTRAL items are game-agnostic: GameTag renders nothing for them. */}
-                        <GameTag game={item.game} />
-                     </div>
-                  </div>
-               </div>
-            ) : (
-               <div className="flex-1 min-w-0">
-                  <DrawerItemPreview item={item} />
-               </div>
-            )}
-         </div>
-         <div className="flex shrink-0 items-center justify-center h-11 w-11 text-muted-foreground">
-            <MoreHorizontal className="w-5 h-5" />
-         </div>
-      </div>
-   );
-};
 
 
 
@@ -292,26 +220,11 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 			{/* Body: the browse tree, or - while a search is active - the flat results IN THE SAME space
 			    (no overlay). Results are a plain list (no drag/reorder). */}
 			{isSearchActive ? (
-				<div className="flex-1 overflow-y-auto overflow-x-hidden p-3">
-					{isSearching ? (
-						<p className="py-8 text-center text-sm text-muted-foreground">{t('Drawer.search.searching')}</p>
-					) : searchResults && searchResults.length > 0 ? (
-						<div className="flex flex-col gap-1">
-							{searchResults.map((summary) => (
-								<button
-									key={summary.id}
-									type="button"
-									onClick={(event) => openResultMenu(summary, event)}
-									className="min-h-11 w-full rounded text-left hover:bg-muted cursor-pointer"
-								>
-									<DrawerListRow type={summary.type} name={summary.name} game={summary.game} createdAt={summary.createdAt} updatedAt={summary.updatedAt} />
-								</button>
-							))}
-						</div>
-					) : (
-						<p className="py-8 text-center text-sm text-muted-foreground">{t('Drawer.search.noMatches')}</p>
-					)}
-				</div>
+				<MobileDrawerSearchResults
+					isSearching={isSearching}
+					results={searchResults}
+					onOpenResultMenu={openResultMenu}
+				/>
 			) : (
 			<DndContext
 				sensors={sensors}
@@ -370,8 +283,14 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 
 				{/* Overlay snapshot of the active row, floating with the pointer */}
 				<DragOverlay dropAnimation={null}>
-					{activeFolder ? renderFolderOverlay(activeFolder, childCounts.get(activeFolder.id)?.folderCount ?? 0, childCounts.get(activeFolder.id)?.itemCount ?? 0, isLeftHanded) : null}
-					{activeItem ? renderItemOverlay(activeItem, isCompactView, isLeftHanded) : null}
+					<MobileDrawerDragOverlay
+						activeFolder={activeFolder}
+						activeItem={activeItem}
+						folderCount={activeFolder ? childCounts.get(activeFolder.id)?.folderCount ?? 0 : 0}
+						itemCount={activeFolder ? childCounts.get(activeFolder.id)?.itemCount ?? 0 : 0}
+						isCompact={isCompactView}
+						isLeftHanded={isLeftHanded}
+					/>
 				</DragOverlay>
 			</DndContext>
 			)}
