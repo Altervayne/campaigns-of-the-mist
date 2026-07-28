@@ -1,5 +1,5 @@
 // -- React Imports --
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Custom Hooks --
@@ -10,6 +10,8 @@ import { useCharacterSheetFileImport } from '@/hooks/character-sheet/useCharacte
 import { useCharacterSheetExport } from '@/hooks/character-sheet/useCharacterSheetExport';
 import { useCharacterSheetUndoRedo } from '@/hooks/character-sheet/useCharacterSheetUndoRedo';
 import { useCardDialogState } from '@/hooks/character-sheet/useCardDialogState';
+import { importBoardView, importNoteView, usePrefetchTabChunks } from '@/hooks/character-sheet/useLazyTabViews';
+import { useNavigatorShortcut } from '@/hooks/character-sheet/useNavigatorShortcut';
 
 // -- Other Library Imports --
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -17,6 +19,8 @@ import { AnimatePresence } from 'framer-motion';
 
 // -- Utils Imports --
 import { customCollisionDetection } from '@/lib/utils/dnd';
+import { resolveActiveWindow } from '@/lib/character/activeWindow';
+import { isSheetScaledDragItem } from '@/lib/character/sheetZoom';
 
 // -- Component Imports --
 import { CommandPalette } from '@/components/organisms/command-palette/CommandPalette';
@@ -56,38 +60,10 @@ import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSett
 import { useCommandPaletteActions } from '@/hooks/useCommandPaletteActions';
 import { useNoteMarkdownIO } from '@/hooks/useNoteMarkdownIO';
 
-// The note and board surfaces are deferred: each pulls in a heavy stack (the
-// note editor drags in the whole markdown/inspector chain incl. the ~500 KiB CodeMirror
-// vendor, the board its canvas engine) that only the matching tab needs. Splitting them
-// off keeps the sheet's first paint lean; the async chunks are still glob-precached, so
-// both stay fully offline. The thunks are named so the on-idle prefetch below warms the
-// SAME module cache Vite dedupes, and the first board/note open never blocks on a cold fetch.
-const importNoteView = () => import('@/components/organisms/note/NoteView');
-const importBoardView = () => import('@/components/organisms/board/BoardView');
+// Both surfaces resolve from their own deferred chunk (see `useLazyTabViews` for why, and for the
+// on-idle prefetch that warms them). The `.then` unwrap is because both modules are named exports.
 const NoteView = lazy(() => importNoteView().then((m) => ({ default: m.NoteView })));
 const BoardView = lazy(() => importBoardView().then((m) => ({ default: m.BoardView })));
-
-/**
- * Prefetches the note + board lazy chunks once the app is idle after boot, so the first open of either
- * tab paints instantly instead of waiting 3-4s on a cold fetch of its chunk (CodeMirror is the heavy one).
- * `requestIdleCallback` so it never contends with boot; a `setTimeout` fallback for browsers without it
- * (Safari). Fire-and-forget - a failed prefetch just leaves the normal lazy-load to fetch on first open.
- */
-function usePrefetchTabChunks(): void {
-   useEffect(() => {
-      const prefetch = () => { void importNoteView(); void importBoardView(); };
-      const w = window as Window & {
-         requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-         cancelIdleCallback?: (id: number) => void;
-      };
-      if (typeof w.requestIdleCallback === 'function') {
-         const id = w.requestIdleCallback(prefetch, { timeout: 3000 });
-         return () => w.cancelIdleCallback?.(id);
-      }
-      const id = window.setTimeout(prefetch, 1500);
-      return () => window.clearTimeout(id);
-   }, []);
-}
 
 function DesktopWorkspacePage() {
    // ==================
@@ -137,22 +113,7 @@ function DesktopWorkspacePage() {
 
    const areTrackersEditable = isEditing || isTrackersAlwaysEditable;
 
-   // A bare `N` toggles the Navigator (its main door - a power-nav tool). Ignored while editing text (a field,
-   // a board/note editor) and when a modifier is held, so browser shortcuts stay intact. Global (unlike the
-   // board-only `L` for Layers), since the Navigator crawls from any workspace.
-   useEffect(() => {
-      const onKeyDown = (event: KeyboardEvent) => {
-         if (event.ctrlKey || event.metaKey || event.altKey) return;
-         const target = event.target;
-         if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
-         if (event.key === 'n' || event.key === 'N') {
-            event.preventDefault();
-            toggleNavigator();
-         }
-      };
-      window.addEventListener('keydown', onKeyDown);
-      return () => window.removeEventListener('keydown', onKeyDown);
-   }, [toggleNavigator]);
+   useNavigatorShortcut(toggleNavigator);
 
    // ==================
    //  Drag and Drop
@@ -263,6 +224,11 @@ function DesktopWorkspacePage() {
    // cursor geometry (not this measurement), so it's unaffected either way.
    const droppableMeasuringStrategy = sheetZoom !== 1 ? MeasuringStrategy.BeforeDragging : MeasuringStrategy.Always;
 
+   // The one copy of the surface precedence: the sidebar's action set and the surface switch below both
+   // dispatch on it, so they can never disagree about which surface is showing. The switch re-tests
+   // `character` on the play-area branch only to narrow it non-null for the sheet.
+   const activeWindow = resolveActiveWindow({ hasNote: !!activeNote, hasBoard: !!activeBoard, hasCharacter: !!character });
+
    return (
       <DndContext sensors={sensors} onDragOver={handleDragOver} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} collisionDetection={customCollisionDetection} measuring={{ droppable: { strategy: droppableMeasuringStrategy } }}>
          {/* The shell is a fixed viewport: `relative` anchors the Expanded overlay, `overflow-hidden`
@@ -275,7 +241,7 @@ function DesktopWorkspacePage() {
                   isEditing={isEditing}
                   isDrawerOpen={isDrawerOpen}
                   isCollapsed={isSidebarCollapsed}
-                  activeWindow={ activeNote ? 'NOTE' : (activeBoard ? 'BOARD' : (character ? 'PLAY_AREA' : 'MAIN_MENU')) }
+                  activeWindow={activeWindow}
                   onExportNoteMarkdown={exportActiveNoteAsMarkdown}
                   onImportNoteMarkdownFile={importMarkdownFile}
                   onToggleEditing={() => setIsEditing(!isEditing)}
@@ -318,15 +284,15 @@ function DesktopWorkspacePage() {
                {/* Content area: own positioning context for the absolutely-filled
                    sheet/menu so they sit below the strip rather than over it. */}
                <div className="relative flex-1 min-h-0">
-                  { activeNote ? (
+                  { activeWindow === 'NOTE' ? (
                      <Suspense fallback={<TabViewLoading kind="note" />}>
                         <NoteView />
                      </Suspense>
-                  ) : activeBoard ? (
+                  ) : activeWindow === 'BOARD' ? (
                      <Suspense fallback={<TabViewLoading kind="board" />}>
                         <BoardView />
                      </Suspense>
-                  ) : character ? (
+                  ) : activeWindow === 'PLAY_AREA' && character ? (
                      <main ref={sheetScrollRef} data-tutorial="character-sheet" className="absolute w-full h-full flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
                         <CharacterNameHeader
                            key={character.id}
@@ -472,13 +438,7 @@ function DesktopWorkspacePage() {
                      activeDragItem={activeDragItem}
                      isEditing={isEditing}
                      isCompactDrawer={isCompactDrawer}
-                     contentScale={
-                        // A sheet-sourced card/tracker/journal renders in the zoom layer; match its on-screen
-                        // size so the clone isn't a mismatched 100%. Drawer items (unscaled) keep scale 1.
-                        activeDragItem && ('cardType' in activeDragItem || 'trackerType' in activeDragItem || ('pages' in activeDragItem && 'bookmarks' in activeDragItem))
-                           ? sheetZoom
-                           : 1
-                     }
+                     contentScale={isSheetScaledDragItem(activeDragItem) ? sheetZoom : 1}
                   />
                ),
             )}

@@ -33,3 +33,12 @@ export function stepSheetZoom(current: number, dir: 1 | -1): number {
    const next = Math.min(SHEET_ZOOM_LEVELS.length - 1, Math.max(0, nearest + dir));
    return SHEET_ZOOM_LEVELS[next];
 }
+
+/**
+ * True for a drag item that came off the sheet. A sheet-sourced card/tracker/journal renders in the
+ * zoom layer; match its on-screen size so the clone isn't a mismatched 100%. Drawer items (unscaled)
+ * keep scale 1. The shapes are duck-typed, so a new sheet-sourced item kind must be added here too.
+ */
+export function isSheetScaledDragItem(item: object | null): boolean {
+   return !!item && ('cardType' in item || 'trackerType' in item || ('pages' in item && 'bookmarks' in item));
+}
