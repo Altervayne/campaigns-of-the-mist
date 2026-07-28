@@ -14,18 +14,15 @@ import MobileFolderItem from '@/components/mobile/drawer/MobileFolderItem';
 import MobileDrawerItem from '@/components/mobile/drawer/MobileDrawerItem';
 import MobileDrawerContextMenu from '@/components/mobile/drawer/MobileDrawerContextMenu';
 import MobileAddFolderSheet from '@/components/mobile/drawer/MobileAddFolderSheet';
+import MobileDrawerToolbar from '@/components/mobile/drawer/MobileDrawerToolbar';
 import { DrawerSearchBar } from '@/components/molecules/drawer/DrawerSearchBar';
 import { DrawerListRow } from '@/components/molecules/drawer/DrawerListRow';
 import { DrawerItemPreview } from '@/components/organisms/drawer/DrawerItemPreview';
 import { GameTag } from '@/components/molecules/GameTag';
 import { FolderCountLabel } from '@/components/mobile/shared/FolderCountLabel';
-import { IconButton } from '@/components/ui/icon-button';
 
 // -- Icon Imports --
-import {
-   FolderPlus, List, Grid3x3, Download, Undo2, Redo2,
-   Folder as FolderIcon, MoreHorizontal,
-} from 'lucide-react';
+import { Folder as FolderIcon, MoreHorizontal } from 'lucide-react';
 
 // -- Store Imports --
 import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
@@ -389,99 +386,20 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
          </div>
 			)}
 
-			{/* Toolbar at bottom for thumb accessibility.
-			    Bottom padding is set inline as `calc(0.5rem + env(safe-area-inset-bottom))`
-			    rather than via the shared `pb-safe` utility: that utility is just the
-			    safe-area inset on its own, which on non-notch devices resolves to 0
-			    and overrides `py-2`'s bottom side, leaving the buttons flush to the
-			    screen edge. The inline calc keeps a real 0.5rem base and adds the
-			    safe-area inset on top, so the toolbar always has visible breathing
-			    room. Top + horizontal padding stay on the `py-2 px-3` utility. */}
-			<div
-				data-tutorial="drawer-toolbar"
-				className={cn(
-					"flex items-center justify-between px-3 py-2 border-t border-border bg-card",
-					isLeftHanded ? "flex-row-reverse" : ""
-				)}
-				style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))', ...fabSlotStyle }}
-			>
-				<div className={cn(
-               "flex items-center gap-2",
-               isLeftHanded ? "flex-row-reverse" : ""
-            )}>
-					{/* Add Folder (icon-only to keep the toolbar within a narrow viewport) */}
-               <IconButton
-						variant="outline"
-						size="lg"
-						onClick={handleAddFolder}
-						aria-label={t('Drawer.addFolder')}
-						title={t('Drawer.addFolder')}
-						className="cursor-pointer"
-					>
-						<FolderPlus className="w-5 h-5" />
-					</IconButton>
-
-               {/* Import */}
-					<form ref={formRef} className="hidden">
-						<input
-							ref={fileInputRef}
-							type="file"
-							accept=".cotm,.json,.md,.markdown,text/markdown"
-							onChange={handleFileSelected}
-						/>
-					</form>
-					<IconButton
-						variant="outline"
-						size="lg"
-						onClick={() => fileInputRef.current?.click()}
-						title={t('Drawer.Actions.import')}
-						className="cursor-pointer"
-					>
-						<Download className="w-5 h-5" />
-					</IconButton>
-
-               {/* View toggle */}
-               <IconButton
-                  data-tutorial="drawer-view-toggle"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsCompactView(!isCompactView)}
-                  title={isCompactView ? t('Drawer.toggleView') : t('Drawer.compactView')}
-                  className="cursor-pointer"
-               >
-                  {isCompactView ? <Grid3x3 className="w-5 h-5" /> : <List className="w-5 h-5" />}
-               </IconButton>
-				</div>
-
-				{/* Undo / Redo for drawer mutations (rename/move/delete/reorder/add) */}
-				<div className={cn(
-					"flex items-center gap-2",
-					isLeftHanded ? "flex-row-reverse" : ""
-				)}>
-					<IconButton
-						variant="outline"
-						size="lg"
-						onClick={() => { void undo(); }}
-						disabled={!canUndo}
-						title={t('Toolbelt.undo')}
-						aria-label={t('Toolbelt.undo')}
-						className="cursor-pointer"
-					>
-						<Undo2 className="w-5 h-5" />
-					</IconButton>
-					<IconButton
-						variant="outline"
-						size="lg"
-						onClick={() => { void redo(); }}
-						disabled={!canRedo}
-						title={t('Toolbelt.redo')}
-						aria-label={t('Toolbelt.redo')}
-						className="cursor-pointer"
-					>
-						<Redo2 className="w-5 h-5" />
-					</IconButton>
-				</div>
-			</div>
+			<MobileDrawerToolbar
+				isLeftHanded={isLeftHanded}
+				fabSlotStyle={fabSlotStyle}
+				formRef={formRef}
+				fileInputRef={fileInputRef}
+				onFileSelected={handleFileSelected}
+				onAddFolder={handleAddFolder}
+				isCompactView={isCompactView}
+				onToggleView={() => setIsCompactView(!isCompactView)}
+				canUndo={canUndo}
+				canRedo={canRedo}
+				onUndo={() => { void undo(); }}
+				onRedo={() => { void redo(); }}
+			/>
 
 			{/* Context Menu */}
 			<MobileDrawerContextMenu
