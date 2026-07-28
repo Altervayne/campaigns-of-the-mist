@@ -15,36 +15,27 @@ import { useNavigatorShortcut } from '@/hooks/character-sheet/useNavigatorShortc
 import { useSheetChromeState } from '@/hooks/character-sheet/useSheetChromeState';
 
 // -- Other Library Imports --
-import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { AnimatePresence } from 'framer-motion';
 
 // -- Utils Imports --
 import { customCollisionDetection } from '@/lib/utils/dnd';
 import { resolveActiveWindow } from '@/lib/character/activeWindow';
-import { isSheetScaledDragItem } from '@/lib/character/sheetZoom';
 
 // -- Component Imports --
-import { CommandPalette } from '@/components/organisms/command-palette/CommandPalette';
 import { TrackersSection } from '@/components/organisms/TrackersSection';
 import { CardsSection } from '@/components/organisms/CardsSection';
 import { SheetMainDropZone } from '@/components/organisms/SheetMainDropZone';
 import { CharacterNameHeader } from '@/components/molecules/CharacterNameHeader';
-import { SheetZoomControl } from '@/components/organisms/character-sheet/SheetZoomControl';
-import { FileDragOverlay } from '@/components/molecules/FileDragOverlay';
-import { DragOverlayContent } from '@/components/molecules/DragOverlayContent';
-import { CreateCardDialog } from '@/components/organisms/dialogs/CreateCardDialog';
-import { ChallengeCardEditor } from '@/components/organisms/dialogs/ChallengeCardEditor';
-import { Drawer } from '@/components/organisms/drawer/Drawer';
-import { ExpandedDrawer } from '@/components/organisms/drawer/ExpandedDrawer';
+import { WorkspaceContentOverlays } from '@/components/organisms/workspace/WorkspaceContentOverlays';
+import { WorkspaceDrawerRegion } from '@/components/organisms/workspace/WorkspaceDrawerRegion';
+import { WorkspaceDialogStack } from '@/components/organisms/workspace/WorkspaceDialogStack';
+import { WorkspaceDragOverlayLayer } from '@/components/organisms/workspace/WorkspaceDragOverlayLayer';
 import { DiceTrayPanel } from '@/components/organisms/dice/DiceTrayPanel';
 import { SidebarMenu } from '@/components/organisms/SidebarMenu';
 import { TabStrip } from '@/components/organisms/tabs/TabStrip';
 import { PortalTrailBar } from '@/components/organisms/tabs/PortalTrailBar';
 import { NavigatorPanel } from '@/components/organisms/navigator/NavigatorPanel';
-import { TabDragPreview } from '@/components/organisms/tabs/TabDragPreview';
-import { CharacterLoadDropZone } from '@/components/organisms/CharacterLoadDropzone';
-import { CannotDropOverlay } from '@/components/organisms/CannotDropOverlay';
-import { SettingsShell } from '@/components/organisms/dialogs/settings/SettingsShell';
 import MainMenu from '@/components/organisms/MainMenu';
 import MobileCharacterSheetPage from '@/components/mobile/character-sheet/MobileCharacterSheetPage';
 import { CharacterBootLoading } from '@/components/molecules/CharacterBootLoading';
@@ -336,54 +327,29 @@ function DesktopWorkspacePage() {
                   )}
 
 
-                  {/* Character from Drawer Drop Zone */}
-                  <CharacterLoadDropZone activeDragItem={activeDragItem} isBoardActive={!!activeBoard || !!activeNote} />
-
-                  {/* "Can't drop here" overlay for an incompatible (wrong-game) component */}
-                  <CannotDropOverlay active={isIncompatibleComponentDrag} />
-
-                  {/* File Drop Zone */}
-                  <FileDragOverlay isDragActive={isFileDragActive} />
-
-                  {/* Floating sheet-zoom control (character tabs only), bottom-right of the content area. */}
-                  {character && <SheetZoomControl />}
+                  <WorkspaceContentOverlays
+                     activeDragItem={activeDragItem}
+                     isBoardActive={!!activeBoard || !!activeNote}
+                     isIncompatibleComponentDrag={isIncompatibleComponentDrag}
+                     isFileDragActive={isFileDragActive}
+                     hasCharacter={!!character}
+                  />
                </div>
 
             </div>
 
-            {/* Drawer (Open side panel). Hidden while Expanded - the takeover renders over the whole row. */}
-            <AnimatePresence>
-               {isDrawerOpen && !isDrawerExpanded &&
-                  <Drawer
-                     isDragHovering={isOverDrawer}
-                     activeDragId={activeDragItem?.id ?? null}
-                     isFolderDragActive={isFolderDragActive}
-                     drawerDropTarget={drawerDropTarget}
-                     overDragId={overDragId}
-                     springTargetId={springTarget}
-                  />
-               }
-            </AnimatePresence>
-
-            {/* Expanded drawer: an overlay over this whole region (TabStrip + sheet/board + side-panel
-                region stay behind it; the sidebar is outside it, so it stays visible). It grows in from
-                the right and recedes for See-Workspace - kept MOUNTED throughout so a live drag survives.
-                `custom={isDrawerOpen}` drives the dynamic exit: contract (still open) hands back to the side
-                panel; close (not open) slides off the right. */}
-            <AnimatePresence custom={isDrawerOpen}>
-               {isDrawerExpanded &&
-                  <ExpandedDrawer
-                     key="expanded-drawer"
-                     isItemDragActive={isDrawerItemDragActive}
-                     isFolderDragActive={isFolderDragActive}
-                     workspaceDwellKey={workspaceDwellKey}
-                     activeDragId={activeDragItem?.id ?? null}
-                     overDragId={overDragId}
-                     drawerDropTarget={drawerDropTarget}
-                     springTargetId={springTarget}
-                  />
-               }
-            </AnimatePresence>
+            <WorkspaceDrawerRegion
+               isDrawerOpen={isDrawerOpen}
+               isDrawerExpanded={isDrawerExpanded}
+               isOverDrawer={isOverDrawer}
+               activeDragId={activeDragItem?.id ?? null}
+               overDragId={overDragId}
+               isFolderDragActive={isFolderDragActive}
+               isDrawerItemDragActive={isDrawerItemDragActive}
+               drawerDropTarget={drawerDropTarget}
+               springTarget={springTarget}
+               workspaceDwellKey={workspaceDwellKey}
+            />
             </div>
          </div>
 
@@ -391,59 +357,33 @@ function DesktopWorkspacePage() {
          <DiceTrayPanel />
 
 
-         {/* Hidden picker for the palette's "Import file" command; routes through the shared drop importer. */}
-         <form ref={formRef} className="hidden">
-            <input ref={fileInputRef} type="file" accept=".cotm,.json" onChange={handleFileSelected} />
-         </form>
-
-         {/* The images-won't-travel warning for note Markdown export (sidebar + palette share it). */}
-         {noteMarkdownDialogs}
-
-         {/* DIALOGS START */}
-         <CommandPalette
+         <WorkspaceDialogStack
+            formRef={formRef}
+            fileInputRef={fileInputRef}
+            onFileSelected={handleFileSelected}
+            noteMarkdownDialogs={noteMarkdownDialogs}
             commands={commands}
-         />
-         <CreateCardDialog
-            isOpen={isCardDialogOpen}
-            onOpenChange={setCardDialogOpen}
-            onConfirm={handleDialogConfirm}
-            mode={dialogMode}
-            cardData={cardToEdit ?? undefined}
-            modal={true}
+            isCardDialogOpen={isCardDialogOpen}
+            onCardDialogOpenChange={setCardDialogOpen}
+            onCardDialogConfirm={handleDialogConfirm}
+            cardDialogMode={dialogMode}
+            cardToEdit={cardToEdit}
             game={character?.game ?? 'LEGENDS'}
+            challengeCardToEdit={challengeCardToEdit}
+            onCloseChallengeEditor={closeChallengeEditor}
+            isSettingsOpen={isSettingsOpen}
+            onSettingsOpenChange={setSettingsOpen}
          />
-         <ChallengeCardEditor
-            isOpen={!!challengeCardToEdit}
-            onOpenChange={(open) => { if (!open) closeChallengeEditor(); }}
-            card={challengeCardToEdit}
-            modal={true}
+
+         <WorkspaceDragOverlayLayer
+            activeDragItem={activeDragItem}
+            activeTabDrag={activeTabDrag}
+            isEditing={isEditing}
+            isCompactDrawer={isCompactDrawer}
+            sheetZoom={sheetZoom}
+            renderClone={renderClone}
+            renderCluster={renderCluster}
          />
-         <SettingsShell
-            isOpen={isSettingsOpen}
-            onOpenChange={setSettingsOpen}
-         />
-         {/* DIALOGS END */}
-
-
-         {/* Reorders apply immediately, so disable the drop-back animation. */}
-         <DragOverlay dropAnimation={null}>
-            {renderClone(
-               activeTabDrag ? (
-                  <TabDragPreview tab={activeTabDrag} />
-               ) : (
-                  <DragOverlayContent
-                     activeDragItem={activeDragItem}
-                     isEditing={isEditing}
-                     isCompactDrawer={isCompactDrawer}
-                     contentScale={isSheetScaledDragItem(activeDragItem) ? sheetZoom : 1}
-                  />
-               ),
-            )}
-         </DragOverlay>
-
-         {/* Cursor cluster as a SIBLING of <DragOverlay> (never a child: the overlay's
-             transform would offset this fixed element). */}
-         {renderCluster()}
       </DndContext>
    );
 }
