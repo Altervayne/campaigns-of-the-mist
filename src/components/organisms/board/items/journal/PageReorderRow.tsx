@@ -10,7 +10,7 @@ import type { SortableChildProps } from '@/components/dnd';
 /**
  * One row in the pages overview: a hover-revealed grip that carries the drag listeners, then the page's
  * number + first-line snippet as a jump button. Click jumps to the page; the grip's click is swallowed so
- * a grip tap never doubles as a jump.
+ * a grip tap never doubles as a jump, and the row's pointerdown so a press never also drags the board item.
  */
 export function PageReorderRow({
    label,
@@ -32,7 +32,14 @@ export function PageReorderRow({
    onJump: () => void;
 }) {
    return (
-      <div className={cn('flex items-center rounded-sm', active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted')}>
+      <div
+         className={cn('flex items-center rounded-sm', active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted')}
+         // React events bubble through the component tree, not the DOM, so the popover's body portal does NOT
+         // keep a press off the board item. Stopping here covers the grip and the jump button alike: React
+         // dispatches to the target first, so dnd-kit's own pointerdown has already run and the sortable drag
+         // still starts; the bubble is only cut before it reaches the item's move gesture.
+         onPointerDown={(event) => event.stopPropagation()}
+      >
          <button
             type="button"
             {...dragAttributes}
