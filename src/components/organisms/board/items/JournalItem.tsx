@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -23,10 +23,9 @@ import { PagesReorderPopover } from './journal/PagesReorderPopover';
 
 // -- Hook Imports --
 import { useBoardMentionMint } from '@/hooks/board/useBoardMentionMint';
-import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
-
-// -- Store Imports --
-import { useJournalViewStore } from '@/lib/stores/journalViewStore';
+import { useJournalPageBuffer } from '@/hooks/board/useJournalPageBuffer';
+import { useJournalPageIndex } from '@/hooks/board/useJournalPageIndex';
+import { useJournalTitleBuffer } from '@/hooks/board/useJournalTitleBuffer';
 
 // -- Type Imports --
 import type { BoardItem, BoardItemContent, JournalBoardContent } from '@/lib/types/board';
@@ -96,82 +95,13 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
    // (kind / mode / sourceDrawerItemId) intact so the Save-back link survives every edit.
    const commitJournal = (next: typeof journal) => onContentChange({ ...content, data: next });
 
-   // The current page is EPHEMERAL view state (not character data): read/write an id-keyed store so it
-   // survives the sheet's tab-switch unmount, and one store serves both the sheet journal and its board
-   // copy (same journal id). Clamp on read - a stored index can outlive a page deletion.
-   const storedIndex = useJournalViewStore((state) => state.journalView[journal.id] ?? 0);
-   const setJournalPage = useJournalViewStore((state) => state.setJournalPage);
-   const pageIndex = Math.min(storedIndex, pages.length - 1);
-   const setIndex = (next: number) => setJournalPage(journal.id, next);
-   const activePage = pages[pageIndex];
-   const [text, setText] = useState(activePage.text);
-
-   // Reset the buffer when the active page changes (switch, add/remove, undo/redo) via React's
-   // adjust-state-during-render pattern. Keyed by page id + stored text, so typing (which
-   // leaves both untouched) never resets the buffer mid-edit.
-   const [sync, setSync] = useState({ id: activePage.id, stored: activePage.text });
-   if (sync.id !== activePage.id || sync.stored !== activePage.text) {
-      setSync({ id: activePage.id, stored: activePage.text });
-      setText(activePage.text);
-   }
+   // The page position, then the two buffered text fields. Order is load-bearing: the page buffer's flushes
+   // register before the title's, and both commits derive from this render's `journal` snapshot.
+   const { pageIndex, setIndex, activePage } = useJournalPageIndex(journal.id, pages);
+   const { text, setText, commit, pageAreaRef } = useJournalPageBuffer({ journal, pages, activePage, isEditing, autoFocusEditor, commitJournal });
+   const { titleText, setTitleText, commitTitle, titleAreaRef } = useJournalTitleBuffer({ journal, isEditing, commitJournal });
 
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
-
-   const commit = () => {
-      if (text !== activePage.text) commitJournal({ ...journal, pages: pages.map((page) => (page.id === activePage.id ? { ...page, text } : page)) });
-   };
-
-   // A tab switch unmounts the board without a blur; flush the active page's buffer so it isn't lost.
-   useCommitOnUnmount(commit);
-
-   // Entering editing focuses the page body on the next frame - deferred past the promoting click's own focus
-   // handling (which lands on the box body and would otherwise blur the freshly mounted textarea). Caret to
-   // the END, the natural place to keep writing; the title stays a secondary click-in field.
-   const pageAreaRef = useRef<HTMLTextAreaElement | null>(null);
-   useEffect(() => {
-      if (!isEditing || !autoFocusEditor) return;
-      const raf = requestAnimationFrame(() => {
-         const el = pageAreaRef.current;
-         if (!el) return;
-         el.focus();
-         const end = el.value.length;
-         el.setSelectionRange(end, end);
-      });
-      return () => cancelAnimationFrame(raf);
-   }, [isEditing, autoFocusEditor]);
-
-   // Leaving editing swaps the page textarea for the rendered Markdown in place (no unmount, no blur), so
-   // flush the page buffer on the editing->false edge. Dirty-guarded, so a normal blur-then-exit no-ops.
-   const wasEditingPage = useRef(isEditing);
-   useEffect(() => {
-      const was = wasEditingPage.current;
-      wasEditingPage.current = isEditing;
-      if (was && !isEditing) commit();
-   });
-
-   // The title is a single-line markdown heading, held in its own buffer and committed on blur. Like the
-   // bookmark label it also flushes on the editable->false edge: deselecting swaps the input for the
-   // rendered title in place (no unmount, maybe no blur), which would otherwise strand a just-typed title.
-   const [titleText, setTitleText] = useState(journal.title);
-   const [titleSync, setTitleSync] = useState(journal.title);
-   if (titleSync !== journal.title) { setTitleSync(journal.title); setTitleText(journal.title); }
-   const commitTitle = () => { if (titleText !== journal.title) commitJournal({ ...journal, title: titleText }); };
-   useCommitOnUnmount(commitTitle);
-   const wasEditingTitle = useRef(isEditing);
-   useEffect(() => {
-      const was = wasEditingTitle.current;
-      wasEditingTitle.current = isEditing;
-      if (was && !isEditing) commitTitle();
-   });
-   // The title editor is a textarea that grows with its content (Enter adds a line, never commits); resize
-   // it to fit on every change and when it (re)mounts on entering editing.
-   const titleAreaRef = useRef<HTMLTextAreaElement | null>(null);
-   useLayoutEffect(() => {
-      const el = titleAreaRef.current;
-      if (!el) return;
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-   }, [titleText, isEditing]);
 
    const goPrev = () => { commit(); setIndex(Math.max(0, pageIndex - 1)); };
    const goNext = () => { commit(); setIndex(Math.min(pages.length - 1, pageIndex + 1)); };
