@@ -37,7 +37,7 @@ import type { DrawerItem } from '@/lib/types/drawer';
  * tab-lane geometry test reads its rect, so the marker must stay on the full strip.
  *
  * The tab `SortableContext` is registered inside the **sheet's** `DndContext`
- * (`CharacterSheetPage`), not its own; the strip mounts within that subtree, so the
+ * (`WorkspacePage`), not its own; the strip mounts within that subtree, so the
  * tabs reorder through the sheet's shared sensors, collision detection, drag overlay,
  * and `handleDragEnd` (which routes a `'tab'` drag to `reorderTabs`). Sharing one
  * context is what lets a tab drag later cross between the strip and the drawer.

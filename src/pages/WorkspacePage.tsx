@@ -89,7 +89,7 @@ function usePrefetchTabChunks(): void {
    }, []);
 }
 
-function DesktopCharacterSheetPage() {
+function DesktopWorkspacePage() {
    // ==================
    //  Localization
    // ==================
@@ -491,7 +491,7 @@ function DesktopCharacterSheetPage() {
    );
 }
 
-export default function CharacterSheetPage() {
+export default function WorkspacePage() {
    const { isMobile } = useDeviceType();
 
    // The ActiveCharacterStoreProvider is mounted in App.tsx (above
@@ -501,5 +501,5 @@ export default function CharacterSheetPage() {
       return <MobileCharacterSheetPage />;
    }
 
-   return <DesktopCharacterSheetPage />;
+   return <DesktopWorkspacePage />;
 }
