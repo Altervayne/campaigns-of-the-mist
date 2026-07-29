@@ -29,6 +29,7 @@ import { useCharacterStore } from '@/lib/stores/characterStore';
 
 // -- Drawer Data Layer Imports --
 import { exportFolderAsNestedTree, getItem } from '@/lib/drawer/drawerRepository';
+import { hasDrawerItemCapability } from '@/lib/drawer/drawerItemCapabilities';
 
 // -- Utils Imports --
 import { deriveExportHandle, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
@@ -222,11 +223,15 @@ export default function MobileDrawerContextMenu({
 		}
 	};
 
-	// A saved character loads INTO the sheet (replacing the active one) - no game-match needed. Every
-	// other addable item (cards/trackers) adds to the loaded character, which needs one present + a match.
+	// A saved character loads INTO the sheet (replacing the active one) - no game-match needed. Adding to
+	// the loaded character is offered only by the types that declare it, and needs a character present.
+	// `isFolder` still gates it because a folder target leaves the previous item's record resolved.
 	const isSheetItem = item?.type === 'FULL_CHARACTER_SHEET';
 	const canLoadCharacter = isSheetItem && !!item && !!onLoadCharacter;
-	const canAddToCharacter = !isFolder && !isSheetItem && !!character && !!onAddToCharacter;
+	const canAddToCharacter = !isFolder
+		&& hasDrawerItemCapability(item?.type, 'ADD_TO_CHARACTER')
+		&& !!character
+		&& !!onAddToCharacter;
 
 	// Position the menu at the clamped coordinates once measured; before the
 	// layout effect runs, anchor at the raw finger position (size is unaffected
@@ -284,7 +289,7 @@ export default function MobileDrawerContextMenu({
                   </Button>
                )}
 
-               {/* Add to Character (cards/trackers only, if a character is loaded) */}
+               {/* Add to Character (types declaring ADD_TO_CHARACTER, if a character is loaded) */}
                {canAddToCharacter && (
                   <Button
                      variant="ghost"
