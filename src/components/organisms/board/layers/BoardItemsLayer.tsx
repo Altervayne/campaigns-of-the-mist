@@ -4,8 +4,11 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 // -- Utils Imports --
 import { zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
-import { toolbarClampDown } from '@/lib/board/boardCoordinates';
+import { toolbarClampDown, toolbarClampX } from '@/lib/board/boardCoordinates';
 import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
+
+// -- Custom Hooks --
+import { useToolbarMetrics } from '@/hooks/board/useToolbarMetrics';
 
 // -- Component Imports --
 import { BoardItemBox } from '../BoardItemBox';
@@ -29,6 +32,8 @@ function buildConnectionContent(item: BoardItem | undefined, style: ConnectionSt
 
 interface BoardItemsLayerProps {
    viewport: Viewport;
+   /** The clip's screen width, so a floating toolbar can be held inside its left/right edges. */
+   clipWidth: number;
    items: Record<string, BoardItem>;
    /** Paint order: non-zone items first, then zones - each rendered by the same single pass. */
    nonZoneItems: BoardItem[];
@@ -73,6 +78,7 @@ interface BoardItemsLayerProps {
  */
 export function BoardItemsLayer({
    viewport,
+   clipWidth,
    items,
    nonZoneItems,
    zoneItems,
@@ -105,6 +111,13 @@ export function BoardItemsLayer({
    handleDuplicateSelection,
    handleDeleteSelection,
 }: BoardItemsLayerProps) {
+   // Each floating bar measures itself for the sideways clamp: its width varies with its own contents (the
+   // per-kind action slot), so no constant can stand in for it. Both reads come off a ResizeObserver, so a
+   // pan costs arithmetic only. The clamps stay undefined until a bar is actually off an edge, keeping the
+   // memoized boxes out of a pan re-render.
+   const itemToolbar = useToolbarMetrics();
+   const groupToolbar = useToolbarMetrics();
+
    /**
     * The off-top clamp for the sole-selected item's toolbar; undefined for every other item, since only the
     * toolbar-bearing sole selection needs measuring. `item.y` is the stored top, so the live move delta is
@@ -113,6 +126,17 @@ export function BoardItemsLayer({
    const toolbarClampFor = (item: BoardItem): number | undefined => {
       if (item.id !== soleSelectedId) return undefined;
       return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0), viewport);
+   };
+
+   /**
+    * The off-edge clamp for that same toolbar. The bar centres on the box, so its anchor is the box's left
+    * edge plus the measured half-width - which the browser resolved against the width the box actually
+    * RENDERS at (a collapsed zone's bar, an expanded card's sheet), not the stored width.
+    */
+   const toolbarClampXFor = (item: BoardItem): number | undefined => {
+      if (item.id !== soleSelectedId) return undefined;
+      const anchor = item.x + (moveDeltaFor(item.id)?.x ?? 0) + itemToolbar.metrics.anchorOffset;
+      return toolbarClampX(anchor, itemToolbar.metrics.screenWidth, 'center', clipWidth, viewport);
    };
 
    /** Renders one item box. Shared by the non-zone and zone passes; a zone paints its own tinted frame inline. */
@@ -128,6 +152,8 @@ export function BoardItemsLayer({
             soleSelected={item.id === soleSelectedId}
             isEditing={item.id === editingId}
             toolbarClamp={toolbarClampFor(item)}
+            toolbarClampX={toolbarClampXFor(item)}
+            toolbarMeasureRef={itemToolbar.measureRef}
             zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount)}
             memberCount={members?.length}
             resizeMin={members ? zoneContentMinSize(item, members) : item.kind === 'portal' ? PORTAL_MIN_SIZE : undefined}
@@ -172,6 +198,8 @@ export function BoardItemsLayer({
                <BoardGroupToolbar
                   zoom={viewport.zoom}
                   clampDown={toolbarClampDown(groupBbox.y, viewport)}
+                  clampX={toolbarClampX(groupBbox.x + groupToolbar.metrics.anchorOffset, groupToolbar.metrics.screenWidth, 'left', clipWidth, viewport)}
+                  measureRef={groupToolbar.measureRef}
                   onMoveStart={(event) => {
                      const anchor = [...selectedIds][0];
                      if (anchor) handleMoveStart(anchor, event);

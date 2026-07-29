@@ -81,6 +81,10 @@ interface BoardItemBoxProps {
    isEditing: boolean;
    /** World-px to push the toolbar down so it clears the clip's top edge (a tall item off the top); 0/undefined = no clamp. */
    toolbarClamp?: number;
+   /** World-px to slide the toolbar sideways so it clears the clip's left/right edge; 0/undefined = no clamp. */
+   toolbarClampX?: number;
+   /** Measures the toolbar for those clamps; the canvas owns the arithmetic. */
+   toolbarMeasureRef: (node: HTMLDivElement | null) => void;
    /** A zone's member count, for its collapsed-bar badge (undefined for non-zones). */
    memberCount?: number;
    /** Current zoom, so screen deltas convert to world deltas and chrome stays screen-constant. */
@@ -145,6 +149,8 @@ export const BoardItemBox = memo(function BoardItemBox({
    soleSelected,
    isEditing,
    toolbarClamp,
+   toolbarClampX,
+   toolbarMeasureRef,
    memberCount,
    zoom,
    moveDelta,
@@ -477,6 +483,8 @@ export const BoardItemBox = memo(function BoardItemBox({
                <BoardItemToolbar
                   zoom={zoom}
                   clampDown={toolbarClamp}
+                  clampX={toolbarClampX}
+                  measureRef={toolbarMeasureRef}
                   // An expanded zone's title bar sits above the frame too; lift the toolbar above it.
                   extraBottom={isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0}
                   onMoveStart={(event) => onMoveStart(item.id, event)}

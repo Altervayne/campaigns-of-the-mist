@@ -20,7 +20,9 @@ import { cn } from '@/lib/utils';
  *
  * When a tall item's top runs off the top of the canvas, the bar would float out of reach above it;
  * `clampDown` (world px, from the canvas) lowers the bar's anchor so it stays visible - it sticks just
- * below the clip's top edge and floats over the item's interior instead.
+ * below the clip's top edge and floats over the item's interior instead. `clampX` does the same sideways
+ * against the clip's left/right edges, where the adjacent panels begin: the bar gives up its centring
+ * near an edge rather than being cut off by the clip.
  */
 
 interface BoardItemToolbarProps {
@@ -37,19 +39,27 @@ interface BoardItemToolbarProps {
    extraBottom?: number;
    /** World-px to lower the bar so it clears the clip's top edge (a tall item off the top); 0 = no clamp. */
    clampDown?: number;
+   /** World-px to slide the bar sideways so it clears the clip's left/right edge; 0 = no clamp. */
+   clampX?: number;
+   /** Measurement mount point for the off-edge clamps; the canvas owns the arithmetic. */
+   measureRef: (node: HTMLDivElement | null) => void;
 }
 
-export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToFront, onSendToBack, onDelete, slotRef, extraBottom = 0, clampDown = 0 }: BoardItemToolbarProps) {
+export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToFront, onSendToBack, onDelete, slotRef, measureRef, extraBottom = 0, clampDown = 0, clampX = 0 }: BoardItemToolbarProps) {
    const { t } = useTranslation();
 
    // The bar anchors at the item's top edge (bottom:100%), lifted by any zone title-bar and lowered by the
    // off-top clamp; both are world px, so a subtractive clamp can push the anchor past the box interior.
    const bottom = clampDown || extraBottom ? `calc(100% + ${extraBottom - clampDown}px)` : '100%';
+   // The sideways clamp rides the transform rather than `left`, so the anchor offset measured off this node
+   // stays the box's own half-width instead of feeding the clamp back into itself.
+   const shiftX = clampX ? `calc(-50% + ${clampX}px)` : '-50%';
 
    return (
       <div
+         ref={measureRef}
          className="absolute left-1/2"
-         style={{ bottom, transformOrigin: '50% 100%', transform: `translateX(-50%) scale(${1 / zoom})` }}
+         style={{ bottom, transformOrigin: '50% 100%', transform: `translateX(${shiftX}) scale(${1 / zoom})` }}
       >
          {/* The padding is the screen-constant gap above the item (it scales with the bar). */}
          <div className="pb-2">

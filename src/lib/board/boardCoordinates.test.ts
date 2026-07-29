@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { MAX_ZOOM, MIN_ZOOM, TOOLBAR_TOP_CLEARANCE, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, toolbarClampDown, zoomToCursor } from './boardCoordinates';
+import { MAX_ZOOM, MIN_ZOOM, TOOLBAR_EDGE_CLEARANCE, TOOLBAR_TOP_CLEARANCE, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, toolbarClampDown, toolbarClampX, zoomToCursor } from './boardCoordinates';
 
 // -- Type Imports --
 import type { BoardItem, Viewport } from '@/lib/types/board';
@@ -206,5 +206,61 @@ describe('toolbarClampDown', () => {
    it('follows the pan, so panning the box back down releases the clamp', () => {
       expect(toolbarClampDown(0, { x: 0, y: 0, zoom: 1 })).toBe(TOOLBAR_TOP_CLEARANCE);
       expect(toolbarClampDown(0, { x: 0, y: TOOLBAR_TOP_CLEARANCE, zoom: 1 })).toBeUndefined();
+   });
+});
+
+describe('toolbarClampX', () => {
+   const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
+   const BAR = 200;
+   const CLIP = 1000;
+
+   it('returns nothing while the bar sits clear of both edges', () => {
+      expect(toolbarClampX(500, BAR, 'center', CLIP, viewport)).toBeUndefined();
+      expect(toolbarClampX(500, BAR, 'left', CLIP, viewport)).toBeUndefined();
+   });
+
+   it('returns nothing until the bar and the clip have been measured', () => {
+      // A bar hard off the left edge, so only the unmeasured guard can be keeping the clamp away.
+      expect(toolbarClampX(-500, 0, 'center', CLIP, viewport)).toBeUndefined();
+      expect(toolbarClampX(-500, BAR, 'center', 0, viewport)).toBeUndefined();
+   });
+
+   it('pushes a centred bar right when it runs off the left edge', () => {
+      // Anchor at screen 50, so the bar spans -50..150; its left end must reach the clearance line.
+      expect(toolbarClampX(50, BAR, 'center', CLIP, viewport)).toBe(TOOLBAR_EDGE_CLEARANCE + 50);
+   });
+
+   it('pushes a centred bar left when it runs off the right edge', () => {
+      // Anchor at screen 950, so the bar spans 850..1050; its right end must reach 1000 - clearance.
+      expect(toolbarClampX(950, BAR, 'center', CLIP, viewport)).toBe(-(50 + TOOLBAR_EDGE_CLEARANCE));
+   });
+
+   it('clamps a left-aligned bar differently from a centred one at the SAME anchor', () => {
+      // The group bar starts at its anchor; the item bar straddles it. At an anchor 20px inside the left
+      // edge the centred bar is already half cut off, while the left-aligned one still fits.
+      expect(toolbarClampX(20, BAR, 'center', CLIP, viewport)).toBe(TOOLBAR_EDGE_CLEARANCE + 80);
+      expect(toolbarClampX(20, BAR, 'left', CLIP, viewport)).toBeUndefined();
+      // Mirrored at the right edge: the left-aligned bar hangs a full width past the anchor, the centred
+      // one only half of it.
+      expect(toolbarClampX(880, BAR, 'left', CLIP, viewport)).toBe(-(80 + TOOLBAR_EDGE_CLEARANCE));
+      expect(toolbarClampX(880, BAR, 'center', CLIP, viewport)).toBeUndefined();
+   });
+
+   it('measures the overshoot in screen px but reports it in world px', () => {
+      // Anchor at world 10, zoom 2 -> screen 20. The bar is 200 SCREEN px whatever the zoom (it
+      // counter-scales), so it spans -80..120 and must move 88 screen px = 44 world px. Treating the
+      // bar's width as world units would size it 400 screen px here and give a different answer.
+      expect(toolbarClampX(10, BAR, 'center', CLIP, { x: 0, y: 0, zoom: 2 })).toBe((TOOLBAR_EDGE_CLEARANCE + 80) / 2);
+   });
+
+   it('follows the pan, so panning the bar back inside releases the clamp', () => {
+      expect(toolbarClampX(0, BAR, 'left', CLIP, viewport)).toBe(TOOLBAR_EDGE_CLEARANCE);
+      expect(toolbarClampX(0, BAR, 'left', CLIP, { x: TOOLBAR_EDGE_CLEARANCE, y: 0, zoom: 1 })).toBeUndefined();
+   });
+
+   it('keeps the left end of a bar too wide for the clip in view', () => {
+      // A 200px bar in a 100px clip cannot fit; the grip lives at the left end, so that end wins.
+      expect(toolbarClampX(50, BAR, 'left', 100, viewport)).toBe(TOOLBAR_EDGE_CLEARANCE - 50);
+      expect(toolbarClampX(50, BAR, 'left', 100, viewport)).toBeLessThan(0);
    });
 });

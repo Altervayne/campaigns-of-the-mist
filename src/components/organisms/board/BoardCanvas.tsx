@@ -534,6 +534,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
 
          <BoardItemsLayer
             viewport={viewport}
+            clipWidth={clipRect.width}
             items={items}
             nonZoneItems={nonZoneItems}
             zoneItems={zoneItems}

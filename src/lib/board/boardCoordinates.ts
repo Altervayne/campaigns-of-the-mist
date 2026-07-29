@@ -62,6 +62,42 @@ export function toolbarClampDown(topWorld: number, viewport: Viewport): number |
    return overshoot > 0 ? overshoot / viewport.zoom : undefined;
 }
 
+/** Screen-px a selection's floating toolbar keeps clear of the clip's left and right edges. */
+export const TOOLBAR_EDGE_CLEARANCE = 8;
+
+/** How a floating toolbar sits against its anchor point: centred over it, or starting at it. */
+export type ToolbarAlign = 'center' | 'left';
+
+/**
+ * World-px to slide a selection's toolbar sideways so it stays fully inside the clip, from the world X of
+ * the point it anchors at. The bar counter-scales by 1/zoom to hold a constant on-screen size, so
+ * `barScreenWidth` is SCREEN px while the result is world px, like {@link toolbarClampDown}. Undefined
+ * when the bar already fits (a stable value, so an unclamped box still skips a pan re-render). Near an
+ * edge the bar gives up its centring rather than being cut off; one too wide for the clip keeps its left
+ * end, where the grip lives, in view.
+ */
+export function toolbarClampX(
+   anchorWorldX: number,
+   barScreenWidth: number,
+   align: ToolbarAlign,
+   clipWidth: number,
+   viewport: Viewport,
+): number | undefined {
+   // Before the bar or the clip has been measured there is nothing to clamp against.
+   if (barScreenWidth <= 0 || clipWidth <= 0) return undefined;
+   const anchorScreen = viewport.x + anchorWorldX * viewport.zoom;
+   const leftScreen = align === 'center' ? anchorScreen - barScreenWidth / 2 : anchorScreen;
+   const rightScreen = leftScreen + barScreenWidth;
+   const minLeft = TOOLBAR_EDGE_CLEARANCE;
+   const maxRight = clipWidth - TOOLBAR_EDGE_CLEARANCE;
+
+   let shift = 0;
+   if (leftScreen < minLeft) shift = minLeft - leftScreen;
+   // Pushing left to reveal the right end never costs the left end: the floor wins for an over-wide bar.
+   else if (rightScreen > maxRight) shift = Math.max(maxRight - rightScreen, minLeft - leftScreen);
+   return shift !== 0 ? shift / viewport.zoom : undefined;
+}
+
 /**
  * The on-screen grid spacing band: the adaptive helper keeps a cell within these px so the
  * grid never turns to mush zoomed out or sparse zoomed in.
