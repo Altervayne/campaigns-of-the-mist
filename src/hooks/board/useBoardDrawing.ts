@@ -8,6 +8,7 @@ import cuid from 'cuid';
 import { ERASER_RADIUS, isLineDegenerate, makeStroke, MIN_LINE_LENGTH, pointsBounds, rebasePoints, regularPolygonVertices, shapeBoxCorners, snapAngle, strokeHitsPoint } from '@/lib/board/drawingStyle';
 import { nextScopeZ } from '@/lib/board/boardTree';
 import { EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseContext';
+import { isEditableTarget } from '@/lib/utils/textEntry';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';
@@ -198,8 +199,7 @@ export function useBoardDrawing({
    useEffect(() => {
       if (activeTool === 'select') return;
       const onKeyDown = (event: KeyboardEvent) => {
-         const target = event.target;
-         if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+         if (isEditableTarget(event.target)) return;
          const verts = polygonRef.current;
          if (verts) {
             if (event.key === 'Escape') {

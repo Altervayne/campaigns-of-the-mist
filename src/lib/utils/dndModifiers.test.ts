@@ -2,15 +2,15 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { restrictToParentElement, restrictToVerticalAxis } from './themeReorderModifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from './dndModifiers';
 
 // -- Type Imports --
 import type { ClientRect } from '@dnd-kit/core';
 
 /*
- * The custom-theme reorder is locked to a clean vertical slide inside the list: vertical-axis kills the
- * horizontal drift, and the parent bound stops the row being dragged past the ends (which would grow the
- * scroller). Only the bits these modifiers read are built here.
+ * A reorder list is locked to a clean vertical slide inside its box: vertical-axis kills the horizontal
+ * drift, and the parent bound stops the row being dragged past the ends (which would grow the scroller).
+ * Only the bits these modifiers read are built here.
  */
 
 const args = (over: object) =>

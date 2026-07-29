@@ -2,10 +2,10 @@
 import type { Modifier } from '@dnd-kit/core';
 
 /*
- * Drag modifiers for the custom-theme reorder list. The `@dnd-kit/modifiers` package isn't a dependency, so
- * these are inlined (vertical-axis matches the existing mobile-list convention; the parent bound mirrors
- * `restrictToParentElement`). Together they keep a row sliding straight up and down within the list's box -
- * no horizontal drift, and no dragging past the ends to grow the scroller.
+ * Drag modifiers shared by every vertical reorder list (theme manager, journal pages, the mobile card and
+ * drawer lists). The `@dnd-kit/modifiers` package isn't a dependency, so these are inlined; don't add it.
+ * Together they keep a row sliding straight up and down within its list box - no horizontal drift, and no
+ * dragging past the ends to grow the scroller. A list may take either one on its own.
  */
 
 /** Locks a drag to the Y axis (kills horizontal drift on a row drag). */

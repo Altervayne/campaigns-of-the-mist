@@ -8,9 +8,8 @@ import type { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import type { useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import type { CharacterState } from '@/lib/stores/characterStore';
 import type { DrawerState } from '@/lib/stores/drawerStore';
-import type { Journal } from '@/lib/types/board';
-import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
-import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
+import type { Character } from '@/lib/types/character';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 import type { DragKind, DrawerDropTarget } from '@/lib/utils/dragFeedback';
 
 /*
@@ -40,7 +39,7 @@ export interface DragEndTarget extends DragEndSnapshot {
 export interface DragEndDeps {
    character: Character | null;
    currentFolderView: DrawerState['currentFolderView'];
-   activeDragItem: CardData | Tracker | Journal | DrawerItem | FolderType | null;
+   activeDragItem: ActiveDragItem;
    /** Read live by the cross-character import, NOT snapshotted - see `dragEndSheetRoutes`. */
    dragSourceCharacterIdRef: RefObject<string | null>;
    tNotifications: ReturnType<typeof useTranslation>['t'];

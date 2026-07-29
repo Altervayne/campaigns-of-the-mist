@@ -11,14 +11,14 @@ import { DrawerCompactItemEntry } from '@/components/molecules/drawer/DrawerComp
 import { DrawerItemPreview, FolderPreview } from '@/components/organisms/drawer/DrawerItemPreview';
 
 // -- Type Imports --
-import type { Card as CardData, Tracker } from '@/lib/types/character';
 import type { Journal } from '@/lib/types/board';
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 
 
 
 interface DragOverlayContentProps {
-   activeDragItem: CardData | Tracker | Journal | DrawerItem | FolderType | null;
+   activeDragItem: ActiveDragItem;
    isEditing: boolean;
    isCompactDrawer: boolean;
    /**

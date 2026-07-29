@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent, Modifier, SensorDescriptor, SensorOptions } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent, SensorDescriptor, SensorOptions } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Component Imports --
@@ -11,22 +11,11 @@ import MobileFolderItem from '@/components/mobile/drawer/MobileFolderItem';
 import MobileDrawerItem from '@/components/mobile/drawer/MobileDrawerItem';
 import MobileDrawerDragOverlay from '@/components/mobile/drawer/MobileDrawerDragOverlay';
 
+// -- Utils Imports --
+import { restrictToVerticalAxis } from '@/lib/utils/dndModifiers';
+
 // -- Type Imports --
 import type { DrawerFolderRecord, DrawerItemRecord } from '@/lib/drawer/drawerRecords';
-
-
-
-/**
- * Inline `@dnd-kit` modifier that locks dragging to the vertical axis: any
- * horizontal pointer travel is dropped from the transform applied to the
- * `DragOverlay`. This keeps the dragged item moving with the finger up and down
- * (so it visually follows the gesture across the screen) while making
- * horizontal drift impossible - which, combined with `overflow-x: hidden` on
- * the scroll container, prevents the drag from expanding the container and
- * breaking the drawer layout. Inlined rather than depending on
- * `@dnd-kit/modifiers` (not installed; do not add).
- */
-const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 
 

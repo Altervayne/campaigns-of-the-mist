@@ -13,9 +13,7 @@ import { cn } from '@/lib/utils';
 
 // -- Type Imports --
 import type { Variants } from 'framer-motion';
-import type { Card as CardData, Tracker } from '@/lib/types/character';
-import type { Journal } from '@/lib/types/board';
-import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 
 
 const overlayVariants: Variants = {
@@ -32,7 +30,7 @@ const overlayVariants: Variants = {
 };
 
 interface CharacterLoadDropZoneProps {
-   activeDragItem: CardData | Tracker | Journal | DrawerItem | FolderType | null;
+   activeDragItem: ActiveDragItem;
    /** A board or note owns the surface: it captures a character drop, so this load-to-tab zone steps aside. */
    isBoardActive?: boolean;
 }

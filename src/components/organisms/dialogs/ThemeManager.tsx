@@ -30,7 +30,7 @@ import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 import { PRESET_LABELS, PRESET_THEMES, customThemeClass, resolveThemeTokens } from '@/lib/theme/themeTokens';
 import { useCreateCustomTheme } from '@/lib/theme/useCreateCustomTheme';
-import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/theme/themeReorderModifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/utils/dndModifiers';
 import { DRAWER_MENU_TRIGGER_CLASS } from '@/components/molecules/drawer/drawerMenuTrigger';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 import { exportCustomTheme, importFromFile } from '@/lib/utils/export-import';

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 // -- Utils Imports --
-import { isEditableTarget } from '@/components/organisms/board/boardCanvasConstants';
+import { isEditableTarget } from '@/lib/utils/textEntry';
 
 /*
  * The mode-independent pan-arm keys. Space and Alt each arm a pan while held; the hook returns the state

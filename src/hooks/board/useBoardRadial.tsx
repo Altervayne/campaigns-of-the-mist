@@ -10,7 +10,7 @@ import { GAME_VISUALS, GAME_CARD_OPTIONS, CHALLENGE_GAME_OPTIONS } from '@/lib/c
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { CREATION_TAXONOMY } from '@/lib/creation/creationTaxonomy';
-import { isEditableTarget } from '@/components/organisms/board/boardCanvasConstants';
+import { isEditableTarget } from '@/lib/utils/textEntry';
 
 // -- Component Imports --
 import type { RadialNode } from '@/components/organisms/board/BoardRadialMenu';

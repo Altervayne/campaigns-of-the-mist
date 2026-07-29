@@ -1,11 +1,24 @@
 import { closestCenter, pointerWithin } from "@dnd-kit/core";
 import type { Collision, CollisionDetection } from "@dnd-kit/core";
-import type { DrawerItem, GameSystem, GeneralItemType } from "../types/drawer";
+import type { DrawerItem, Folder, GameSystem, GeneralItemType } from "../types/drawer";
 import type { Card, Tracker } from "../types/character";
 import type { Journal, PostItNote } from "../types/board";
 import type { SortingStrategy } from "@dnd-kit/sortable";
 import { resolveSortableOverId, resolveSortableOverId2D } from "./dragFeedback";
 import { useAppGeneralStateStore } from "../stores/appGeneralStateStore";
+
+
+// ==================
+//  Shared types
+// ==================
+
+/**
+ * Every payload a workspace drag can carry, plus `null` for "no drag in flight". Held as overlay state by
+ * the drag engine and threaded down to the overlay/dropzone components, so it lives here rather than being
+ * re-spelled at each site.
+ */
+export type ActiveDragItem = Card | Tracker | Journal | DrawerItem | Folder | null;
+
 
 
 // ==================

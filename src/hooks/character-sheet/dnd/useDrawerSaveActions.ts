@@ -23,7 +23,7 @@ import type { DragOverEvent } from '@dnd-kit/core';
 import type { DrawerState } from '@/lib/stores/drawerStore';
 import type { Journal } from '@/lib/types/board';
 import type { Card as CardData, Tracker } from '@/lib/types/character';
-import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 
 interface UseDrawerSaveActionsArgs {
    initiateItemDrop: DrawerState['actions']['initiateItemDrop'];
@@ -39,7 +39,7 @@ export function useDrawerSaveActions({ initiateItemDrop }: UseDrawerSaveActionsA
     * Handle dropping sheet items (cards/trackers) back into the drawer
     */
    const handleSheetToDrawerDrop = useCallback((
-      activeDragItem: CardData | Tracker | Journal | DrawerItem | FolderType | null,
+      activeDragItem: ActiveDragItem,
       overIdStr: string,
       overType: string,
       over: NonNullable<DragOverEvent['over']>

@@ -5,6 +5,9 @@ import type { RefObject } from 'react';
 // -- Store and Hook Imports --
 import { getActiveSheetZoom, useTabManagerActions } from '@/lib/character/tabManagerStore';
 
+// -- Utils Imports --
+import { isEditableTarget } from '@/lib/utils/textEntry';
+
 // -- Constants --
 import { DEFAULT_SHEET_ZOOM, stepSheetZoom } from '@/lib/character/sheetZoom';
 
@@ -37,8 +40,7 @@ export function useSheetZoomShortcuts(scrollRef: RefObject<HTMLElement | null>, 
       const onKeyDown = (event: KeyboardEvent) => {
          if (!event.ctrlKey && !event.metaKey) return;
          // Leave text entry alone: a field's own Ctrl/Cmd combos win.
-         const target = event.target;
-         if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+         if (isEditableTarget(event.target)) return;
          if (event.key === '=' || event.key === '+') {
             event.preventDefault();
             setTabZoom(activeTabId, stepSheetZoom(getActiveSheetZoom(), 1));

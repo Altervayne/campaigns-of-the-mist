@@ -35,7 +35,8 @@ import { BoardGridLayer } from './layers/BoardGridLayer';
 import { BoardItemsLayer } from './layers/BoardItemsLayer';
 import { BoardToolbar } from './toolbar/BoardToolbar';
 import { BoardNamePill } from './toolbar/BoardNamePill';
-import { isEditableTarget, isTextEditableKind, MOVE_THRESHOLD, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
+import { isTextEditableKind, MOVE_THRESHOLD, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
+import { isEditableTarget } from '@/lib/utils/textEntry';
 
 // -- Store Imports --
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
@@ -280,8 +281,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    useEffect(() => {
       if (selectedIds.size === 0) return;
       const onKeyDown = (event: KeyboardEvent) => {
-         const target = event.target;
-         if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+         if (isEditableTarget(event.target)) return;
          // A freeform polygon in progress owns Backspace (it pops a vertex); don't also delete the selection.
          if (event.key === 'Backspace' && polygonRef.current) return;
          if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -301,8 +301,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    useEffect(() => {
       const onKeyDown = (event: KeyboardEvent) => {
          if (event.ctrlKey || event.metaKey || event.altKey) return;
-         const target = event.target;
-         if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+         if (isEditableTarget(event.target)) return;
          if (event.key === 'l' || event.key === 'L') {
             event.preventDefault();
             toggleLayersPanel();

@@ -13,13 +13,11 @@ import { TabDragPreview } from '@/components/organisms/tabs/TabDragPreview';
 
 // -- Type Imports --
 import type { OpenTab } from '@/lib/character/tabManagerStore';
-import type { Card as CardData, Tracker } from '@/lib/types/character';
-import type { Journal } from '@/lib/types/board';
-import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 
 
 interface WorkspaceDragOverlayLayerProps {
-   activeDragItem: CardData | Tracker | Journal | DrawerItem | FolderType | null;
+   activeDragItem: ActiveDragItem;
    /** Non-null while a tab is dragged, which swaps the preview for the strip's own. */
    activeTabDrag: OpenTab | null;
    isEditing: boolean;

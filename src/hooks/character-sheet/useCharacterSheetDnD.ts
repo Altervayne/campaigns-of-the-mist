@@ -28,10 +28,9 @@ import { useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import { useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
 // -- Type Imports --
-import type { Journal } from '@/lib/types/board';
-import type { Card as CardData, Tracker } from '@/lib/types/character';
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
 import type { OpenTab } from '@/lib/character/tabManagerStore';
+import type { ActiveDragItem } from '@/lib/utils/dnd';
 import type { DragOverZone } from '@/lib/utils/dragFeedback';
 
 
@@ -76,7 +75,7 @@ export function useCharacterSheetDnD() {
    //  Utility & Library States
    // ==================
    const [isOverDrawer, setIsOverDrawer] = useState(false);
-   const [activeDragItem, setActiveDragItem] = useState<CardData | Tracker | Journal | DrawerItem | FolderType | null>(null);
+   const [activeDragItem, setActiveDragItem] = useState<ActiveDragItem>(null);
    const [overDragId, setOverDragId] = useState<string | null>(null);
    // The tab being dragged (the strip shares this DndContext); drives the overlay's
    // tab-preview branch. Separate from `activeDragItem` since a tab is not a sheet item.

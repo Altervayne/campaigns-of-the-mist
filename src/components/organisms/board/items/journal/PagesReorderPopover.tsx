@@ -10,7 +10,7 @@ import { ListOrdered } from 'lucide-react';
 
 // -- Utils Imports --
 import { pageSnippet } from '@/lib/board/journalContent';
-import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/theme/themeReorderModifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/utils/dndModifiers';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Component Imports --

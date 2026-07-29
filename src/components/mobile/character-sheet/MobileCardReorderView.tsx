@@ -1,7 +1,6 @@
 // -- Library Imports --
 import { useTranslation } from 'react-i18next';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import type { Modifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Component Imports --
@@ -23,21 +22,11 @@ import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { getFloatingContentPadding } from '@/lib/utils/mobileFloating';
+import { restrictToVerticalAxis } from '@/lib/utils/dndModifiers';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Type Imports --
 import type { Card } from '@/lib/types/character';
-
-
-
-/**
- * Inline `@dnd-kit` modifier that locks dragging to the vertical axis - any
- * horizontal pointer travel is dropped from the transform. Combined with
- * `overflow-x: hidden` on the scroll container, this prevents the dragged card
- * from drifting sideways and expanding the layout. Inlined rather than pulling
- * in `@dnd-kit/modifiers` (not installed; do not add).
- */
-const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 
 
