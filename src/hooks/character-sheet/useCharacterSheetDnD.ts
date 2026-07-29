@@ -8,7 +8,7 @@ import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core'
 
 // -- Utils Imports --
 import { mapItemToStorableInfo } from '@/lib/utils/dnd';
-import { MORPH_DESCRIPTORS, SPRING_BACK_KEY, createSpringController, deriveDragContext, drawerDropTargetKey, isOverTabLaneFor, resolveDrawerDropTarget, resolveSpringTarget, resolveTabSpringTarget, shouldForceMorph, springDirection } from '@/lib/utils/dragFeedback';
+import { MORPH_DESCRIPTORS, SPRING_BACK_KEY, deriveDragContext, drawerDropTargetKey, isOverTabLaneFor, resolveDrawerDropTarget, resolveSpringTarget, resolveTabSpringTarget, shouldForceMorph, springDirection } from '@/lib/utils/dragFeedback';
 import { sheetSectionForItemType } from '@/lib/utils/dnd';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
@@ -16,6 +16,7 @@ import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 import { classifyDrag, NAV_GRACE_PX } from '@/hooks/character-sheet/dnd/dragClassification';
 import { useDrawerSaveActions } from '@/hooks/character-sheet/dnd/useDrawerSaveActions';
 import { useSheetReorderActions } from '@/hooks/character-sheet/dnd/useSheetReorderActions';
+import { useSpringNavigation } from '@/hooks/character-sheet/dnd/useSpringNavigation';
 
 // -- Drag-morph engine --
 import { useDragMorph } from '@/components/molecules/drag-morph/useDragMorph';
@@ -26,7 +27,7 @@ import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterSt
 import { useTabManagerActions, useTabManagerStore } from '@/lib/character/tabManagerStore';
 import { getOrCreateInstance } from '@/lib/character/characterStoreRegistry';
 import { useDrawerStore, useDrawerActions } from '@/lib/stores/drawerStore';
-import { getChildFolders, getParentFolderId, whenFolderTreeSettled } from '@/lib/drawer/drawerFolderTree';
+import { getChildFolders, whenFolderTreeSettled } from '@/lib/drawer/drawerFolderTree';
 import { useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
@@ -43,7 +44,7 @@ import type { WorkspaceDwellTarget } from '@/hooks/character-sheet/dnd/dragClass
 import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
 import type { OpenTab } from '@/lib/character/tabManagerStore';
-import type { DragContext, DragKind, DragOverZone, DrawerDropTarget, SpringController, SpringHitArea, SpringTarget } from '@/lib/utils/dragFeedback';
+import type { DragContext, DragKind, DragOverZone, DrawerDropTarget, SpringHitArea, SpringTarget } from '@/lib/utils/dragFeedback';
 
 
 
@@ -146,15 +147,6 @@ export function useCharacterSheetDnD() {
    const { captureGrab, setCursor, setMorph, setIdentity, reset: resetMorph, renderClone, renderCluster } = useDragMorph();
 
    // ==================
-   //  Spring-loaded drawer navigation
-   // ==================
-   // Dwelling on a folder row / Back button mid-drag drills the drawer there without
-   // ending the drag, so a deep move is one continuous gesture. `springTarget` (state)
-   // drives the progress affordance on the hovered row; `draggedFolderIdRef` excludes
-   // the held folder; `springNavigatingRef` guards against re-firing while a (async)
-   // navigation is in flight. The controller owns the dwell timer (see dragFeedback).
-   const [springTarget, setSpringTarget] = useState<string | null>(null);
-   // ==================
    //  See-Workspace recede (Expanded only)
    // ==================
    // `isDrawerItemDragActive` gates the strip's appearance (a drawer ITEM drag, not a folder);
@@ -164,9 +156,6 @@ export function useCharacterSheetDnD() {
    // True only while a FOLDER is being dragged: the drawer surfaces show the reorder drop slots even after
    // drilling into another folder (where the dragged folder isn't in view), so it can be placed precisely.
    const [isFolderDragActive, setIsFolderDragActive] = useState(false);
-   const [workspaceDwellKey, setWorkspaceDwellKey] = useState<string | null>(null);
-   const draggedFolderIdRef = useRef<string | null>(null);
-   const springNavigatingRef = useRef(false);
    // The in-drawer drop target under the cursor, resolved by live geometry each move.
    // dnd-kit's collision rects desync in the scrollable/animated
    // drawer so folder drops were center-only; this is the source of truth for an
@@ -190,64 +179,21 @@ export function useCharacterSheetDnD() {
    // a dwell-then-release lands in the folder you navigated to. Cleared on real movement.
    const navGraceAnchorRef = useRef<{ x: number; y: number } | null>(null);
 
-   /**
-    * Performs a spring navigation when a dwell completes: drill into a folder, or go
-    * up via the parent (read fresh from the store so Back is never stale). Guards
-    * against re-firing while a navigation is in flight; the next pointer move
-    * re-derives the dwell against the freshly loaded view, chaining multi-level
-    * drilling without ending the drag.
-    */
-   const handleSpringNavigate = useCallback((target: SpringTarget) => {
-      // Tab auto-nav: spring-switch the active character (synchronous). The drag
-      // stays alive via the shared DragOverlay; the next move re-evaluates against
-      // the now-active tab's sheet.
-      if (target.kind === 'tab') {
-         setActiveTab(target.id);
-         return;
-      }
-      if (springNavigatingRef.current) return;
-      const destination = target.kind === 'back' ? getParentFolderId(useDrawerStore.getState().currentFolderId) : target.id;
-      // Anchor the post-nav grace at the current cursor: until it moves NAV_GRACE_PX,
-      // the drop resolves to the folder we navigated to (not a row that reflows under it).
-      navGraceAnchorRef.current = lastPointerRef.current;
-      springNavigatingRef.current = true;
-      // No post-nav target reset needed: dropping over the Back button (or anywhere in
-      // the drawer that isn't a folder row) resolves to `current-folder`, which reads
-      // the live current folder at drop, so a dwell-Back-then-release lands in the
-      // folder you navigated to, regardless of pointer movement after the nav.
-      void Promise.resolve(setDrawerCurrentFolderId(destination)).finally(() => {
-         springNavigatingRef.current = false;
-      });
-   }, [setDrawerCurrentFolderId, setActiveTab]);
-
-   // The dwell controller is an imperative object created once (in an effect, not
-   // during render, so its ref-reading callback is allowed) and reused for the
-   // hook's lifetime; the event handlers below drive it via the ref.
-   const springControllerRef = useRef<SpringController | null>(null);
-   useEffect(() => {
-      springControllerRef.current = createSpringController({
-         onTargetChange: setSpringTarget,
-         onNavigate: handleSpringNavigate,
-      });
-      const controller = springControllerRef.current;
-      return () => controller.cancel();
-   }, [handleSpringNavigate]);
-
-   // The See-Workspace dwell: a SECOND instance of the same spring timer (same hold/affordance), keyed by
-   // its own string target, so dwelling the strip recedes the overlay and dwelling the edge re-expands it.
-   const handleWorkspaceDwell = useCallback((target: WorkspaceDwellTarget) => {
-      setDrawerReceded(target === 'see-workspace');
-   }, [setDrawerReceded]);
-   const workspaceDwellControllerRef = useRef<SpringController<WorkspaceDwellTarget> | null>(null);
-   useEffect(() => {
-      workspaceDwellControllerRef.current = createSpringController<WorkspaceDwellTarget>({
-         keyOf: (target) => target,
-         onTargetChange: setWorkspaceDwellKey,
-         onNavigate: handleWorkspaceDwell,
-      });
-      const controller = workspaceDwellControllerRef.current;
-      return () => controller.cancel();
-   }, [handleWorkspaceDwell]);
+   const {
+      springTarget,
+      workspaceDwellKey,
+      setWorkspaceDwellKey,
+      draggedFolderIdRef,
+      springNavigatingRef,
+      springControllerRef,
+      workspaceDwellControllerRef,
+   } = useSpringNavigation({
+      setDrawerCurrentFolderId,
+      setActiveTab,
+      setDrawerReceded,
+      lastPointerRef,
+      navGraceAnchorRef,
+   });
 
    // Feed the morph engine a single resolved signal whenever the derived context or
    // the spring target changes. The arrow mirrors springDirection() for
@@ -423,7 +369,7 @@ export function useCharacterSheetDnD() {
          }
       }
       workspaceDwellControllerRef.current?.setTarget(workspaceTarget);
-   }, [updateContext, setCursor]);
+   }, [updateContext, setCursor, draggedFolderIdRef, springControllerRef, workspaceDwellControllerRef]);
 
    /**
     * Tears down the feedback layer: detaches the move listener and clears every
@@ -471,7 +417,7 @@ export function useCharacterSheetDnD() {
       if (useAppGeneralStateStore.getState().isDrawerReceded) setDrawerReceded(false);
       // Clear the morph feedback (clone funnel + cursor cluster).
       resetMorph();
-   }, [handlePointerMove, resetMorph, setDrawerReceded]);
+   }, [handlePointerMove, resetMorph, setDrawerReceded, draggedFolderIdRef, springNavigatingRef, springControllerRef, workspaceDwellControllerRef, setWorkspaceDwellKey]);
 
    // Safety net: never leak the window listener if the sheet unmounts mid-drag.
    useEffect(() => () => window.removeEventListener('pointermove', handlePointerMove), [handlePointerMove]);
@@ -543,7 +489,7 @@ export function useCharacterSheetDnD() {
          // tab auto-nav) imports a copy instead of a no-op same-character reorder.
          dragSourceCharacterIdRef.current = character?.id ?? null;
       }
-   }, [character, setDrawerOpen, handlePointerMove, captureGrab, setIdentity, tNotifications]);
+   }, [character, setDrawerOpen, handlePointerMove, captureGrab, setIdentity, tNotifications, draggedFolderIdRef]);
 
    const handleDragOver = useCallback((event: DragOverEvent) => {
       const { active, over } = event;

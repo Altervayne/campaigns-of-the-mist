@@ -174,6 +174,45 @@ describe('spring navigation dwell', () => {
 });
 
 /*
+ * The in-flight guard. A spring nav is async, so the guard blocks a re-fire until the navigation settles -
+ * but it must release on the navigation's own promise (a nav that never clears it kills spring-nav for the
+ * rest of the drag), and the tab branch must sit ahead of it (a tab switch is synchronous and unrelated to
+ * the drawer view, so a folder nav in flight must not swallow it).
+ */
+describe('in-flight navigation guard', () => {
+   it('drills a second time once the first navigation settles', async () => {
+      const dnd = mountDnD();
+
+      dnd.start('i1', itemDrag('i1'));
+      dnd.move(150, 120);
+      dnd.hold(SPRING_HOLD_MS);
+      // The guard releases on the navigation's promise, not on the next move.
+      await act(async () => {});
+      mocks.currentFolderId = 'f2';
+
+      dnd.move(150, 160);
+      dnd.hold(SPRING_HOLD_MS);
+
+      expect(mocks.drawerActions.setDrawerCurrentFolderId).toHaveBeenNthCalledWith(1, 'f2');
+      expect(mocks.drawerActions.setDrawerCurrentFolderId).toHaveBeenNthCalledWith(2, 'f3');
+   });
+
+   it('switches tabs on a dwell while a folder navigation is still in flight', () => {
+      mountRect('data-tab-id=t2', { left: 400, top: 20, right: 600, bottom: 60 });
+      const dnd = mountDnD();
+
+      dnd.start('i1', itemDrag('i1'));
+      dnd.move(150, 120);
+      dnd.hold(SPRING_HOLD_MS);
+      // No microtask flush: the folder navigation is still unsettled when the tab dwell completes.
+      dnd.move(500, 40);
+      dnd.hold(SPRING_HOLD_MS);
+
+      expect(mocks.tabActions.setActiveTab).toHaveBeenCalledWith('t2');
+   });
+});
+
+/*
  * The post-navigation grace. After a drill-in the view reflows under a stationary cursor, so a row that
  * slid into place must not become the drop target; the target is forced to the folder just navigated to
  * until the cursor genuinely leaves the anchor. Both halves are read through the routed destination.
