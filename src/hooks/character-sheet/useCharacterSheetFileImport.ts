@@ -15,6 +15,7 @@ import { reIdCharacterAggregate } from '@/lib/character/reIdCharacterAggregate';
 import { importBoard } from '@/lib/board/boardRepository';
 import { prepareImportedBoard } from '@/lib/board/importBoardReferencedCharacters';
 import { useThemeImport } from '@/lib/theme/useThemeImport';
+import { ACCEPT_SHEET_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Store Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
@@ -148,7 +149,7 @@ export function useCharacterSheetFileImport() {
    // Drop-only: the picker path below (its own hidden input + `triggerImport`) handles clicks.
    const { getRootProps, isDragActive } = useFileDrop({
       onFiles,
-      accept: '.cotm,.json',
+      accept: ACCEPT_SHEET_IMPORT,
       noClick: true,
    });
 

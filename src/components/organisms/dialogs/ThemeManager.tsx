@@ -34,6 +34,7 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/utils/dnd
 import { DRAWER_MENU_TRIGGER_CLASS } from '@/components/molecules/drawer/drawerMenuTrigger';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 import { exportCustomTheme, importFromFile } from '@/lib/utils/export-import';
+import { ACCEPT_THEME_IMPORT } from '@/lib/utils/fileAccept';
 import { useThemeImport } from '@/lib/theme/useThemeImport';
 import { useThemeSwitchGuard } from '@/components/organisms/dialogs/themeSwitchGuard';
 
@@ -350,7 +351,7 @@ export function ThemeManager({ onEnterEditor }: { onEnterEditor?: () => void } =
          </AlertDialog>
 
          <form ref={importFormRef} className="hidden">
-            <input type="file" ref={importInputRef} onChange={handleImportFileSelected} accept=".cotm,application/json" />
+            <input type="file" ref={importInputRef} onChange={handleImportFileSelected} accept={ACCEPT_THEME_IMPORT} />
          </form>
       </div>
    );

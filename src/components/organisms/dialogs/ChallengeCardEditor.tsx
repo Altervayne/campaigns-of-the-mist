@@ -27,6 +27,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 
 // -- Shared Constants --
 import { CHALLENGE_ART_ASPECT } from '@/lib/cards/challengeArt';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Shared Factories --
 import { addRow, newAbility, newConsequence, newCustomMove, newHardMove, newMightyTag, newSoftMove, newSpecial, newStatus, newTag, removeRowById, updateRowById } from '@/lib/cards/challengeCardFactories';
@@ -574,7 +575,7 @@ function ImagePicker({ assetId, onChange }: { assetId: string | null; onChange: 
                </Button>
             )}
          </div>
-         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+         <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {cropperDialog}
       </div>
    );

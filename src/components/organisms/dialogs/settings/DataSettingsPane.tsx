@@ -16,6 +16,9 @@ import { MigrationDialog } from '@/components/organisms/dialogs/MigrationDialog'
 import { LegacyDrawerBackupDialog } from '@/components/organisms/dialogs/LegacyDrawerBackupDialog';
 import { LegacyCharacterBackupDialog } from '@/components/organisms/dialogs/LegacyCharacterBackupDialog';
 
+// -- Utils Imports --
+import { ACCEPT_BACKUP_RESTORE } from '@/lib/utils/fileAccept';
+
 // -- Store and Hook Imports --
 import { useDataSettingsActions } from '@/hooks/useDataSettingsActions';
 
@@ -151,7 +154,7 @@ export function DataSettingsPane() {
                      <span className="truncate">{t('SettingsDialog.backup.restoreButton')}</span>
                   </Button>
                   <p className="text-xs text-muted-foreground">{t('SettingsDialog.backup.description')}</p>
-                  <input ref={restoreInputRef} type="file" accept=".cotmbak" onChange={onRestoreFileChange} className="hidden" />
+                  <input ref={restoreInputRef} type="file" accept={ACCEPT_BACKUP_RESTORE} onChange={onRestoreFileChange} className="hidden" />
                </div>
             </div>
 

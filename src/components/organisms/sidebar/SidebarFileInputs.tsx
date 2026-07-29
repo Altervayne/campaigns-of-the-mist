@@ -1,5 +1,7 @@
 // -- React Imports --
 import type { ChangeEventHandler, RefObject } from 'react';
+// -- Utils Imports --
+import { ACCEPT_ENTITY_IMPORT, ACCEPT_NOTE_IMPORT, ACCEPT_WORKSPACE_IMPORT } from '@/lib/utils/fileAccept';
 
 interface SidebarFileInputsProps {
    characterImportInputRef: RefObject<HTMLInputElement | null>;
@@ -63,7 +65,7 @@ export function SidebarFileInputs({
                type="file"
                ref={characterImportInputRef}
                onChange={onCharacterFileSelected}
-               accept=".cotm,application/json"
+               accept={ACCEPT_ENTITY_IMPORT}
             />
          </form>
          <form ref={componentFormRef} className="hidden">
@@ -71,7 +73,7 @@ export function SidebarFileInputs({
                type="file"
                ref={componentImportInputRef}
                onChange={onComponentFileSelected}
-               accept=".cotm,application/json"
+               accept={ACCEPT_ENTITY_IMPORT}
             />
          </form>
          <form ref={boardFormRef} className="hidden">
@@ -79,7 +81,7 @@ export function SidebarFileInputs({
                type="file"
                ref={boardImportInputRef}
                onChange={onBoardFileSelected}
-               accept=".cotm,application/json"
+               accept={ACCEPT_ENTITY_IMPORT}
             />
          </form>
          <form ref={characterUpdateFormRef} className="hidden">
@@ -87,7 +89,7 @@ export function SidebarFileInputs({
                type="file"
                ref={characterUpdateInputRef}
                onChange={onCharacterUpdateFileSelected}
-               accept=".cotm,application/json"
+               accept={ACCEPT_ENTITY_IMPORT}
             />
          </form>
          <form ref={boardUpdateFormRef} className="hidden">
@@ -95,7 +97,7 @@ export function SidebarFileInputs({
                type="file"
                ref={boardUpdateInputRef}
                onChange={onBoardUpdateFileSelected}
-               accept=".cotm,application/json"
+               accept={ACCEPT_ENTITY_IMPORT}
             />
          </form>
          <form ref={noteFormRef} className="hidden">
@@ -103,7 +105,7 @@ export function SidebarFileInputs({
                type="file"
                ref={noteImportInputRef}
                onChange={onNoteFileSelected}
-               accept=".cotm,application/json,.md,.markdown,text/markdown"
+               accept={ACCEPT_NOTE_IMPORT}
             />
          </form>
          <form ref={noteUpdateFormRef} className="hidden">
@@ -111,7 +113,7 @@ export function SidebarFileInputs({
                type="file"
                ref={noteUpdateInputRef}
                onChange={onNoteUpdateFileSelected}
-               accept=".cotm,application/json,.md,.markdown,text/markdown"
+               accept={ACCEPT_NOTE_IMPORT}
             />
          </form>
          <form ref={workspaceFormRef} className="hidden">
@@ -119,7 +121,7 @@ export function SidebarFileInputs({
                type="file"
                ref={workspaceImportInputRef}
                onChange={onWorkspaceFileSelected}
-               accept=".cotm,application/json,.md,.markdown,text/markdown"
+               accept={ACCEPT_WORKSPACE_IMPORT}
             />
          </form>
       </>

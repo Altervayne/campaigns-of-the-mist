@@ -8,6 +8,7 @@ import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Scaling, Upload } from 
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Store and Hook Imports --
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
@@ -108,7 +109,7 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
             toolbarSlot,
          )}
 
-         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+         <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {cropperDialog}
       </div>
    );

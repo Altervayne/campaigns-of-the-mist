@@ -51,6 +51,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({ isOpen, onOpen
    }, []);
 
    // The one import site with click-to-open + multi-select: the dashed box opens the picker and takes drops.
+   // Plain 1.x character exports, not `.cotm` envelopes, so this keeps its own `accept` rather than a shared one.
    const { getRootProps, getInputProps, isDragActive } = useFileDrop({
       onFiles: appendFiles,
       accept: '.json',

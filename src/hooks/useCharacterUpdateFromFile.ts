@@ -12,6 +12,7 @@ import { getActiveCharacterStore } from '@/lib/character/characterStoreRegistry'
 // -- Utils Imports --
 import { importFromFile } from '@/lib/utils/export-import';
 import { harmonizeData } from '@/lib/harmonization';
+import { ACCEPT_ENTITY_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Type Imports --
 import type { Character } from '@/lib/types/character';
@@ -31,7 +32,7 @@ export function useCharacterUpdateFromFile() {
 	const triggerImport = () => {
 		const input = document.createElement('input');
 		input.type = 'file';
-		input.accept = '.cotm,application/json';
+		input.accept = ACCEPT_ENTITY_IMPORT;
 		input.onchange = async () => {
 			const file = input.files?.[0];
 			if (!file) return;

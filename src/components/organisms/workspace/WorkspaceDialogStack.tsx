@@ -7,6 +7,9 @@ import { CreateCardDialog } from '@/components/organisms/dialogs/CreateCardDialo
 import { ChallengeCardEditor } from '@/components/organisms/dialogs/ChallengeCardEditor';
 import { SettingsShell } from '@/components/organisms/dialogs/settings/SettingsShell';
 
+// -- Utils Imports --
+import { ACCEPT_SHEET_IMPORT } from '@/lib/utils/fileAccept';
+
 // -- Type Imports --
 import type { CommandAction } from '@/hooks/useCommandPaletteActions';
 import type { Card as CardData } from '@/lib/types/character';
@@ -44,7 +47,7 @@ export function WorkspaceDialogStack({ formRef, fileInputRef, onFileSelected, no
       <>
          {/* Hidden picker for the palette's "Import file" command; routes through the shared drop importer. */}
          <form ref={formRef} className="hidden">
-            <input ref={fileInputRef} type="file" accept=".cotm,.json" onChange={onFileSelected} />
+            <input ref={fileInputRef} type="file" accept={ACCEPT_SHEET_IMPORT} onChange={onFileSelected} />
          </form>
 
          {/* The images-won't-travel warning for note Markdown export (sidebar + palette share it). */}

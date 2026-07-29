@@ -18,6 +18,7 @@ import { extractHeadings } from '@/lib/notes/noteOutline';
 // -- Pipeline / Asset Store --
 import { processImage } from '@/lib/assets/processImage';
 import { storeAsset } from '@/lib/assets/assetRepository';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Component Imports --
 import { NoteDocument } from '@/components/molecules/NoteDocument';
@@ -348,7 +349,7 @@ function NoteSurface() {
             linkEditSeed={linkEditSeed}
          />
          {/* Hidden picker for the toolbar's insert-image action; the paste/drop paths never touch it. */}
-         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+         <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {imageCropperDialog}
 
          {/* The live table's right-click context menu (portals to the click point; opened by the CM6 widget). */}
@@ -408,7 +409,7 @@ function NoteSurface() {
                   )}
                </div>
                {/* Hidden picker for the cover Add/Change control. */}
-               <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverSelected} />
+               <input ref={coverInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleCoverSelected} />
                {coverCropperDialog}
                </div>
             </div>

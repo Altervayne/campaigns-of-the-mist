@@ -15,6 +15,7 @@ import { Image as ImageIcon, Loader2, Scaling, Trash2, Upload } from 'lucide-rea
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Component Imports --
 import { ToolbarHandle } from '@/components/molecules/ToolbarHandle';
@@ -325,7 +326,7 @@ const ImageCardContent = React.memo(
                <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPT_IMAGE}
                   className="hidden"
                   onChange={handleFileSelected}
                />

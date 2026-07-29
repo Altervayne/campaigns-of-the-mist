@@ -10,6 +10,7 @@ import { FolderPlus, List, Grid3x3, Download, Undo2, Redo2 } from 'lucide-react'
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
 
 
 
@@ -85,7 +86,7 @@ export default function MobileDrawerToolbar({
                <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".cotm,.json,.md,.markdown,text/markdown"
+                  accept={ACCEPT_DRAWER_IMPORT}
                   onChange={onFileSelected}
                />
             </form>

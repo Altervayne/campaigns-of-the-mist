@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { deriveCardTitle } from '@/lib/utils/character';
 import { triggerHaptic } from '@/lib/utils/haptics';
 import { getFloatingBottom } from '@/lib/utils/mobileFloating';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Type Imports --
 import type { Card, Tracker } from '@/lib/types/character';
@@ -348,7 +349,7 @@ export default function MobileCharacterSheet({
 		<input
 			ref={portraitInputRef}
 			type="file"
-			accept="image/*"
+			accept={ACCEPT_IMAGE}
 			className="hidden"
 			onChange={onPortraitFileSelected}
 		/>

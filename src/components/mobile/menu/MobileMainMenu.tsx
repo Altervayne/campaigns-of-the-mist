@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { getFloatingContentPadding } from '@/lib/utils/mobileFloating';
 import { importFromFile } from '@/lib/utils/export-import';
 import { harmonizeData } from '@/lib/harmonization';
+import { ACCEPT_ENTITY_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Constants --
 import { GAME_VISUALS, GAME_CARD_OPTIONS } from '@/lib/constants/gameVisuals';
@@ -102,7 +103,7 @@ export default function MobileMainMenu({ onOpenSettings, onCharacterOpened }: Mo
 	const handleImportCharacter = () => {
 		const input = document.createElement('input');
 		input.type = 'file';
-		input.accept = '.cotm,application/json';
+		input.accept = ACCEPT_ENTITY_IMPORT;
 		input.onchange = async () => {
 			const file = input.files?.[0];
 			if (!file) return;

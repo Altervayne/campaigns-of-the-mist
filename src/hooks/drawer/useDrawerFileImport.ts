@@ -12,6 +12,7 @@ import { useFileDrop } from '@/hooks/useFileDrop';
 import { deriveDrawerFolderName, exportDrawer, importFromFile, readFileAsText } from '@/lib/utils/export-import';
 import { harmonizeData } from '@/lib/harmonization';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
+import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Store Imports --
 import { useDrawerActions } from '@/lib/stores/drawerStore';
@@ -105,7 +106,7 @@ export function useDrawerFileImport(currentFolderId: string | null) {
    // Drop-only: the import button owns its own hidden input + `handleFileSelected` below.
    const { getRootProps, isDragActive } = useFileDrop({
       onFiles,
-      accept: '.cotm,.json,.md,.markdown',
+      accept: ACCEPT_DRAWER_IMPORT,
       noClick: true,
    });
 

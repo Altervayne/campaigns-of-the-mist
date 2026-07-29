@@ -10,6 +10,7 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolvePortalIcon, portalDestinationIcon, smartPortalIconName, PORTAL_ICON_NAMES } from '@/lib/board/portalIcons';
 import { PORTAL_IMAGE_SIZE_DEFAULT, PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Pipeline / Asset Store --
 import { processImage } from '@/lib/assets/processImage';
@@ -465,7 +466,7 @@ function PortalImageControl({ assetId, onUploaded }: { assetId: string; onUpload
             {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : assetId ? <ImageIcon className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
             <span>{assetId ? t('BoardView.imageChange') : t('BoardView.imageUpload')}</span>
          </button>
-         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+         <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {cropperDialog}
       </>
    );

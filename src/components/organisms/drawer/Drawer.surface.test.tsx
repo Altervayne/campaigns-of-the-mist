@@ -11,6 +11,9 @@ import { Drawer } from './Drawer';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useDrawerStore } from '@/lib/stores/drawerStore';
 
+// -- Utils Imports --
+import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
+
 // -- Type Imports --
 import type { DrawerItemSummary } from '@/lib/drawer/drawerRepository';
 
@@ -124,6 +127,13 @@ describe('Drawer surface wiring', () => {
 
       expect(screen.getByTestId('result-row')).toBeTruthy();
       expect(screen.queryByTestId('item-row')).toBeNull();
+   });
+
+   // Shared with the mobile toolbar, which feeds the same import handler and pins the same constant.
+   it('offers the drawer import family on its import picker', () => {
+      const { container } = renderPanel();
+
+      expect(container.querySelector('input[type="file"]')?.getAttribute('accept')).toBe(ACCEPT_DRAWER_IMPORT);
    });
 
    it('jumps to a result folder, then clears the search', () => {

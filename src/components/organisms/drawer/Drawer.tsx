@@ -20,6 +20,7 @@ import { staticListSortingStrategy } from '@/lib/utils/dnd';
 import { SPRING_BACK_KEY } from '@/lib/utils/dragFeedback';
 import type { DrawerDropTarget } from '@/lib/utils/dragFeedback';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
+import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Component Imports --
 import { DrawerFolderEntry } from '@/components/molecules/drawer/DrawerFolderEntry';
@@ -351,7 +352,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
                               type="file"
                               ref={fileInputRef}
                               onChange={handleFileSelected}
-                              accept=".cotm,application/json,.md,.markdown,text/markdown"
+                              accept={ACCEPT_DRAWER_IMPORT}
                            />
                         </form>
                         <Button

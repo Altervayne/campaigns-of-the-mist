@@ -11,6 +11,7 @@ import { Crosshair, Loader2, Skull, Sparkles, Star, Swords, Tags, Trash2, Upload
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Store and Hook Imports --
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -198,7 +199,7 @@ export function SheetImageBand({ url, name, isEditing, commitImage }: {
                </button>
             </div>
          )}
-         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelected} />
+         <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {cropperDialog}
       </div>
    );

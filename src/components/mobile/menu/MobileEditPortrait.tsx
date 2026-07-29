@@ -18,6 +18,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 // -- Utils and Constants --
 import { cn } from '@/lib/utils';
 import { IMAGE_CARD_PRESETS, LEGACY_IMAGE_CARD_SIZE, clampCardHeight, clampCardWidth } from '@/lib/constants/imageCard';
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Type Imports --
 import type { ImageCardDetails } from '@/lib/types/character';
@@ -162,7 +163,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
          <input
             ref={replaceInputRef}
             type="file"
-            accept="image/*"
+            accept={ACCEPT_IMAGE}
             className="hidden"
             onChange={onReplaceFileSelected}
          />

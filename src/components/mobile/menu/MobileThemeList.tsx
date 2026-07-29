@@ -26,6 +26,7 @@ import { Check, MoreHorizontal, Palette, Copy, Plus, Pencil, Trash2, Upload, Dow
 import { cn } from '@/lib/utils';
 import { PRESET_LABELS, PRESET_THEMES, customThemeClass, customThemeIdFromClass, resolveThemeTokens } from '@/lib/theme/themeTokens';
 import { exportCustomTheme, importFromFile } from '@/lib/utils/export-import';
+import { ACCEPT_THEME_IMPORT } from '@/lib/utils/fileAccept';
 import { useThemeImport } from '@/lib/theme/useThemeImport';
 import { useCreateCustomTheme } from '@/lib/theme/useCreateCustomTheme';
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
@@ -276,7 +277,7 @@ export function MobileThemeList({ onOpenEditor }: MobileThemeListProps) {
          </MobileBottomSheet>
 
          <form ref={importFormRef} className="hidden">
-            <input type="file" ref={importInputRef} onChange={handleImportFileSelected} accept=".cotm,application/json" />
+            <input type="file" ref={importInputRef} onChange={handleImportFileSelected} accept={ACCEPT_THEME_IMPORT} />
          </form>
       </>
    );

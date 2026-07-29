@@ -23,6 +23,7 @@ import { LegacyCharacterBackupDialog } from '@/components/organisms/dialogs/Lega
 import { useDataSettingsActions } from '@/hooks/useDataSettingsActions';
 import { exportEntireDrawerAsNestedTree } from '@/lib/drawer/drawerRepository';
 import { exportDrawer } from '@/lib/utils/export-import';
+import { ACCEPT_BACKUP_RESTORE } from '@/lib/utils/fileAccept';
 
 interface MobileSettingsDataProps {
 	onBack?: () => void;
@@ -125,7 +126,7 @@ export default function MobileSettingsData({ onBack }: MobileSettingsDataProps) 
 					<ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
 				</Button>
 				<p className="text-xs text-muted-foreground">{t('SettingsDialog.backup.description')}</p>
-				<input ref={restoreInputRef} type="file" accept=".cotmbak" onChange={onRestoreFileChange} className="hidden" />
+				<input ref={restoreInputRef} type="file" accept={ACCEPT_BACKUP_RESTORE} onChange={onRestoreFileChange} className="hidden" />
 			</div>
 
 			{/* Migration */}
