@@ -51,10 +51,10 @@ function AssetFigure({ hash, alt, align, widthPct, aspect }: { hash: string; alt
          {url ? (
             aspect != null ? (
                // BOX mode (resized): the image fills a fixed-ratio box via object-fit:cover, like the cover.
-               <img src={url} alt={alt} className={cn(IMAGE_INNER_COVER, IMAGE_ALIGN_MAX_HEIGHT[align])} style={{ aspectRatio: `1 / ${clampImageAspect(aspect)}` }} />
+               <img src={url} alt={alt} draggable={false} className={cn(IMAGE_INNER_COVER, IMAGE_ALIGN_MAX_HEIGHT[align])} style={{ aspectRatio: `1 / ${clampImageAspect(aspect)}` }} />
             ) : (
                // NATURAL mode: the image at its own ratio (object-contain).
-               <img src={url} alt={alt} className={cn(IMAGE_INNER, IMAGE_ALIGN_MAX_HEIGHT[align])} />
+               <img src={url} alt={alt} draggable={false} className={cn(IMAGE_INNER, IMAGE_ALIGN_MAX_HEIGHT[align])} />
             )
          ) : (
             // Loading, or a missing/reclaimed blob: a quiet placeholder frame, never a broken-image glyph.

@@ -151,7 +151,7 @@ export function SheetImageBand({ url, name, isEditing, commitImage }: {
       return (
          <div className={cn(matte, 'w-62.5 shrink-0')}>
             {url ? (
-               <img src={url} alt={name} title={name} className="h-full w-full object-contain" />
+               <img src={url} alt={name} title={name} draggable={false} className="h-full w-full object-contain" />
             ) : (
                <Skull className="h-14 w-14 text-card-paper-fg/30" />
             )}
@@ -170,7 +170,7 @@ export function SheetImageBand({ url, name, isEditing, commitImage }: {
             {isProcessing ? (
                <Loader2 className="h-6 w-6 animate-spin text-card-paper-fg/50" />
             ) : url ? (
-               <img src={url} alt={name} title={name} className="h-full w-full object-contain" />
+               <img src={url} alt={name} title={name} draggable={false} className="h-full w-full object-contain" />
             ) : (
                <div className="flex flex-col items-center gap-1 text-card-paper-fg/50">
                   <Upload className="h-6 w-6" />

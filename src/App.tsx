@@ -12,10 +12,13 @@ import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
 import { router } from '@/router';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useImageDragGuard } from '@/hooks/useImageDragGuard';
 import '@/app/global.css';
 
 function AppContent() {
   const { isMobile } = useDeviceType();
+  // One delegated listener stands in for a `draggable={false}` on every image in the app.
+  useImageDragGuard();
 
   return (
     // A flex column so the dev-preview banner (when present) reserves its height above the app instead of

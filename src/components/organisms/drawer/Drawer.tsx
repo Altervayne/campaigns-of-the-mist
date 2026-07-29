@@ -1,5 +1,5 @@
 // -- React Imports --
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -36,10 +36,12 @@ import { DrawerHeader } from '@/components/molecules/drawer/DrawerHeader';
 import { DrawerItemsSkeleton } from '@/components/molecules/drawer/DrawerContentSkeleton';
 
 // -- Store and Hook Imports --
-import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
+import { useDrawerStore } from '@/lib/stores/drawerStore';
 import { useDrawerNavigation } from '@/hooks/drawer/useDrawerNavigation';
 import { useDrawerActionState } from '@/hooks/drawer/useDrawerActionState';
 import { useDrawerFileImport } from '@/hooks/drawer/useDrawerFileImport';
+import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
+import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
 import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
@@ -82,14 +84,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
       isContentLoading,
    } = useDrawerNavigation();
 
-   const { reloadCurrentFolder } = useDrawerActions();
-
-   // The store loads the current-folder view on demand (it is not auto-loaded on
-   // import). Trigger the initial load when the drawer mounts; reopening the drawer
-   // remounts and refreshes the view.
-   useEffect(() => {
-      void reloadCurrentFolder();
-   }, [reloadCurrentFolder]);
+   useDrawerMountLoad();
 
    const {
       activeAction,
@@ -103,14 +98,8 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
 
    // The flat results + active flag come from the shared store (the search bar owns the input).
    const searchResults = useDrawerStore((state) => state.searchResults);
-   const isSearchActive = useDrawerStore((state) => isSearchFilterActive(state.searchCriteria));
-   const { clearSearch } = useDrawerActions();
-
-   // A result's "Jump to": navigate to its folder (null = root), then exit search.
-   const handleJumpToResult = (parentFolderId: string | null) => {
-      navigateToFolder(parentFolderId);
-      clearSearch();
-   };
+   const isSearchActive = useIsDrawerSearchActive();
+   const handleJumpToResult = useJumpToSearchResult();
 
    const {
       getRootProps,

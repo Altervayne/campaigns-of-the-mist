@@ -292,6 +292,7 @@ function coverOverlay(controller: CoverController) {
 
             const img = document.createElement('img');
             img.alt = '';
+            img.draggable = false;
             img.setAttribute('aria-hidden', 'true');
             // Fills + crops the fixed box, keeping its own ratio (object-fit: cover).
             img.style.cssText = 'display:block;width:100%;height:100%;object-fit:cover;';

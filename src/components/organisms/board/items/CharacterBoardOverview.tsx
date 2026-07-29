@@ -45,7 +45,7 @@ export function CharacterBoardOverview({ character, onOpen }: CharacterBoardOver
          <div className="relative flex shrink-0 items-center gap-3 border-b border-card-accent bg-card-header-bg p-1 text-card-header-fg">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-card-accent bg-card-paper-bg">
                {portrait.url
-                  ? <img src={portrait.url} alt="" className="h-full w-full object-cover" />
+                  ? <img src={portrait.url} alt="" draggable={false} className="h-full w-full object-cover" />
                   : <User className="h-6 w-6 text-card-paper-fg/50" />}
             </div>
             <div className="flex min-w-0 flex-col pr-6">

@@ -179,6 +179,7 @@ const ImageCardContent = React.memo(
                      src={url}
                      alt={altText}
                      title={altText}
+                     draggable={false}
                      className={cn('h-full w-full', details.fit === 'contain' ? 'object-contain' : 'object-cover')}
                   />
                ) : interactive ? (

@@ -98,7 +98,9 @@ vi.mock('@/components/mobile/drawer/MobileDrawerContextMenu', () => ({
          data-has-jump={String(onJumpTo != null)}
          data-has-add={String(onAddToCharacter != null)}
          data-has-load={String(onLoadCharacter != null)}
-      />
+      >
+         {onJumpTo && <button data-testid="menu-jump" onClick={onJumpTo} />}
+      </div>
    ),
 }));
 
@@ -120,6 +122,9 @@ const searchFor = (text: string, results: DrawerItemSummary[] | null, isSearchin
 
 beforeEach(() => {
    mocks.renders = 0;
+   mocks.drawerActions.reloadCurrentFolder.mockClear();
+   mocks.drawerActions.setDrawerCurrentFolderId.mockClear();
+   mocks.drawerActions.clearSearch.mockClear();
    mocks.folders = [{ id: 'folder-a', name: 'Folder A' }];
    mocks.items = [{ id: 'item-a', name: 'Item A' }];
    useDrawerStore.setState({
@@ -266,6 +271,30 @@ describe('MobileDrawer context menus', () => {
          expect(menu.getAttribute('data-has-add')).toBe('true');
          expect(menu.getAttribute('data-has-load')).toBe('true');
       }
+   });
+});
+
+// The mount load and the jump-to are shared with the two desktop drawer surfaces; each surface pins
+// them separately, so a break in the shared hook cannot hide behind another adopter's coverage.
+describe('MobileDrawer shared drawer wiring', () => {
+   it('loads the current folder once on mount', () => {
+      render(<MobileDrawer />);
+
+      expect(mocks.drawerActions.reloadCurrentFolder).toHaveBeenCalledTimes(1);
+   });
+
+   it('jumps to a result folder, then clears the search', () => {
+      searchFor('a', [{ ...summary('result-a', 'Result A'), parentFolderId: 'folder-a' }]);
+      render(<MobileDrawer />);
+      fireEvent.click(screen.getByTestId('result-row').closest('button')!);
+
+      fireEvent.click(screen.getByTestId('menu-jump'));
+
+      expect(mocks.drawerActions.setDrawerCurrentFolderId).toHaveBeenCalledWith('folder-a');
+      expect(mocks.drawerActions.clearSearch).toHaveBeenCalledTimes(1);
+      // Reversing the two statements passes every assertion above and fails only this one.
+      expect(mocks.drawerActions.setDrawerCurrentFolderId.mock.invocationCallOrder[0])
+         .toBeLessThan(mocks.drawerActions.clearSearch.mock.invocationCallOrder[0]);
    });
 });
 

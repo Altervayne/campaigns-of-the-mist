@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -15,12 +15,14 @@ import MobileDrawerBrowseList from '@/components/mobile/drawer/MobileDrawerBrows
 import { DrawerSearchBar } from '@/components/molecules/drawer/DrawerSearchBar';
 
 // -- Store Imports --
-import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
+import { useDrawerActions, useDrawerStore } from '@/lib/stores/drawerStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 // -- Hook Imports --
 import { useDrawerNavigation } from '@/hooks/drawer/useDrawerNavigation';
 import { useDrawerFileImport } from '@/hooks/drawer/useDrawerFileImport';
+import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
+import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
 import { useDrawerLongPressHint } from '@/hooks/mobile/useDrawerLongPressHint';
 import { useMobileDrawerBrowseMenu, useMobileDrawerResultMenu } from '@/hooks/mobile/useMobileDrawerMenus';
 import { useMobileDrawerDragState } from '@/hooks/mobile/useMobileDrawerDragState';
@@ -40,22 +42,18 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 	const { t } = useTranslation();
 
 	// Drawer state
-	const { addFolder, reloadCurrentFolder, clearSearch } = useDrawerActions();
+	const { addFolder } = useDrawerActions();
 
 	// Search reads straight from the store (DrawerSearchBar owns the sole useDrawerSearch instance);
 	// when a search is active the body swaps browse -> results in the same space.
-	const isSearchActive = useDrawerStore((state) => isSearchFilterActive(state.searchCriteria));
+	const isSearchActive = useIsDrawerSearchActive();
 	const searchResults = useDrawerStore((state) => state.searchResults);
 	const isSearching = useDrawerStore((state) => state.isSearching);
 
 	// Folder navigation (current folder, contents, breadcrumb) via the shared hook
 	const { currentFolderId, navigateToFolder, currentItems, currentFolders, breadcrumbPath, childCounts } = useDrawerNavigation();
 
-	// The store loads the current-folder view on demand; trigger the initial load
-	// when the drawer mounts (reopening remounts and refreshes).
-	useEffect(() => {
-		void reloadCurrentFolder();
-	}, [reloadCurrentFolder]);
+	useDrawerMountLoad();
 
 	// File import via the shared hook (button-triggered file-input path only; no drag zone)
 	const { handleFileSelected, fileInputRef, formRef } = useDrawerFileImport(currentFolderId);
@@ -63,6 +61,8 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 	// UI state
 	const [isCompactView, setIsCompactView] = useState(true);
 	const [showAddFolderSheet, setShowAddFolderSheet] = useState(false);
+
+	const handleJumpToResult = useJumpToSearchResult();
 
 	// The two context menus keep separate state: both stay mounted, only one is ever open.
 	const browseMenu = useMobileDrawerBrowseMenu();
@@ -206,7 +206,7 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 				position={resultPosition}
 				onAddToCharacter={onAddToCharacter}
 				onLoadCharacter={onLoadCharacter}
-				onJumpTo={resultTarget ? () => { navigateToFolder(resultTarget.parentFolderId); clearSearch(); } : undefined}
+				onJumpTo={resultTarget ? () => handleJumpToResult(resultTarget.parentFolderId) : undefined}
 			/>
 		</div>
 	);

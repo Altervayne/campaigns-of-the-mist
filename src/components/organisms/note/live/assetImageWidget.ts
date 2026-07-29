@@ -90,6 +90,7 @@ export class AssetImageWidget extends WidgetType {
       if (align !== 'full') wrap.style.width = `${widthPct}%`;
 
       const img = document.createElement('img');
+      img.draggable = false;
       // BOX mode (a resized image with a fixed aspect): object-cover into a fixed-ratio box, like the cover;
       // NATURAL mode: object-contain at the image's own ratio. Parity with NoteImage's two branches.
       if (aspect != null) {

@@ -168,7 +168,7 @@ export const CityChallengeCard = React.memo(
                {/* Image banner (front art). */}
                <div className={cn('w-full shrink-0 overflow-hidden bg-muted', isDrawerPreview ? 'h-12' : 'h-52')}>
                   {url ? (
-                     <img src={url} alt={name} title={name} className="h-full w-full object-cover" />
+                     <img src={url} alt={name} title={name} draggable={false} className="h-full w-full object-cover" />
                   ) : (
                      <div className="flex h-full w-full items-center justify-center text-card-paper-fg/30">
                         <Skull className={isDrawerPreview ? 'h-6 w-6' : 'h-12 w-12'} />

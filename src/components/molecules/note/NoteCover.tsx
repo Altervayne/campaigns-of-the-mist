@@ -35,7 +35,7 @@ export function NoteCover({ cover, className }: { cover: NoteCoverData; classNam
             marginBottom: `${COVER_GAP_REM * 0.5}rem`,
          }}
       >
-         <img src={url} alt="" className="block h-full w-full object-cover" />
+         <img src={url} alt="" draggable={false} className="block h-full w-full object-cover" />
       </span>
    );
 }

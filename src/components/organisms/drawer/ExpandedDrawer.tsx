@@ -27,9 +27,11 @@ import { DrawerModificationWindow } from '@/components/organisms/drawer/DrawerMo
 import { Breadcrumb } from '@/components/molecules/Breadcrumbs';
 
 // -- Store and Hook Imports --
-import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
+import { useDrawerStore } from '@/lib/stores/drawerStore';
 import { useDrawerNavigation } from '@/hooks/drawer/useDrawerNavigation';
 import { useDrawerActionState } from '@/hooks/drawer/useDrawerActionState';
+import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
+import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
 import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 
@@ -87,14 +89,13 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
       isContentLoading,
    } = useDrawerNavigation();
 
-   const { reloadCurrentFolder, clearSearch } = useDrawerActions();
    const { contractDrawer, setDrawerOpen, setDrawerReceded } = useAppGeneralStateActions();
    // The Library honors the SAME Rich/List toggle as the side panel (one shared setting, not a new flag).
    const isCompactDrawer = useAppSettingsStore((state) => state.isCompactDrawer);
    const { toggleCompactDrawer } = useAppSettingsActions();
 
    const searchResults = useDrawerStore((state) => state.searchResults);
-   const isSearchActive = useDrawerStore((state) => isSearchFilterActive(state.searchCriteria));
+   const isSearchActive = useIsDrawerSearchActive();
 
    // Reorder scaffolding, mirroring the side panel: folder ids for the SortableContext, and the dragged
    // folder's index so the two no-op slots flanking it don't expand.
@@ -114,10 +115,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
       handleAnimationComplete,
    } = useDrawerActionState(currentFolderId);
 
-   // The store loads on demand; refresh the current-folder view when the Expanded view mounts.
-   useEffect(() => {
-      void reloadCurrentFolder();
-   }, [reloadCurrentFolder]);
+   useDrawerMountLoad();
 
    // Leaving the Library always lands non-receded. A drop that contracted from the receded See-Workspace
    // state keeps it receded so the overlay exits off-screen (no Library flash); clear the flag once this
@@ -125,10 +123,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
    // recede is a transform, not an unmount, so this never fires then.
    useEffect(() => () => { setDrawerReceded(false); }, [setDrawerReceded]);
 
-   const handleJumpToResult = (folderId: string | null) => {
-      navigateToFolder(folderId);
-      clearSearch();
-   };
+   const handleJumpToResult = useJumpToSearchResult();
 
    const isDwellingStrip = workspaceDwellKey === 'see-workspace';
    const isDwellingEdge = workspaceDwellKey === 'reexpand';
