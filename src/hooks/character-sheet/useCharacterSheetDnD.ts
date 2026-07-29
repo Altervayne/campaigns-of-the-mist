@@ -175,10 +175,6 @@ export function useCharacterSheetDnD() {
       () => character?.trackers.storyThemes.map(t => t.id) || [],
       [character?.trackers.storyThemes]
    );
-   const cardIds = useMemo(
-      () => character?.cards.map(c => c.id) || [],
-      [character?.cards]
-   );
 
    // ==================
    //  Drag-feedback layer: context derivation + generous tab lane
@@ -758,16 +754,7 @@ export function useCharacterSheetDnD() {
    ) => {
       if (!activeDragItem) return;
 
-      let destinationFolderId: string | undefined = undefined;
-
-      if (overType === 'drawer-folder') {
-         destinationFolderId = overIdStr;
-      } else if (overIdStr.startsWith('drawer-drop-zone-')) {
-         const parsedId = overIdStr.replace('drawer-drop-zone-', '');
-         destinationFolderId = parsedId === 'root' ? undefined : parsedId;
-      } else if (overType === 'drawer-back-button') {
-         destinationFolderId = over.data.current?.destinationId ?? undefined;
-      }
+      const destinationFolderId = drawerDropFolderId(overIdStr, overType, over);
 
       // A card, tracker, OR journal: mapItemToStorableInfo forks on the shape (a journal → ['JOURNAL','NEUTRAL']).
       const storableInfo = mapItemToStorableInfo(activeDragItem as CardData | Tracker | Journal);
@@ -1415,7 +1402,6 @@ export function useCharacterSheetDnD() {
       statusIds,
       storyTagIds,
       storyThemeIds,
-      cardIds,
       handleDragStart,
       handleDragOver,
       handleDragEnd,
