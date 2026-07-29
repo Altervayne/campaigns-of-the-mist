@@ -119,15 +119,6 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
-  // The sheet's drag-and-drop hook is the one file in that set still over the cap. It is the next
-  // de-monolithization target, to be split alongside the duplicated drag logic on the other surfaces;
-  // exempt until then rather than leaving the whole folder unguarded.
-  {
-    files: ['src/hooks/character-sheet/useCharacterSheetDnD.ts'],
-    rules: {
-      'max-lines': 'off',
-    },
-  },
   // Same guard for the decomposed JournalItem: its section leaves and primitives stay small. Scoped to the
   // journal output only - the other board items are not decomposed yet and are deliberately not covered.
   // Its extracted hooks live under `src/hooks/board/**`, already guarded by the board block above.
