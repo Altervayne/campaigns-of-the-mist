@@ -37,6 +37,10 @@ const mocks = vi.hoisted(() => {
       boardInstance: {
          getState: () => ({ boardId: 'b1', name: 'Board', actions: { linkToDrawerItem: () => Promise.resolve({ id: 'b1' }) } }),
       },
+      noteInstance: {
+         getState: () => ({ noteId: 'n1', note: { title: 'Note' }, actions: { linkToDrawerItem: () => Promise.resolve({ id: 'n1' }) } }),
+      },
+      stampNoteReferences: write('stampNoteReferencesDrawerSource', Promise.resolve()),
       linkToDrawerItem: vi.fn(),
       setHasUnsavedChanges: vi.fn(),
       drawerActions: {
@@ -109,10 +113,10 @@ vi.mock('@/lib/character/characterStoreRegistry', () => ({
       }),
    }),
 }));
-vi.mock('@/lib/notes/noteStoreRegistry', () => ({ getOrCreateNoteInstance: () => ({ getState: () => ({ noteId: null, note: null }) }) }));
+vi.mock('@/lib/notes/noteStoreRegistry', () => ({ getOrCreateNoteInstance: () => mocks.noteInstance }));
 vi.mock('@/lib/board/boardRepository', () => ({ importBoard: mocks.write('importBoard', Promise.resolve()) }));
 vi.mock('@/lib/notes/noteRepository', () => ({ importNote: mocks.write('importNote', Promise.resolve()) }));
-vi.mock('@/lib/board/refreezeNoteReferences', () => ({ stampNoteReferencesDrawerSource: vi.fn(() => Promise.resolve()) }));
+vi.mock('@/lib/board/refreezeNoteReferences', () => ({ stampNoteReferencesDrawerSource: mocks.stampNoteReferences }));
 vi.mock('@/lib/drawer/drawerFolderTree', () => ({
    getChildFolders: () => [],
    getParentFolderId: () => null,
@@ -203,6 +207,21 @@ describe('handleDragEnd BRANCH 0 (tab)', () => {
 
       await waitFor(() => { expect(mocks.ledger).toEqual(['initiateItemDrop']); });
       expect(mocks.linkToDrawerItem).not.toHaveBeenCalled();
+   });
+
+   /*
+    * A NOTE tab save stamps every board reference to the once-tab-only note with the new drawer source
+    * BEFORE the item is minted. The order is the contract, so the ledger pins the sequence rather than
+    * just asserting both calls happened.
+    */
+   it('stamps the note references before minting the drawer item on a NOTE tab save', async () => {
+      mocks.openTabs = [{ id: 'n1', type: 'note' }];
+      const dnd = mountDnD();
+
+      dnd.start('n1', tabDrag('n1'));
+      dnd.end('n1', tabDrag('n1'), { id: 'drawer-drop-zone-root', data: { type: 'drawer-item' } });
+
+      await waitFor(() => { expect(mocks.ledger).toEqual(['stampNoteReferencesDrawerSource', 'initiateItemDrop']); });
    });
 
    it('adds a character element when a tab lands on the board', () => {
