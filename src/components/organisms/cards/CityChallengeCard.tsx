@@ -24,7 +24,6 @@ import { ExpandedCityChallengeSheet } from '@/components/organisms/cards/Expande
 
 // -- Store and Hook Imports --
 import { useCharacterActions } from '@/lib/stores/characterStore';
-import { useActiveCharacterInstance } from '@/lib/character/ActiveCharacterStoreContext';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useToolbarHover } from '@/hooks/useToolbarHover';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
@@ -32,6 +31,7 @@ import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useManualScroll } from '@/hooks/useManualScroll';
 import { useSheetMentionCreate } from '@/hooks/character-sheet/useSheetMentionCreate';
+import { useLiveCardDetails } from '@/hooks/character-sheet/useLiveCardDetails';
 
 // -- Utils Imports --
 import { addRow, cityChallengePaletteClass, newCustomMove, newHardMove, newSoftMove, newStatus, removeRowById, updateRowById } from '@/lib/cards/challengeCardFactories';
@@ -63,7 +63,6 @@ export const CityChallengeCard = React.memo(
       ({ card, isEditing = false, isSnapshot, isDrawerPreview, isBoardEmbed = false, isMobile = false, useVerticalStack, dragAttributes, dragListeners, onEditCard, onExport, onMentionClick, isExpanded = false }, ref) => {
          const { t } = useTranslation();
          const actions = useCharacterActions();
-         const storeInstance = useActiveCharacterInstance();
          const details = card.details as CityChallengeDetails;
          const cardThemeClass = cityChallengePaletteClass(details.primaryType);
 
@@ -106,13 +105,12 @@ export const CityChallengeCard = React.memo(
             (value) => actions.updateCardDetails(card.id, { mythosSubtitle: value }),
          );
 
-         // Reads the LIVE City details from the store at commit time, so a debounced field's unmount-flush
-         // patches whatever the store holds NOW - not a render snapshot. Every row commit composes over this,
-         // so two fields flushing together can't clobber (`set` is synchronous). Falls back to the render's
-         // details only if the card vanished (nothing to write then).
+         // Every row commit composes over the live read, so two fields flushing together can't clobber
+         // (`set` is synchronous). The game guard narrows the stored union back to the City shape.
+         const liveCardDetails = useLiveCardDetails<ChallengeDetails>(card.id, details);
          const liveDetails = (): CityChallengeDetails => {
-            const live = storeInstance.getState().character?.cards.find((c) => c.id === card.id)?.details as ChallengeDetails | undefined;
-            return live && live.game === 'CITY_OF_MIST' ? live : details;
+            const live = liveCardDetails();
+            return live.game === 'CITY_OF_MIST' ? live : details;
          };
 
          const commitSpectrums = (next: ChallengeStatus[]) => actions.updateCardDetails(card.id, { spectrums: next });

@@ -33,7 +33,7 @@ import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
 
 // -- Type Imports --
-import type { Card as CardData, LegendsHeroDetails } from '@/lib/types/character';
+import type { Card as CardData, CardDetails, LegendsHeroDetails } from '@/lib/types/character';
 
 
 
@@ -75,8 +75,11 @@ const HeroCardContent = React.memo(
 
 
       
+      // Commits one key. `updateCardDetails` merges, so the patch stays narrow - spreading the render's
+      // `details` here would write every other key back at its render-time value and revert whatever
+      // landed since, including a debounced field that has already flushed.
       const handleDetailChange = (field: keyof LegendsHeroDetails, value: LegendsHeroDetails[keyof LegendsHeroDetails]) => {
-         actions.updateCardDetails(card.id, { ...details, [field]: value });
+         actions.updateCardDetails(card.id, { [field]: value } as Partial<CardDetails>);
       };
 
       const { handleCycleViewMode } = useCardViewMode(card);

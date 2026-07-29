@@ -31,7 +31,7 @@ import { useCardViewMode } from '@/hooks/useCardViewMode';
 // -- Type Imports --
 import type { DraggableAttributes } from '@dnd-kit/core';
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
-import type { Card as CardData, CityRiftDetails, CrewMember } from '@/lib/types/character';
+import type { Card as CardData, CardDetails, CityRiftDetails, CrewMember } from '@/lib/types/character';
 
 
 
@@ -69,8 +69,11 @@ const RiftCardContent = React.memo(
       useManualScroll(crewScrollRef);
       useManualScroll(nemesesScrollRef);
 
+      // Commits one key. `updateCardDetails` merges, so the patch stays narrow - spreading the render's
+      // `details` here would write every other key back at its render-time value and revert whatever
+      // landed since, including a debounced field that has already flushed.
       const handleDetailChange = (field: keyof CityRiftDetails, value: CityRiftDetails[keyof CityRiftDetails]) => {
-         actions.updateCardDetails(card.id, { ...details, [field]: value });
+         actions.updateCardDetails(card.id, { [field]: value } as Partial<CardDetails>);
       };
 
       const { handleCycleViewMode } = useCardViewMode(card);

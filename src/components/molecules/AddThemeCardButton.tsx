@@ -15,6 +15,11 @@ interface AddCardButtonProps {
 
 
 
+/**
+ * The zero-card placeholder on the mobile carousel: a dashed stand-in at the card
+ * footprint that opens the card creator. Its type scale is sized for that 250px
+ * footprint, not a desktop column.
+ */
 export function AddCardButton({ onClick }: AddCardButtonProps) {
    const { t: t } = useTranslation();
 
@@ -23,13 +28,13 @@ export function AddCardButton({ onClick }: AddCardButtonProps) {
          data-tutorial="add-card-button"
          onClick={onClick}
          className={cn(
-            "cursor-pointer flex flex-col gap-4 items-center justify-center min-w-62.5 w-62.5 max-h-150 h-150 p-4",
-            "rounded-lg border-2 border-dashed border-bg text-bg border-border text-muted-foreground text-center bg-muted/50",
+            "cursor-pointer flex flex-col gap-3 items-center justify-center min-w-62.5 w-62.5 max-h-150 h-150 p-4",
+            "rounded-lg border-2 border-dashed border-border text-muted-foreground text-center bg-muted/50",
             "hover:text-foreground hover:border-foreground transition-all duration-150"
          )}
       >
-         <PlusCircle className="w-10 h-10" />
-         <span className="text-3xl font-semibold">{t('CharacterSheetPage.addCard')}</span>
+         <PlusCircle className="w-7 h-7" />
+         <span className="text-lg font-semibold">{t('CharacterSheetPage.addCard')}</span>
       </div>
    );
 }

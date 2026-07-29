@@ -281,8 +281,13 @@ export default function MobileCharacterSheetPage() {
 		}
 		setCardToEdit(null);
 		setNewlyCreatedCardId(resolvedCardId);
-		navigateToTab('sheet');
-		navigateToSheetTab('cards');
+		// Confirm lands on the card itself, so the overview is left behind when the add was
+		// launched from it. The destination is pushed as one entry rather than going through
+		// the nav helpers, whose `isReordering` reads the pre-exit render's value.
+		setIsReorderingCards(false);
+		setActiveTab('sheet');
+		setSheetActiveTab('cards');
+		pushHistoryState({ tab: 'sheet', sheetTab: 'cards', isReordering: false });
 	};
 
 	const handleAddDrawerItemToCharacter = (item: import('@/lib/types/drawer').DrawerItem) => {

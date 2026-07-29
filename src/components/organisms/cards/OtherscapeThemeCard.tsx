@@ -28,13 +28,16 @@ import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useManualScroll } from '@/hooks/useManualScroll';
 import { useToolbarHover } from '@/hooks/useToolbarHover';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
+import { useLiveCardDetails } from '@/hooks/character-sheet/useLiveCardDetails';
 
 // -- Type Imports --
 import type { DraggableAttributes } from '@dnd-kit/core';
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
-import type { Card as CardData, CardViewMode, OtherscapeThemeDetails, OtherscapeCrewDetails, OtherscapeLoadoutDetails, Tag, BlandTag } from '@/lib/types/character';
+import type { Card as CardData, CardDetails, CardViewMode, OtherscapeThemeDetails, OtherscapeCrewDetails, OtherscapeLoadoutDetails, Tag, BlandTag } from '@/lib/types/character';
 
 
+
+type ThemeDetails = OtherscapeThemeDetails | OtherscapeCrewDetails | OtherscapeLoadoutDetails;
 
 interface OtherscapeThemeCardProps {
    card: CardData;
@@ -57,7 +60,7 @@ export const OtherscapeThemeCard = React.memo(
       ({ card, isEditing=false, isSnapshot, isDrawerPreview, isBoardEmbed=false, isMobile=false, useVerticalStack, dragAttributes, dragListeners, onEditCard, onExport }, ref) => {
       const { t: t } = useTranslation();
       const actions = useCharacterActions();
-      const details = card.details as OtherscapeThemeDetails | OtherscapeCrewDetails | OtherscapeLoadoutDetails;
+      const details = card.details as ThemeDetails;
 
       const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
 
@@ -87,8 +90,19 @@ export const OtherscapeThemeCard = React.memo(
 
 
 
+      // Commits one key. `updateCardDetails` merges, so the patch stays narrow - spreading the render's
+      // `details` here would write every other key back at its render-time value and revert whatever
+      // landed since, including a debounced field that has already flushed.
       const handleDetailChange = (field: string, value: number | string | Tag | Tag[] | BlandTag[] | null) => {
-         actions.updateCardDetails(card.id, { ...details, [field]: value });
+         actions.updateCardDetails(card.id, { [field]: value } as Partial<CardDetails>);
+      };
+
+      // The main tag is a nested object, so a patch has to rebuild it. Rebuilding from the LIVE details
+      // rather than the render's keeps a sibling key (name / isActive / isScratched) from being reverted
+      // by a commit whose render predates it.
+      const liveDetails = useLiveCardDetails<ThemeDetails>(card.id, details);
+      const commitMainTag = (updates: Partial<Tag>) => {
+         actions.updateCardDetails(card.id, { mainTag: { ...liveDetails().mainTag, ...updates } });
       };
 
 
@@ -116,7 +130,7 @@ export const OtherscapeThemeCard = React.memo(
       // ==================
       const [localMainTagName, setLocalMainTagName] = useInputDebouncer(
          details.mainTag.name,
-         (value) => actions.updateCardDetails(card.id, { ...details, mainTag: { ...details.mainTag, name: value }})
+         (value) => commitMainTag({ name: value })
       );
 
       // ==================
@@ -133,11 +147,11 @@ export const OtherscapeThemeCard = React.memo(
          mysteryIdentityOrDescription,
          (value) => {
             if (card.cardType === 'CHARACTER_THEME') {
-               actions.updateCardDetails(card.id, { ...details, mystery: value });
+               actions.updateCardDetails(card.id, { mystery: value });
             } else if (card.cardType === 'GROUP_THEME') {
-               actions.updateCardDetails(card.id, { ...details, identity: value });
+               actions.updateCardDetails(card.id, { identity: value });
             } else {
-               actions.updateCardDetails(card.id, { ...details, description: value });
+               actions.updateCardDetails(card.id, { description: value });
             }
          }
       );
@@ -244,7 +258,7 @@ export const OtherscapeThemeCard = React.memo(
                      <div className="w-full text-center px-1 py-2.5 shrink-0 flex justify-between items-center gap-2 border-y border-card-accent/30">
                         <div className="w-6">
                            {!isEditing && (
-                              <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleDetailChange('mainTag', { ...details.mainTag, isActive: !details.mainTag.isActive })}>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isActive: !details.mainTag.isActive })}>
                                  {details.mainTag.isActive ? <Disc2 className="h-5 w-5 text-card-paper" /> : <Circle className="h-4 w-4" />}
                               </Button>
                            )}
@@ -263,7 +277,7 @@ export const OtherscapeThemeCard = React.memo(
                         )}
                         <div className="w-6">
                            {!isEditing && (
-                              <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleDetailChange('mainTag', { ...details.mainTag, isScratched: !details.mainTag.isScratched })}>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isScratched: !details.mainTag.isScratched })}>
                                  <Flame className={cn('h-4 w-4', details.mainTag.isScratched && 'text-destructive fill-destructive')} />
                               </Button>
                            )}

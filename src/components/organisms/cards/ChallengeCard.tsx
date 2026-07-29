@@ -23,7 +23,6 @@ import { ExpandedChallengeSheet } from '@/components/organisms/cards/ExpandedCha
 
 // -- Store and Hook Imports --
 import { useCharacterActions } from '@/lib/stores/characterStore';
-import { useActiveCharacterInstance } from '@/lib/character/ActiveCharacterStoreContext';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useToolbarHover } from '@/hooks/useToolbarHover';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
@@ -31,6 +30,7 @@ import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useManualScroll } from '@/hooks/useManualScroll';
 import { useSheetMentionCreate } from '@/hooks/character-sheet/useSheetMentionCreate';
+import { useLiveCardDetails } from '@/hooks/character-sheet/useLiveCardDetails';
 
 // -- Utils Imports --
 import { addRow, challengePaletteClass, newAbility, newMightyTag, newSpecial, newStatus, newTag, patchAbilityById, removeRowById, updateRowById } from '@/lib/cards/challengeCardFactories';
@@ -53,7 +53,6 @@ export const ChallengeCard = React.memo(
       ({ card, isEditing = false, isSnapshot, isDrawerPreview, isBoardEmbed = false, isMobile = false, useVerticalStack, dragAttributes, dragListeners, onEditCard, onExport, onMentionClick, isExpanded = false }, ref) => {
          const { t } = useTranslation();
          const actions = useCharacterActions();
-         const storeInstance = useActiveCharacterInstance();
          const details = card.details as SharedChallengeDetails;
          const cardThemeClass = challengePaletteClass(details.game);
 
@@ -103,13 +102,10 @@ export const ChallengeCard = React.memo(
          const commitSpecials = (next: ChallengeSpecial[]) => actions.updateCardDetails(card.id, { specials: next });
          const commitAbilities = (next: ChallengeAbility[]) => actions.updateCardDetails(card.id, { abilities: next });
 
-         // Reads the LIVE details straight from the store at commit time, so a debounced field's
-         // unmount-flush patches whatever the store holds NOW - not a snapshot captured at render. Every
-         // debounced row commit built by this component composes over this, so two fields flushing together
-         // can't clobber: `set` is synchronous, so the second read already carries the first's write. Falls
-         // back to the render's `details` only if the card just vanished (nothing to write in that case).
-         const liveDetails = () =>
-            (storeInstance.getState().character?.cards.find((c) => c.id === card.id)?.details as SharedChallengeDetails | undefined) ?? details;
+         // Every debounced row commit built by this component composes over the live read, so two fields
+         // flushing together can't clobber: `set` is synchronous, so the second read already carries the
+         // first's write.
+         const liveDetails = useLiveCardDetails<SharedChallengeDetails>(card.id, details);
 
          // Patches one ability by id against the live abilities - the sheet's tag + flavor + per-consequence
          // debouncers all commit through here, so no unmount-flush can stomp a sibling field.

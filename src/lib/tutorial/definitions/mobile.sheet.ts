@@ -218,14 +218,14 @@ export const MOBILE_SHEET_TUTORIAL: TutorialDefinition = {
          advance: { on: 'next-click' },
       },
       {
-         // Gate: reorder is a mode, not a gesture on the nav bar, so this beat points at its front door
-         // and waits on the mode itself. Off on arrival so the gate is meaningful and back-nav from the
-         // drag beat re-establishes it; the next beat teaches the drag inside.
+         // Gate: the overview is a mode, not a gesture on the nav bar, so this beat points at its front
+         // door and waits on the mode itself. Off on arrival so the gate is meaningful and back-nav from
+         // the beats inside re-establishes it.
          id: 'open-reorder',
          onArrive: arriveAt({ sheetTab: 'cards', toolbelt: false, reorder: false, editing: false }),
          anchorKey: 'card-reorder-button',
-         titleKey: 'Tutorial.mobileSheet.openReorder_title',
-         bodyKey: 'Tutorial.mobileSheet.openReorder_body',
+         titleKey: 'Tutorial.mobileSheet.openOverview_title',
+         bodyKey: 'Tutorial.mobileSheet.openOverview_body',
          placement: 'top',
          interaction: 'anchor-only',
          gestureCue: { kind: 'tap' },
@@ -233,6 +233,19 @@ export const MOBILE_SHEET_TUTORIAL: TutorialDefinition = {
             on: 'user-action',
             signal: { kind: 'store', predicate: () => useAppGeneralStateStore.getState().mobileNav?.reordering === true },
          },
+      },
+      {
+         // A locator, not an invite (like `add-more`): tapping the add row leaves for the full-screen
+         // creator, which would take this beat's own surface with it. Ordered before the drag beat,
+         // whose `onLeave` drops the mode - a beat after it would exit the overview and re-enter it
+         // just to be shown.
+         id: 'overview-add-card',
+         onArrive: arriveAt({ sheetTab: 'cards', toolbelt: false, reorder: true, editing: false }),
+         anchorKey: 'card-overview-add',
+         titleKey: 'Tutorial.mobileSheet.overviewAddCard_title',
+         bodyKey: 'Tutorial.mobileSheet.overviewAddCard_body',
+         placement: 'top',
+         advance: { on: 'next-click' },
       },
       {
          // The drag signature, taught where it actually lives. The anchor is the first row's grip - the

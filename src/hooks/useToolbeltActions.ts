@@ -17,7 +17,7 @@ import {
 	Undo2,
 	Redo2,
 	Edit as EditIcon,
-	ArrowUpDown,
+	LayoutList,
 	Save,
    SaveAll,
    CreditCard,
@@ -266,12 +266,12 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		// ==================
 		// Add Card (only on cards tab)
 		if (activeTab === 'cards') {
-			// Reorder Cards action
+			// Card overview (jump, reorder, add)
 			if (onEnterCardReorderMode) {
 				globalActions.push({
 					id: 'reorder-cards',
-					label: t('Toolbelt.reorderCards'),
-					icon: ArrowUpDown,
+					label: t('Toolbelt.cardOverview'),
+					icon: LayoutList,
 					onClick: onEnterCardReorderMode,
 					group: 'add',
 					show: true

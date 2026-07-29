@@ -10,7 +10,7 @@ import { resolveCardComponent } from '@/components/organisms/cards/resolveCardCo
 import { Sortable, DragStaticWrapper } from '@/components/dnd';
 
 // -- Icon Imports --
-import { GripVertical } from 'lucide-react';
+import { GripVertical, PlusCircle } from 'lucide-react';
 
 // -- Hook Imports --
 import { useMobileDragSensors } from '@/hooks/mobile/useMobileDragSensors';
@@ -35,30 +35,38 @@ interface MobileCardReorderViewProps {
 	isMobileFABMode: boolean;
 	isLeftHanded: boolean;
 	onSelectCard: (index: number) => void;
+	onOpenAddCard?: () => void;
 }
 
 /**
- * The card-reorder view of the mobile character sheet: a vertical, drag-sortable
+ * The card overview of the mobile character sheet: a vertical, drag-sortable
  * list of card previews. Each row pairs a tappable preview (tap jumps to that
- * card and exits reorder mode) with a dedicated ≥44px grip handle that owns
+ * card and leaves the overview) with a dedicated ≥44px grip handle that owns
  * drag-to-reorder, so tapping a preview never starts a drag and dragging the
  * handle never selects. The handle sits on the handedness-leading edge (right by
  * default, left when left-handed) and is touch-action: none so an intentional
  * drag is not pre-empted by the list's vertical scroll; @dnd-kit auto-scrolls the
  * surrounding scroll container while dragging near its edges.
  *
+ * This is the cards tab's collection view - the carousel is a detail view with no
+ * natural place to add - so the add affordance lives here, as a dashed row after
+ * the list. It sits OUTSIDE the `SortableContext`: a dashed row among sortable
+ * rows reads as a drop slot. It carries no grip and neutral tokens only, so it
+ * never competes with scanning the list for a specific card.
+ *
  * Reordering is wired through {@link useMobileCardDragReorder} (dispatching the
  * `reorderCards` store action); the previews route through the shared
  * `resolveCardComponent` (forced to the front-facing side-by-side view), so no
  * card-type/game routing lives here. Entry into this view is owned by the
- * toolbelt's reorder action; this component only renders the list.
+ * toolbelt and the card nav bar; this component only renders the list.
  *
  * @param cards - The character's cards, in their displayed order.
  * @param isMobileFABMode - Adds bottom padding so the FAB does not overlap the list.
  * @param isLeftHanded - Mirrors each grip handle to the left edge when true.
  * @param onSelectCard - Called with a card index when its preview is tapped.
+ * @param onOpenAddCard - Opens the card creator; the add row is omitted without it.
  */
-export function MobileCardReorderView({ cards, isMobileFABMode, isLeftHanded, onSelectCard }: MobileCardReorderViewProps) {
+export function MobileCardReorderView({ cards, isMobileFABMode, isLeftHanded, onSelectCard, onOpenAddCard }: MobileCardReorderViewProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 	const sensors = useMobileDragSensors();
@@ -84,7 +92,7 @@ export function MobileCardReorderView({ cards, isMobileFABMode, isLeftHanded, on
 			<div className="max-w-2xl mx-auto space-y-3">
 				{/* Header */}
 				<div className="flex items-center justify-center mb-2 sticky top-0 bg-background z-10 pb-2">
-					<h2 className="text-lg font-semibold">{t('MobileCharacterSheet.reorderCards')}</h2>
+					<h2 className="text-lg font-semibold">{t('MobileCharacterSheet.cardOverview')}</h2>
 				</div>
 
 				{/* Drag-sortable card list */}
@@ -130,6 +138,24 @@ export function MobileCardReorderView({ cards, isMobileFABMode, isLeftHanded, on
 						))}
 					</SortableContext>
 				</DndContext>
+
+				{/* Add card: outside the sortable list so it never reads as a drop slot, and
+				    deliberately quieter than the rows it follows. */}
+				{onOpenAddCard && (
+					<button
+						type="button"
+						data-tutorial="card-overview-add"
+						onClick={onOpenAddCard}
+						className={cn(
+							"flex w-full h-16 items-center justify-center gap-2 rounded-lg",
+							"border-2 border-dashed border-border bg-muted/50 text-muted-foreground",
+							"hover:text-foreground hover:border-foreground transition-colors"
+						)}
+					>
+						<PlusCircle className="h-5 w-5" />
+						<span className="text-sm font-medium">{t('CharacterSheetPage.addCard')}</span>
+					</button>
+				)}
 			</div>
 		</div>
 	);

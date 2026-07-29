@@ -1665,8 +1665,10 @@
          "cardSwipe_body": "Balayez vers la gauche ou la droite sur une carte pour les parcourir une à une.",
          "cardNav_title": "La Barre des Cartes",
          "cardNav_body": "La barre sous vos cartes vous aide à vous déplacer. Utilisez les flèches pour avancer pas à pas, touchez un point pour sauter, et touchez une carte pour la retourner.",
-         "openReorder_title": "Réorganiser Vos Cartes",
-         "openReorder_body": "Réagencer vos cartes a son propre mode, avec tout le paquet sous forme de liste. Touchez Réorganiser pour l'ouvrir.",
+         "openOverview_title": "[TO COMPLETE]",
+         "openOverview_body": "[TO COMPLETE]",
+         "overviewAddCard_title": "[TO COMPLETE]",
+         "overviewAddCard_body": "[TO COMPLETE]",
          "reorderDrag_title": "Glissez-les à Leur Place",
          "reorderDrag_body": "Appuyez d'abord longuement sur la poignée d'une carte, puis faites-la glisser vers le haut ou le bas de la liste. Un simple glissement ne soulèvera pas la carte. Toucher une carte y saute directement, et le bouton de validation enregistre votre ordre quand il vous convient.",
          "wrap_title": "Bien Joué",
@@ -2133,7 +2135,7 @@
       "statuses": "Statuts",
       "storyTags": "Traits Narratifs",
       "storyThemes": "Thèmes Narratifs",
-      "reorderCards": "Réorganiser les Cartes"
+      "cardOverview": "[TO COMPLETE]"
    },
    "MobileCardCarousel": {
       "noCards": "Aucune carte pour le moment"
@@ -2175,7 +2177,7 @@
       "addStatus": "Ajouter un Statut",
       "addStoryTag": "Ajouter un Trait Narratif",
       "addStoryTheme": "Ajouter un Thème Narratif",
-      "reorderCards": "Réorganiser les Cartes",
+      "cardOverview": "[TO COMPLETE]",
       "createPortrait": "Créer un Portrait",
       "editPortrait": "Éditer le Portrait",
       "flipCard": "Retourner la Carte",

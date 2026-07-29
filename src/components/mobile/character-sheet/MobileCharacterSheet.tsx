@@ -260,6 +260,7 @@ export default function MobileCharacterSheet({
 									setCurrentCardIndex(index);
 									setIsReorderingCards(false);
 								}}
+								onOpenAddCard={onOpenAddCard}
 							/>
 						) : (
 							<MobileCardArea

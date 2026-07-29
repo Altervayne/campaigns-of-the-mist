@@ -1763,8 +1763,10 @@
          "cardSwipe_body": "Swipe left or right across a card to move through them one at a time.",
          "cardNav_title": "The Card Bar",
          "cardNav_body": "The bar below your cards helps you get around. Use the arrows to step through, tap a dot to jump, and tap a card to flip it.",
-         "openReorder_title": "Reorder Your Cards",
-         "openReorder_body": "Rearranging your cards has its own mode, with the whole deck as a list. Tap Reorder to open it.",
+         "openOverview_title": "The Card Overview",
+         "openOverview_body": "Your whole deck as one list, for finding a card fast or rearranging the set. Tap Card Overview to open it.",
+         "overviewAddCard_title": "Adding a Card",
+         "overviewAddCard_body": "The dashed row at the end of the list opens the card creator, so new cards start from the same place you browse them.",
          "reorderDrag_title": "Drag Them Into Place",
          "reorderDrag_body": "Press and hold a card's grip handle first, then drag it up or down the list. A drag on its own will not pick the card up. Tapping a card jumps straight to it, and the check button saves your order when it looks right.",
          "wrap_title": "Nicely Done",
@@ -2259,7 +2261,7 @@
       "statuses": "Statuses",
       "storyTags": "Story Tags",
       "storyThemes": "Story Themes",
-      "reorderCards": "Reorder Cards"
+      "cardOverview": "Card Overview"
    },
    "MobileCardCarousel": {
       "noCards": "No cards yet"
@@ -2301,7 +2303,7 @@
       "addStatus": "Add Status",
       "addStoryTag": "Add Story Tag",
       "addStoryTheme": "Add Story Theme",
-      "reorderCards": "Reorder Cards",
+      "cardOverview": "Card Overview",
       "createPortrait": "Create Portrait",
       "editPortrait": "Edit Portrait",
       "flipCard": "Flip Card",

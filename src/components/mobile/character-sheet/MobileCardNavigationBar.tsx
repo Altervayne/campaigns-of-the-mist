@@ -11,7 +11,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, RefreshCw, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, LayoutList } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -41,23 +41,24 @@ interface MobileCardNavigationBarProps {
  * Carries the nav-bar horizontal-navigate swipe handlers spread from the sheet's
  * gesture hook. Purely presentational; the `data-tutorial` anchor is preserved.
  *
- * Touch targets follow the ≥44px guideline: the prev/next arrows are 44px, and
- * each ~6px dot keeps its small visual but sits inside an invisible 44px hit area
- * (the dot row wraps when a character has enough cards to overflow one line). The
- * flip and reorder controls are grouped on the handedness-leading side (left for
+ * The prev/next arrows are 44px, meeting the touch-target guideline; the dots do
+ * not, and are deliberately sub-guideline (see the comment on the dot row). The
+ * dot row wraps when a character has enough cards to overflow one line. The flip
+ * and overview controls are grouped on the handedness-leading side (left for
  * left-handed, right otherwise) so they stay thumb-reachable while the prev/next
  * steppers remain at the outer edges. Flip toggles the current card's face via the
  * sheet's `onFlip`; for a card whose effective view mode is side-by-side
  * this is a visual no-op (both faces already show), matching the prior
- * edge-swipe-flip semantics. Reorder (`onReorder`) enters the card drag-reorder
- * mode - the same action the toolbelt exposes, surfaced here as a discoverable
- * front door - and is shown only when there is more than one card to reorder.
+ * edge-swipe-flip semantics. `onReorder` opens the card overview - the same action
+ * the toolbelt exposes, surfaced here as a discoverable front door. The overview
+ * also owns Add Card, so this button shows from one card up rather than only when
+ * there is something to reorder.
  */
 export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, onPrevious, onNext, onSelectCard, onFlip, onReorder, touchHandlers }: MobileCardNavigationBarProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 
-	// The explicit flip + reorder controls, grouped on the handedness-leading side
+	// The explicit flip + overview controls, grouped on the handedness-leading side
 	// so the two most-used card actions stay thumb-reachable next to the dot row.
 	const flipButton = (
 		<IconButton
@@ -71,25 +72,26 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 		</IconButton>
 	);
 
-	// Reorder is also available in the toolbelt; this is its discoverable front
-	// door, shown only when there is more than one card to reorder.
-	const reorderButton = cards.length > 1 ? (
+	// The overview is also available in the toolbelt; this is its discoverable front
+	// door. It shows from one card up, because the overview carries Add Card and a
+	// single-card sheet still needs a route to it.
+	const overviewButton = cards.length >= 1 ? (
 		<IconButton
 			variant="outline"
 			size="sm"
 			onClick={onReorder}
-			aria-label={t('Toolbelt.reorderCards')}
+			aria-label={t('Toolbelt.cardOverview')}
 			className="h-11 w-11 shrink-0"
 			data-tutorial="card-reorder-button"
 		>
-			<ArrowUpDown className="h-5 w-5" />
+			<LayoutList className="h-5 w-5" />
 		</IconButton>
 	) : null;
 
 	const leadingControls = (
 		<>
 			{flipButton}
-			{reorderButton}
+			{overviewButton}
 		</>
 	);
 

@@ -31,9 +31,12 @@ import { useManualScroll } from '@/hooks/useManualScroll';
 import { useToolbarHover } from '@/hooks/useToolbarHover';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
+import { useLiveCardDetails } from '@/hooks/character-sheet/useLiveCardDetails';
 
 // -- Type Imports --
-import type { Card as CardData, CityThemeDetails, CityCrewDetails, Tag, BlandTag } from '@/lib/types/character';
+import type { Card as CardData, CardDetails, CityThemeDetails, CityCrewDetails, Tag, BlandTag } from '@/lib/types/character';
+
+type ThemeDetails = CityThemeDetails | CityCrewDetails;
 
 interface CityThemeCardProps {
    card: CardData;
@@ -56,7 +59,7 @@ export const CityThemeCard = React.memo(
       ({ card, isEditing=false, isSnapshot, isDrawerPreview, isBoardEmbed=false, isMobile=false, useVerticalStack, dragAttributes, dragListeners, onEditCard, onExport }, ref) => {
       const { t: t } = useTranslation();
       const actions = useCharacterActions();
-      const details = card.details as CityThemeDetails | CityCrewDetails;
+      const details = card.details as ThemeDetails;
 
       const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
 
@@ -86,8 +89,19 @@ export const CityThemeCard = React.memo(
 
 
 
+      // Commits one key. `updateCardDetails` merges, so the patch stays narrow - spreading the render's
+      // `details` here would write every other key back at its render-time value and revert whatever
+      // landed since, including a debounced field that has already flushed.
       const handleDetailChange = (field: string, value: number | string | Tag | Tag[] | BlandTag[] | null) => {
-         actions.updateCardDetails(card.id, { ...details, [field]: value });
+         actions.updateCardDetails(card.id, { [field]: value } as Partial<CardDetails>);
+      };
+
+      // The main tag is a nested object, so a patch has to rebuild it. Rebuilding from the LIVE details
+      // rather than the render's keeps a sibling key (name / isActive / isScratched) from being reverted
+      // by a commit whose render predates it.
+      const liveDetails = useLiveCardDetails<ThemeDetails>(card.id, details);
+      const commitMainTag = (updates: Partial<Tag>) => {
+         actions.updateCardDetails(card.id, { mainTag: { ...liveDetails().mainTag, ...updates } });
       };
 
       const { handleCycleViewMode } = useCardViewMode(card);
@@ -103,7 +117,7 @@ export const CityThemeCard = React.memo(
       // ==================
       const [localMainTagName, setLocalMainTagName] = useInputDebouncer(
          details.mainTag.name,
-         (value) => actions.updateCardDetails(card.id, { ...details, mainTag: { ...details.mainTag, name: value }})
+         (value) => commitMainTag({ name: value })
       );
 
       // ==================
@@ -114,9 +128,9 @@ export const CityThemeCard = React.memo(
          mysteryOrIdentity,
          (value) => {
             if (card.cardType === 'CHARACTER_THEME') {
-               actions.updateCardDetails(card.id, { ...details, mystery: value });
+               actions.updateCardDetails(card.id, { mystery: value });
             } else if (card.cardType === 'GROUP_THEME') {
-               actions.updateCardDetails(card.id, { ...details, identity: value });
+               actions.updateCardDetails(card.id, { identity: value });
             }
          }
       );
@@ -152,7 +166,7 @@ export const CityThemeCard = React.memo(
                <div className="w-full text-center px-1 py-2.5 shrink-0 flex justify-between items-center gap-2 border-y border-card-accent/30">
                   <div className="w-6">
                      {!isEditing && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleDetailChange('mainTag', { ...details.mainTag, isActive: !details.mainTag.isActive })}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isActive: !details.mainTag.isActive })}>
                            {details.mainTag.isActive ? <Disc2 className="h-5 w-5 text-card-paper" /> : <Circle className="h-4 w-4" />}
                         </Button>
                      )}
@@ -171,7 +185,7 @@ export const CityThemeCard = React.memo(
                   )}
                   <div className="w-6">
                      {!isEditing && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleDetailChange('mainTag', { ...details.mainTag, isScratched: !details.mainTag.isScratched })}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isScratched: !details.mainTag.isScratched })}>
                            <Flame className={cn('h-4 w-4', details.mainTag.isScratched && 'text-destructive fill-destructive')} />
                         </Button>
                      )}

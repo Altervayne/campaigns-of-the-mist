@@ -60,7 +60,9 @@ export default function MobileCardCarousel({ cards, currentIndex, onOpenAddCard 
 				<p className="text-lg text-muted-foreground mb-6">
 					{t('MobileCardCarousel.noCards')}
 				</p>
-				{isEditing && onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
+				{/* Not edit-gated: with no cards the overview does not exist, so this is the
+				    only route to creating one. */}
+				{onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
 			</div>
 		);
 	}
