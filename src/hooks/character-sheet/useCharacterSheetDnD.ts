@@ -13,6 +13,9 @@ import { MORPH_DESCRIPTORS, SPRING_BACK_KEY, createSpringController, deriveDragC
 import { sheetSectionForItemType } from '@/lib/utils/dnd';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
+// -- Local Imports --
+import { classifyDrag, drawerDropFolderId, NAV_GRACE_PX } from '@/hooks/character-sheet/dnd/dragClassification';
+
 // -- Drag-morph engine --
 import { useDragMorph } from '@/components/molecules/drag-morph/useDragMorph';
 import { buildDragIdentity } from '@/hooks/character-sheet/buildDragIdentity';
@@ -29,9 +32,7 @@ import { getActiveBoardStore, getOrCreateBoardInstance } from '@/lib/board/board
 import { getOrCreateNoteInstance } from '@/lib/notes/noteStoreRegistry';
 
 // -- Board Imports --
-import { screenToWorld } from '@/lib/board/boardCoordinates';
-import { zoneContaining } from '@/lib/board/zoneMembership';
-import { nextScopeZ } from '@/lib/board/boardTree';
+import { boardDropPlacement } from '@/lib/board/boardDropPlacement';
 import { embeddedSpecForDrawerItem, embeddedSpecForComponent, characterElementSpec } from '@/lib/board/embedDrawerItem';
 import { importBoard } from '@/lib/board/boardRepository';
 import { importNote } from '@/lib/notes/noteRepository';
@@ -39,80 +40,11 @@ import { stampNoteReferencesDrawerSource } from '@/lib/board/refreezeNoteReferen
 
 // -- Type Imports --
 import type { Board, Journal, Note } from '@/lib/types/board';
-import type { BoardStore } from '@/lib/stores/boardStore';
+import type { WorkspaceDwellTarget } from '@/hooks/character-sheet/dnd/dragClassification';
 import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
 import type { OpenTab } from '@/lib/character/tabManagerStore';
 import type { DragContext, DragKind, DragOverZone, DrawerDropTarget, SpringController, SpringHitArea, SpringTarget } from '@/lib/utils/dragFeedback';
-
-
-
-/**
- * How far (px) the cursor must move after a spring navigation before in-drawer folder
- * rows are honored as drop targets again. Within this grace the drop target is forced
- * to the current folder, so a row that merely reflowed under the stationary cursor
- * (e.g. at root, where the Back button vanishes) is never an accidental target.
- */
-const NAV_GRACE_PX = 24;
-
-/**
- * The See-Workspace dwell targets in the Expanded drawer: the bottom strip recedes the overlay to
- * reveal the workspace; the re-expand edge (shown while receded) brings it back. The dwell reuses the
- * spring-nav timer; these are its targets, keyed by their own string value.
- */
-type WorkspaceDwellTarget = 'see-workspace' | 'reexpand';
-
-/**
- * Classifies a drag's source ONCE at start, so the drag-scoped `pointermove`
- * listener can branch (tab-lane test, puck context) by kind without re-reading
- * @dnd-kit's active data on every move.
- *
- * @param active - The @dnd-kit `active` descriptor from `onDragStart`.
- * @returns The {@link DragKind}, or null when the source is not recognised.
- */
-function classifyDrag(active: DragStartEvent['active']): DragKind {
-   const type = active.data.current?.type as string | undefined;
-   if (type === DRAG_TYPES.TAB) return 'tab';
-   if (type === DRAG_TYPES.DRAWER_FOLDER) return 'drawer-folder';
-   if (type === DRAG_TYPES.DRAWER_ITEM) {
-      const item = active.data.current?.item as DrawerItem | undefined;
-      return item?.type === 'FULL_CHARACTER_SHEET' ? 'drawer-character' : 'drawer-component';
-   }
-   if (typeof type === 'string' && type.startsWith('sheet-')) return 'sheet-item';
-   return null;
-}
-
-/**
- * The placement (id, world rect centred on the drop, top z, joined zone) for a new board item of
- * `size` dropped at `dropPointer`. Falls back to the viewport centre when the cursor/clip is missing.
- * Shared by every board drop (a dragged drawer item, a dragged tab).
- */
-function boardDropPlacement(boardStore: BoardStore, dropPointer: { x: number; y: number } | null, size: { width: number; height: number }) {
-   const { viewport, items } = boardStore.getState();
-   const clip = document.querySelector('[data-board-clip]') as HTMLElement | null;
-   const rect = clip?.getBoundingClientRect() ?? null;
-   const screenPoint = dropPointer && rect ? dropPointer : rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : null;
-   const world = rect && screenPoint ? screenToWorld(screenPoint.x, screenPoint.y, { left: rect.left, top: rect.top }, viewport) : { x: 0, y: 0 };
-   const placement = { id: cuid(), x: world.x - size.width / 2, y: world.y - size.height / 2, width: size.width, height: size.height };
-   const zoneId = zoneContaining(placement, Object.values(items).filter((item) => item.kind === 'zone')) ?? undefined;
-   const z = nextScopeZ(items, zoneId ?? null);
-   return { ...placement, z, zoneId };
-}
-
-/**
- * The destination folder id for a drop onto a drawer target: an explicit folder row, a folder's items
- * drop-zone (root → undefined), or a Back button's parent. Undefined when the target is none of these.
- * Shared by every tab→drawer save so the character/board/note paths route identically.
- */
-export function drawerDropFolderId(overIdStr: string, overType: string, over: NonNullable<DragOverEvent['over']>): string | undefined {
-   if (overType === 'drawer-folder') return overIdStr;
-   if (overIdStr.startsWith('drawer-drop-zone-')) {
-      const parsedId = overIdStr.replace('drawer-drop-zone-', '');
-      return parsedId === 'root' ? undefined : parsedId;
-   }
-   if (overType === 'drawer-back-button') return over.data.current?.destinationId ?? undefined;
-   return undefined;
-}
 
 
 
