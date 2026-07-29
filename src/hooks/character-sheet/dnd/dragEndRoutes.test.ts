@@ -289,7 +289,10 @@ describe('handleDragEnd route ordering', () => {
       mocks.activeBoardStore = mocks.boardStore;
       mountRect('data-drawer-panel', { left: 0, top: 0, right: 300, bottom: 900 });
       mountRect('data-folder-id=f2', { left: 10, top: 100, right: 290, bottom: 140 });
-      const item = drawerItem('i1', 'CHARACTER_CARD');
+      // Real card content, so the board route is genuinely available: with an empty content the
+      // embed spec resolves to null and the board could never be written to, leaving the
+      // "geometry wins" assertion below unable to fail.
+      const item = drawerItem('i1', 'CHARACTER_CARD', 'LEGENDS', card('c1'));
       const dnd = mountDnD();
 
       dnd.start('i1', itemDrag(item));

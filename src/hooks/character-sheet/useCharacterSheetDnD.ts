@@ -3,17 +3,16 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
-import toast from 'react-hot-toast';
-import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
+import type { DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 
 // -- Utils Imports --
-import { mapItemToStorableInfo } from '@/lib/utils/dnd';
 import { MORPH_DESCRIPTORS, SPRING_BACK_KEY, deriveDragContext, drawerDropTargetKey, isOverTabLaneFor, resolveDrawerDropTarget, resolveSpringTarget, resolveTabSpringTarget, shouldForceMorph, springDirection } from '@/lib/utils/dragFeedback';
 import { sheetSectionForItemType } from '@/lib/utils/dnd';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Local Imports --
 import { classifyDrag, NAV_GRACE_PX } from '@/hooks/character-sheet/dnd/dragClassification';
+import { useDragEndRouter } from '@/hooks/character-sheet/dnd/useDragEndRouter';
 import { useDrawerSaveActions } from '@/hooks/character-sheet/dnd/useDrawerSaveActions';
 import { useSheetReorderActions } from '@/hooks/character-sheet/dnd/useSheetReorderActions';
 import { useSpringNavigation } from '@/hooks/character-sheet/dnd/useSpringNavigation';
@@ -25,23 +24,15 @@ import { buildDragIdentity } from '@/hooks/character-sheet/buildDragIdentity';
 // -- Store Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
 import { useTabManagerActions, useTabManagerStore } from '@/lib/character/tabManagerStore';
-import { getOrCreateInstance } from '@/lib/character/characterStoreRegistry';
 import { useDrawerStore, useDrawerActions } from '@/lib/stores/drawerStore';
-import { getChildFolders, whenFolderTreeSettled } from '@/lib/drawer/drawerFolderTree';
 import { useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
-import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
-
-// -- Board Imports --
-import { boardDropPlacement } from '@/lib/board/boardDropPlacement';
-import { embeddedSpecForDrawerItem, embeddedSpecForComponent, characterElementSpec } from '@/lib/board/embedDrawerItem';
-import { importBoard } from '@/lib/board/boardRepository';
-import { importNote } from '@/lib/notes/noteRepository';
 
 // -- Type Imports --
-import type { Board, Journal, Note } from '@/lib/types/board';
+import type { Journal } from '@/lib/types/board';
+import type { DragEndSnapshot } from '@/hooks/character-sheet/dnd/dragEndDeps';
 import type { WorkspaceDwellTarget } from '@/hooks/character-sheet/dnd/dragClassification';
-import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
+import type { Card as CardData, Tracker } from '@/lib/types/character';
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
 import type { OpenTab } from '@/lib/character/tabManagerStore';
 import type { DragContext, DragKind, DragOverZone, DrawerDropTarget, SpringHitArea, SpringTarget } from '@/lib/utils/dragFeedback';
@@ -372,6 +363,19 @@ export function useCharacterSheetDnD() {
    }, [updateContext, setCursor, draggedFolderIdRef, springControllerRef, workspaceDwellControllerRef]);
 
    /**
+    * Reads the feedback values a drop routes against, as plain values taken in one call. Every one of
+    * them is reset by `clearDragFeedback`, so the drop handler calls this FIRST and the routes read the
+    * snapshot rather than the layer.
+    */
+   const readDragSnapshot = useCallback((): DragEndSnapshot => ({
+      wasOverTabLane: isOverTabLaneRef.current,
+      dragKind: dragKindRef.current,
+      manualDrawerTarget: hoveredDrawerTargetRef.current,
+      // The last cursor position, for a board drop's world placement (cleared by cleanup).
+      dropPointer: lastPointerRef.current,
+   }), []);
+
+   /**
     * Tears down the feedback layer: detaches the move listener and clears every
     * ref + its mirrored state. Called from both `handleDragEnd` and the cancel path
     * (and on unmount) so nothing leaks across drags.
@@ -588,499 +592,43 @@ export function useCharacterSheetDnD() {
    });
    const { handleSheetToDrawerDrop, saveTabToDrawer, saveBoardTabToDrawer, saveNoteTabToDrawer } = useDrawerSaveActions({ initiateItemDrop });
 
-   const handleDragEnd = useCallback((event: DragEndEvent) => {
-      const { active, over } = event;
-
-      // Read the feedback refs BEFORE tearing them down (clearDragFeedback resets them).
-      const wasOverTabLane = isOverTabLaneRef.current;
-      const dragKind = dragKindRef.current;
-      const manualDrawerTarget = hoveredDrawerTargetRef.current;
-      // The last cursor position, for a board drop's world placement (cleared by cleanup).
-      const dropPointer = lastPointerRef.current;
-      // Read the drawer's expand/recede state before clearDragFeedback tears it down: once an item lands
-      // on the workspace, the Library's search/nav job is done, so leave the drawer as the reduced side
-      // panel. If the drop came from the receded See-Workspace state, clearDragFeedback just un-receded it,
-      // which would slide the Library back UP into view as the overlay contracts (a flash). Re-recede so it
-      // stays off-screen through the exit - only the reduced side panel is seen opening; ExpandedDrawer
-      // clears the flag when it unmounts. Only the successful workspace-drop branches call this; a no-op /
-      // cancel leaves clearDragFeedback's un-recede in place, restoring the Library.
-      const wasDrawerExpanded = useAppGeneralStateStore.getState().isDrawerExpanded;
-      const wasDrawerReceded = useAppGeneralStateStore.getState().isDrawerReceded;
-      const contractIfExpanded = () => {
-         if (!wasDrawerExpanded) return;
-         contractDrawer();
-         if (wasDrawerReceded) setDrawerReceded(true);
-      };
-
-      // Embeds the dragged sheet component as a self-contained board copy at the drop point.
-      // Shared by SCENARIO 2.0a's two entry paths: the dnd-kit `board-drop-zone` hit, and the
-      // geometry fallback for a board tab reached by a mid-drag spring nav (see below).
-      const dropSheetItemOnBoard = () => {
-         const boardStore = getActiveBoardStore();
-         if (!boardStore || !activeDragItem) return;
-         // A card, tracker, OR journal: embeddedSpecForComponent forks on the shape (a bare Journal drops
-         // as a board journal copy), so no separate journal branch is needed here.
-         const spec = embeddedSpecForComponent(activeDragItem as CardData | Tracker | Journal);
-         if (!spec) return;
-         void boardStore.getState().actions.addItem({
-            ...boardDropPlacement(boardStore, dropPointer, spec),
-            kind: spec.kind,
-            content: spec.content,
-         });
-         contractIfExpanded();
-      };
-
-      setActiveDragItem(null);
-      setIsOverDrawer(false);
-      setOverDragId(null);
-      setActiveTabDrag(null);
-      clearDragFeedback();
-
-      // ##################################################
-      // ###   Generous tab lane (drawer character)     ###
-      // ##################################################
-      // A character released anywhere in the padded top band opens/focuses its tab,
-      // even when @dnd-kit's thin `tab-strip-drop-zone` was missed (so this runs
-      // BEFORE the `over` null-guard). The kind guard keeps it character-only.
-      if (wasOverTabLane && dragKind === 'drawer-character') {
-         const draggedItem = active.data.current?.item as DrawerItem | undefined;
-         if (draggedItem?.type === 'FULL_CHARACTER_SHEET') {
-            const characterData = draggedItem.content as Character;
-            openCharacterTab(characterData, draggedItem.id); // append-or-focus
-            setContextualGame(characterData.game);
-            contractIfExpanded();
-         }
-         return;
-      }
-
-      // ##################################################
-      // ###   Manual in-drawer drop targeting          ###
-      // ##################################################
-      // For a drawer-sourced drag, the in-drawer DROP target is resolved by live cursor
-      // geometry, NOT dnd-kit's `over`, its collision rects desync in
-      // the scrollable/animated drawer (folder drops were center-only). This runs BEFORE
-      // the `over` null-guard so an off-center drop the collision missed still lands.
-      // A folder-row target moves into that folder; a current-folder target (Back, the
-      // items body, anywhere else in the drawer) moves into the folder currently being
-      // VIEWED, read live from the store, so a dwell-Back-then-release lands in the
-      // folder you navigated to (not its parent). Same-folder current-folder drops fall
-      // through to the dnd-kit reorder path below.
-      const activeIsDrawerMove =
-         dragKind === 'drawer-character' || dragKind === 'drawer-component' || dragKind === 'drawer-folder';
-      if (activeIsDrawerMove) {
-         const draggedId = active.id.toString();
-         const isFolderDrag = dragKind === 'drawer-folder';
-
-         // Folder onto a reorder SLOT → place at that exact position, ahead of the generic
-         // folder-row / current-folder handling so the user lands where the highlighted slot
-         // shows. When the dragged folder is already in this view it is a pure reorder; when
-         // it arrived via a spring navigation it is moved into the current folder and then
-         // slotted into place (an append + reorder, hence two undo steps). Driven by dnd-kit's
-         // `over` (the drop-zone droppable), so it must run independently of the geometry resolver:
-         // the slots sit in the folder-nav region the resolver excludes, so its target is null there.
-         if (isFolderDrag && over?.data.current?.type === 'drawer-drop-zone') {
-            const destParentId = useDrawerStore.getState().currentFolderId ?? null;
-            // Folder scope comes from the folder-tree cache (the store no longer carries folders).
-            const scope = getChildFolders(destParentId);
-            const { targetId } = over.data.current as { targetId: string };
-            const fromIndex = scope.findIndex((f) => f.id === draggedId);
-            const slotIndex = targetId === 'last' ? scope.length : scope.findIndex((f) => f.id === targetId);
-            if (fromIndex !== -1) {
-               let newIndex = targetId === 'last' ? scope.length - 1 : slotIndex;
-               if (newIndex !== -1) {
-                  if (fromIndex < newIndex) newIndex -= 1;
-                  if (fromIndex !== newIndex) void reorderFolders(destParentId, fromIndex, newIndex);
-               }
-            } else {
-               const targetIndex = slotIndex < 0 ? scope.length : slotIndex;
-               void (async () => {
-                  await moveFolder(draggedId, destParentId ?? undefined);
-                  // The move re-derived the cache; read the appended position back from it to slot it in.
-                  await whenFolderTreeSettled();
-                  const after = getChildFolders(destParentId);
-                  const appendedIndex = after.findIndex((f) => f.id === draggedId);
-                  if (appendedIndex !== -1 && appendedIndex !== targetIndex) {
-                     await reorderFolders(destParentId, appendedIndex, targetIndex);
-                  }
-               })();
-            }
-            return;
-         }
-
-         // The remaining in-drawer drops need the geometry-resolved target: nest onto a folder ROW, or
-         // move into the VIEWED folder (the items body / Back). When it is null - the cursor is over
-         // chrome (header / breadcrumb / search) - there is nothing more to do here.
-         if (manualDrawerTarget) {
-            if (manualDrawerTarget.kind === 'folder') {
-               if (manualDrawerTarget.id !== draggedId) {
-                  if (isFolderDrag) void moveFolder(draggedId, manualDrawerTarget.id);
-                  else void moveItem(draggedId, manualDrawerTarget.id);
-               }
-               return;
-            }
-            // current-folder: move into the folder being VIEWED, unless the dragged item is
-            // ALREADY a child of it (then fall through to reorder). The source of truth is
-            // the loaded current-folder view, NOT the drag data's `parentFolderId`, which is
-            // stale/null after a spring navigation (it reported ROOT for an item dragged from
-            // a folder, making a real cross-folder drop look like a same-folder no-op).
-            const currentFolderId = useDrawerStore.getState().currentFolderId ?? null;
-            const view = useDrawerStore.getState().currentFolderView;
-            const alreadyInCurrentFolder = isFolderDrag
-               ? getChildFolders(currentFolderId).some((f) => f.id === draggedId)
-               : (view?.items ?? []).some((i) => i.id === draggedId);
-            if (!alreadyInCurrentFolder) {
-               if (isFolderDrag) void moveFolder(draggedId, currentFolderId ?? undefined);
-               else void moveItem(draggedId, currentFolderId ?? undefined);
-               return;
-            }
-            // Already in the current folder → fall through to the dnd-kit reorder path below.
-         }
-      }
-
-      // ##################################################
-      // ###   Sheet → board via mid-drag spring nav    ###
-      // ##################################################
-      // A sheet item dropped on the board after spring-navigating to the board tab MID-DRAG:
-      // BoardView's `board-drop-zone` droppable mounts during the drag, so dnd-kit never measures
-      // it and `over` is not `board-drop-zone` (often null), which would fall through to the reorder
-      // path below. Resolve it by real cursor geometry instead, matching how the drawer force-morph
-      // and nav-grace already trust the live pointer over dnd-kit's `over`. Guarded so it fires ONLY
-      // for a sheet drag with a live board tab and a real pointer inside the board canvas, so it can
-      // never hijack a sheet or drawer target. Runs BEFORE the `over` null-guard for the null case.
-      if (dragKind === 'sheet-item' && dropPointer && getActiveBoardStore()) {
-         const clip = document.querySelector('[data-board-clip]') as HTMLElement | null;
-         const rect = clip?.getBoundingClientRect() ?? null;
-         const overBoard = !!rect &&
-            dropPointer.x >= rect.left && dropPointer.x <= rect.right &&
-            dropPointer.y >= rect.top && dropPointer.y <= rect.bottom;
-         if (overBoard) {
-            dropSheetItemOnBoard();
-            return;
-         }
-      }
-
-      if (!over || active.id === over.id) {
-         return;
-      }
-
-      const activeType = active.data.current?.type as string;
-      const overType = over.data.current?.type as string;
-      const overIdStr = over.id.toString();
-
-      // ##########################################
-      // ###   BRANCH 0: Reordering tab strip   ###
-      // ##########################################
-      // A tab reorders against another tab, or saves to the drawer when dropped on a
-      // drawer target (collision detection scopes a tab drag to those two). Reorder
-      // persistence is the TabManager's; the save creates a new linked drawer copy.
-      if (activeType === DRAG_TYPES.TAB) {
-         const tabId = (active.data.current?.tabId as string) ?? String(active.id);
-         if (overType === DRAG_TYPES.TAB) {
-            reorderTabs(String(active.id), String(over.id));
-         } else if (overIdStr.startsWith('drawer-drop-zone-') || overType?.startsWith('drawer-')) {
-            // Route the save by the tab's kind: a board/note tab saves its own aggregate, a character
-            // tab its character. All three land a NEW linked drawer copy in the drop target's folder.
-            const draggedTab = useTabManagerStore.getState().openTabs.find((openTab) => openTab.id === tabId);
-            if (draggedTab?.type === 'board') void saveBoardTabToDrawer(tabId, overIdStr, overType, over);
-            else if (draggedTab?.type === 'note') void saveNoteTabToDrawer(tabId, overIdStr, overType, over);
-            else saveTabToDrawer(tabId, overIdStr, overType, over);
-         } else if (overIdStr === 'board-drop-zone') {
-            // A tab dropped on the board adds a character element - saved or unsaved. The element keys
-            // on the character id and reads live while the tab is open; a saved one also links its
-            // drawer source for when the tab is closed.
-            const boardStore = getActiveBoardStore();
-            const character = getOrCreateInstance(tabId).getState().character;
-            if (!boardStore) return;
-            const spec = characterElementSpec(character);
-            if (!spec) return;
-            void boardStore.getState().actions.addItem({
-               ...boardDropPlacement(boardStore, dropPointer, spec),
-               kind: spec.kind,
-               content: spec.content,
-            });
-         }
-         return;
-      }
-
-      // ##############################################
-      // ###   BRANCH 1: Dragging FROM the Drawer   ###
-      // ##############################################
-      if (activeType === 'drawer-item' || activeType === 'drawer-folder') {
-
-         // ==================
-         //  SCENARIO 1.0: Dropping a card/tracker onto the board canvas
-         // ==================
-         // Board-only target (the zone exists solely on a board tab). A board is game-agnostic, so
-         // there is NO game gate. A card/tracker becomes a self-contained COPY, an image a native
-         // image, and a saved character a read-only reference element - all at the drop point. A
-         // folder / full board has no spec and no-ops.
-         if (overIdStr === 'board-drop-zone') {
-            const boardStore = getActiveBoardStore();
-            const draggedItem = active.data.current?.item as DrawerItem | undefined;
-            if (!boardStore || !draggedItem) return;
-            const spec = embeddedSpecForDrawerItem(draggedItem);
-            if (!spec) return;
-
-            void boardStore.getState().actions.addItem({
-               ...boardDropPlacement(boardStore, dropPointer, spec),
-               kind: spec.kind,
-               content: spec.content,
-            });
-            contractIfExpanded();
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 1.1: Dropping a full character onto the play area
-         // ==================
-         if (overIdStr === 'main-character-drop-zone') {
-            const draggedItem = active.data.current?.item as DrawerItem;
-            if (draggedItem?.type === 'FULL_CHARACTER_SHEET') {
-               const characterData = draggedItem.content as Character;
-               openCharacterTab(characterData, draggedItem.id);
-               setContextualGame(characterData.game);
-               contractIfExpanded();
-            } else if (draggedItem?.type === 'FULL_BOARD') {
-               // A board dropped on the workspace opens like a character: focus its tab if already
-               // open (don't re-import, so live unsaved edits aren't clobbered), else materialize the
-               // drawer copy into the working tables and open it by id.
-               const boardData = draggedItem.content as Board;
-               if (useTabManagerStore.getState().openTabs.some((tab) => tab.id === boardData.id)) {
-                  setActiveTab(boardData.id);
-               } else {
-                  void importBoard(boardData).then(() => openBoardTab(boardData.id));
-               }
-               contractIfExpanded();
-            } else if (draggedItem?.type === 'NOTE') {
-               // A note opens like a board: focus its tab if already open (don't re-import, so live
-               // unsaved edits aren't clobbered), else materialize the drawer copy into the working
-               // note table (linked to the drawer item) and open it by id.
-               const noteData = draggedItem.content as Note;
-               if (useTabManagerStore.getState().openTabs.some((tab) => tab.id === noteData.id)) {
-                  setActiveTab(noteData.id);
-               } else {
-                  void importNote(noteData, draggedItem.id).then(() => openNoteTab(noteData.id));
-               }
-               contractIfExpanded();
-            }
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 1.1b: Dropping a full character / board onto the tab strip (open or focus)
-         // ==================
-         // Only FULL_CHARACTER_SHEET / FULL_BOARD items are valid here; anything else is a no-op.
-         if (overIdStr === 'tab-strip-drop-zone') {
-            const draggedItem = active.data.current?.item as DrawerItem;
-            if (draggedItem?.type === 'FULL_CHARACTER_SHEET') {
-               const characterData = draggedItem.content as Character;
-               openCharacterTab(characterData, draggedItem.id); // append-or-focus
-               setContextualGame(characterData.game);
-               contractIfExpanded();
-            } else if (draggedItem?.type === 'FULL_BOARD') {
-               // The drawer copy is the source of truth on open: materialize it into the
-               // working tables, then focus-or-open its tab (by board id) so an already-open
-               // board's live state is never clobbered.
-               const boardData = draggedItem.content as Board;
-               void importBoard(boardData).then(() => openBoardTab(boardData.id));
-               contractIfExpanded();
-            } else if (draggedItem?.type === 'NOTE') {
-               // Same as a board: materialize the drawer copy into the working note table (linked to
-               // the drawer item), then focus-or-open its tab (by note id).
-               const noteData = draggedItem.content as Note;
-               void importNote(noteData, draggedItem.id).then(() => openNoteTab(noteData.id));
-               contractIfExpanded();
-            }
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 1.2: Dropping INSIDE the drawer
-         // ==================
-         if (overType?.startsWith('drawer-') || overIdStr.startsWith('drawer-')) {
-            const activeIsItem = activeType === 'drawer-item';
-            const parentFolderId = active.data.current?.parentFolderId ?? null;
-            // Scope = the currently loaded folder's children (the drawer only ever
-            // shows one folder, so every in-drawer drag originates there).
-            const itemsInScope = currentFolderView?.items ?? [];
-
-            // NOTE: moves INTO a folder / Back / the items body of a different folder, and
-            // ALL folder slot placements (reorder + cross-folder insert), are handled by the
-            // manual geometry resolver above; this block now only handles same-folder
-            // item REORDER. The `over` is resolved from live row geometry (customCollisionDetection),
-            // so the live-shuffle lands on the right sibling - reliable at the edges and in place.
-            if (overType === 'drawer-item' && activeIsItem && parentFolderId === (over.data.current?.parentFolderId ?? null)) {
-               const oldIndex = itemsInScope.findIndex(item => item.id === active.id);
-               const overIndex = itemsInScope.findIndex(item => item.id === over.id);
-               if (oldIndex !== -1 && overIndex !== -1) void reorderItems(parentFolderId, oldIndex, overIndex);
-               return;
-            }
-         }
-
-         // ==================
-         //  SCENARIO 1.3: Dropping ONTO the character sheet
-         // ==================
-         // (Requires a character to be loaded)
-         if (!character) return;
-
-         const isOverSheet = overIdStr === 'character-sheet-main-drop-zone' ||
-                              overIdStr === 'tracker-drop-zone' ||
-                              overIdStr === 'card-drop-zone' ||
-                              overType === 'sheet-card' ||
-                              overType === 'sheet-journal' ||
-                              overType === 'sheet-tracker';
-
-         if (isOverSheet) {
-            if (activeType !== 'drawer-item') return;
-
-            const draggedItem = active.data.current?.item as DrawerItem;
-            if (!draggedItem) return;
-
-            const isTrackerType = draggedItem.type === 'STATUS_TRACKER' || draggedItem.type === 'STORY_TAG_TRACKER' || draggedItem.type === 'STORY_THEME_TRACKER';
-            const isImageCard = draggedItem.type === 'IMAGE_CARD';
-            const isCardType = draggedItem.type === 'CHARACTER_CARD' || draggedItem.type === 'CHARACTER_THEME' || draggedItem.type === 'GROUP_THEME' || draggedItem.type === 'LOADOUT_THEME' || isImageCard;
-            const isJournalType = draggedItem.type === 'JOURNAL';
-
-            // Only sheet components add here; a FULL_CHARACTER_SHEET over the sheet is
-            // not a failure (it opens a tab via its own zone), so don't toast for it.
-            if (!isTrackerType && !isCardType && !isJournalType) return;
-
-            // Game mismatch: the drop can't land, tell the user why instead of a silent
-            // no-op. NEUTRAL items are game-agnostic, so they skip this gate.
-            if (draggedItem.game !== 'NEUTRAL' && draggedItem.game !== character.game) {
-               toast.error(tNotifications(draggedItem.type === 'CHALLENGE_CARD'
-                  ? 'Notifications.general.importFailedWrongGameChallenge'
-                  : 'Notifications.general.importFailedWrongGame'));
-               return;
-            }
-
-            if (isTrackerType) {
-               addImportedTracker(draggedItem.content as Tracker);
-               toast.success(tNotifications('Notifications.character.componentImported'));
-            } else if (isJournalType) {
-               // A bare journal (game-agnostic): import a copy onto the sheet (fresh id, pages/bookmarks kept).
-               addImportedJournal(draggedItem.content as Journal);
-               toast.success(tNotifications('Notifications.character.componentImported'));
-            } else if (isCardType) {
-               const added = addImportedCard(draggedItem.content as CardData);
-               if (added) {
-                  toast.success(tNotifications('Notifications.character.componentImported'));
-               } else {
-                  toast.error(tNotifications('Notifications.character.duplicatePortrait'));
-               }
-            }
-            contractIfExpanded();
-            return;
-         }
-      }
-
-      // #############################################
-      // ###   BRANCH 2: Dragging FROM the Sheet   ###
-      // #############################################
-      if (activeType?.startsWith('sheet-')) {
-
-         // A sheet JOURNAL (SHEET_JOURNAL) rides the SAME scenarios below as a card - board drop, drawer
-         // save, cross-character import, reorder - each of which forks explicitly on the journal shape (its
-         // bare aggregate has no cardType/trackerType). It saves a COPY and stays put, mirroring a card.
-
-         // ==================
-         //  SCENARIO 2.0a: Dropping a card/tracker/journal onto the board canvas
-         // ==================
-         // Mirrors the drawer's board drop (SCENARIO 1.0): a board is game-agnostic, so there is NO
-         // game gate. The sheet component becomes a self-contained COPY (no `sourceDrawerItemId`, it is
-         // not from the drawer); an image drops as a native image. The board zone only exists on a board
-         // tab, so a sheet drag reaches it only when a board is active. The geometry fallback above
-         // handles the mid-drag spring-nav case where this dnd-kit target is not yet measured.
-         if (overIdStr === 'board-drop-zone') {
-            dropSheetItemOnBoard();
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 2.0: Dropping on a DIFFERENT character's sheet (after tab auto-nav)
-         // ==================
-         // The sheet item came from another tab; import a copy into the now-active
-         // character (game must match). A same-character drop falls through to reorder.
-         const overIsSheetZone = overIdStr === 'character-sheet-main-drop-zone' ||
-            overIdStr === 'card-drop-zone' || overIdStr === 'tracker-drop-zone' ||
-            overType?.startsWith('sheet-');
-         if (
-            character && activeDragItem && overIsSheetZone &&
-            dragSourceCharacterIdRef.current && dragSourceCharacterIdRef.current !== character.id
-         ) {
-            const info = mapItemToStorableInfo(activeDragItem as CardData | Tracker | Journal);
-            // NEUTRAL items are game-agnostic; every other component must match the sheet's game.
-            if (info && (info[1] === 'NEUTRAL' || info[1] === character.game)) {
-               if ('cardType' in activeDragItem) {
-                  const added = addImportedCard(activeDragItem as CardData);
-                  if (added) {
-                     toast.success(tNotifications('Notifications.character.componentImported'));
-                  } else {
-                     toast.error(tNotifications('Notifications.character.duplicatePortrait'));
-                  }
-               } else if ('trackerType' in activeDragItem) {
-                  addImportedTracker(activeDragItem as Tracker);
-                  toast.success(tNotifications('Notifications.character.componentImported'));
-               } else if ('pages' in activeDragItem) {
-                  // A bare journal (no cardType/trackerType): import a copy onto the now-active character.
-                  addImportedJournal(activeDragItem as Journal);
-                  toast.success(tNotifications('Notifications.character.componentImported'));
-               }
-            }
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 2.1: Dropping ONTO the drawer
-         // ==================
-         if (overIdStr.startsWith('drawer-drop-zone-') || overType?.startsWith('drawer-')) {
-            handleSheetToDrawerDrop(activeDragItem, overIdStr, overType, over);
-            return;
-         }
-
-         // ==================
-         //  SCENARIO 2.2: Reordering ON the sheet
-         // ==================
-         if (overType?.startsWith('sheet-') && character) {
-            // Cards and journals share one manifest space: a card-or-journal reorder lands on any
-            // card-or-journal target, resolved by id through reorderSheetLayout.
-            const isLayoutDrag = activeType === DRAG_TYPES.SHEET_CARD || activeType === DRAG_TYPES.SHEET_JOURNAL;
-            const overIsLayout = overType === DRAG_TYPES.SHEET_CARD || overType === DRAG_TYPES.SHEET_JOURNAL;
-            if (isLayoutDrag && overIsLayout) {
-               handleSheetLayoutReorder(active.id as string, over.id as string);
-            } else if (activeType === DRAG_TYPES.SHEET_TRACKER) {
-               handleSheetTrackerReorder(active, over);
-            }
-         }
-      }
-   }, [
+   // ==================
+   //  Drop routing: the ordered handleDragEnd chain
+   // ==================
+   const handleDragEnd = useDragEndRouter({
       character,
       currentFolderView,
+      activeDragItem,
+      dragSourceCharacterIdRef,
+      tNotifications,
       moveFolder,
       reorderFolders,
       moveItem,
       reorderItems,
-      handleSheetLayoutReorder,
-      handleSheetTrackerReorder,
-      handleSheetToDrawerDrop,
-      saveTabToDrawer,
-      saveBoardTabToDrawer,
-      saveNoteTabToDrawer,
       openCharacterTab,
       openBoardTab,
       openNoteTab,
       reorderTabs,
       setActiveTab,
       setContextualGame,
-      addImportedTracker,
       addImportedCard,
+      addImportedTracker,
       addImportedJournal,
-      tNotifications,
+      handleSheetLayoutReorder,
+      handleSheetTrackerReorder,
+      handleSheetToDrawerDrop,
+      saveTabToDrawer,
+      saveBoardTabToDrawer,
+      saveNoteTabToDrawer,
+      readDragSnapshot,
       clearDragFeedback,
       contractDrawer,
       setDrawerReceded,
-      activeDragItem,
-   ]);
+      setActiveDragItem,
+      setIsOverDrawer,
+      setOverDragId,
+      setActiveTabDrag,
+   });
 
    /**
     * Clears all transient drag state when a drag is cancelled (Escape, or a drop
