@@ -156,7 +156,9 @@ describe('MobileDrawer body branch', () => {
       searchFor('a', [summary('result-a', 'Result A')]);
       render(<MobileDrawer />);
 
-      expect(screen.getByTestId('result-row')).toBeTruthy();
+      // Assert the row's text, not just its presence: the name is what proves the summary's
+      // fields reach the row at all, rather than some other field being wired into it.
+      expect(screen.getByTestId('result-row').textContent).toBe('Result A');
       expect(screen.queryByTestId('folder-row')).toBeNull();
       expect(screen.queryByTestId('item-row')).toBeNull();
       expect(screen.queryByTestId('breadcrumbs')).toBeNull();

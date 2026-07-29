@@ -1,11 +1,11 @@
 // -- React Imports --
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
-import type { DragStartEvent, DragEndEvent, Modifier } from '@dnd-kit/core';
+import type { Modifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Component Imports --
@@ -21,24 +21,18 @@ import { DrawerSearchBar } from '@/components/molecules/drawer/DrawerSearchBar';
 
 // -- Store Imports --
 import { useDrawerActions, useDrawerStore, isSearchFilterActive } from '@/lib/stores/drawerStore';
-import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
+import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 // -- Hook Imports --
 import { useDrawerNavigation } from '@/hooks/drawer/useDrawerNavigation';
 import { useDrawerFileImport } from '@/hooks/drawer/useDrawerFileImport';
-import { useMobileDragSensors } from '@/hooks/mobile/useMobileDragSensors';
-import { useMobileDrawerDragReorder } from '@/hooks/mobile/useMobileDrawerDragReorder';
+import { useDrawerLongPressHint } from '@/hooks/mobile/useDrawerLongPressHint';
+import { useMobileDrawerBrowseMenu, useMobileDrawerResultMenu } from '@/hooks/mobile/useMobileDrawerMenus';
+import { useMobileDrawerDragState } from '@/hooks/mobile/useMobileDrawerDragState';
 import { useDrawerUndoRedo } from '@/hooks/drawer/useDrawerUndoRedo';
-
-// -- Utils Imports --
-import { triggerHaptic } from '@/lib/utils/haptics';
 
 // -- Type Imports --
 import type { DrawerItem } from '@/lib/types/drawer';
-import type { DrawerItemSummary } from '@/lib/drawer/drawerRepository';
-
-// -- Constants Imports --
-import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 
 
@@ -87,24 +81,11 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 
 	// UI state
 	const [isCompactView, setIsCompactView] = useState(true);
-	const [showContextMenu, setShowContextMenu] = useState(false);
-	const [contextMenuTarget, setContextMenuTarget] = useState<{
-      type: 'item' | 'folder';
-		id: string;
-		name: string;
-	} | null>(null);
-	const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
 	const [showAddFolderSheet, setShowAddFolderSheet] = useState(false);
 
-	// The search-result context menu (its own target + anchor, distinct from the browse long-press menu).
-	const [searchMenuTarget, setSearchMenuTarget] = useState<DrawerItemSummary | null>(null);
-	const [searchMenuPos, setSearchMenuPos] = useState<{ x: number; y: number } | null>(null);
-
-	const openResultMenu = (summary: DrawerItemSummary, event: React.MouseEvent<HTMLButtonElement>) => {
-		const rect = event.currentTarget.getBoundingClientRect();
-		setSearchMenuTarget(summary);
-		setSearchMenuPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-	};
+	// The two context menus keep separate state: both stay mounted, only one is ever open.
+	const browseMenu = useMobileDrawerBrowseMenu();
+	const { target: resultTarget, position: resultPosition, open: openResultMenu, close: closeResultMenu } = useMobileDrawerResultMenu();
 
    // Mobile Handedness
    const mobileHandedness = useAppSettingsStore((state) => state.mobileHandedness);
@@ -121,61 +102,18 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
       ? (isLeftHanded ? { paddingLeft: '4rem' } : { paddingRight: '4rem' })
       : undefined;
 
-   // One-time long-press hint: shown once when gesture tips are enabled, then
-   // remembered so it never repeats. Gated on the setting (never shown when off).
-   // The overflow (⋯) button on each row is the always-present fallback.
-   const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
-   const hasSeenDrawerMenuHint = useAppSettingsStore((state) => state.hasSeenDrawerMenuHint);
-   const { setHasSeenDrawerMenuHint } = useAppSettingsActions();
+   useDrawerLongPressHint();
 
-   useEffect(() => {
-      // StrictMode invokes effect setup twice synchronously; both invocations
-      // would see the same committed `hasSeenDrawerMenuHint = false` closure and
-      // toast twice. Re-read the store live, and set the flag before toasting so
-      // the second invoke's live read is already `true`.
-      if (!areGestureHintsEnabled) return;
-      if (useAppSettingsStore.getState().hasSeenDrawerMenuHint) return;
-      setHasSeenDrawerMenuHint(true);
-      toast(t('MobileGestureHints.drawerLongPress'));
-   }, [areGestureHintsEnabled, hasSeenDrawerMenuHint, setHasSeenDrawerMenuHint, t]);
-
-   // Drag-to-reorder (folders and items within the current folder). The drawer
-   // uses the body of each row as the drag target (no dedicated grip), so the
-   // TouchSensor activation delay is bumped to the platform long-press idiom
-   // (500ms) - quick taps and scroll flings still fall through to their
-   // normal behaviour, while a deliberate press-and-hold picks the row up.
-   const DRAWER_LONG_PRESS_DELAY_MS = 500;
-   const sensors = useMobileDragSensors(DRAWER_LONG_PRESS_DELAY_MS);
-   const { handleDragEnd } = useMobileDrawerDragReorder(currentFolderId, currentFolders, currentItems);
-   const folderIds = useMemo(() => currentFolders.map((folder) => folder.id), [currentFolders]);
-   const itemIds = useMemo(() => currentItems.map((item) => item.id), [currentItems]);
-
-   // Track which row is being dragged so we can render its snapshot inside the
-   // `DragOverlay`. Without an overlay, the dragged row is the real list element
-   // moved by `transform` and clipped by the scroll container, so it appears to
-   // stop following the finger as soon as the gesture leaves the list bounds.
-   // The overlay floats anywhere on screen and follows the pointer faithfully.
-   const [activeDrag, setActiveDrag] = useState<{ kind: 'folder' | 'item'; id: string } | null>(null);
-   const activeFolder = activeDrag?.kind === 'folder' ? currentFolders.find(f => f.id === activeDrag.id) : undefined;
-   const activeItem = activeDrag?.kind === 'item' ? currentItems.find(i => i.id === activeDrag.id) : undefined;
-
-   const handleDragStart = (event: DragStartEvent) => {
-      const dragType = event.active.data.current?.type as string | undefined;
-      if (dragType === DRAG_TYPES.DRAWER_FOLDER) {
-         setActiveDrag({ kind: 'folder', id: String(event.active.id) });
-      } else if (dragType === DRAG_TYPES.DRAWER_ITEM) {
-         setActiveDrag({ kind: 'item', id: String(event.active.id) });
-      }
-      // Confirms the long-press picked the row up - the row body is no longer
-      // wired through `useLongPress` (which used to fire the haptic), so we
-      // fire it here on drag activation instead.
-      triggerHaptic();
-   };
-
-   const handleDragEndWithCleanup = (event: DragEndEvent) => {
-      setActiveDrag(null);
-      handleDragEnd(event);
-   };
+   const {
+      sensors,
+      folderIds,
+      itemIds,
+      activeFolder,
+      activeItem,
+      handleDragStart,
+      handleDragEndWithCleanup,
+      handleDragCancel,
+   } = useMobileDrawerDragState(currentFolderId, currentFolders, currentItems);
 
    // Undo/redo for drawer mutations (rename/move/delete/reorder/add), mirroring how
    // the character sheet exposes undo/redo via the temporal store. Any past state
@@ -183,18 +121,6 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
    const { canUndo, canRedo, undo, redo } = useDrawerUndoRedo();
 
 	// Handlers
-	const handleFolderLongPress = (folderId: string, folderName: string, position: { x: number; y: number }) => {
-		setContextMenuTarget({ type: 'folder', id: folderId, name: folderName });
-		setContextMenuPosition(position);
-		setShowContextMenu(true);
-	};
-
-	const handleItemLongPress = (itemId: string, itemName: string, position: { x: number; y: number }) => {
-		setContextMenuTarget({ type: 'item', id: itemId, name: itemName });
-		setContextMenuPosition(position);
-		setShowContextMenu(true);
-	};
-
 	const handleAddFolder = () => {
 		setShowAddFolderSheet(true);
 	};
@@ -232,7 +158,7 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 				modifiers={[restrictToVerticalAxis]}
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEndWithCleanup}
-				onDragCancel={() => setActiveDrag(null)}
+				onDragCancel={handleDragCancel}
 			>
 				<div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-2">
 					{!hasContent && (
@@ -256,7 +182,7 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 								folderCount={childCounts.get(folder.id)?.folderCount ?? 0}
 								itemCount={childCounts.get(folder.id)?.itemCount ?? 0}
 								onNavigate={navigateToFolder}
-								onLongPress={handleFolderLongPress}
+								onLongPress={browseMenu.openForFolder}
 								isLeftHanded={isLeftHanded}
 							/>
 						))}
@@ -274,7 +200,7 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 								key={item.id}
 								item={item}
 								isCompact={isCompactView}
-								onLongPress={handleItemLongPress}
+								onLongPress={browseMenu.openForItem}
 								isLeftHanded={isLeftHanded}
 							/>
 						))}
@@ -322,14 +248,10 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 
 			{/* Context Menu */}
 			<MobileDrawerContextMenu
-				isOpen={showContextMenu}
-				onClose={() => {
-					setShowContextMenu(false);
-					setContextMenuTarget(null);
-					setContextMenuPosition(null);
-				}}
-				target={contextMenuTarget}
-				position={contextMenuPosition}
+				isOpen={browseMenu.isOpen}
+				onClose={browseMenu.close}
+				target={browseMenu.target}
+				position={browseMenu.position}
 				onAddToCharacter={onAddToCharacter}
 				onLoadCharacter={onLoadCharacter}
 			/>
@@ -344,13 +266,13 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 			{/* Search-result context menu: its own target/anchor. Jump-to navigates + clears search, which
 			    swaps the body back to browse in that folder (no sheet to close). */}
 			<MobileDrawerContextMenu
-				isOpen={searchMenuTarget != null}
-				onClose={() => { setSearchMenuTarget(null); setSearchMenuPos(null); }}
-				target={searchMenuTarget ? { type: 'item', id: searchMenuTarget.id, name: searchMenuTarget.name } : null}
-				position={searchMenuPos}
+				isOpen={resultTarget != null}
+				onClose={closeResultMenu}
+				target={resultTarget ? { type: 'item', id: resultTarget.id, name: resultTarget.name } : null}
+				position={resultPosition}
 				onAddToCharacter={onAddToCharacter}
 				onLoadCharacter={onLoadCharacter}
-				onJumpTo={searchMenuTarget ? () => { navigateToFolder(searchMenuTarget.parentFolderId); clearSearch(); } : undefined}
+				onJumpTo={resultTarget ? () => { navigateToFolder(resultTarget.parentFolderId); clearSearch(); } : undefined}
 			/>
 		</div>
 	);
