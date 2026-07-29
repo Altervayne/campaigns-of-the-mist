@@ -1,10 +1,13 @@
 // -- React Imports --
 import { useCallback } from 'react';
 
+// -- Character Imports --
+import { applyTrackerReorder } from '@/lib/character/trackerReorder';
+
 // -- Type Imports --
 import type { DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import type { CharacterState } from '@/lib/stores/characterStore';
-import type { Character, Tracker } from '@/lib/types/character';
+import type { Character } from '@/lib/types/character';
 
 interface UseSheetReorderActionsArgs {
    character: Character | null;
@@ -43,31 +46,7 @@ export function useSheetReorderActions({
       active: DragStartEvent['active'],
       over: NonNullable<DragOverEvent['over']>
    ) => {
-      if (!character) return;
-
-      const activeTracker = active.data.current?.item as Tracker;
-      const overTracker = over.data.current?.item as Tracker;
-
-      if (!activeTracker?.trackerType || !overTracker?.trackerType) return;
-      if (activeTracker.trackerType !== overTracker.trackerType) return;
-
-      const activeId = active.id as string;
-      const overId = over.id as string;
-
-      // Live shuffle: dnd-kit's `over` already reflects the shuffled position, so land on it.
-      if (activeTracker.trackerType === 'STATUS') {
-         const oldIndex = character.trackers.statuses.findIndex(item => item.id === activeId);
-         const overIndex = character.trackers.statuses.findIndex(item => item.id === overId);
-         if (oldIndex !== -1 && overIndex !== -1) reorderStatuses(oldIndex, overIndex);
-      } else if (activeTracker.trackerType === 'STORY_TAG') {
-         const oldIndex = character.trackers.storyTags.findIndex(item => item.id === activeId);
-         const overIndex = character.trackers.storyTags.findIndex(item => item.id === overId);
-         if (oldIndex !== -1 && overIndex !== -1) reorderStoryTags(oldIndex, overIndex);
-      } else if (activeTracker.trackerType === 'STORY_THEME') {
-         const oldIndex = character.trackers.storyThemes.findIndex(item => item.id === activeId);
-         const overIndex = character.trackers.storyThemes.findIndex(item => item.id === overId);
-         if (oldIndex !== -1 && overIndex !== -1) reorderStoryThemes(oldIndex, overIndex);
-      }
+      applyTrackerReorder(character, active, over, { reorderStatuses, reorderStoryTags, reorderStoryThemes });
    }, [character, reorderStatuses, reorderStoryTags, reorderStoryThemes]);
 
    return { handleSheetLayoutReorder, handleSheetTrackerReorder };

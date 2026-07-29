@@ -362,14 +362,28 @@ describe('handleDragEnd BRANCH 2 (from the sheet)', () => {
       expect(mocks.characterActions.reorderStatuses).toHaveBeenCalledWith(0, 1);
    });
 
-   it('writes nothing when a tracker lands on another tracker type', () => {
-      mocks.character = makeCharacter('cA', 'LEGENDS', [], [tracker('st1')]);
+   // The self-drop is intercepted by the router's own `active.id === over.id` guard, upstream of every
+   // route; the reorder never sees one.
+   it('writes nothing when a tracker is dropped back on itself', () => {
+      mocks.character = makeCharacter('cA', 'LEGENDS', [], [tracker('st1'), tracker('st2')]);
       const data = { type: 'sheet-tracker', item: tracker('st1') };
-      const overTag = { id: 'tag1', trackerType: 'STORY_TAG', name: 'tag1' };
       const dnd = mountDnD();
 
       dnd.start('st1', data);
-      dnd.end('st1', data, { id: 'tag1', data: { type: 'sheet-tracker', item: overTag } });
+      dnd.end('st1', data, { id: 'st1', data: { type: 'sheet-tracker', item: tracker('st1') } });
+
+      expect(mocks.ledger).toEqual([]);
+   });
+
+   it('writes nothing when a tracker lands on another tracker type', () => {
+      // The target id resolves inside the active's own group, so only the trackerType check refuses it.
+      mocks.character = makeCharacter('cA', 'LEGENDS', [], [tracker('st1'), tracker('st2')]);
+      const data = { type: 'sheet-tracker', item: tracker('st1') };
+      const overTag = { id: 'st2', trackerType: 'STORY_TAG', name: 'st2' };
+      const dnd = mountDnD();
+
+      dnd.start('st1', data);
+      dnd.end('st1', data, { id: 'st2', data: { type: 'sheet-tracker', item: overTag } });
 
       expect(mocks.ledger).toEqual([]);
    });

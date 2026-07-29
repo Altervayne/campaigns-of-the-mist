@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -15,6 +15,7 @@ import { useDragEndRouter } from '@/hooks/character-sheet/dnd/useDragEndRouter';
 import { useDragFeedbackLayer } from '@/hooks/character-sheet/dnd/useDragFeedbackLayer';
 import { useDrawerSaveActions } from '@/hooks/character-sheet/dnd/useDrawerSaveActions';
 import { useSheetReorderActions } from '@/hooks/character-sheet/dnd/useSheetReorderActions';
+import { useTrackerSortableIds } from '@/hooks/useTrackerSortableIds';
 
 // -- Drag-morph engine --
 import { useDragMorph } from '@/components/molecules/drag-morph/useDragMorph';
@@ -82,18 +83,7 @@ export function useCharacterSheetDnD() {
    const [activeTabDrag, setActiveTabDrag] = useState<OpenTab | null>(null);
 
    // Memoize SortableContext arrays to prevent unnecessary re-renders
-   const statusIds = useMemo(
-      () => character?.trackers.statuses.map(t => t.id) || [],
-      [character?.trackers.statuses]
-   );
-   const storyTagIds = useMemo(
-      () => character?.trackers.storyTags.map(t => t.id) || [],
-      [character?.trackers.storyTags]
-   );
-   const storyThemeIds = useMemo(
-      () => character?.trackers.storyThemes.map(t => t.id) || [],
-      [character?.trackers.storyThemes]
-   );
+   const { statusIds, storyTagIds, storyThemeIds } = useTrackerSortableIds(character);
 
    // ==================
    //  Drag-morph engine
