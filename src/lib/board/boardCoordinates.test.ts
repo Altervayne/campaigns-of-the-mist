@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { MAX_ZOOM, MIN_ZOOM, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, zoomToCursor } from './boardCoordinates';
+import { MAX_ZOOM, MIN_ZOOM, TOOLBAR_TOP_CLEARANCE, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, toolbarClampDown, zoomToCursor } from './boardCoordinates';
 
 // -- Type Imports --
 import type { BoardItem, Viewport } from '@/lib/types/board';
@@ -182,5 +182,29 @@ describe('itemsInMarquee', () => {
       ];
       const hits = itemsInMarquee(withConn, { minX: -10, minY: -10, maxX: 500, maxY: 500 });
       expect(hits).not.toContain('conn');
+   });
+});
+
+describe('toolbarClampDown', () => {
+   it('returns nothing while the box top sits at or below the clearance line', () => {
+      const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
+      expect(toolbarClampDown(TOOLBAR_TOP_CLEARANCE, viewport)).toBeUndefined();
+      expect(toolbarClampDown(500, viewport)).toBeUndefined();
+   });
+
+   it('returns the world-px overshoot once the box top runs above the clearance line', () => {
+      const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
+      // Top at screen 8, so the bar must drop 40px to reach the clearance line.
+      expect(toolbarClampDown(8, viewport)).toBe(TOOLBAR_TOP_CLEARANCE - 8);
+   });
+
+   it('measures the overshoot in screen px but reports it in world px', () => {
+      // Top at world -100, zoom 2 -> screen -200; overshoot 248 screen px = 124 world px.
+      expect(toolbarClampDown(-100, { x: 0, y: 0, zoom: 2 })).toBe((TOOLBAR_TOP_CLEARANCE + 200) / 2);
+   });
+
+   it('follows the pan, so panning the box back down releases the clamp', () => {
+      expect(toolbarClampDown(0, { x: 0, y: 0, zoom: 1 })).toBe(TOOLBAR_TOP_CLEARANCE);
+      expect(toolbarClampDown(0, { x: 0, y: TOOLBAR_TOP_CLEARANCE, zoom: 1 })).toBeUndefined();
    });
 });

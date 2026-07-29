@@ -12,7 +12,14 @@ import { cn } from '@/lib/utils';
  * The floating action bar for a MULTI-selection: move the whole group, duplicate it, or
  * delete it, anchored above the selection's bounding box. Same frosted look and 1/zoom
  * counter-scale as the per-item toolbar. The per-item toolbars are suppressed while
- * multi-selected, so the move grip lives HERE (the only group-move affordance besides this).
+ * multi-selected, so the move grip lives HERE.
+ *
+ * Its host spans the whole selection bbox and must stay inert so a press still reaches the items inside
+ * it, so the bar re-arms pointer events on itself.
+ *
+ * When the selection's top runs off the top of the canvas, the bar would float out of reach above it;
+ * `clampDown` (world px, from the canvas) lowers the bar's anchor so it sticks just below the clip's top
+ * edge and floats over the selection instead.
  */
 
 interface BoardGroupToolbarProps {
@@ -21,13 +28,19 @@ interface BoardGroupToolbarProps {
    onMoveStart: (event: ReactPointerEvent) => void;
    onDuplicate: () => void;
    onDelete: () => void;
+   /** World-px to lower the bar so it clears the clip's top edge (a selection off the top); 0 = no clamp. */
+   clampDown?: number;
 }
 
-export function BoardGroupToolbar({ zoom, onMoveStart, onDuplicate, onDelete }: BoardGroupToolbarProps) {
+export function BoardGroupToolbar({ zoom, onMoveStart, onDuplicate, onDelete, clampDown = 0 }: BoardGroupToolbarProps) {
    const { t } = useTranslation();
 
+   // The bar anchors at the bbox's top edge (bottom:100%), lowered by the off-top clamp (world px), which
+   // can push the anchor down past the bbox interior.
+   const bottom = clampDown ? `calc(100% - ${clampDown}px)` : '100%';
+
    return (
-      <div className="absolute left-0" style={{ bottom: '100%', transformOrigin: '0 100%', transform: `scale(${1 / zoom})` }}>
+      <div className="pointer-events-auto absolute left-0" style={{ bottom, transformOrigin: '0 100%', transform: `scale(${1 / zoom})` }}>
          {/* The padding is the screen-constant gap above the selection (it scales with the bar). */}
          <div className="pb-2">
             <div className="flex items-center gap-0.5 rounded-lg border border-border bg-popover/90 p-1 shadow-md backdrop-blur-sm">

@@ -45,6 +45,24 @@ export function screenDeltaToWorld(deltaX: number, deltaY: number, zoom: number)
 }
 
 /**
+ * Screen-px a selection's floating toolbar keeps below the clip's top edge. The bar grows upward from
+ * the box it anchors to, so a box whose top runs above the canvas would push the bar out of reach; this
+ * covers the bar's own height plus a small margin.
+ */
+export const TOOLBAR_TOP_CLEARANCE = 48;
+
+/**
+ * World-px to push a selection's toolbar down so it clears the clip's top edge, from the world Y of the
+ * box it anchors to; undefined when the box sits low enough to need none (a stable value, so an unclamped
+ * box still skips a pan re-render). `topWorld` must already carry any live move delta.
+ */
+export function toolbarClampDown(topWorld: number, viewport: Viewport): number | undefined {
+   const topScreen = viewport.y + topWorld * viewport.zoom;
+   const overshoot = TOOLBAR_TOP_CLEARANCE - topScreen;
+   return overshoot > 0 ? overshoot / viewport.zoom : undefined;
+}
+
+/**
  * The on-screen grid spacing band: the adaptive helper keeps a cell within these px so the
  * grid never turns to mush zoomed out or sparse zoomed in.
  */

@@ -4,6 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 // -- Utils Imports --
 import { zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
+import { toolbarClampDown } from '@/lib/board/boardCoordinates';
 import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
 
 // -- Component Imports --
@@ -25,13 +26,6 @@ function buildConnectionContent(item: BoardItem | undefined, style: ConnectionSt
    const to = content?.kind === 'connection' ? content.to : '';
    return { kind: 'connection', from, to, style };
 }
-
-/**
- * Screen-px the selected item's toolbar keeps below the clip's top edge. When the item's top runs above
- * the canvas (a tall drawing/zone pushes the bar out of reach), the bar is clamped down to this line so it
- * stays visible. Covers the bar's own height (it grows upward from the box top) plus a small margin.
- */
-const TOOLBAR_TOP_CLEARANCE = 48;
 
 interface BoardItemsLayerProps {
    viewport: Viewport;
@@ -112,15 +106,13 @@ export function BoardItemsLayer({
    handleDeleteSelection,
 }: BoardItemsLayerProps) {
    /**
-    * World-px to push the sole-selected item's toolbar down so it clears the clip's top edge; undefined
-    * when the item sits low enough to need no clamp (a stable prop, so an unclamped box still skips a pan
-    * re-render). Only the toolbar-bearing sole selection is measured. `item.y` includes any live move.
+    * The off-top clamp for the sole-selected item's toolbar; undefined for every other item, since only the
+    * toolbar-bearing sole selection needs measuring. `item.y` is the stored top, so the live move delta is
+    * added here (the group bbox already carries its own).
     */
    const toolbarClampFor = (item: BoardItem): number | undefined => {
       if (item.id !== soleSelectedId) return undefined;
-      const topScreen = viewport.y + (item.y + (moveDeltaFor(item.id)?.y ?? 0)) * viewport.zoom;
-      const overshoot = TOOLBAR_TOP_CLEARANCE - topScreen;
-      return overshoot > 0 ? overshoot / viewport.zoom : undefined;
+      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0), viewport);
    };
 
    /** Renders one item box. Shared by the non-zone and zone passes; a zone paints its own tinted frame inline. */
@@ -172,11 +164,14 @@ export function BoardItemsLayer({
          {zoneItems.map(renderBox)}
 
          {/* Group toolbar over the multi-selection's bounding box (per-item bars suppressed). It
-             tops every band so it floats above its members and the connection layer. */}
+             tops every band so it floats above its members and the connection layer. The anchor spans
+             the whole bbox and stays inert, so a press inside it still reaches the item under it (the
+             bar itself re-arms pointer events); the bbox already carries the live move delta. */}
          {groupBbox && (
-            <div className="absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
+            <div className="pointer-events-none absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
                <BoardGroupToolbar
                   zoom={viewport.zoom}
+                  clampDown={toolbarClampDown(groupBbox.y, viewport)}
                   onMoveStart={(event) => {
                      const anchor = [...selectedIds][0];
                      if (anchor) handleMoveStart(anchor, event);
