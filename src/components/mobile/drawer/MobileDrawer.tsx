@@ -4,19 +4,14 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
-import type { Modifier } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Component Imports --
 import MobileBreadcrumbs from '@/components/mobile/drawer/MobileBreadcrumbs';
-import MobileFolderItem from '@/components/mobile/drawer/MobileFolderItem';
-import MobileDrawerItem from '@/components/mobile/drawer/MobileDrawerItem';
 import MobileDrawerContextMenu from '@/components/mobile/drawer/MobileDrawerContextMenu';
 import MobileAddFolderSheet from '@/components/mobile/drawer/MobileAddFolderSheet';
 import MobileDrawerToolbar from '@/components/mobile/drawer/MobileDrawerToolbar';
 import MobileDrawerSearchResults from '@/components/mobile/drawer/MobileDrawerSearchResults';
-import MobileDrawerDragOverlay from '@/components/mobile/drawer/MobileDrawerDragOverlay';
+import MobileDrawerBrowseList from '@/components/mobile/drawer/MobileDrawerBrowseList';
 import { DrawerSearchBar } from '@/components/molecules/drawer/DrawerSearchBar';
 
 // -- Store Imports --
@@ -33,20 +28,6 @@ import { useDrawerUndoRedo } from '@/hooks/drawer/useDrawerUndoRedo';
 
 // -- Type Imports --
 import type { DrawerItem } from '@/lib/types/drawer';
-
-
-
-/**
- * Inline `@dnd-kit` modifier that locks dragging to the vertical axis: any
- * horizontal pointer travel is dropped from the transform applied to the
- * `DragOverlay`. This keeps the dragged item moving with the finger up and down
- * (so it visually follows the gesture across the screen) while making
- * horizontal drift impossible - which, combined with `overflow-x: hidden` on
- * the scroll container, prevents the drag from expanding the container and
- * breaking the drawer layout. Inlined rather than depending on
- * `@dnd-kit/modifiers` (not installed; do not add).
- */
-const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 
 
@@ -152,73 +133,26 @@ export default function MobileDrawer({ onAddToCharacter, onLoadCharacter }: Mobi
 					onOpenResultMenu={openResultMenu}
 				/>
 			) : (
-			<DndContext
-				sensors={sensors}
-				collisionDetection={closestCenter}
-				modifiers={[restrictToVerticalAxis]}
-				onDragStart={handleDragStart}
-				onDragEnd={handleDragEndWithCleanup}
-				onDragCancel={handleDragCancel}
-			>
-				<div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-2">
-					{!hasContent && (
-						<div className="h-full flex items-center justify-center text-center p-8">
-							<div>
-								<p className="text-muted-foreground mb-4">
-									{currentFolderId
-										? t('Drawer.emptyFolder')
-										: t('Drawer.emptyDrawer')}
-								</p>
-							</div>
-						</div>
-					)}
-
-					{/* Folders */}
-					<SortableContext items={folderIds} strategy={verticalListSortingStrategy}>
-						{currentFolders.map((folder) => (
-							<MobileFolderItem
-								key={folder.id}
-								folder={folder}
-								folderCount={childCounts.get(folder.id)?.folderCount ?? 0}
-								itemCount={childCounts.get(folder.id)?.itemCount ?? 0}
-								onNavigate={navigateToFolder}
-								onLongPress={browseMenu.openForFolder}
-								isLeftHanded={isLeftHanded}
-							/>
-						))}
-					</SortableContext>
-
-					{/* Separator if both folders and items exist */}
-					{currentFolders.length > 0 && currentItems.length > 0 && (
-						<div className="border-t border-border my-2" />
-					)}
-
-					{/* Items */}
-					<SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-						{currentItems.map((item) => (
-							<MobileDrawerItem
-								key={item.id}
-								item={item}
-								isCompact={isCompactView}
-								onLongPress={browseMenu.openForItem}
-								isLeftHanded={isLeftHanded}
-							/>
-						))}
-					</SortableContext>
-				</div>
-
-				{/* Overlay snapshot of the active row, floating with the pointer */}
-				<DragOverlay dropAnimation={null}>
-					<MobileDrawerDragOverlay
-						activeFolder={activeFolder}
-						activeItem={activeItem}
-						folderCount={activeFolder ? childCounts.get(activeFolder.id)?.folderCount ?? 0 : 0}
-						itemCount={activeFolder ? childCounts.get(activeFolder.id)?.itemCount ?? 0 : 0}
-						isCompact={isCompactView}
-						isLeftHanded={isLeftHanded}
-					/>
-				</DragOverlay>
-			</DndContext>
+				<MobileDrawerBrowseList
+					sensors={sensors}
+					onDragStart={handleDragStart}
+					onDragEnd={handleDragEndWithCleanup}
+					onDragCancel={handleDragCancel}
+					hasContent={hasContent}
+					currentFolderId={currentFolderId}
+					folders={currentFolders}
+					items={currentItems}
+					folderIds={folderIds}
+					itemIds={itemIds}
+					childCounts={childCounts}
+					onNavigate={navigateToFolder}
+					onFolderLongPress={browseMenu.openForFolder}
+					onItemLongPress={browseMenu.openForItem}
+					isCompactView={isCompactView}
+					isLeftHanded={isLeftHanded}
+					activeFolder={activeFolder}
+					activeItem={activeItem}
+				/>
 			)}
 
 			{/* Breadcrumbs navigation at bottom - browse-only (hidden while searching, like desktop). */}

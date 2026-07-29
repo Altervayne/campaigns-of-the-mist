@@ -88,6 +88,24 @@ export default defineConfig([
       'max-lines': 'off',
     },
   },
+  // Same guard for the decomposed MobileDrawer: the drawer's parts and the mobile hooks stay small.
+  {
+    files: [
+      'src/components/mobile/drawer/**/*.{ts,tsx}',
+      'src/hooks/mobile/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
+  // The drawer's context menu is the one file in that set still over the cap, and it is the next mobile
+  // de-monolithization target; exempt until then rather than leaving the whole folder unguarded.
+  {
+    files: ['src/components/mobile/drawer/MobileDrawerContextMenu.tsx'],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
   // Same guard for the decomposed WorkspacePage: the page, its workspace/sheet regions, and its hooks
   // stay small.
   {
