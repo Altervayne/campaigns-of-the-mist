@@ -2304,7 +2304,7 @@
       "closeSheetConfirmButton": "Close Sheet",
       "closeWithoutSaving": "Close Without Saving",
       "closeSheetDirtyTitle": "Close without saving your changes?",
-      "closeSheetDirtyDescription": "You've edited this character since your last save. Closing without saving discards those changes, and they can't be recovered on mobile.",
+      "closeSheetDirtyDescription": "You've edited this character since your last save. Closing without saving discards those changes, and they can't be recovered.",
       "closeSheetSaveAndCloseButton": "Save & Close",
       "closeSheetUnsavedTitle": "This character has never been saved",
       "closeSheetUnsavedDescription": "It exists only on this sheet. Closing without saving loses it for good. Save it to the drawer first to keep it.",
