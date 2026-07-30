@@ -157,7 +157,7 @@ export default function MobileFolderPicker({
                   </div>
 
                   {/* Action buttons */}
-                  <div className="p-4 border-t border-border flex gap-2 shrink-0 pb-safe">
+                  <div className="p-4 border-t border-border flex gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
                      <Button
                         variant="outline"
                         onClick={handleCancel}

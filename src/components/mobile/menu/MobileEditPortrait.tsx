@@ -68,7 +68,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
    // Reached only with a portrait loaded; back out if it's gone (e.g. deleted from elsewhere).
    if (!portrait || !details) {
       return (
-         <div className="h-full flex flex-col items-center justify-center gap-4 p-6 pt-safe">
+         <div className="h-full flex flex-col items-center justify-center gap-4 p-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
             <p className="text-center text-muted-foreground">{t('MobileEditPortrait.missing')}</p>
             <Button onClick={onBack} className="cursor-pointer">{t('MobileEditPortrait.back')}</Button>
          </div>
@@ -100,7 +100,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
             </div>
          </div>
 
-         <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-safe">
+         <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {/* The portrait at its current frame, so aspect changes read immediately. */}
             <div className="flex justify-center">
                <div

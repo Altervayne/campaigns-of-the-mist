@@ -38,7 +38,6 @@ import { getActiveCharacterStore } from '@/lib/character/characterStoreRegistry'
 import { useDrawerActions, useDrawerStore } from '@/lib/stores/drawerStore';
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import { useAppSettingsActions } from '@/lib/stores/appSettingsStore';
-import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 
 // -- Hook Imports --
 import useCharacterTemporalStore from '@/hooks/useCharacterTemporalStore';
@@ -59,7 +58,7 @@ import type { CardViewMode, Card, Tracker } from '@/lib/types/character';
  * Hook to build action lists for the Toolbelt based on the current context.
  * Returns both item-specific actions (the selected card/tracker) and global ones.
  */
-export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'trackers' | 'cards', onSaveToDrawer?: (item: Card | Tracker) => void, onEditCard?: (card: Card) => void, onImportUpdate?: () => void, onEditPortrait?: () => void): ToolbeltActions {
+export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'trackers' | 'cards', onSaveToDrawer?: (item: Card | Tracker) => void, onEditCard?: (card: Card) => void, onImportUpdate?: () => void, onEditPortrait?: () => void, onCloseSheet?: () => void): ToolbeltActions {
 	const { t } = useTranslation();
 	const {
 		loadCharacter,
@@ -85,9 +84,8 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 
 	// Workspace actions gate on a loaded character; read it reactively so the group appears/hides in step.
 	const character = useCharacterStore((state) => state.character);
-	// Save As (a fresh drawer copy) and Unload reuse the shared desktop paths, so mobile can't drift from them.
+	// Save As reuses the shared desktop path, so mobile can't drift from it.
 	const { saveCharacterAsToDrawer } = useSaveToDrawer();
-	const { mobileReturnToMenu } = useTabManagerActions();
 
 	const { undo, redo, pastStates, futureStates } = useCharacterTemporalStore(
 		(state) => state,
@@ -235,15 +233,16 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 			show: !!character && !!onImportUpdate
 		});
 
-		// Unload: leave the character and return to the menu (keeps the working row).
+		// Close Sheet: leave the sheet and return to the menu (keeps the working row). Destructive-styled
+		// as a stop against an accidental yank mid-session; the caller owns the confirm gate.
 		globalActions.push({
-			id: 'unload-character',
-			label: t('Toolbelt.unloadCharacter'),
+			id: 'close-sheet',
+			label: t('Toolbelt.closeSheet'),
 			icon: LogOut,
 			variant: 'destructive',
 			group: 'workspace',
-			onClick: () => mobileReturnToMenu(),
-			show: !!character
+			onClick: () => onCloseSheet?.(),
+			show: !!character && !!onCloseSheet
 		});
 
 		// ==================
@@ -580,10 +579,10 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		setDrawerOpen,
 		character,
 		saveCharacterAsToDrawer,
-		mobileReturnToMenu,
 		onSaveToDrawer,
 		onEditCard,
 		onImportUpdate,
 		onEditPortrait,
+		onCloseSheet,
 	]);
 }

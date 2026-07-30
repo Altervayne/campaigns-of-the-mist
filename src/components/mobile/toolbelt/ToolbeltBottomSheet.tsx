@@ -129,7 +129,7 @@ export default function ToolbeltBottomSheet({
 			{/* Action tiles, one labelled section per populated group */}
 			<div
 				data-tutorial="toolbelt"
-				className="max-h-[55vh] overflow-y-auto p-3 pb-safe space-y-4"
+				className="max-h-[55vh] overflow-y-auto p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] space-y-4"
 			>
 				{sections.map((section) => (
 					<div key={section.label}>

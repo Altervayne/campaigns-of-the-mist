@@ -625,13 +625,18 @@ body {
 
 /* Safe-area padding utility: clears the bottom home-indicator gutter on inset
    devices. Resolves to 0 unless the document sets viewport-fit=cover. This is
-   the single canonical name for the safe-area bottom inset across the app. */
+   the single canonical name for the safe-area bottom inset across the app.
+   Inset-only: overrides any base bottom padding rather than adding to it, so
+   never stack on a p-*/py-*/pb-* base. To keep a base gutter plus the inset use
+   pb-[calc(<base>+env(safe-area-inset-bottom))]. */
 @utility pb-safe {
    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Mirror of pb-safe for the top: clears the status bar / Dynamic Island on inset
-   devices in standalone. Resolves to 0 unless the document sets viewport-fit=cover. */
+   devices in standalone. Resolves to 0 unless the document sets viewport-fit=cover.
+   Inset-only, same caveat as pb-safe: to keep a base gutter plus the inset use
+   pt-[calc(<base>+env(safe-area-inset-top))]. */
 @utility pt-safe {
    padding-top: env(safe-area-inset-top);
 }

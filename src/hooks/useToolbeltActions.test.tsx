@@ -86,6 +86,34 @@ describe('toolbelt globals on the cards tab', () => {
    });
 });
 
+describe('close sheet action', () => {
+   afterEach(() => { characterState.character = null; });
+
+   it('carries the close-sheet id and label when a character is loaded', () => {
+      characterState.character = { id: 'x' };
+      const actions = renderHook(() =>
+         useToolbeltActions(none, 'cards', vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn()),
+      ).result.current.globalActions;
+      const closeSheet = actions.find((action) => action.id === 'close-sheet');
+
+      expect(closeSheet).toBeDefined();
+      expect(closeSheet?.label).toBe('Toolbelt.closeSheet');
+   });
+
+   it('routes a tap to the confirm-opener instead of returning to the menu', () => {
+      characterState.character = { id: 'x' };
+      const onCloseSheet = vi.fn();
+      const actions = renderHook(() =>
+         useToolbeltActions(none, 'cards', vi.fn(), vi.fn(), vi.fn(), vi.fn(), onCloseSheet),
+      ).result.current.globalActions;
+      const closeSheet = actions.find((action) => action.id === 'close-sheet');
+
+      closeSheet?.onClick();
+
+      expect(onCloseSheet).toHaveBeenCalledTimes(1);
+   });
+});
+
 describe('portrait actions', () => {
    it('offers its editor and the shared delete on the portrait card', () => {
       const ids = itemIds({ type: 'card', card: card('IMAGE_CARD') }, 'cards');

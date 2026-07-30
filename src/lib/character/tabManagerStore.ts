@@ -168,6 +168,12 @@ interface TabManagerState {
       mobileReplaceWithImportedCharacter: (character: Character) => void;
       /** Mobile "Return to Menu": disposes the live character and shows the menu, keeping `openTabs`. */
       mobileReturnToMenu: () => void;
+      /**
+       * Mobile "Close Sheet": DISCARDS the live character (drop its handle without flushing, delete its
+       * working row, prune its tab), then shows the menu. Contrast {@link mobileReturnToMenu}, which keeps
+       * the tab and working row. Never flushes, so a save the user wanted must complete BEFORE this runs.
+       */
+      mobileCloseSheet: () => void;
    };
 }
 
@@ -636,6 +642,12 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          // Dispose the live character (don't surface a hidden neighbour), then show
          // the menu while keeping the shared `openTabs`.
          disposeLiveCharacterInstances();
+         deactivateToMenu();
+      },
+      mobileCloseSheet: () => {
+         // Discard the live character (prune its tab + drop its working row, no flush), then show the
+         // menu. The discard never flushes, so a Save & Close must finish its save before calling this.
+         discardLiveCharacterInstances();
          deactivateToMenu();
       },
    },

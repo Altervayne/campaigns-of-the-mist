@@ -78,7 +78,7 @@ export default function MobileThemeEditor({ onBack }: MobileThemeEditorProps) {
    // Reached only after a custom is selected/created, so this is defensive: back out if none is active.
    if (!activeCustom) {
       return (
-         <div className="h-full flex flex-col items-center justify-center gap-4 p-6 pt-safe">
+         <div className="h-full flex flex-col items-center justify-center gap-4 p-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
             <p className="text-center text-muted-foreground">{t('SettingsDialog.themes.noActiveCustom')}</p>
             <Button onClick={onBack} className="cursor-pointer">{t('SettingsDialog.dangerZone.resetDialog.cancel')}</Button>
          </div>
@@ -149,7 +149,7 @@ export default function MobileThemeEditor({ onBack }: MobileThemeEditorProps) {
             </div>
          </div>
 
-         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-safe">
+         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {/* Live preview of the mode being edited (its own inline vars; the whole app also previews). */}
             <ThemePreview
                tokenSet={editorMode === 'dark' ? draft.dark : draft.light}

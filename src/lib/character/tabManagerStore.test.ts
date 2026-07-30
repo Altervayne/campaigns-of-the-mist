@@ -362,6 +362,24 @@ describe('mobile single-live lifecycle', () => {
       expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['A', 'B']); // kept
    });
+
+   it('mobileCloseSheet prunes the tab, drops the working row, and shows the menu', async () => {
+      const actions = useTabManagerStore.getState().actions;
+      await saveCharacter(makeCharacter('A'));
+      actions.mobileOpenCharacter(makeCharacter('A'));
+      expect(await getCharacter('A')).toBeDefined();
+
+      actions.mobileCloseSheet();
+
+      expect(getCharacterInstanceIds()).toEqual([]); // no live instance
+      expect(useTabManagerStore.getState().activeTabId).toBeNull();
+      expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
+      // No orphan tab: the closed id is pruned from the shared set (contrast mobileReturnToMenu, which keeps it).
+      expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual([]);
+      // No orphan working record: the discard deletes it (async delete settles on the next tick).
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(await getCharacter('A')).toBeUndefined();
+   });
 });
 
 describe('platform-aware boot', () => {

@@ -74,7 +74,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
                className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none"
             >
                {/* Header: title + a live preview of the crop in its own shape. */}
-               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 pt-safe">
+               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
                   <DialogTitle className="text-base">{t('ImageCropper.title')}</DialogTitle>
                   <DestinationPreview imageUrl={imageUrl} region={region} rotation={rotation} source={bitmap} />
                </div>
