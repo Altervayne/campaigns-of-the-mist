@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/check-precache.mjs",
+    "check:precache": "node scripts/check-precache.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
