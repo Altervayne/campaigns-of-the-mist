@@ -113,7 +113,6 @@ export interface CharacterState {
       updateCardDetails: (cardId: string, newDetails: Partial<CardDetails>) => void;
       /** Sets a card's display title (the challenge card's name lives here). */
       updateCardTitle: (cardId: string, title: string) => void;
-      reorderCards: (startIndex: number, endIndex: number) => void;
       /** Kind-agnostic sheet reorder: moves the manifest entry for `fromId` to `toId`'s slot. */
       reorderSheetLayout: (fromId: string, toId: string) => void;
       flipCard: (cardId: string) => void;
@@ -569,25 +568,6 @@ export function createCharacterStore() {
                      useAppGeneralStateStore.getState().actions.setLastModifiedStore('character');
                      return updateCardInState(state, cardId, card => ({ ...card, title }));
                   });
-               },
-               reorderCards: (startIndex, endIndex) => {
-                  set(state => {
-                     if (!state.character) return {};
-                     useAppGeneralStateStore.getState().actions.setLastModifiedStore('character');
-                     // Mobile's card-only reorder (its carousel maps `cards` directly). Re-sync the
-                     // manifest's card entries to the new card order so the desktop sheet - which
-                     // renders by the manifest - stays coherent with what mobile set (journals keep
-                     // their manifest slots relative to the surrounding cards).
-                     const cards = Array.from(state.character.cards);
-                     const [moved] = cards.splice(startIndex, 1);
-                     cards.splice(endIndex, 0, moved);
-                     const orderedCardIds = cards.map((card) => card.id);
-                     let cardCursor = 0;
-                     const sheetLayout = state.character.sheetLayout.map((entry) =>
-                        entry.kind === 'card' ? { kind: 'card' as const, id: orderedCardIds[cardCursor++] } : entry,
-                     );
-                     return { character: { ...state.character, cards, sheetLayout } };
-                  })
                },
                reorderSheetLayout: (fromId, toId) => {
                   set(state => {

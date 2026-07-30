@@ -6,7 +6,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 
 // -- Type Imports --
 import type { ReactNode } from 'react';
-import type { Card } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 /*
  * The overview's add row must sit OUTSIDE the SortableContext and after the list. Inside it, a dashed
@@ -16,7 +16,7 @@ import type { Card } from '@/lib/types/character';
  */
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('@/lib/stores/characterStore', () => ({ useCharacterActions: () => ({ reorderCards: vi.fn() }) }));
+vi.mock('@/lib/stores/characterStore', () => ({ useCharacterActions: () => ({ reorderSheetLayout: vi.fn() }) }));
 vi.mock('@/lib/stores/appSettingsStore', () => ({ useAppSettingsStore: () => false }));
 // The previews route through the card registry; a stub keeps this about the list's shape.
 vi.mock('@/components/organisms/cards/resolveCardComponent', () => ({
@@ -37,16 +37,16 @@ vi.mock('@dnd-kit/sortable', async (importOriginal) => {
 
 import { MobileCardReorderView } from './MobileCardReorderView';
 
-const card = (id: string): Card =>
-   ({ id, cardType: 'CHARACTER_THEME', details: { game: 'LEGENDS' } } as unknown as Card);
+const cardItem = (id: string): ResolvedSheetItem =>
+   ({ kind: 'card', id, card: { id, cardType: 'CHARACTER_THEME', details: { game: 'LEGENDS' } } } as unknown as ResolvedSheetItem);
 
 const mount = (onOpenAddCard?: () => void) =>
    render(
       <MobileCardReorderView
-         cards={[card('c1'), card('c2')]}
+         items={[cardItem('c1'), cardItem('c2')]}
          isMobileFABMode={false}
          isLeftHanded={false}
-         onSelectCard={() => {}}
+         onSelectItem={() => {}}
          onOpenAddCard={onOpenAddCard}
       />
    );

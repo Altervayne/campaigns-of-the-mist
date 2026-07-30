@@ -8,6 +8,8 @@ import type { Character } from '@/lib/types/character';
 
 interface UseMobileCardSheetGesturesParameters {
 	character: Character | null;
+	/** The count of the resolved sheet layout (cards + journals), the bound for card-stepping. */
+	itemCount: number;
 	safeCardIndex: number;
 	isLeftHanded: boolean;
 	isMobileFABMode: boolean;
@@ -60,6 +62,7 @@ const isHorizontalNavigationSwipe = (deltaX: number, deltaY: number) =>
  */
 export function useMobileCardSheetGestures({
 	character,
+	itemCount,
 	safeCardIndex,
 	isLeftHanded,
 	isMobileFABMode,
@@ -70,16 +73,16 @@ export function useMobileCardSheetGestures({
 	onNavigateToCards,
 }: UseMobileCardSheetGesturesParameters) {
 	// Shared prev/next navigation for the card-area and nav-bar swipes. Steps one
-	// card on a clearly-horizontal swipe (G3 dominance + minimum distance),
-	// clamped to the card-list bounds.
+	// item on a clearly-horizontal swipe (G3 dominance + minimum distance),
+	// clamped to the layout bounds.
 	const navigateFromHorizontalSwipe = (deltaX: number, deltaY: number) => {
-		if (!character || character.cards.length === 0) return;
+		if (!character || itemCount === 0) return;
 
 		// Require horizontal dominance so diagonal/vertical scrolls do not navigate.
 		if (!isHorizontalNavigationSwipe(deltaX, deltaY)) return;
 
-		// Swipe left = next card; swipe right = previous card.
-		if (deltaX < 0 && safeCardIndex < character.cards.length - 1) {
+		// Swipe left = next item; swipe right = previous item.
+		if (deltaX < 0 && safeCardIndex < itemCount - 1) {
 			setCurrentCardIndex(i => i + 1);
 		} else if (deltaX > 0 && safeCardIndex > 0) {
 			setCurrentCardIndex(i => i - 1);

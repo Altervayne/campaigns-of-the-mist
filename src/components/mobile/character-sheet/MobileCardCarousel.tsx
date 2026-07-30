@@ -4,20 +4,23 @@ import { useTranslation } from 'react-i18next';
 // -- Component Imports --
 import { resolveCardComponent } from '@/components/organisms/cards/resolveCardComponent';
 import { AddCardButton } from '@/components/molecules/AddThemeCardButton';
+import { MobileJournalCoverTile } from '@/components/mobile/character-sheet/MobileJournalCoverTile';
 
 // -- Store Imports --
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
 // -- Type Imports --
 import type { Card as CardData } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 interface MobileCardCarouselProps {
-	cards: CardData[];
+	items: ResolvedSheetItem[];
 	currentIndex: number;
 	onOpenAddCard?: () => void;
+	onOpenJournal?: (journalId: string) => void;
 }
 
-export default function MobileCardCarousel({ cards, currentIndex, onOpenAddCard }: MobileCardCarouselProps) {
+export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard, onOpenJournal }: MobileCardCarouselProps) {
 	const { t } = useTranslation();
 	const isEditing = useAppGeneralStateStore((state) => state.isEditing);
 
@@ -53,26 +56,32 @@ export default function MobileCardCarousel({ cards, currentIndex, onOpenAddCard 
 		return <Component key={card.id} {...commonProps} />;
 	};
 
+	// A card or a journal, at its manifest position.
+	const renderItem = (item: ResolvedSheetItem) =>
+		item.kind === 'card'
+			? renderCard(item.card)
+			: <MobileJournalCoverTile key={item.id} journal={item.journal} onOpenJournal={onOpenJournal} />;
+
 	// Empty state
-	if (cards.length === 0) {
+	if (items.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center h-full p-8 text-center">
 				<p className="text-lg text-muted-foreground mb-6">
 					{t('MobileCardCarousel.noCards')}
 				</p>
-				{/* Not edit-gated: with no cards the overview does not exist, so this is the
+				{/* Not edit-gated: with no items the overview does not exist, so this is the
 				    only route to creating one. */}
 				{onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
 			</div>
 		);
 	}
 
-	const currentCard = cards[currentIndex];
+	const currentItem = items[currentIndex];
 
-	// Simple card display (swipe gestures handled by parent MobileCharacterSheet)
+	// Simple item display (swipe gestures handled by parent MobileCharacterSheet)
 	return (
 		<div className="h-full w-full flex items-center justify-center">
-			{renderCard(currentCard)}
+			{renderItem(currentItem)}
 		</div>
 	);
 }

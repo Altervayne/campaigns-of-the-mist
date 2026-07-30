@@ -1,5 +1,6 @@
 // -- Type Imports --
-import type { Character, SheetLayoutEntry } from '@/lib/types/character';
+import type { Card, Character, SheetLayoutEntry } from '@/lib/types/character';
+import type { Journal } from '@/lib/types/board';
 
 /*
  * The character sheet's ordered layout manifest: a flat list of references into `cards`/`journals`
@@ -49,6 +50,33 @@ export function resolveSheetLayout(character: Pick<Character, 'cards' | 'journal
    for (const journal of character.journals) if (!seen.has(journal.id)) resolved.push({ kind: 'journal', id: journal.id });
 
    return resolved;
+}
+
+/** A resolved layout entry joined to its live card/journal, in manifest order. */
+export type ResolvedSheetItem =
+   | { kind: 'card'; id: string; card: Card }
+   | { kind: 'journal'; id: string; journal: Journal };
+
+/**
+ * Joins the resolved manifest to its live card/journal objects, in manifest order - the concrete list
+ * a sheet renders. Runs through `resolveSheetLayout`, so dangling ids are already dropped and the list
+ * has no holes; for a journal-less character it's `cards` in array order.
+ */
+export function resolveSheetItems(character: Pick<Character, 'cards' | 'journals' | 'sheetLayout'>): ResolvedSheetItem[] {
+   const cardsById = new Map(character.cards.map((card) => [card.id, card]));
+   const journalsById = new Map(character.journals.map((journal) => [journal.id, journal]));
+
+   const items: ResolvedSheetItem[] = [];
+   for (const entry of resolveSheetLayout(character)) {
+      if (entry.kind === 'card') {
+         const card = cardsById.get(entry.id);
+         if (card) items.push({ kind: 'card', id: card.id, card });
+      } else {
+         const journal = journalsById.get(entry.id);
+         if (journal) items.push({ kind: 'journal', id: journal.id, journal });
+      }
+   }
+   return items;
 }
 
 /** Appends a manifest entry for a freshly-added card/journal (the add cascade). */

@@ -29,7 +29,7 @@ afterEach(cleanup);
 describe('empty carousel add-card placeholder', () => {
    it('offers the placeholder in Play mode', () => {
       const onOpenAddCard = vi.fn();
-      render(<MobileCardCarousel cards={[]} currentIndex={0} onOpenAddCard={onOpenAddCard} />);
+      render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={onOpenAddCard} />);
 
       const button = addButton();
       expect(button).not.toBeNull();
@@ -40,13 +40,13 @@ describe('empty carousel add-card placeholder', () => {
 
    it('offers the placeholder in Edit mode', () => {
       mocks.isEditing = true;
-      render(<MobileCardCarousel cards={[]} currentIndex={0} onOpenAddCard={() => {}} />);
+      render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={() => {}} />);
 
       expect(addButton()).not.toBeNull();
    });
 
    it('is omitted with no add handler', () => {
-      render(<MobileCardCarousel cards={[]} currentIndex={0} />);
+      render(<MobileCardCarousel items={[]} currentIndex={0} />);
 
       expect(addButton()).toBeNull();
    });

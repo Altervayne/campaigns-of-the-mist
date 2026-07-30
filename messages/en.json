@@ -809,6 +809,8 @@
       "otherscapeLoadoutCard": "Loadout",
       "themeCard": "Theme",
       "portraitCard": "Portrait",
+      "journalUntitled": "Untitled journal",
+      "journalPageCount": "pg {{current}} / {{total}}",
       "challenge": {
          "limits": "Limits",
          "tagsAndStatuses": "Tags & Statuses",

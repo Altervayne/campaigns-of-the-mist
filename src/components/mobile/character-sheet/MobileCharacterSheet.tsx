@@ -26,6 +26,7 @@ import { useMobileCardSheetGestures } from '@/hooks/mobile/useMobileCardSheetGes
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { deriveCardTitle } from '@/lib/utils/character';
+import { resolveSheetItems } from '@/lib/character/sheetLayout';
 import { triggerHaptic } from '@/lib/utils/haptics';
 import { getFloatingBottom } from '@/lib/utils/mobileFloating';
 
@@ -103,16 +104,21 @@ export default function MobileCharacterSheet({
 	const mobileHandedness = useAppSettingsStore((state) => state.mobileHandedness);
 	const isLeftHanded = mobileHandedness === 'left';
 
+	// The interleaved cards + journals region, in manifest order. The carousel, nav bar, dots, and
+	// overview all index this resolved list (not `cards`); for a journal-less character it is `cards`
+	// in the same order, so nothing changes there.
+	const layout = useMemo(() => (character ? resolveSheetItems(character) : []), [character]);
+
 	// Card navigation state
 	const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-	// Navigate to a specific card when initialCardId changes
+	// Navigate to a specific item when initialCardId changes
 	useEffect(() => {
-		if (initialCardId && character?.cards) {
-			const cardIndex = character.cards.findIndex(card => card.id === initialCardId);
-			if (cardIndex !== -1) {
+		if (initialCardId) {
+			const itemIndex = layout.findIndex(item => item.id === initialCardId);
+			if (itemIndex !== -1) {
 				startTransition(() => {
-					setCurrentCardIndex(cardIndex);
+					setCurrentCardIndex(itemIndex);
 				});
 			}
 		}
@@ -124,14 +130,15 @@ export default function MobileCharacterSheet({
 	// Save to Drawer sheet state (mobile hook)
 	const { isSaveToDrawerOpen, setIsSaveToDrawerOpen, saveToDrawerDefaultName, openSaveToDrawer, handleConfirmSaveToDrawer } = useMobileSaveToDrawer();
 
-	// Safe card index (clamp to valid range)
-	const safeCardIndex = character && character.cards.length > 0
-		? Math.min(currentCardIndex, character.cards.length - 1)
+	// Safe item index (clamp to valid range)
+	const safeCardIndex = layout.length > 0
+		? Math.min(currentCardIndex, layout.length - 1)
 		: 0;
 
 	// Card-sheet touch gestures (mobile hook)
 	const { cardAreaHandlers, navBarHandlers, trackersAreaHandlers } = useMobileCardSheetGestures({
 		character,
+		itemCount: layout.length,
 		safeCardIndex,
 		isLeftHanded,
 		isMobileFABMode,
@@ -149,10 +156,15 @@ export default function MobileCharacterSheet({
 		openSaveToDrawer(item, defaultName);
 	};
 
+	// Opening a journal cover lands the full-screen reader; that screen is not built yet.
+	const handleOpenJournal = (_journalId: string) => {};
+
 	// Build toolbelt context based on active tab and selection
 	const toolbeltContext: ToolbeltContext = useMemo(() => {
-		if (activeTab === 'cards' && character && character.cards.length > 0) {
-			return { type: 'card', card: character.cards[safeCardIndex] };
+		if (activeTab === 'cards' && layout.length > 0) {
+			// A journal entry has no card-specific actions; the toolbelt defaults to none.
+			const activeItem = layout[safeCardIndex];
+			if (activeItem?.kind === 'card') return { type: 'card', card: activeItem.card };
 		}
 		if (activeTab === 'trackers' && selectedTrackerId && character) {
 			// Check statuses
@@ -168,7 +180,7 @@ export default function MobileCharacterSheet({
 			if (storyTheme) return { type: 'tracker', tracker: storyTheme };
 		}
 		return { type: 'none' };
-	}, [activeTab, character, safeCardIndex, selectedTrackerId]);
+	}, [activeTab, layout, character, safeCardIndex, selectedTrackerId]);
 
 
 
@@ -228,13 +240,13 @@ export default function MobileCharacterSheet({
 
 				{activeTab === 'cards' && (
 					<>
-						{/* Card Reorder View or Normal Card Display */}
+						{/* Reorder overview or normal item display */}
 						{isReorderingCards ? (
 							<MobileCardReorderView
-								cards={character.cards}
+								items={layout}
 								isMobileFABMode={isMobileFABMode}
 								isLeftHanded={isLeftHanded}
-								onSelectCard={(index) => {
+								onSelectItem={(index) => {
 									setCurrentCardIndex(index);
 									setIsReorderingCards(false);
 								}}
@@ -242,24 +254,30 @@ export default function MobileCharacterSheet({
 							/>
 						) : (
 							<MobileCardArea
-								cards={character.cards}
+								items={layout}
 								currentIndex={safeCardIndex}
 								isLeftHanded={isLeftHanded}
 								touchHandlers={cardAreaHandlers}
 								onOpenAddCard={onOpenAddCard}
+								onOpenJournal={handleOpenJournal}
 							/>
 						)}
 
-						{/* Navigation Bar - Only visible in normal card view */}
-						{!isReorderingCards && character.cards.length > 0 && (
+						{/* Navigation Bar - Only visible in normal item view */}
+						{!isReorderingCards && layout.length > 0 && (
 							<MobileCardNavigationBar
-								cards={character.cards}
+								items={layout}
 								safeCardIndex={safeCardIndex}
 								isLeftHanded={isLeftHanded}
 								onPrevious={() => setCurrentCardIndex(i => Math.max(0, i - 1))}
-								onNext={() => setCurrentCardIndex(i => Math.min(character.cards.length - 1, i + 1))}
+								onNext={() => setCurrentCardIndex(i => Math.min(layout.length - 1, i + 1))}
 								onSelectCard={(index) => setCurrentCardIndex(index)}
-								onFlip={() => { triggerHaptic(); flipCard(character.cards[safeCardIndex].id); }}
+								onFlip={() => {
+									const activeItem = layout[safeCardIndex];
+									if (activeItem?.kind !== 'card') return;
+									triggerHaptic();
+									flipCard(activeItem.id);
+								}}
 								onReorder={() => { triggerHaptic(); setIsReorderingCards(true); }}
 								touchHandlers={navBarHandlers}
 							/>

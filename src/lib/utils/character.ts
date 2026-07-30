@@ -4,6 +4,7 @@ import cuid from 'cuid';
 // -- Types Imports --
 import type { TFunction } from 'i18next';
 import type { Card, CardDetails, ChallengeDetails, Character, CityChallengeDetails, CityRiftDetails, LegendsChallengeDetails, LegendsHeroDetails, OtherscapeCharacterDetails, OtherscapeChallengeDetails } from '@/lib/types/character';
+import type { Journal } from '@/lib/types/board';
 import type { GameSystem } from '../types/drawer';
 import type { ChallengeGame } from '@/lib/types/common';
 
@@ -108,6 +109,17 @@ export function deriveCardTitle(card: Card, t: TFunction): string {
 
    // Fallback to card type
    return t('Cards.themeCard');
+}
+
+/**
+ * Derives a journal's display title, falling back to a generic label when unnamed.
+ *
+ * @param journal - The journal whose title to derive.
+ * @param t - The i18next translator (from `useTranslation`).
+ * @returns The journal's title, or the localized untitled label when it is empty.
+ */
+export function deriveJournalTitle(journal: Journal, t: TFunction): string {
+   return journal.title.trim() || t('Cards.journalUntitled');
 }
 
 /**

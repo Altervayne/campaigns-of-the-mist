@@ -8,37 +8,30 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { useCharacterActions } from '@/lib/stores/characterStore';
 
 // -- Type Imports --
-import type { Card } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 
 
 /**
- * Drives drag-to-reorder for the mobile card reorder list.
+ * Drives drag-to-reorder for the mobile sheet overview (cards and journals interleaved).
  *
- * Returns the memoized `cardIds` for the `SortableContext` and the @dnd-kit
- * `handleDragEnd` handler, which resolves the dragged card's old/new index
- * within the supplied list and dispatches `reorderCards`. Reordering is
- * index-based, so the caller passes the live `cards` array in display order. A
- * drop onto the same card, or one whose ids do not both resolve to an index, is
- * ignored.
+ * Returns the memoized `itemIds` for the `SortableContext` and the @dnd-kit `handleDragEnd`, which
+ * moves the dragged item to the drop target by id via `reorderSheetLayout` - the same manifest reorder
+ * desktop uses, so both surfaces converge on one action. A drop onto the same item is ignored.
  *
- * @param cards - The character's cards, in their displayed order.
- * @returns `{ cardIds, handleDragEnd }` to wire onto the reorder list's
- *   `<SortableContext>` and `<DndContext>`.
+ * @param items - The resolved layout items, in their displayed order.
+ * @returns `{ itemIds, handleDragEnd }` to wire onto the overview's `<SortableContext>` and `<DndContext>`.
  */
-export function useMobileCardDragReorder(cards: Card[]) {
-	const { reorderCards } = useCharacterActions();
+export function useMobileCardDragReorder(items: ResolvedSheetItem[]) {
+	const { reorderSheetLayout } = useCharacterActions();
 
-	const cardIds = useMemo(() => cards.map((card) => card.id), [cards]);
+	const itemIds = useMemo(() => items.map((item) => item.id), [items]);
 
 	const handleDragEnd = useCallback((event: DragEndEvent) => {
 		const { active, over } = event;
 		if (!over || active.id === over.id) return;
+		reorderSheetLayout(String(active.id), String(over.id));
+	}, [reorderSheetLayout]);
 
-		const oldIndex = cards.findIndex((card) => card.id === active.id);
-		const newIndex = cards.findIndex((card) => card.id === over.id);
-		if (oldIndex !== -1 && newIndex !== -1) reorderCards(oldIndex, newIndex);
-	}, [cards, reorderCards]);
-
-	return { cardIds, handleDragEnd };
+	return { itemIds, handleDragEnd };
 }

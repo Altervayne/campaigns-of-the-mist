@@ -5,16 +5,17 @@ import type { TouchEvent } from 'react';
 import MobileCardCarousel from '@/components/mobile/character-sheet/MobileCardCarousel';
 
 // -- Type Imports --
-import type { Card } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 
 
 interface MobileCardAreaProps {
-	cards: Card[];
+	items: ResolvedSheetItem[];
 	currentIndex: number;
 	isLeftHanded: boolean;
 	touchHandlers: { onTouchStart: (event: TouchEvent) => void; onTouchEnd: (event: TouchEvent) => void };
 	onOpenAddCard?: () => void;
+	onOpenJournal?: (journalId: string) => void;
 }
 
 /**
@@ -54,7 +55,7 @@ const FAB_CLEARANCE_PADDING = 'calc(2 * max(0px, min(calc(201px - 50vw), calc(50
  *
  * @param isLeftHanded - The FAB rests on this (leading) side, so the card is shifted the other way: right when true, left otherwise.
  */
-export function MobileCardArea({ cards, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard }: MobileCardAreaProps) {
+export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard, onOpenJournal }: MobileCardAreaProps) {
 	// Pad the FAB side so the centred card shifts away from it (see constant).
 	const clearanceStyle = isLeftHanded
 		? { paddingLeft: FAB_CLEARANCE_PADDING }
@@ -68,9 +69,10 @@ export function MobileCardArea({ cards, currentIndex, isLeftHanded, touchHandler
 		>
 			<div className="min-h-full flex items-center justify-center" style={clearanceStyle}>
 				<MobileCardCarousel
-					cards={cards}
+					items={items}
 					currentIndex={currentIndex}
 					onOpenAddCard={onOpenAddCard}
+					onOpenJournal={onOpenJournal}
 				/>
 			</div>
 		</div>

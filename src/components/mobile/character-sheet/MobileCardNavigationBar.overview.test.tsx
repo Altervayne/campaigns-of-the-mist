@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 // -- Type Imports --
-import type { Card } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 /*
  * The overview button used to hide below two cards, back when the overview only reordered. It now
@@ -15,16 +15,16 @@ import type { Card } from '@/lib/types/character';
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('@/lib/stores/appSettingsStore', () => ({ useAppSettingsStore: () => false }));
-vi.mock('@/lib/utils/character', () => ({ deriveCardTitle: () => 'Card' }));
+vi.mock('@/lib/utils/character', () => ({ deriveCardTitle: () => 'Card', deriveJournalTitle: () => 'Journal' }));
 
 import { MobileCardNavigationBar } from './MobileCardNavigationBar';
 
-const card = (id: string): Card => ({ id } as unknown as Card);
+const cardItem = (id: string): ResolvedSheetItem => ({ kind: 'card', id, card: { id } } as unknown as ResolvedSheetItem);
 
-const mount = (cards: Card[], onReorder = vi.fn()) => {
+const mount = (items: ResolvedSheetItem[], onReorder = vi.fn()) => {
    render(
       <MobileCardNavigationBar
-         cards={cards}
+         items={items}
          safeCardIndex={0}
          isLeftHanded={false}
          onPrevious={() => {}}
@@ -42,7 +42,7 @@ afterEach(cleanup);
 
 describe('card nav bar overview button', () => {
    it('shows with a single card', () => {
-      const onReorder = mount([card('c1')]);
+      const onReorder = mount([cardItem('c1')]);
 
       const button = screen.getByLabelText('Toolbelt.cardOverview');
       fireEvent.click(button);
@@ -51,7 +51,7 @@ describe('card nav bar overview button', () => {
    });
 
    it('shows with several cards', () => {
-      mount([card('c1'), card('c2'), card('c3')]);
+      mount([cardItem('c1'), cardItem('c2'), cardItem('c3')]);
 
       expect(screen.getByLabelText('Toolbelt.cardOverview')).toBeTruthy();
    });

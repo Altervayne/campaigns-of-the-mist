@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { buildSheetLayout, resolveSheetLayout, appendSheetLayoutEntry, removeSheetLayoutEntry, reorderSheetLayoutEntries } from './sheetLayout';
+import { buildSheetLayout, resolveSheetLayout, resolveSheetItems, appendSheetLayoutEntry, removeSheetLayoutEntry, reorderSheetLayoutEntries } from './sheetLayout';
 
 // -- Type Imports --
 import type { Character, Card } from '@/lib/types/character';
@@ -66,6 +66,70 @@ describe('resolveSheetLayout (self-healing)', () => {
          { kind: 'card', id: 'c2' },
          { kind: 'journal', id: 'j1' },
       ]);
+   });
+});
+
+describe('resolveSheetItems', () => {
+   it('joins a journal-less character 1:1 with cards, in order', () => {
+      const cards = [card('c1'), card('c2'), card('c3')];
+      const items = resolveSheetItems(character(cards, [], buildSheetLayout({ cards, journals: [] })));
+
+      // The mobile switch is a no-op with no journals: same ids, same order, all cards.
+      expect(items.map((item) => item.id)).toEqual(['c1', 'c2', 'c3']);
+      expect(items.every((item) => item.kind === 'card')).toBe(true);
+      // Each item references the live card object, not a copy.
+      items.forEach((item, index) => {
+         if (item.kind === 'card') expect(item.card).toBe(cards[index]);
+      });
+   });
+
+   it('joins the interleaved manifest to live card/journal objects in manifest order', () => {
+      const c1 = card('c1');
+      const j1 = journal('j1');
+      const c2 = card('c2');
+      const layout = [{ kind: 'journal', id: 'j1' }, { kind: 'card', id: 'c1' }, { kind: 'card', id: 'c2' }] as Character['sheetLayout'];
+
+      const items = resolveSheetItems(character([c1, c2], [j1], layout));
+
+      expect(items).toEqual([
+         { kind: 'journal', id: 'j1', journal: j1 },
+         { kind: 'card', id: 'c1', card: c1 },
+         { kind: 'card', id: 'c2', card: c2 },
+      ]);
+   });
+
+   it('self-heals through resolveSheetLayout (drops an orphan, appends the unlisted)', () => {
+      const layout = [{ kind: 'card', id: 'gone' }, { kind: 'journal', id: 'j1' }] as Character['sheetLayout'];
+      const items = resolveSheetItems(character([card('c1')], [journal('j1')], layout));
+
+      // 'gone' is dropped; the unlisted c1 is appended (cards before journals in the append pass).
+      expect(items.map((item) => `${item.kind}:${item.id}`)).toEqual(['journal:j1', 'card:c1']);
+   });
+
+   it('does not mutate the character content arrays', () => {
+      const cards = [card('c1'), card('c2')];
+      const journals = [journal('j1')];
+      const layout = [{ kind: 'journal', id: 'j1' }, { kind: 'card', id: 'c1' }] as Character['sheetLayout'];
+
+      resolveSheetItems(character(cards, journals, layout));
+
+      expect(cards.map((c) => c.id)).toEqual(['c1', 'c2']);
+      expect(journals.map((j) => j.id)).toEqual(['j1']);
+   });
+
+   it('a cards-only reorder by id matches the retired index-splice order', () => {
+      // The old reorderCards(oldIndex,newIndex) spliced the cards array. With no journals the manifest
+      // is cards 1:1, so the id-based reorderSheetLayout must produce the identical order.
+      const cards = [card('c1'), card('c2'), card('c3')];
+      const layout = buildSheetLayout({ cards, journals: [] });
+
+      const indexSplice = Array.from(cards);
+      const [moved] = indexSplice.splice(0, 1);
+      indexSplice.splice(2, 0, moved);
+
+      const byId = reorderSheetLayoutEntries(layout, cards[0].id, cards[2].id);
+
+      expect(byId.map((entry) => entry.id)).toEqual(indexSplice.map((c) => c.id));
    });
 });
 

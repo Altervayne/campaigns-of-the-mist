@@ -773,6 +773,8 @@
       "otherscapeLoadoutCard": "Équipement",
       "themeCard": "Thème",
       "portraitCard": "Portrait",
+      "journalUntitled": "[TO COMPLETE]",
+      "journalPageCount": "[TO COMPLETE]",
       "challenge": {
          "limits": "Limites",
          "tagsAndStatuses": "Traits & Statuts",

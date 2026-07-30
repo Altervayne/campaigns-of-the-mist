@@ -15,15 +15,15 @@ import { ChevronLeft, ChevronRight, RefreshCw, LayoutList } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { deriveCardTitle } from '@/lib/utils/character';
+import { deriveCardTitle, deriveJournalTitle } from '@/lib/utils/character';
 
 // -- Type Imports --
-import type { Card } from '@/lib/types/character';
+import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
 
 
 interface MobileCardNavigationBarProps {
-	cards: Card[];
+	items: ResolvedSheetItem[];
 	safeCardIndex: number;
 	isLeftHanded: boolean;
 	onPrevious: () => void;
@@ -43,24 +43,31 @@ interface MobileCardNavigationBarProps {
  *
  * The prev/next arrows are 44px, meeting the touch-target guideline; the dots do
  * not, and are deliberately sub-guideline (see the comment on the dot row). The
- * dot row wraps when a character has enough cards to overflow one line. The flip
+ * dot row wraps when a character has enough items to overflow one line. The flip
  * and overview controls are grouped on the handedness-leading side (left for
  * left-handed, right otherwise) so they stay thumb-reachable while the prev/next
  * steppers remain at the outer edges. Flip toggles the current card's face via the
  * sheet's `onFlip`; for a card whose effective view mode is side-by-side
  * this is a visual no-op (both faces already show), matching the prior
- * edge-swipe-flip semantics. `onReorder` opens the card overview - the same action
- * the toolbelt exposes, surfaced here as a discoverable front door. The overview
- * also owns Add Card, so this button shows from one card up rather than only when
- * there is something to reorder.
+ * edge-swipe-flip semantics. A journal has no faces, so the flip control is hidden
+ * on a journal entry and its title reads from the journal. `onReorder` opens the
+ * overview - the same action the toolbelt exposes, surfaced here as a discoverable
+ * front door. The overview also owns Add Card, so this button shows from one item
+ * up rather than only when there is something to reorder.
  */
-export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, onPrevious, onNext, onSelectCard, onFlip, onReorder, touchHandlers }: MobileCardNavigationBarProps) {
+export function MobileCardNavigationBar({ items, safeCardIndex, isLeftHanded, onPrevious, onNext, onSelectCard, onFlip, onReorder, touchHandlers }: MobileCardNavigationBarProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 
-	// The explicit flip + overview controls, grouped on the handedness-leading side
-	// so the two most-used card actions stay thumb-reachable next to the dot row.
-	const flipButton = (
+	const activeItem = items[safeCardIndex];
+	const activeTitle = activeItem
+		? activeItem.kind === 'card' ? deriveCardTitle(activeItem.card, t) : deriveJournalTitle(activeItem.journal, t)
+		: '';
+
+	// The explicit flip control, hidden on a journal entry (a notebook has no faces).
+	// Grouped on the handedness-leading side with the overview so the two most-used
+	// card actions stay thumb-reachable next to the dot row.
+	const flipButton = activeItem?.kind === 'card' ? (
 		<IconButton
 			variant="outline"
 			size="sm"
@@ -70,12 +77,12 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 		>
 			<RefreshCw className="h-5 w-5" />
 		</IconButton>
-	);
+	) : null;
 
 	// The overview is also available in the toolbelt; this is its discoverable front
-	// door. It shows from one card up, because the overview carries Add Card and a
-	// single-card sheet still needs a route to it.
-	const overviewButton = cards.length >= 1 ? (
+	// door. It shows from one item up, because the overview carries Add Card and a
+	// single-item sheet still needs a route to it.
+	const overviewButton = items.length >= 1 ? (
 		<IconButton
 			variant="outline"
 			size="sm"
@@ -115,9 +122,9 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 			{isLeftHanded && leadingControls}
 
 			<div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5">
-				{/* Card Title */}
+				{/* Item Title */}
 				<span className="text-xs font-medium truncate max-w-full text-center">
-					{deriveCardTitle(cards[safeCardIndex], t)}
+					{activeTitle}
 				</span>
 
 				{/* Dot Indicators - compact pills packed together and centred between the
@@ -125,9 +132,9 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 				    (the prev/next arrows remain the primary, full-size navigation) so the
 				    pills read as one tidy row rather than being spread across wide boxes. */}
 				<div className="flex flex-wrap items-center justify-center gap-0.5">
-					{cards.map((_, index) => (
+					{items.map((item, index) => (
 						<button
-							key={index}
+							key={item.id}
 							onClick={() => onSelectCard(index)}
 							className="flex h-6 w-4 shrink-0 items-center justify-center"
 							aria-label={t('MobileCardNavigationBar.goToCard', { number: index + 1 })}
@@ -146,7 +153,7 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 
 				{/* Gesture tip: gated on the user's "gesture tips" setting, shown only
 				    when navigation is possible. Unobtrusive and non-interactive. */}
-				{areGestureHintsEnabled && cards.length > 1 && (
+				{areGestureHintsEnabled && items.length > 1 && (
 					<span className="text-[10px] leading-none text-muted-foreground/70 pointer-events-none">
 						{t('MobileCardNavigationBar.swipeHint')}
 					</span>
@@ -159,7 +166,7 @@ export function MobileCardNavigationBar({ cards, safeCardIndex, isLeftHanded, on
 				variant="outline"
 				size="sm"
 				onClick={onNext}
-				disabled={safeCardIndex === cards.length - 1}
+				disabled={safeCardIndex === items.length - 1}
 				aria-label={t('MobileCardNavigationBar.nextCard')}
 				className="h-11 w-11 shrink-0"
 			>
