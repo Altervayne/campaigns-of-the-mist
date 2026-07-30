@@ -12,7 +12,7 @@ export const patchNotes: PatchNote[] = [
 ### 🔧 Changes
 * Edit mode is now a toggle on the character sheet's tab bar on mobile, instead of being tucked away in the toolbelt.
 * Undo and Redo no longer close the mobile toolbelt, so you can use them several times in a row.
-* "Unload Character" is now "Close Sheet". It warns before discarding unsaved changes and offers to save first.
+* On mobile, "Unload Character" is now "Close Sheet". It warns before discarding unsaved changes and offers to save first.
 * The image cropper no longer rejects small or awkwardly-shaped images. It warns that a small crop may look soft, but lets you use it.
 
 ### 🐛 Bugfixes
