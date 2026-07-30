@@ -114,7 +114,8 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 			icon: Undo2,
 			onClick: () => canUndo && undo(),
 			group: 'edit',
-			show: true
+			show: true,
+			keepOpen: true
 		});
 
 		globalActions.push({
@@ -123,7 +124,8 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 			icon: Redo2,
 			onClick: () => canRedo && redo(),
 			group: 'edit',
-			show: true
+			show: true,
+			keepOpen: true
 		});
 
 		// ==================

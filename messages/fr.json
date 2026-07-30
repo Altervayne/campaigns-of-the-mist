@@ -513,7 +513,7 @@
       "reset": "Réinitialiser",
       "cancel": "Annuler",
       "apply": "Appliquer",
-      "tooSmall": "Ce redimensionnement est trop petit. Veuillez tracer une plus grande zone."
+      "lowResolution": "[TO COMPLETE]"
    },
    "MobileEditPortrait": {
       "title": "Modifier le Portrait",

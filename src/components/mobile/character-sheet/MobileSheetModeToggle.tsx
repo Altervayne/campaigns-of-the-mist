@@ -41,7 +41,7 @@ export function MobileSheetModeToggle() {
 			}}
 			aria-label={t('MobileCharacterSheet.modeToggle')}
 			data-tutorial="sheet-mode-toggle"
-			className="mr-2 shrink-0 cursor-pointer text-muted-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+			className="mx-2 shrink-0 cursor-pointer text-muted-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
 		>
 			<Edit className="size-5" />
 		</Toggle>

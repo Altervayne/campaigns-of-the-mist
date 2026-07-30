@@ -515,7 +515,7 @@
       "reset": "Reset",
       "cancel": "Cancel",
       "apply": "Apply",
-      "tooSmall": "This crop is too small. Drag a larger area."
+      "lowResolution": "Low resolution: the result may look soft or pixelated at this size."
    },
 
    "MobileEditPortrait": {

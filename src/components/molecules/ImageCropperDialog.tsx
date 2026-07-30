@@ -24,7 +24,7 @@ import { cropImage, type CropRegion } from '@/lib/assets/cropImage';
  * resolve nothing. Fixed frame colors live in the stage; all chrome here stays on tokens.
  */
 
-/** Below this on the short edge the cut is too small to be worth keeping; Accept is blocked. */
+/** Below this on the short edge the cut warns as low-resolution; it never blocks Accept. */
 const MIN_CROP_EDGE_PX = 200;
 
 interface ImageCropperDialogProps {
@@ -47,7 +47,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
    const [isCutting, setIsCutting] = useState(false);
 
    const lockedAspect = aspect === 'free' ? undefined : aspect;
-   const tooSmall = region !== null && Math.min(region.width, region.height) < MIN_CROP_EDGE_PX;
+   const lowResolution = region !== null && Math.min(region.width, region.height) < MIN_CROP_EDGE_PX;
 
    const reset = () => {
       setRotation(0);
@@ -105,12 +105,13 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
                   </IconButton>
                </div>
 
-               {tooSmall && <p className="shrink-0 px-4 pb-1 text-sm text-destructive">{t('ImageCropper.tooSmall')}</p>}
+               {lowResolution && <p className="shrink-0 px-4 pb-1 text-sm text-muted-foreground">{t('ImageCropper.lowResolution')}</p>}
 
-               {/* Footer: full-width touch targets, clear of the bottom inset. */}
-               <div className="flex shrink-0 gap-2 border-t border-border px-4 py-3 pb-safe">
+               {/* Footer: full-width touch targets. The safe-area inset adds to the base padding so the
+                   bottom gutter survives on devices without a home indicator. */}
+               <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                   <Button type="button" variant="outline" onClick={onCancel} className="h-11 flex-1 cursor-pointer">{t('ImageCropper.cancel')}</Button>
-                  <Button type="button" onClick={accept} disabled={!region || tooSmall || isCutting} className="h-11 flex-1 cursor-pointer">
+                  <Button type="button" onClick={accept} disabled={!region || isCutting} className="h-11 flex-1 cursor-pointer">
                      {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                      {t('ImageCropper.apply')}
                   </Button>
@@ -155,11 +156,11 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
                </IconButton>
             </div>
 
-            {tooSmall && <p className="px-4 pb-2 text-sm text-destructive">{t('ImageCropper.tooSmall')}</p>}
+            {lowResolution && <p className="px-4 pb-2 text-sm text-muted-foreground">{t('ImageCropper.lowResolution')}</p>}
 
             <DialogFooter className="border-t border-border px-4 py-3">
                <Button type="button" variant="outline" onClick={onCancel} className="cursor-pointer">{t('ImageCropper.cancel')}</Button>
-               <Button type="button" onClick={accept} disabled={!region || tooSmall || isCutting} className="cursor-pointer">
+               <Button type="button" onClick={accept} disabled={!region || isCutting} className="cursor-pointer">
                   {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                   {t('ImageCropper.apply')}
                </Button>

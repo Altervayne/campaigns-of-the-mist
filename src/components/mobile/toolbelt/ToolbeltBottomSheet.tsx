@@ -32,8 +32,9 @@ interface ToolbeltBottomSheetProps {
  * actions are laid out as a three-column grid of icon-over-label tiles, grouped
  * into the item-specific section (shown only when the context supplies item
  * actions) and the always-present global section. Tapping a tile runs its action
- * and closes the sheet. The grid scrolls within a capped height for long action
- * lists, and the content clears the home indicator via the `pb-safe` utility.
+ * and closes the sheet, unless the action sets `keepOpen` (undo/redo, run repeatedly
+ * in a row). The grid scrolls within a capped height for long action lists, and the
+ * content clears the home indicator via the `pb-safe` utility.
  *
  * Built on the shared {@link MobileBottomSheet} scaffold (backdrop + slide), so
  * this component owns only the toolbelt-specific chrome and tile layout. The
@@ -95,7 +96,7 @@ export default function ToolbeltBottomSheet({
 				data-tutorial={action.tutorialAnchor}
 				onClick={() => {
 					action.onClick();
-					onOpenChange(false);
+					if (!action.keepOpen) onOpenChange(false);
 				}}
 				className={cn(
 					"flex flex-col items-center justify-center gap-1.5 rounded-lg p-2 min-h-20 text-center transition-colors",

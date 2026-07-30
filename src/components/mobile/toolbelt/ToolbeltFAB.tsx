@@ -254,7 +254,7 @@ export default function ToolbeltFAB({
                                           onClick={(e) => {
                                              e.stopPropagation()
                                              action.onClick();
-                                             onOpenChange(false);
+                                             if (!action.keepOpen) onOpenChange(false);
                                           }}
 														style={{
 															transform: `scale(${scale})`,
