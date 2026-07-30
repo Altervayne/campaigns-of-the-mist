@@ -7,6 +7,25 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.0.1',
+      content: `
+### 🔧 Changes
+* Edit mode is now a toggle on the character sheet's tab bar on mobile, instead of being tucked away in the toolbelt.
+* Undo and Redo no longer close the mobile toolbelt, so you can use them several times in a row.
+* "Unload Character" is now "Close Sheet". It warns before discarding unsaved changes and offers to save first.
+* The image cropper no longer rejects small or awkwardly-shaped images. It warns that a small crop may look soft, but lets you use it.
+
+### 🐛 Bugfixes
+* Fixed editing two fields in a row on a theme card (a main tag, then the quest / mystery / identity) sometimes wiping the first one because of debounce concurrency.
+* Fixed multi-selections on boards only being movable by the toolbar's grab handle. You can now drag the whole group by any selected element.
+* Fixed dragging a board element by an image on it starting a browser image-drag instead of moving the element.
+* Fixed selection toolbars getting cut off at the edges of the board, near the sidebar and drawer.
+* Fixed the multi-selection toolbar drifting off-screen when panning.
+* Fixed reordering a journal's pages also dragging the journal across the board.
+* Fixed "Add to character" showing in the mobile drawer for items that can't be added to a character.
+`,
+   },
+   {
       version: '2.0.0',
       content: `
 ## 🎉 Campaigns of the Mist
