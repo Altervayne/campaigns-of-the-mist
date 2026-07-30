@@ -31,9 +31,11 @@ interface MobileAddCardProps {
 	mode: 'create' | 'edit';
 	cardData?: CardData;
 	game: GameSystem;
+	/** Mints the portrait singleton and picks its image. Omitted once the sheet has one. */
+	onCreatePortrait?: () => void;
 }
 
-export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game }: MobileAddCardProps) {
+export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game, onCreatePortrait }: MobileAddCardProps) {
 	const { t } = useTranslation();
 	const { t: tTheme } = useTranslation();
 
@@ -121,6 +123,13 @@ export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game 
 		}
 	};
 
+	// The portrait needs no configuration, so its row acts on the spot and leaves rather than
+	// arming the footer's Confirm.
+	const handleSelectPortrait = () => {
+		onCreatePortrait?.();
+		onBack();
+	};
+
 	const handleThemeTypeChange = (value: string) => {
 		if (game === 'LEGENDS') {
 			if (value === 'Origin' || value === 'Adventure' || value === 'Greatness') {
@@ -171,6 +180,7 @@ export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game 
 						mode={mode}
 						cardType={cardType}
 						onSelect={setCardType}
+						onSelectPortrait={mode === 'create' && onCreatePortrait ? handleSelectPortrait : undefined}
 					/>
 
 					{/* Theme Type & Themebook (only for CHARACTER_THEME) */}

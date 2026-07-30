@@ -12,13 +12,13 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 // - `setupFiles: ['fake-indexeddb/auto']`: installs an in-memory IndexedDB
 //   implementation onto the global scope before any test runs, so Dexie has a
 //   backing store without a browser.
-// - `include`: the framework-agnostic layers (the drawer/board lib and the pure-logic hooks)
-//   plus the component and page tests, which carry their own jsdom pragma.
+// - `include`: every test under the four source roots, both extensions. A hook test that renders
+//   needs `.tsx`, so per-root extension lists silently skip files - keep these globs extension-agnostic.
 export default defineConfig({
    plugins: [tsconfigPaths()],
    test: {
       environment: 'node',
       setupFiles: ['fake-indexeddb/auto'],
-      include: ['src/lib/**/*.test.ts', 'src/hooks/**/*.test.ts', 'src/components/**/*.test.tsx', 'src/pages/**/*.test.tsx'],
+      include: ['src/{lib,hooks,components,pages}/**/*.test.{ts,tsx}'],
    },
 });

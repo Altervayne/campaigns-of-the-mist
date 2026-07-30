@@ -23,11 +23,8 @@ interface MobileToolbeltProps {
 	onOpenChange: (open: boolean) => void;
 	activeTab?: SheetTab;
 	isMenuFABExpanded?: boolean;
-	onEnterCardReorderMode?: () => void;
-	onOpenAddCard?: () => void;
 	onSaveToDrawer?: (item: Card | Tracker) => void;
 	onEditCard?: (card: Card) => void;
-	onCreatePortrait?: () => void;
 	onEditPortrait?: () => void;
 }
 
@@ -38,11 +35,8 @@ export default function MobileToolbelt({
 	onOpenChange,
 	activeTab,
 	isMenuFABExpanded,
-	onEnterCardReorderMode,
-	onOpenAddCard,
 	onSaveToDrawer,
 	onEditCard,
-	onCreatePortrait,
 	onEditPortrait
 }: MobileToolbeltProps) {
 	const { t } = useTranslation();
@@ -52,7 +46,7 @@ export default function MobileToolbelt({
 	const { triggerImport, pendingUpdate, confirmUpdate, cancelUpdate } = useCharacterUpdateFromFile();
 
 	// Build action lists based on context and active tab
-	const { itemActions, globalActions } = useToolbeltActions(context, activeTab, onEnterCardReorderMode, onOpenAddCard, onSaveToDrawer, onEditCard, triggerImport, onCreatePortrait, onEditPortrait);
+	const { itemActions, globalActions } = useToolbeltActions(context, activeTab, onSaveToDrawer, onEditCard, triggerImport, onEditPortrait);
 
 	// Render appropriate UI based on mode. In side-panel mode the actions are now
 	// presented as a compact bottom sheet (it no longer covers the selected item).

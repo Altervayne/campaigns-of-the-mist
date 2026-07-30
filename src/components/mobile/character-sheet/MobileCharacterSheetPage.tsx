@@ -34,6 +34,12 @@ import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import { useIsBootHydrating, useCharacterBootStore } from '@/lib/character/characterPersistence';
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
+// -- Hook Imports --
+import { useCreatePortrait } from '@/hooks/mobile/useCreatePortrait';
+
+// -- Utils Imports --
+import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
+
 // -- Type Imports --
 import type { CreateCardOptions } from '@/lib/types/creation';
 import type { Card, Character } from '@/lib/types/character';
@@ -81,6 +87,11 @@ export default function MobileCharacterSheetPage() {
 	const { mobileOpenCharacter } = useTabManagerActions();
 	const [cardToEdit, setCardToEdit] = useState<Card | null>(null);
 	const [newlyCreatedCardId, setNewlyCreatedCardId] = useState<string | null>(null);
+
+	// The portrait is offered as a card type by the creator, so its picker + crop stage live here: the
+	// creator is a full-screen tab and the sheet under it is unmounted while it is open.
+	const { createPortrait, fileInputRef: portraitInputRef, handleFileSelected: onPortraitFileSelected, cropperDialog: portraitCropperDialog } = useCreatePortrait();
+	const hasPortrait = character?.cards.some((card) => card.cardType === 'IMAGE_CARD') ?? false;
 
 	// Track if we're handling a popstate event to avoid pushing duplicate history
 	const isNavigatingBack = useRef(false);
@@ -396,6 +407,7 @@ export default function MobileCharacterSheetPage() {
 						mode={cardToEdit ? 'edit' : 'create'}
 						cardData={cardToEdit ?? undefined}
 						game={character.game}
+						onCreatePortrait={hasPortrait ? undefined : createPortrait}
 					/>
 				)}
 				{activeTab === 'editPortrait' && character && (
@@ -428,6 +440,16 @@ export default function MobileCharacterSheetPage() {
 					/>
 				)
 			)}
+
+			{/* Portrait create: the picker + crop stage behind the creator's Portrait row. */}
+			<input
+				ref={portraitInputRef}
+				type="file"
+				accept={ACCEPT_IMAGE}
+				className="hidden"
+				onChange={onPortraitFileSelected}
+			/>
+			{portraitCropperDialog}
 
 			{/* App-wide dice tray (shared with desktop); overlays any tab, opened from the toolbelt. */}
 			<MobileDiceTraySheet />

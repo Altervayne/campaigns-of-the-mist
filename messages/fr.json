@@ -2135,7 +2135,8 @@
       "statuses": "Statuts",
       "storyTags": "Traits Narratifs",
       "storyThemes": "Thèmes Narratifs",
-      "cardOverview": "[TO COMPLETE]"
+      "cardOverview": "[TO COMPLETE]",
+      "modeToggle": "[TO COMPLETE]"
    },
    "MobileCardCarousel": {
       "noCards": "Aucune carte pour le moment"
@@ -2165,20 +2166,16 @@
       "workspaceSection": "Espace de travail",
       "undo": "Annuler",
       "redo": "Rétablir",
-      "editMode": "Mode Édition",
-      "playMode": "Mode Jeu",
       "dice": "Dés",
       "saveCharacter": "Enregistrer le Perso.",
       "saveCharacterAs": "Enregistrer sous... ",
       "exportCharacter": "Exporter le Perso.",
       "updateCharacter": "Mettre à jour du Fichier",
       "unloadCharacter": "Décharger le Perso.",
-      "addCard": "Ajouter une Carte",
       "addStatus": "Ajouter un Statut",
       "addStoryTag": "Ajouter un Trait Narratif",
       "addStoryTheme": "Ajouter un Thème Narratif",
       "cardOverview": "[TO COMPLETE]",
-      "createPortrait": "Créer un Portrait",
       "editPortrait": "Éditer le Portrait",
       "flipCard": "Retourner la Carte",
       "export": "Exporter",

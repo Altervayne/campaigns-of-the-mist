@@ -1,6 +1,9 @@
 // -- Library Imports --
 import { useTranslation } from 'react-i18next';
 
+// -- Component Imports --
+import { MobileSheetModeToggle } from '@/components/mobile/character-sheet/MobileSheetModeToggle';
+
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
@@ -16,12 +19,13 @@ interface MobileCharacterSheetTabBarProps {
 
 /**
  * The trackers/cards tab bar for the mobile character sheet. Renders the two tab
- * buttons (the cards tab showing a count badge). Purely presentational - active
- * tab, counts, and the change callback all come from the sheet.
+ * buttons (the cards tab showing a count badge) plus the Edit toggle on the trailing
+ * edge - the sheet's only global in-flow row, so a sheet-wide mode belongs here
+ * rather than in either tab's own chrome. Active tab, counts, and the change
+ * callback all come from the sheet; the mode toggle owns its own state.
  *
  * The toolbelt trigger no longer lives here: in tabs-and-menus mode it is the
- * dedicated Toolbelt button in the bottom navigation bar, so this bar is now
- * just the tab switcher.
+ * dedicated Toolbelt button in the bottom navigation bar.
  */
 export function MobileCharacterSheetTabBar({ activeTab, onTabChange, cardCount }: MobileCharacterSheetTabBarProps) {
 	const { t } = useTranslation();
@@ -59,6 +63,7 @@ export function MobileCharacterSheetTabBar({ activeTab, onTabChange, cardCount }
 					</span>
 				)}
 			</button>
+			<MobileSheetModeToggle />
 		</div>
 	);
 }

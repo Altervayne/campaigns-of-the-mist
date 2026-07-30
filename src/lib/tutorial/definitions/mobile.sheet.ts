@@ -23,8 +23,9 @@ import type { TutorialAction, TutorialDefinition } from '../tutorialTypes';
  * would strand the user on a surface where its anchor does not exist when they walk back into it. Nav is
  * driven through the serializable `mobileNav` bridge (the page owns its own local nav state); the
  * runner never captures a setter.
- * The toolbelt is opened for the Edit-toggle gate and closed again for the add-status gate so the
- * section's own add buttons show. Creations run on the seeded demo character, whose store carries no
+ * The toolbelt is opened for its own beat and closed again from the next one on, so the sheet's own
+ * chrome (the Edit toggle, the section add buttons) stays reachable. Creations run on the seeded
+ * demo character, whose store carries no
  * persistence handle, so the mutations live purely in memory. Gate predicates read the active
  * character store fresh; hooks go through `runTutorialAction`.
  */
@@ -122,17 +123,16 @@ export const MOBILE_SHEET_TUTORIAL: TutorialDefinition = {
          advance: { on: 'next-click' },
       },
       {
-         // Gate: the toolbelt stays open (the Edit tile lives inside it) and Edit starts off, so the
-         // gate is meaningful; both are re-established on arrival for back-navigation. The tile stays
-         // lit and tappable (`scrim:'none'` + `anchor-only`).
+         // Gate: the Edit toggle sits in the sheet tab bar, so the toolbelt closes here. Edit starts off so
+         // the gate is meaningful; both axes are re-established on arrival for back-navigation. Its anchor
+         // is the control's own key, not `edit-mode-toggle` (the desktop sidebar button).
          id: 'enter-edit',
-         onArrive: arriveAt({ sheetTab: 'trackers', toolbelt: true, reorder: false, editing: false }),
-         anchorKey: 'edit-mode-toggle',
+         onArrive: arriveAt({ sheetTab: 'trackers', toolbelt: false, reorder: false, editing: false }),
+         anchorKey: 'sheet-mode-toggle',
          titleKey: 'Tutorial.mobileSheet.enterEdit_title',
          bodyKey: 'Tutorial.mobileSheet.enterEdit_body',
-         placement: 'top',
+         placement: 'bottom',
          interaction: 'anchor-only',
-         scrim: 'none',
          gestureCue: { kind: 'tap' },
          advance: {
             on: 'user-action',

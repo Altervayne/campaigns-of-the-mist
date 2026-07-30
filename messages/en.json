@@ -2261,7 +2261,8 @@
       "statuses": "Statuses",
       "storyTags": "Story Tags",
       "storyThemes": "Story Themes",
-      "cardOverview": "Card Overview"
+      "cardOverview": "Card Overview",
+      "modeToggle": "Edit mode"
    },
    "MobileCardCarousel": {
       "noCards": "No cards yet"
@@ -2291,20 +2292,16 @@
       "workspaceSection": "Workspace",
       "undo": "Undo",
       "redo": "Redo",
-      "editMode": "Edit Mode",
-      "playMode": "Play Mode",
       "dice": "Dice",
       "saveCharacter": "Save Character",
       "saveCharacterAs": "Save Character as...",
       "exportCharacter": "Export Character",
       "updateCharacter": "Update from File",
       "unloadCharacter": "Unload Character",
-      "addCard": "Add Card",
       "addStatus": "Add Status",
       "addStoryTag": "Add Story Tag",
       "addStoryTheme": "Add Story Theme",
       "cardOverview": "Card Overview",
-      "createPortrait": "Create Portrait",
       "editPortrait": "Edit Portrait",
       "flipCard": "Flip Card",
       "export": "Export",

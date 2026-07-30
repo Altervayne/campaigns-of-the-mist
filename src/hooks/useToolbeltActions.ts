@@ -13,11 +13,8 @@ import {
 	ThumbsDown,
 	SplitSquareVertical,
 	Edit3,
-	PlusCircle,
 	Undo2,
 	Redo2,
-	Edit as EditIcon,
-	LayoutList,
 	Save,
    SaveAll,
    CreditCard,
@@ -60,9 +57,9 @@ import type { CardViewMode, Card, Tracker } from '@/lib/types/character';
 
 /**
  * Hook to build action lists for the Toolbelt based on the current context.
- * Returns both item-specific actions and global actions (like Add Card).
+ * Returns both item-specific actions (the selected card/tracker) and global ones.
  */
-export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'trackers' | 'cards', onEnterCardReorderMode?: () => void, onOpenAddCard?: () => void, onSaveToDrawer?: (item: Card | Tracker) => void, onEditCard?: (card: Card) => void, onImportUpdate?: () => void, onCreatePortrait?: () => void, onEditPortrait?: () => void): ToolbeltActions {
+export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'trackers' | 'cards', onSaveToDrawer?: (item: Card | Tracker) => void, onEditCard?: (card: Card) => void, onImportUpdate?: () => void, onEditPortrait?: () => void): ToolbeltActions {
 	const { t } = useTranslation();
 	const {
 		loadCharacter,
@@ -80,8 +77,7 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
       addStoryTheme
 	} = useCharacterActions();
 
-	const { toggleIsEditing, setCardDialogOpen, setDrawerOpen } = useAppGeneralStateStore((state) => state.actions);
-	const isEditing = useAppGeneralStateStore((state) => state.isEditing);
+	const { setCardDialogOpen, setDrawerOpen } = useAppGeneralStateStore((state) => state.actions);
 
 	const { setDiceTrayOpen } = useAppSettingsActions();
 
@@ -128,19 +124,6 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 			onClick: () => canRedo && redo(),
 			group: 'edit',
 			show: true
-		});
-
-		// ==================
-		//  Edit Mode Toggle (in FAB mode)
-		// ==================
-		globalActions.push({
-			id: 'toggle-edit-mode',
-			label: isEditing ? (t('Toolbelt.playMode')) : (t('Toolbelt.editMode')),
-			icon: EditIcon,
-			onClick: () => toggleIsEditing(),
-			group: 'edit',
-			show: true,
-			tutorialAnchor: 'edit-mode-toggle'
 		});
 
 		// ==================
@@ -264,50 +247,8 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		// ==================
 		//  Context-aware Add buttons
 		// ==================
-		// Add Card (only on cards tab)
-		if (activeTab === 'cards') {
-			// Card overview (jump, reorder, add)
-			if (onEnterCardReorderMode) {
-				globalActions.push({
-					id: 'reorder-cards',
-					label: t('Toolbelt.cardOverview'),
-					icon: LayoutList,
-					onClick: onEnterCardReorderMode,
-					group: 'add',
-					show: true
-				});
-			}
-
-			globalActions.push({
-				id: 'add-card',
-				label: t('Toolbelt.addCard'),
-				icon: PlusCircle,
-				group: 'add',
-				onClick: () => {
-					if (onOpenAddCard) {
-						onOpenAddCard();
-					} else {
-						setCardDialogOpen(true);
-					}
-				},
-				show: true
-			});
-
-			// The portrait is a sheet singleton: create it (and pick its image) when absent, otherwise open
-			// its edit screen. Handlers are supplied only where the create/edit surfaces exist, so this stays
-			// hidden without them.
-			if (onCreatePortrait) {
-				const hasPortrait = character?.cards.some((c) => c.cardType === 'IMAGE_CARD') ?? false;
-				globalActions.push({
-					id: 'portrait',
-					label: hasPortrait ? t('Toolbelt.editPortrait') : t('Toolbelt.createPortrait'),
-					icon: ImageIcon,
-					group: 'add',
-					onClick: () => (hasPortrait ? onEditPortrait?.() : onCreatePortrait()),
-					show: true
-				});
-			}
-		}
+		// The cards tab has none: the overview and the card creator (portrait included) are reached from
+		// the card nav bar and the overview's own add row.
 
 		// Add trackers (only on trackers tab)
 		if (activeTab === 'trackers') {
@@ -432,6 +373,19 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 						}
 					},
 					show: true
+				});
+			}
+
+			// The portrait's own editor (frame aspect, replace, delete). Contextual to the portrait card
+			// rather than global: it is a sheet singleton, so it only has a meaning while that card is selected.
+			// Deleting it needs nothing special - `delete-card` above already drops any non-character card.
+			if (card.cardType === 'IMAGE_CARD') {
+				pushItem({
+					id: 'edit-portrait',
+					label: t('Toolbelt.editPortrait'),
+					icon: ImageIcon,
+					onClick: () => onEditPortrait?.(),
+					show: !!onEditPortrait
 				});
 			}
 
@@ -600,7 +554,6 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		context,
 		activeTab,
 		t,
-		isEditing,
 		canUndo,
 		canRedo,
 		undo,
@@ -619,7 +572,6 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		addStoryTag,
 		addStoryTheme,
 		setCardDialogOpen,
-		toggleIsEditing,
 		setDiceTrayOpen,
 		initiateItemDrop,
 		reloadCurrentFolder,
@@ -627,12 +579,9 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		character,
 		saveCharacterAsToDrawer,
 		mobileReturnToMenu,
-		onEnterCardReorderMode,
-		onOpenAddCard,
 		onSaveToDrawer,
 		onEditCard,
 		onImportUpdate,
-		onCreatePortrait,
 		onEditPortrait,
 	]);
 }
