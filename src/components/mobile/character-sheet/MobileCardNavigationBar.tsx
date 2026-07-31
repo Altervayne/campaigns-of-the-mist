@@ -1,6 +1,3 @@
-// -- React Imports --
-import type { TouchEvent } from 'react';
-
 // -- Library Imports --
 import { useTranslation } from 'react-i18next';
 
@@ -31,15 +28,14 @@ interface MobileCardNavigationBarProps {
 	onSelectCard: (index: number) => void;
 	onFlip: () => void;
 	onReorder: () => void;
-	touchHandlers: { onTouchStart: (event: TouchEvent) => void; onTouchEnd: (event: TouchEvent) => void };
 }
 
 /**
  * The card navigation bar shown beneath the carousel in normal card view:
  * previous/next buttons, the current card's title (via the shared
- * `deriveCardTitle`), a row of dot indicators, and an explicit flip control.
- * Carries the nav-bar horizontal-navigate swipe handlers spread from the sheet's
- * gesture hook. Purely presentational; the `data-tutorial` anchor is preserved.
+ * `deriveCardTitle`), a row of dot indicators, and an explicit flip control. Its
+ * arrows and dots drive the sheet pager through the shared settle motion. Purely
+ * presentational; the `data-tutorial` anchor is preserved.
  *
  * The prev/next arrows are 44px, meeting the touch-target guideline; the dots do
  * not, and are deliberately sub-guideline (see the comment on the dot row). The
@@ -55,7 +51,7 @@ interface MobileCardNavigationBarProps {
  * front door. The overview also owns Add Card, so this button shows from one item
  * up rather than only when there is something to reorder.
  */
-export function MobileCardNavigationBar({ items, safeCardIndex, isLeftHanded, onPrevious, onNext, onSelectCard, onFlip, onReorder, touchHandlers }: MobileCardNavigationBarProps) {
+export function MobileCardNavigationBar({ items, safeCardIndex, isLeftHanded, onPrevious, onNext, onSelectCard, onFlip, onReorder }: MobileCardNavigationBarProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 
@@ -105,7 +101,6 @@ export function MobileCardNavigationBar({ items, safeCardIndex, isLeftHanded, on
 	return (
 		<div
 			className="shrink-0 flex items-center justify-between gap-2 px-3 py-1.5 bg-card border-t border-border"
-			{...touchHandlers}
 			data-tutorial="card-navigation-bar"
 		>
 			<IconButton

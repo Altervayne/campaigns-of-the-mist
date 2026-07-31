@@ -2116,6 +2116,8 @@
       "addRelationship": "Add Crew Member",
       "companionPlaceholder": "Member",
       "relationshipPlaceholder": "Relation",
+      "relationshipCompanionNoName": "NO NAME",
+      "relationshipRelationNoName": "NO RELATION",
       "Specials": {
          "title": "Specials",
          "addSpecial": "Add Special"
@@ -2132,6 +2134,8 @@
       "companionPlaceholder": "Fellow",
       "relationship": "Relation",
       "relationshipPlaceholder": "Relation",
+      "relationshipCompanionNoName": "NO NAME",
+      "relationshipRelationNoName": "NO RELATION",
 
       "quintessences": "Quintessences",
       "addQuintessence": "Add Quintessence"
@@ -2143,10 +2147,12 @@
       "placeholder": "Write your item..."
    },
    "quintessences": {
-      "placeholder": "Write your quintessence..."
+      "placeholder": "Write your quintessence...",
+      "noName": "NO QUINTESSENCE"
    },
    "improvements": {
-      "placeholder": "Write your improvement..."
+      "placeholder": "Write your improvement...",
+      "noName": "NO IMPROVEMENT"
    },
    "specials": {
       "placeholder": "Write your special trait...",

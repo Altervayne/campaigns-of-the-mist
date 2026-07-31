@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/check-i18n.mjs",
     "build": "tsc -b && vite build",
     "postbuild": "node scripts/check-precache.mjs",
     "check:precache": "node scripts/check-precache.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

@@ -282,7 +282,7 @@
       "journalBookmarkPlaceholder": "Marque-page",
       "journalBookmarks": "Marque-pages",
       "journalNoBookmarks": "Aucun marque-page pour l'instant",
-      "journalPages": "[TO COMPLETE]",
+      "journalPages": "Pages",
       "journalReorderPages": "Réordonner les pages",
       "journalPageLabel": "Page {{number}}",
       "journalEmptyPage": "Page vide",
@@ -774,8 +774,8 @@
       "otherscapeLoadoutCard": "Équipement",
       "themeCard": "Thème",
       "portraitCard": "Portrait",
-      "journalUntitled": "[TO COMPLETE]",
-      "journalPageCount": "[TO COMPLETE]",
+      "journalUntitled": "Journal sans titre",
+      "journalPageCount": "pg {{current}} / {{total}}",
       "challenge": {
          "limits": "Limites",
          "tagsAndStatuses": "Traits & Statuts",
@@ -2002,6 +2002,8 @@
       "addRelationship": "Ajouter un Membre",
       "companionPlaceholder": "Membre",
       "relationshipPlaceholder": "Relation",
+      "relationshipCompanionNoName": "SANS NOM",
+      "relationshipRelationNoName": "SANS RELATION",
       "Specials": {
          "title": "Spéciaux",
          "addSpecial": "Ajouter un Spécial"
@@ -2017,6 +2019,8 @@
       "companionPlaceholder": "Camarade",
       "relationship": "Relation",
       "relationshipPlaceholder": "Relation",
+      "relationshipCompanionNoName": "SANS NOM",
+      "relationshipRelationNoName": "SANS RELATION",
       "quintessences": "Quintessences",
       "addQuintessence": "Créer une Quintessence"
    },
@@ -2027,10 +2031,12 @@
       "placeholder": "Entrez votre objet..."
    },
    "quintessences": {
-      "placeholder": "Entrez votre quintessence..."
+      "placeholder": "Entrez votre quintessence...",
+      "noName": "SANS QUINTESSENCE"
    },
    "improvements": {
-      "placeholder": "Entrez votre amélioration..."
+      "placeholder": "Entrez votre amélioration...",
+      "noName": "SANS AMÉLIORATION"
    },
    "specials": {
       "placeholder": "Entrez votre trait spécial...",
@@ -2160,13 +2166,13 @@
       "close": "Fermer"
    },
    "Workspace": {
-      "switcherTitle": "[TO COMPLETE]",
-      "openSwitcher": "[TO COMPLETE]",
-      "newWorkspace": "[TO COMPLETE]",
-      "desktopOnly": "[TO COMPLETE]",
-      "closeConfirmTitle": "[TO COMPLETE]",
-      "closeConfirmDirtyBody": "[TO COMPLETE]",
-      "closeConfirmCleanBody": "[TO COMPLETE]"
+      "switcherTitle": "Espace de travail",
+      "openSwitcher": "Changer d'espace",
+      "newWorkspace": "Nouvel espace",
+      "desktopOnly": "PC seulement",
+      "closeConfirmTitle": "Fermer l'espace ?",
+      "closeConfirmDirtyBody": "Les modifications non enregistrées seront perdues.",
+      "closeConfirmCleanBody": "Vous pourrez l'ouvrir à nouveau depuis le Tiroir."
    },
    "Toolbelt": {
       "title": "Ceinture à outils",
@@ -2312,6 +2318,6 @@
       "back": "Retour",
       "name": "Nom",
       "close": "Fermer",
-      "cancel": "[TO COMPLETE]"
+      "cancel": "Annuler"
    }
 }

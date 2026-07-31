@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useEffect, type TouchEvent } from 'react';
+import { useEffect } from 'react';
 
 // -- Library Imports --
 import { useTranslation } from 'react-i18next';
@@ -44,7 +44,6 @@ interface MobileTrackersSectionProps {
 	onAddStoryTag: () => void;
 	onAddStoryTheme: () => void;
 	isLeftHanded: boolean;
-	touchHandlers: { onTouchStart: (event: TouchEvent) => void; onTouchEnd: (event: TouchEvent) => void };
 }
 
 /**
@@ -55,16 +54,16 @@ interface MobileTrackersSectionProps {
  * The three groups are each their own `SortableContext` inside a single scoped
  * `DndContext`; reorder is constrained within a group via
  * {@link useMobileTrackerDragReorder}. The character, edit flags, selection, add
- * handlers, handedness, and the trackers-area swipe handlers (spread onto the
- * scroll container) all come from the sheet. The trackers-area touch handlers and
- * `data-tutorial` anchor are preserved.
+ * handlers, and handedness all come from the sheet. Horizontal paging is owned by
+ * the sheet pager (this is page 0), so the surface carries no swipe handlers; its
+ * vertical scroll and `data-tutorial` anchor are preserved.
  *
  * Note: the story-themes group intentionally gates its card's `isEditing` on
  * `isEditing` rather than `areTrackersEditable` (unlike the other two groups) -
  * preserved verbatim from the original; not a normalization target. Drag handles,
  * however, are gated uniformly on `areTrackersEditable` across all three groups.
  */
-export function MobileTrackersSection({ character, areTrackersEditable, isEditing, isMobileFABMode, selectedTrackerId, onSelectTracker, onAddStatus, onAddStoryTag, onAddStoryTheme, isLeftHanded, touchHandlers }: MobileTrackersSectionProps) {
+export function MobileTrackersSection({ character, areTrackersEditable, isEditing, isMobileFABMode, selectedTrackerId, onSelectTracker, onAddStatus, onAddStoryTag, onAddStoryTheme, isLeftHanded }: MobileTrackersSectionProps) {
 	const { t } = useTranslation();
 
 	// Drag-to-reorder within each tracker group
@@ -103,7 +102,6 @@ export function MobileTrackersSection({ character, areTrackersEditable, isEditin
 			// scroll clear of the FAB.
 			style={isMobileFABMode ? { paddingBottom: getFloatingContentPadding({ stagger: 1 }) } : undefined}
 			data-tutorial="trackers-section"
-			{...touchHandlers}
 		>
 			<div className="max-w-7xl mx-auto space-y-4">
 				{/* Statuses Section */}

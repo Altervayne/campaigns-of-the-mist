@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useState, useMemo, useEffect, startTransition } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Component Imports --
@@ -10,7 +10,7 @@ import { MobileCharacterNameHeader } from '@/components/mobile/character-sheet/M
 import { MobileCharacterSheetTabBar } from '@/components/mobile/character-sheet/MobileCharacterSheetTabBar';
 import { MobileTrackersSection } from '@/components/mobile/character-sheet/MobileTrackersSection';
 import { MobileCardReorderView } from '@/components/mobile/character-sheet/MobileCardReorderView';
-import { MobileCardArea } from '@/components/mobile/character-sheet/MobileCardArea';
+import { MobileSheetPager } from '@/components/mobile/character-sheet/MobileSheetPager';
 import { MobileCardNavigationBar } from '@/components/mobile/character-sheet/MobileCardNavigationBar';
 
 // -- Icon Imports --
@@ -21,7 +21,6 @@ import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterSt
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useMobileSaveToDrawer } from '@/hooks/mobile/useMobileSaveToDrawer';
-import { useMobileCardSheetGestures } from '@/hooks/mobile/useMobileCardSheetGestures';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -111,21 +110,14 @@ export default function MobileCharacterSheet({
 	// in the same order, so nothing changes there.
 	const layout = useMemo(() => (character ? resolveSheetItems(character) : []), [character]);
 
-	// Card navigation state
-	const [currentCardIndex, setCurrentCardIndex] = useState(0);
+	// Card navigation state. Seeded from `initialItemId` so a freshly-created item lands on its page at
+	// mount with no animation (the creator unmounts this sheet, so the jump only ever happens on mount).
+	const [currentCardIndex, setCurrentCardIndex] = useState(() => {
+		if (!initialItemId || !character) return 0;
+		const itemIndex = resolveSheetItems(character).findIndex(item => item.id === initialItemId);
+		return itemIndex === -1 ? 0 : itemIndex;
+	});
 
-	// Navigate to a specific item when initialItemId changes
-	useEffect(() => {
-		if (initialItemId) {
-			const itemIndex = layout.findIndex(item => item.id === initialItemId);
-			if (itemIndex !== -1) {
-				startTransition(() => {
-					setCurrentCardIndex(itemIndex);
-				});
-			}
-		}
-	}, [initialItemId]);
-   
 	// Toolbelt context state
 	const [selectedTrackerId, setSelectedTrackerId] = useState<string | null>(null);
 
@@ -137,25 +129,26 @@ export default function MobileCharacterSheet({
 		? Math.min(currentCardIndex, layout.length - 1)
 		: 0;
 
-	// Over an editable journal body a horizontal drag is caret/selection, so a card-area swipe there must
-	// not step items; the nav-bar arrows/dots stay the way to move. A resting journal swipes like a card.
+	// Over an editable journal body a horizontal drag is caret/selection, so the pager drag stands down
+	// there; the nav-bar arrows/dots stay the way to move. A resting journal pages like a card.
 	const activeItem = layout[safeCardIndex];
 	const suppressCardAreaSwipe = activeItem?.kind === 'journal' && isEditing;
 
-	// Card-sheet touch gestures (mobile hook)
-	const { cardAreaHandlers, navBarHandlers, trackersAreaHandlers } = useMobileCardSheetGestures({
-		character,
-		itemCount: layout.length,
-		safeCardIndex,
-		isLeftHanded,
-		isMobileFABMode,
-		isToolbeltOpen,
-		suppressCardAreaSwipe,
-		setCurrentCardIndex,
-		setIsToolbeltOpen: handleToolbeltOpenChange,
-		onNavigateToTrackers: () => setActiveTab('trackers'),
-		onNavigateToCards: () => setActiveTab('cards'),
-	});
+	// The pager collapses the Trackers/Cards toggle and the card index into one track: page 0 is Trackers,
+	// pages 1..N the resolved items. The committed page derives from the same tab + index state.
+	const committedPage = activeTab === 'trackers' ? 0 : safeCardIndex + 1;
+
+	// Map a settled page back to tab + card state. Only crossing the Trackers<->Cards boundary pushes
+	// history (via the tab-change path); a card-to-card settle touches only the local index.
+	const commitPage = (page: number) => {
+		if (page <= 0) {
+			if (activeTab !== 'trackers') setActiveTab('trackers');
+			return;
+		}
+		const index = page - 1;
+		if (index !== safeCardIndex) setCurrentCardIndex(index);
+		if (activeTab !== 'cards') setActiveTab('cards');
+	};
 
 
 	// Save to Drawer handlers
@@ -238,50 +231,50 @@ export default function MobileCharacterSheet({
 				/>
 			)}
 
-			{/* Tab Content */}
+			{/* Sheet body: the reorder overview owns the surface, else the continuous pager. */}
 			<div className="flex-1 flex flex-col overflow-hidden">
-				{activeTab === 'trackers' && (
-					<MobileTrackersSection
-						character={character}
-						areTrackersEditable={areTrackersEditable}
-						isEditing={isEditing}
+				{isReorderingCards ? (
+					<MobileCardReorderView
+						items={layout}
 						isMobileFABMode={isMobileFABMode}
-						selectedTrackerId={selectedTrackerId}
-						onSelectTracker={(id) => setSelectedTrackerId(id === selectedTrackerId ? null : id)}
-						onAddStatus={() => addStatus()}
-						onAddStoryTag={() => addStoryTag()}
-						onAddStoryTheme={() => addStoryTheme()}
 						isLeftHanded={isLeftHanded}
-						touchHandlers={trackersAreaHandlers}
+						onSelectItem={(index) => {
+							setCurrentCardIndex(index);
+							setIsReorderingCards(false);
+						}}
+						onOpenAddCard={onOpenAddCard}
 					/>
-				)}
-
-				{activeTab === 'cards' && (
+				) : (
 					<>
-						{/* Reorder overview or normal item display */}
-						{isReorderingCards ? (
-							<MobileCardReorderView
-								items={layout}
-								isMobileFABMode={isMobileFABMode}
-								isLeftHanded={isLeftHanded}
-								onSelectItem={(index) => {
-									setCurrentCardIndex(index);
-									setIsReorderingCards(false);
-								}}
-								onOpenAddCard={onOpenAddCard}
-							/>
-						) : (
-							<MobileCardArea
-								items={layout}
-								currentIndex={safeCardIndex}
-								isLeftHanded={isLeftHanded}
-								touchHandlers={cardAreaHandlers}
-								onOpenAddCard={onOpenAddCard}
-							/>
-						)}
+						<MobileSheetPager
+							trackersSurface={
+								<MobileTrackersSection
+									character={character}
+									areTrackersEditable={areTrackersEditable}
+									isEditing={isEditing}
+									isMobileFABMode={isMobileFABMode}
+									selectedTrackerId={selectedTrackerId}
+									onSelectTracker={(id) => setSelectedTrackerId(id === selectedTrackerId ? null : id)}
+									onAddStatus={() => addStatus()}
+									onAddStoryTag={() => addStoryTag()}
+									onAddStoryTheme={() => addStoryTheme()}
+									isLeftHanded={isLeftHanded}
+								/>
+							}
+							items={layout}
+							committedPage={committedPage}
+							onCommit={commitPage}
+							suppressDrag={suppressCardAreaSwipe}
+							isLeftHanded={isLeftHanded}
+							isMobileFABMode={isMobileFABMode}
+							isToolbeltOpen={isToolbeltOpen}
+							isEditing={isEditing}
+							onOpenToolbelt={() => handleToolbeltOpenChange(true)}
+							onOpenAddCard={onOpenAddCard}
+						/>
 
-						{/* Navigation Bar - Only visible in normal item view */}
-						{!isReorderingCards && layout.length > 0 && (
+						{/* Nav bar: only on a card page (Cards half with at least one item). */}
+						{activeTab === 'cards' && layout.length > 0 && (
 							<MobileCardNavigationBar
 								items={layout}
 								safeCardIndex={safeCardIndex}
@@ -290,13 +283,12 @@ export default function MobileCharacterSheet({
 								onNext={() => setCurrentCardIndex(i => Math.min(layout.length - 1, i + 1))}
 								onSelectCard={(index) => setCurrentCardIndex(index)}
 								onFlip={() => {
-									const activeItem = layout[safeCardIndex];
-									if (activeItem?.kind !== 'card') return;
+									const item = layout[safeCardIndex];
+									if (item?.kind !== 'card') return;
 									triggerHaptic();
-									flipCard(activeItem.id);
+									flipCard(item.id);
 								}}
 								onReorder={() => { triggerHaptic(); setIsReorderingCards(true); }}
-								touchHandlers={navBarHandlers}
 							/>
 						)}
 					</>

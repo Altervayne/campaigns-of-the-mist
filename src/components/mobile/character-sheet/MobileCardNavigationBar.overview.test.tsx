@@ -32,7 +32,6 @@ const mount = (items: ResolvedSheetItem[], onReorder = vi.fn()) => {
          onSelectCard={() => {}}
          onFlip={() => {}}
          onReorder={onReorder}
-         touchHandlers={{ onTouchStart: () => {}, onTouchEnd: () => {} }}
       />
    );
    return onReorder;

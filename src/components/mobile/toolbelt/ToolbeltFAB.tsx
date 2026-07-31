@@ -300,7 +300,7 @@ export default function ToolbeltFAB({
 				<motion.div
 					className={cn(
 						// Single resting inset on every tab; the card yields room for the FAB
-						// on the cards tab (see MobileCardArea's FAB_CLEARANCE_SHIFT) instead of
+						// on the cards tab (see MobileSheetCardSlot's FAB_CLEARANCE_PADDING) instead of
 						// the FAB hopping inward here.
 						"fixed layer-panel",
 						isLeft ? "left-4" : "right-4"

@@ -192,7 +192,7 @@ export default function MobileFAB({
 					className={cn(
 						"fixed layer-panel",
 						// Cards/sheet tabs: float at the standard 16px corner inset (the
-						// card yields room via MobileCardArea's FAB_CLEARANCE_SHIFT).
+						// card yields room via MobileSheetCardSlot's FAB_CLEARANCE_PADDING).
 						// Drawer tab: use the toolbar's own 12px (px-3) edge inset so the
 						// FAB lines up with the action buttons' horizontal rhythm - with the
 						// 4rem slot the drawer reserves, this leaves an 8px (gap-2) gap to

@@ -18,6 +18,16 @@ i18n
       es: { translation: es },
     },
     fallbackLng: 'en',
+    // Dev-only safety net for keys the static build guard (scripts/check-i18n.mjs) can't see -
+    // dynamically-built ones like t(`${ns}.suffix`). Fires only when a key resolves to nothing in
+    // en too (untranslated fr/de/es fall back to en and are expected), the instant a component
+    // renders it. Off in production: no overhead, no console noise.
+    saveMissing: import.meta.env.DEV,
+    missingKeyHandler: (_lngs, _ns, key) => {
+      if (import.meta.env.DEV && !i18n.exists(key, { lng: 'en' })) {
+        console.error(`[i18n] Missing key — renders as its raw path to users: "${key}"`);
+      }
+    },
     interpolation: {
       escapeValue: false
     },

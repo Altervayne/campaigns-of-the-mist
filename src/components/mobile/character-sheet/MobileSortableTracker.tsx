@@ -89,6 +89,10 @@ export default function MobileSortableTracker({
 							// the scroll container's swipe detector does not affect dragging.
 							<div
 								className="shrink-0"
+								// The sheet pager reads touches on a native (non-React) listener, which React's
+								// synthetic stopPropagation cannot reach; this attribute makes the pager stand
+								// down when a gesture starts on the grip so a reorder drag never also pages.
+								data-sheet-pager-ignore
 								onTouchStart={(event) => event.stopPropagation()}
 								onTouchEnd={(event) => event.stopPropagation()}
 							>

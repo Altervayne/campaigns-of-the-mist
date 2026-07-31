@@ -35,7 +35,6 @@ const mount = (items: ResolvedSheetItem[], safeCardIndex: number) =>
          onSelectCard={() => {}}
          onFlip={() => {}}
          onReorder={() => {}}
-         touchHandlers={{ onTouchStart: () => {}, onTouchEnd: () => {} }}
       />
    );
 
