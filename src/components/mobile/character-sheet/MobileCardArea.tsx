@@ -4,6 +4,9 @@ import type { TouchEvent } from 'react';
 // -- Component Imports --
 import MobileCardCarousel from '@/components/mobile/character-sheet/MobileCardCarousel';
 
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
 // -- Type Imports --
 import type { ResolvedSheetItem } from '@/lib/character/sheetLayout';
 
@@ -15,7 +18,6 @@ interface MobileCardAreaProps {
 	isLeftHanded: boolean;
 	touchHandlers: { onTouchStart: (event: TouchEvent) => void; onTouchEnd: (event: TouchEvent) => void };
 	onOpenAddCard?: () => void;
-	onOpenJournal?: (journalId: string) => void;
 }
 
 /**
@@ -55,7 +57,11 @@ const FAB_CLEARANCE_PADDING = 'calc(2 * max(0px, min(calc(201px - 50vw), calc(50
  *
  * @param isLeftHanded - The FAB rests on this (leading) side, so the card is shifted the other way: right when true, left otherwise.
  */
-export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard, onOpenJournal }: MobileCardAreaProps) {
+export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard }: MobileCardAreaProps) {
+	// A journal fills the stage width and height and scrolls its own page body, so the centring, the
+	// FAB-clearance nudge (both assume a fixed-width centred card), and the outer scroll are all dropped.
+	const isJournal = items[currentIndex]?.kind === 'journal';
+
 	// Pad the FAB side so the centred card shifts away from it (see constant).
 	const clearanceStyle = isLeftHanded
 		? { paddingLeft: FAB_CLEARANCE_PADDING }
@@ -63,16 +69,15 @@ export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandler
 
 	return (
 		<div
-			className="flex-1 overflow-y-auto overflow-x-hidden p-3"
+			className={cn('flex-1 overflow-x-hidden p-3', isJournal ? 'overflow-hidden' : 'overflow-y-auto')}
 			data-tutorial="card-carousel"
 			{...touchHandlers}
 		>
-			<div className="min-h-full flex items-center justify-center" style={clearanceStyle}>
+			<div className={cn(isJournal ? 'h-full' : 'min-h-full flex items-center justify-center')} style={isJournal ? undefined : clearanceStyle}>
 				<MobileCardCarousel
 					items={items}
 					currentIndex={currentIndex}
 					onOpenAddCard={onOpenAddCard}
-					onOpenJournal={onOpenJournal}
 				/>
 			</div>
 		</div>

@@ -1,5 +1,4 @@
 // -- React Imports --
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
@@ -8,6 +7,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 // -- Component Imports --
 import { BookmarkPopover } from './BookmarkPopover';
 import { JournalControlButton } from './JournalControlButton';
+import { JournalPageIndicator } from './JournalPageIndicator';
 import { PagesReorderPopover } from './PagesReorderPopover';
 
 // -- Type Imports --
@@ -55,17 +55,6 @@ export function JournalNavBar({
 }) {
    const { t } = useTranslation();
 
-   // The page indicator's current number is click-to-edit: a typed page (1..M) jumps there on Enter/blur,
-   // anything else is ignored. Ephemeral view state, so it lives here, not on the journal aggregate.
-   const [pageNumEditing, setPageNumEditing] = useState(false);
-   const [pageNumText, setPageNumText] = useState('');
-   const startEditPageNum = () => { setPageNumText(String(pageIndex + 1)); setPageNumEditing(true); };
-   const commitPageNum = () => {
-      const target = Number.parseInt(pageNumText, 10);
-      if (Number.isFinite(target) && target >= 1 && target <= pages.length) onGoToPageNumber(target);
-      setPageNumEditing(false);
-   };
-
    return (
       <div className="flex shrink-0 items-center justify-between gap-0.5 border-t border-paper-border bg-paper-primary text-paper-primary-foreground px-1.5 py-1 text-xs">
          <JournalControlButton title={t('BoardView.prevPage')} disabled={pageIndex === 0} onPointerDown={stopDrag} onClick={onPrev}>
@@ -80,35 +69,7 @@ export function JournalNavBar({
             )}
             {/* The current page number is click-to-edit; the total stays static. Both numbers carry the
                 same width / centering / weight so `N / M` reads as a balanced pair. */}
-            {pageNumEditing ? (
-               <input
-                  type="text"
-                  inputMode="numeric"
-                  value={pageNumText}
-                  autoFocus
-                  onChange={(event) => setPageNumText(event.target.value.replace(/[^0-9]/g, ''))}
-                  onFocus={(event) => event.target.select()}
-                  onKeyDown={(event) => { if (event.key === 'Enter') commitPageNum(); else if (event.key === 'Escape') setPageNumEditing(false); }}
-                  onBlur={commitPageNum}
-                  onPointerDown={stopDrag}
-                  aria-label={t('BoardView.journalGoToPage')}
-                  // The editable number reads as a small parchment inset on the header band (the current-page indicator).
-                  className="w-7 rounded bg-paper-background px-1 text-center tabular-nums text-paper-foreground outline-none"
-               />
-            ) : (
-               <button
-                  type="button"
-                  title={t('BoardView.journalGoToPage')}
-                  aria-label={t('BoardView.journalGoToPage')}
-                  onPointerDown={stopDrag}
-                  onClick={startEditPageNum}
-                  className="min-w-7 rounded px-1 text-center tabular-nums text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer"
-               >
-                  {pageIndex + 1}
-               </button>
-            )}
-            <span className="text-paper-primary-foreground/70">/</span>
-            <span className="min-w-7 px-1 text-center tabular-nums text-paper-primary-foreground/80">{pages.length}</span>
+            <JournalPageIndicator pageIndex={pageIndex} pageCount={pages.length} stopDrag={stopDrag} onGoToPageNumber={onGoToPageNumber} />
             {isSelected && (
                <JournalControlButton title={t('BoardView.journalInsertPageAfter')} onPointerDown={stopDrag} onClick={() => onInsertPage(pageIndex + 1)}>
                   <Plus className="h-3 w-3" />

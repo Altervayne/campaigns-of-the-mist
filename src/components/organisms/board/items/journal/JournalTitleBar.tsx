@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 // -- Component Imports --
 import { JournalTitle } from './JournalTitle';
 
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
 // -- Type Imports --
 import type { RefObject } from 'react';
 
@@ -16,6 +19,7 @@ import type { RefObject } from 'react';
  */
 export function JournalTitleBar({
    isEditing,
+   touch = false,
    storedTitle,
    titleText,
    titleAreaRef,
@@ -24,6 +28,8 @@ export function JournalTitleBar({
    onRequestSelect,
 }: {
    isEditing: boolean;
+   /** Mobile reader: the heading grows to 16px in both branches (no iOS focus-zoom, no mode reflow). */
+   touch?: boolean;
    /** The committed title. The resting branch renders THIS, not the buffer - the falling-edge commit lands a render later. */
    storedTitle: string;
    /** The live buffer, edited in the textarea. */
@@ -49,10 +55,10 @@ export function JournalTitleBar({
                rows={1}
                // Editing -> the board's wheel listener skips this so the wheel scrolls the title, not zoom.
                data-board-wheel-scroll
-               className="max-h-24 w-full resize-none overflow-y-auto bg-transparent text-sm font-semibold leading-snug outline-none placeholder:text-paper-primary-foreground/50 cursor-text"
+               className={cn('max-h-24 w-full resize-none overflow-y-auto bg-transparent font-semibold leading-snug outline-none placeholder:text-paper-primary-foreground/50 cursor-text', touch ? 'text-base' : 'text-sm')}
             />
          ) : (
-            <div className="line-clamp-3 w-full whitespace-pre-wrap break-words text-sm font-semibold leading-snug">
+            <div className={cn('line-clamp-3 w-full whitespace-pre-wrap break-words font-semibold leading-snug', touch ? 'text-base' : 'text-sm')}>
                {storedTitle.trim()
                   ? <JournalTitle content={storedTitle} />
                   : <span className="text-paper-primary-foreground/50">{t('BoardView.journalTitlePlaceholder')}</span>}

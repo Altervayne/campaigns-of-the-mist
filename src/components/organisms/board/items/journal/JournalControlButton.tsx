@@ -21,6 +21,7 @@ export function JournalControlButton({
    onPointerDown,
    toolbarClassName,
    appChrome = false,
+   touch = false,
    children,
 }: {
    title: string;
@@ -30,6 +31,8 @@ export function JournalControlButton({
    toolbarClassName?: string;
    /** Board-only fallback: color for the app-chrome selection toolbar (vs the default paper-band footer). */
    appChrome?: boolean;
+   /** Mobile reader: grow the paper-band control to a >=44px touch target (the icon stays centered). */
+   touch?: boolean;
    children: React.ReactNode;
 }) {
    if (toolbarClassName) {
@@ -62,6 +65,7 @@ export function JournalControlButton({
             appChrome
                ? 'text-popover-foreground hover:bg-muted'
                : 'text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground',
+            touch && 'min-h-11 min-w-11',
          )}
       >
          {children}

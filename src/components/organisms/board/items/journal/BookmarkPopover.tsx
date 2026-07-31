@@ -8,6 +8,9 @@ import { BookMarked } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { BookmarkListRow } from './BookmarkListRow';
 
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
 // -- Type Imports --
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { JournalBookmark } from '@/lib/types/board';
@@ -22,6 +25,7 @@ export function BookmarkPopover({
    tabs,
    pageIndex,
    editable,
+   touch = false,
    stopDrag,
    onJump,
    onRemove,
@@ -30,6 +34,8 @@ export function BookmarkPopover({
    tabs: { bookmark: JournalBookmark; page: number }[];
    pageIndex: number;
    editable: boolean;
+   /** Mobile reader: grow the nav-row trigger to a >=44px touch target. */
+   touch?: boolean;
    stopDrag: (event: ReactPointerEvent) => void;
    onJump: (pageId: string) => void;
    onRemove: (id: string) => void;
@@ -45,9 +51,9 @@ export function BookmarkPopover({
                title={t('BoardView.journalBookmarks')}
                aria-label={t('BoardView.journalBookmarks')}
                onPointerDown={stopDrag}
-               className="flex items-center justify-center rounded p-0.5 text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer"
+               className={cn('flex items-center justify-center rounded p-0.5 text-paper-primary-foreground/80 hover:bg-paper-primary-foreground/10 hover:text-paper-primary-foreground cursor-pointer', touch && 'min-h-11 min-w-11')}
             >
-               <BookMarked className="h-3.5 w-3.5" />
+               <BookMarked className={cn(touch ? 'h-6 w-6' : 'h-3.5 w-3.5')} />
             </button>
          </PopoverTrigger>
          <PopoverContent align="end" className="w-60 p-1.5" onOpenAutoFocus={(event) => event.preventDefault()}>

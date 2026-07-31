@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useMemo, type PointerEvent as ReactPointerEvent } from 'react';
+import { useMemo, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 // -- Utils Imports --
@@ -20,8 +20,35 @@ import { useJournalPageIndex } from '@/hooks/board/useJournalPageIndex';
 import { useJournalTitleBuffer } from '@/hooks/board/useJournalTitleBuffer';
 
 // -- Type Imports --
-import type { BoardItem, BoardItemContent, JournalBoardContent } from '@/lib/types/board';
+import type { BoardItem, BoardItemContent, JournalBoardContent, JournalBookmark } from '@/lib/types/board';
 import type { MentionSegment } from '@/lib/challenge/parseMentions';
+
+/**
+ * The full page/bookmark control surface, handed to a host-supplied {@link JournalItemProps.renderControls}
+ * so a surface can inject its own bar (the mobile paper control bar) in place of the default `JournalNavBar`,
+ * without re-orchestrating any of the paging/buffer/action wiring.
+ */
+export interface JournalControlsContext {
+   pageIndex: number;
+   pageCount: number;
+   isSelected: boolean;
+   isEditing: boolean;
+   tabs: { bookmark: JournalBookmark; page: number }[];
+   isBookmarked: boolean;
+   /** One empty page left, the live buffer included - there is nothing to remove. */
+   removeDisabled: boolean;
+   stopDrag: (event: ReactPointerEvent) => void;
+   onPrev: () => void;
+   onNext: () => void;
+   /** Jump to a validated 1..M page number. */
+   onGoToPageNumber: (pageNumber: number) => void;
+   onAddPage: () => void;
+   onRemovePage: () => void;
+   onToggleBookmark: () => void;
+   onJumpToPage: (pageId: string) => void;
+   onRemoveBookmark: (id: string) => void;
+   onSetBookmarkLabel: (id: string, label: string) => void;
+}
 
 /*
  * A paged note: one editable plain-text page at a time, with prev/next, a page indicator,
@@ -61,6 +88,20 @@ interface JournalItemProps {
     */
    bookmarkMode?: 'side-tabs' | 'popover';
    /**
+    * Touch sizing for the mobile surface: the page/title editors grow to 16px (so iOS doesn't zoom on focus)
+    * and the resting page scrolls its own overflow. Defaults false, so the board and sheet-card hosts render
+    * exactly as before.
+    */
+   touch?: boolean;
+   /** Extra bottom padding on the page scroll surface (mobile FAB clearance); forwarded to the page body. */
+   pageBottomInset?: string;
+   /**
+    * Injects the page/bookmark control surface. When set (the mobile paper control bar), it replaces the
+    * default `JournalNavBar` and receives the full {@link JournalControlsContext}; the structural actions then
+    * live in that bar, so a mobile host passes no `toolbarSlot`. Undefined -> the desktop `JournalNavBar`.
+    */
+   renderControls?: (context: JournalControlsContext) => ReactNode;
+   /**
     * Overrides the tapped-mention handler. The board leaves it undefined and mints a board-native tracker
     * (`useBoardMentionMint`); the sheet journal passes the on-sheet create-or-raise handler so a tap creates
     * a status/tag on the active character (its fake zero-rect host means the board mint would no-op).
@@ -70,7 +111,7 @@ interface JournalItemProps {
    onRequestSelect: () => void;
 }
 
-export function JournalItem({ item, content, isSelected, isEditing, autoFocusEditor = false, toolbarSlot, sideSlot, toolbarControlClassName, bookmarkMode = 'side-tabs', onMentionClick, onContentChange, onRequestSelect }: JournalItemProps) {
+export function JournalItem({ item, content, isSelected, isEditing, autoFocusEditor = false, toolbarSlot, sideSlot, toolbarControlClassName, bookmarkMode = 'side-tabs', touch = false, pageBottomInset, renderControls, onMentionClick, onContentChange, onRequestSelect }: JournalItemProps) {
    // A tapped `{mention}` mints a board-native tracker beside the journal (create-only, board scope); a host
    // that supplies its own handler (the sheet journal → create-or-raise on the character) overrides it.
    const boardMint = useBoardMentionMint(item);
@@ -99,10 +140,14 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
 
    const tabs = orderedBookmarkTabs(pages, bookmarks);
 
+   // One empty page left, the live buffer included - there is nothing to remove.
+   const removeDisabled = pages.length === 1 && (pages[0]?.text ?? '') === '' && text === '';
+
    return (
       <div className="relative flex h-full w-full flex-col bg-paper-background text-paper-foreground">
          <JournalTitleBar
             isEditing={isEditing}
+            touch={touch}
             storedTitle={journal.title}
             titleText={titleText}
             titleAreaRef={titleAreaRef}
@@ -111,11 +156,12 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
             onRequestSelect={onRequestSelect}
          />
 
-         {/* Structural actions live in the selection toolbar. */}
+         {/* Structural actions live in the selection toolbar. A host that injects its own control bar
+             (mobile) carries these inside it instead and passes no toolbarSlot. */}
          {isSelected && toolbarSlot && createPortal(
             <JournalToolbarActions
                isBookmarked={isBookmarked}
-               removeDisabled={pages.length === 1 && (pages[0]?.text ?? '') === '' && text === ''}
+               removeDisabled={removeDisabled}
                toolbarControlClassName={toolbarControlClassName}
                stopDrag={stopDrag}
                onAddPage={addPage}
@@ -127,6 +173,8 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
 
          <JournalPageBody
             isEditing={isEditing}
+            touch={touch}
+            paddingBottom={pageBottomInset}
             text={text}
             pageAreaRef={pageAreaRef}
             onTextChange={setText}
@@ -135,23 +183,45 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
             onMentionClick={handleMentionClick}
          />
 
-         <JournalNavBar
-            pages={pages}
-            activePageId={activePage.id}
-            pageIndex={pageIndex}
-            isSelected={isSelected}
-            bookmarkMode={bookmarkMode}
-            tabs={tabs}
-            stopDrag={stopDrag}
-            onPrev={goPrev}
-            onNext={goNext}
-            onInsertPage={insertPage}
-            onGoToPageNumber={goToPageNumber}
-            onReorderPages={reorderPages}
-            onJumpToPage={jumpToPage}
-            onRemoveBookmark={removeBookmark}
-            onSetBookmarkLabel={setBookmarkLabel}
-         />
+         {renderControls ? (
+            renderControls({
+               pageIndex,
+               pageCount: pages.length,
+               isSelected,
+               isEditing,
+               tabs,
+               isBookmarked,
+               removeDisabled,
+               stopDrag,
+               onPrev: goPrev,
+               onNext: goNext,
+               onGoToPageNumber: goToPageNumber,
+               onAddPage: addPage,
+               onRemovePage: removePage,
+               onToggleBookmark: toggleBookmark,
+               onJumpToPage: jumpToPage,
+               onRemoveBookmark: removeBookmark,
+               onSetBookmarkLabel: setBookmarkLabel,
+            })
+         ) : (
+            <JournalNavBar
+               pages={pages}
+               activePageId={activePage.id}
+               pageIndex={pageIndex}
+               isSelected={isSelected}
+               bookmarkMode={bookmarkMode}
+               tabs={tabs}
+               stopDrag={stopDrag}
+               onPrev={goPrev}
+               onNext={goNext}
+               onInsertPage={insertPage}
+               onGoToPageNumber={goToPageNumber}
+               onReorderPages={reorderPages}
+               onJumpToPage={jumpToPage}
+               onRemoveBookmark={removeBookmark}
+               onSetBookmarkLabel={setBookmarkLabel}
+            />
+         )}
 
          {/* Bookmark side tabs (board default): portaled into the box's non-clipped side slot so they
              protrude past the right edge (the body keeps clipping its text). The sheet uses

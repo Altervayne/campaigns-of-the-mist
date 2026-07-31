@@ -14,6 +14,8 @@ interface UseMobileCardSheetGesturesParameters {
 	isLeftHanded: boolean;
 	isMobileFABMode: boolean;
 	isToolbeltOpen: boolean;
+	/** The active item is an editable journal, whose body owns horizontal drags (caret/selection); the card-area swipe stands down. */
+	suppressCardAreaSwipe: boolean;
 	setCurrentCardIndex: Dispatch<SetStateAction<number>>;
 	setIsToolbeltOpen: (value: boolean) => void;
 	onNavigateToTrackers: () => void;
@@ -41,7 +43,9 @@ const isHorizontalNavigationSwipe = (deltaX: number, deltaY: number) =>
  *   card crosses over to the Trackers tab. Card flip is now an explicit
  *   nav-bar button, so the former edge-swipe-flip is retired; the former
  *   side-panel edge-swipe-toolbelt is also retired here in favour of the tab-bar
- *   toolbelt button, so the card body navigates uniformly with no edge zones.
+ *   toolbelt button, so the card body navigates uniformly with no edge zones. Over
+ *   an editable journal body the swipe stands down (the textarea owns the drag);
+ *   the nav-bar arrows/dots step items there instead.
  * - **Nav bar:** a horizontal swipe navigates to the previous/next card. (Card
  *   reorder is entered via the toolbelt's reorder action and performed by
  *   drag-to-reorder, so the former swipe-up-to-reorder gesture is retired.)
@@ -67,6 +71,7 @@ export function useMobileCardSheetGestures({
 	isLeftHanded,
 	isMobileFABMode,
 	isToolbeltOpen,
+	suppressCardAreaSwipe,
 	setCurrentCardIndex,
 	setIsToolbeltOpen,
 	onNavigateToTrackers,
@@ -118,6 +123,8 @@ export function useMobileCardSheetGestures({
 	};
 
 	const handleCardAreaTouchEnd = (e: TouchEvent) => {
+		// An editable journal body claims the horizontal drag, so the card-area swipe does not navigate.
+		if (suppressCardAreaSwipe) return;
 		const touchEndX = e.changedTouches[0].clientX;
 		const touchEndY = e.changedTouches[0].clientY;
 		navigateFromHorizontalSwipe(touchEndX - cardSwipeStartX.current, touchEndY - cardSwipeStartY.current);

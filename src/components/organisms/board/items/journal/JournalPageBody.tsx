@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 // -- Component Imports --
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
 
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
 // -- Type Imports --
 import type { RefObject } from 'react';
 import type { MentionSegment } from '@/lib/challenge/parseMentions';
@@ -17,6 +20,8 @@ import type { MentionSegment } from '@/lib/challenge/parseMentions';
  */
 export function JournalPageBody({
    isEditing,
+   touch = false,
+   paddingBottom,
    text,
    pageAreaRef,
    onTextChange,
@@ -25,6 +30,10 @@ export function JournalPageBody({
    onMentionClick,
 }: {
    isEditing: boolean;
+   /** Mobile reader: the editor grows to 16px (no iOS focus-zoom) and the resting page scrolls its own overflow. */
+   touch?: boolean;
+   /** Extra bottom padding on the scroll surface so the last line / caret can clear a floating control that rests over it. */
+   paddingBottom?: string;
    /** The live buffer. Rendered by BOTH branches, unlike the title bar's resting branch. */
    text: string;
    pageAreaRef: RefObject<HTMLTextAreaElement | null>;
@@ -34,6 +43,7 @@ export function JournalPageBody({
    onMentionClick: (segment: MentionSegment) => void;
 }) {
    const { t } = useTranslation();
+   const style = paddingBottom ? { paddingBottom } : undefined;
 
    return isEditing ? (
       <textarea
@@ -44,13 +54,14 @@ export function JournalPageBody({
          onBlur={onCommit}
          onPointerDown={(event) => event.stopPropagation()}
          placeholder={t('BoardView.journalPlaceholder')}
+         style={style}
          // Editing -> the board's wheel listener skips this so the wheel scrolls the page, not zoom.
          data-board-wheel-scroll
-         className="min-h-0 flex-1 resize-none border-0 bg-transparent p-2 text-sm leading-snug outline-none placeholder:text-muted-foreground/50 cursor-text"
+         className={cn('min-h-0 flex-1 resize-none border-0 bg-transparent p-2 leading-snug outline-none placeholder:text-muted-foreground/50 cursor-text', touch ? 'text-base' : 'text-sm')}
       />
    ) : (
-      // Clip at rest (no scrollbar on a resting page); the textarea scrolls while editing.
-      <div className="min-h-0 flex-1 overflow-hidden p-2">
+      // Clip at rest on the fixed board box; the mobile reader scrolls the page instead (the textarea scrolls while editing).
+      <div style={style} className={cn('min-h-0 flex-1 p-2', touch ? 'overflow-y-auto' : 'overflow-hidden')}>
          {text.trim() ? <NoteMarkdown content={text} onMentionClick={onMentionClick} /> : null}
       </div>
    );

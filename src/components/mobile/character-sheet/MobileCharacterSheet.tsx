@@ -135,6 +135,11 @@ export default function MobileCharacterSheet({
 		? Math.min(currentCardIndex, layout.length - 1)
 		: 0;
 
+	// Over an editable journal body a horizontal drag is caret/selection, so a card-area swipe there must
+	// not step items; the nav-bar arrows/dots stay the way to move. A resting journal swipes like a card.
+	const activeItem = layout[safeCardIndex];
+	const suppressCardAreaSwipe = activeItem?.kind === 'journal' && isEditing;
+
 	// Card-sheet touch gestures (mobile hook)
 	const { cardAreaHandlers, navBarHandlers, trackersAreaHandlers } = useMobileCardSheetGestures({
 		character,
@@ -143,6 +148,7 @@ export default function MobileCharacterSheet({
 		isLeftHanded,
 		isMobileFABMode,
 		isToolbeltOpen,
+		suppressCardAreaSwipe,
 		setCurrentCardIndex,
 		setIsToolbeltOpen: handleToolbeltOpenChange,
 		onNavigateToTrackers: () => setActiveTab('trackers'),
@@ -155,9 +161,6 @@ export default function MobileCharacterSheet({
 		const defaultName = 'cardType' in item ? deriveCardTitle(item, t) : item.name;
 		openSaveToDrawer(item, defaultName);
 	};
-
-	// Opening a journal cover lands the full-screen reader; that screen is not built yet.
-	const handleOpenJournal = (_journalId: string) => {};
 
 	// Build toolbelt context based on active tab and selection
 	const toolbeltContext: ToolbeltContext = useMemo(() => {
@@ -259,7 +262,6 @@ export default function MobileCharacterSheet({
 								isLeftHanded={isLeftHanded}
 								touchHandlers={cardAreaHandlers}
 								onOpenAddCard={onOpenAddCard}
-								onOpenJournal={handleOpenJournal}
 							/>
 						)}
 

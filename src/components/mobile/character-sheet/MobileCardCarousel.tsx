@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 // -- Component Imports --
 import { resolveCardComponent } from '@/components/organisms/cards/resolveCardComponent';
 import { AddCardButton } from '@/components/molecules/AddThemeCardButton';
-import { MobileJournalCoverTile } from '@/components/mobile/character-sheet/MobileJournalCoverTile';
+import { MobileJournalCard } from '@/components/mobile/character-sheet/MobileJournalCard';
 
 // -- Store Imports --
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
+
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
 
 // -- Type Imports --
 import type { Card as CardData } from '@/lib/types/character';
@@ -17,10 +20,9 @@ interface MobileCardCarouselProps {
 	items: ResolvedSheetItem[];
 	currentIndex: number;
 	onOpenAddCard?: () => void;
-	onOpenJournal?: (journalId: string) => void;
 }
 
-export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard, onOpenJournal }: MobileCardCarouselProps) {
+export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard }: MobileCardCarouselProps) {
 	const { t } = useTranslation();
 	const isEditing = useAppGeneralStateStore((state) => state.isEditing);
 
@@ -56,11 +58,11 @@ export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard,
 		return <Component key={card.id} {...commonProps} />;
 	};
 
-	// A card or a journal, at its manifest position.
+	// A card or a journal, at its manifest position. A journal fills the whole stage inline (not a fixed card box).
 	const renderItem = (item: ResolvedSheetItem) =>
 		item.kind === 'card'
 			? renderCard(item.card)
-			: <MobileJournalCoverTile key={item.id} journal={item.journal} onOpenJournal={onOpenJournal} />;
+			: <MobileJournalCard key={item.id} journal={item.journal} />;
 
 	// Empty state
 	if (items.length === 0) {
@@ -78,9 +80,10 @@ export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard,
 
 	const currentItem = items[currentIndex];
 
-	// Simple item display (swipe gestures handled by parent MobileCharacterSheet)
+	// A card is centred in the stage; a journal fills it (its own frame provides the shape).
+	// Swipe gestures are handled by the parent MobileCharacterSheet.
 	return (
-		<div className="h-full w-full flex items-center justify-center">
+		<div className={cn('h-full w-full flex', currentItem.kind === 'journal' ? '' : 'items-center justify-center')}>
 			{renderItem(currentItem)}
 		</div>
 	);
