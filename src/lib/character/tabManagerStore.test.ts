@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // -- Local Imports --
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
-import { useTabManagerStore, runCharacterBoot } from './tabManagerStore';
+import { useTabManagerStore, runCharacterBoot, __resetMobileKeepAliveForTest } from './tabManagerStore';
 import {
    SINGLE_ACTIVE_INSTANCE_ID,
    disposeInstance,
@@ -70,10 +70,16 @@ beforeEach(async () => {
    await drawerDatabase.boards.clear();
    await drawerDatabase.boardItems.clear();
    useTabManagerStore.setState({ openTabs: [], activeTabId: null });
+   __resetMobileKeepAliveForTest();
 });
 
 afterEach(async () => {
    vi.restoreAllMocks();
+   // Keep-alive can leave several live instances (including re-minted import ids); sweep them all.
+   getCharacterInstanceIds().forEach((id) => {
+      detachPersistenceHandle(id);
+      disposeInstance(id);
+   });
    FIXTURE_IDS.forEach((id) => {
       detachPersistenceHandle(id);
       disposeInstance(id);
@@ -299,84 +305,74 @@ describe('desktop deactivate (Return to Menu, keep tabs)', () => {
    });
 });
 
-describe('mobile single-live lifecycle', () => {
-   it('mobileOpenCharacter keeps exactly one live character instance across opens, never pruning openTabs', () => {
+describe('mobile keep-alive lifecycle', () => {
+   it('mobileOpenCharacter keeps both characters live across opens (keep-alive), never pruning openTabs', () => {
       const actions = useTabManagerStore.getState().actions;
 
       actions.mobileOpenCharacter(makeCharacter('A'));
       expect(getCharacterInstanceIds()).toEqual(['A']);
 
       actions.mobileOpenCharacter(makeCharacter('B'));
-      // A's instance is gone, only B is live; both stay in openTabs (shared desktop set).
-      expect(getCharacterInstanceIds()).toEqual(['B']);
+      // Keep-alive: A stays live alongside B (within budget); both are in the shared openTabs.
+      expect(getCharacterInstanceIds().sort()).toEqual(['A', 'B']);
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['A', 'B']);
+      expect(useTabManagerStore.getState().activeTabId).toBe('B');
    });
 
-   it('mobileReplaceWithNewCharacter discards the outgoing live character and prunes its tab', () => {
+   it('mobileReplaceWithNewCharacter opens a NEW resident tab and keeps the previous (keep-alive)', () => {
       const actions = useTabManagerStore.getState().actions;
 
       actions.mobileOpenCharacter(makeCharacter('A'));
-      expect(getCharacterInstanceIds()).toEqual(['A']);
-
       actions.mobileReplaceWithNewCharacter('LEGENDS');
       const created = useTabManagerStore.getState().activeTabId!;
-      // TRUE overwrite: A's instance is gone AND its tab is pruned (not the old keep-and-orphan).
-      expect(getCharacterInstanceIds()).toEqual([created]);
-      const ids = useTabManagerStore.getState().openTabs.map((t) => t.id);
-      expect(ids).not.toContain('A');
-      expect(ids).toEqual([created]);
 
-      detachPersistenceHandle(created);
-      disposeInstance(created); // cleanup the minted instance
+      expect(created).not.toBe('A');
+      const ids = useTabManagerStore.getState().openTabs.map((t) => t.id);
+      expect(ids).toContain('A'); // previous tab kept
+      expect(ids).toContain(created);
+      expect(getCharacterInstanceIds().sort()).toEqual(['A', created].sort());
    });
 
-   it('mobileReplaceWithImportedCharacter discards the outgoing live character and loads the import as a fresh identity', () => {
+   it('mobileReplaceWithImportedCharacter opens the import as a NEW resident tab under a fresh id, keeping the previous', () => {
       const actions = useTabManagerStore.getState().actions;
 
       actions.mobileOpenCharacter(makeCharacter('A'));
       actions.mobileReplaceWithImportedCharacter(makeCharacter('B'));
 
-      // The import replaces A and rides in on a FRESH id - an import is a new entity, never the file's id.
+      // A is kept; the import rides in on a FRESH id (an import is a new entity, never the file's id).
       const liveIds = getCharacterInstanceIds();
-      expect(liveIds).toHaveLength(1);
-      const [newId] = liveIds;
-      expect(newId).not.toBe('A'); // A is discarded
+      expect(liveIds).toContain('A');
+      const newId = liveIds.find((id) => id !== 'A')!;
       expect(newId).not.toBe('B'); // the file's id is re-minted
       expect(useTabManagerStore.getState().activeTabId).toBe(newId);
-      expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual([newId]);
-
-      // The re-minted id isn't in FIXTURE_IDS, so dispose it here.
-      detachPersistenceHandle(newId);
-      disposeInstance(newId);
+      expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['A', newId]);
    });
 
-   it('mobileReturnToMenu disposes the live instance, nulls active, and keeps openTabs', () => {
+   it('mobileReturnToMenu is a keep-alive no-op: active tab and live instances stay put', () => {
       const actions = useTabManagerStore.getState().actions;
       actions.mobileOpenCharacter(makeCharacter('A'));
       actions.mobileOpenCharacter(makeCharacter('B'));
 
       actions.mobileReturnToMenu();
 
-      expect(getCharacterInstanceIds()).toEqual([]); // no live character instance
-      expect(useTabManagerStore.getState().activeTabId).toBeNull();
-      expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
+      expect(getCharacterInstanceIds().sort()).toEqual(['A', 'B']); // instances stay live
+      expect(useTabManagerStore.getState().activeTabId).toBe('B'); // active unchanged (the page shows the menu)
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['A', 'B']); // kept
    });
 
-   it('mobileCloseSheet prunes the tab, drops the working row, and shows the menu', async () => {
+   it('mobileCloseSheet destructively closes the active tab, dropping its working row and showing the menu', async () => {
       const actions = useTabManagerStore.getState().actions;
       await saveCharacter(makeCharacter('A'));
       actions.mobileOpenCharacter(makeCharacter('A'));
       expect(await getCharacter('A')).toBeDefined();
 
-      actions.mobileCloseSheet();
+      actions.mobileCloseSheet(); // sole tab → lands on the menu
 
       expect(getCharacterInstanceIds()).toEqual([]); // no live instance
       expect(useTabManagerStore.getState().activeTabId).toBeNull();
       expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
-      // No orphan tab: the closed id is pruned from the shared set (contrast mobileReturnToMenu, which keeps it).
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual([]);
-      // No orphan working record: the discard deletes it (async delete settles on the next tick).
+      // The closed record is deleted (async delete settles on the next tick).
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(await getCharacter('A')).toBeUndefined();
    });

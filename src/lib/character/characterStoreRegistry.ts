@@ -51,6 +51,18 @@ export function getOrCreateInstance(id: string): CharacterStore {
 }
 
 /**
+ * Returns the already-registered instance for `id`, or `undefined` when none exists.
+ * Never creates one, so a caller can inspect a tab's liveness without materializing an
+ * empty instance (which would otherwise register as a live character).
+ *
+ * @param id - The id to look up.
+ * @returns The instance, or `undefined` when the id is not registered.
+ */
+export function peekInstance(id: string): CharacterStore | undefined {
+   return registry.get(id);
+}
+
+/**
  * The currently active store instance, or `null` when none is active. The accessor
  * for non-React callers; it never creates an instance, so callers must tolerate
  * `null` (the menu fallback is ensured at startup, so it is non-null in normal flow).

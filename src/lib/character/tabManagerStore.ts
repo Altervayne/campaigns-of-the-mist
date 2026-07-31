@@ -16,6 +16,7 @@ import {
    getCharacterInstanceIds,
    getMenuFallbackInstance,
    getOrCreateInstance,
+   peekInstance,
    setActiveInstance,
 } from './characterStoreRegistry';
 import { attachPersistenceHandle, detachPersistenceHandle, discardPersistenceHandle, finishBootHydration } from './characterPersistence';
@@ -89,6 +90,16 @@ export interface OpenTab {
    type: TabType;
    /** Desktop character-sheet zoom factor (content scale); absent means the default 1. */
    zoom?: number;
+   /**
+    * Last-known display name. Denormalized so a cold (evicted or boot-dormant) tab with no
+    * live instance can still render in the mobile switcher; kept fresh from the live instance
+    * while resident. Desktop ignores it and reads the live instance directly.
+    */
+   title?: string;
+   /** Last-known game, denormalized alongside {@link OpenTab.title} for the cold-tab switcher. */
+   game?: GameSystem;
+   /** Last-known unsaved-changes flag, denormalized alongside {@link OpenTab.title}. */
+   dirty?: boolean;
 }
 
 interface TabManagerState {
@@ -152,26 +163,26 @@ interface TabManagerState {
       /** Dismisses the whole trail (the bar's close button) - the user is done with this dive. */
       clearJourney: () => void;
 
-      // -- Mobile (single live character instance) --
-      /** Mobile open: disposes the current live character, loads `character`, adds it to `openTabs` if missing, activates. */
+      // -- Mobile (bounded keep-alive) --
+      /**
+       * Mobile tab switch (character-only). Keep-alive: hydrates a cold tab from storage BEFORE flipping the
+       * active pointer (so the sheet never reads a null character), then activates it, records it as most-recently
+       * active, and runs weighted eviction of the least-recently-active resident tabs. A no-op for a non-character
+       * tab or the already-active tab. Latest-wins: a superseding switch abandons this one without stealing the pointer.
+       */
+      mobileSetActiveTab: (id: string) => Promise<void>;
+      /** Mobile open-or-focus: focuses an already-open character (keep-alive), else loads it as a new resident tab. */
       mobileOpenCharacter: (character: Character, drawerItemId?: string) => void;
-      /**
-       * Mobile overwrite: DISCARDS the current live character (drop its handle without flushing,
-       * delete its working row, prune its tab), then builds + appends a new character of `game`.
-       * The forward-compat seam for a post-2.0 `openWorkspace`.
-       */
+      /** Mobile "New character": builds a character of `game` and opens it as a new resident tab (append + activate + evict). */
       mobileReplaceWithNewCharacter: (game: GameSystem) => void;
-      /**
-       * Mobile overwrite with an imported sheet: DISCARDS the current live character (as
-       * {@link mobileReplaceWithNewCharacter}), then loads `character` as the new live sheet.
-       */
+      /** Mobile "Import": re-ids the imported aggregate and opens it as a new resident tab (no drawer link, stays dirty). */
       mobileReplaceWithImportedCharacter: (character: Character) => void;
-      /** Mobile "Return to Menu": disposes the live character and shows the menu, keeping `openTabs`. */
+      /** Mobile "Return to Menu": no-op on state. Keep-alive keeps every tab and live instance; the page shows the menu. */
       mobileReturnToMenu: () => void;
       /**
-       * Mobile "Close Sheet": DISCARDS the live character (drop its handle without flushing, delete its
-       * working row, prune its tab), then shows the menu. Contrast {@link mobileReturnToMenu}, which keeps
-       * the tab and working row. Never flushes, so a save the user wanted must complete BEFORE this runs.
+       * Mobile "Close Sheet": per-tab destructive close of the active tab (delegates to {@link closeTab}),
+       * landing on a neighbour or the menu and deleting the working record. Never flushes, so a save the
+       * user wanted must complete BEFORE this runs.
        */
       mobileCloseSheet: () => void;
    };
@@ -300,39 +311,155 @@ function deactivateToMenu(): void {
    persistWorkspace();
 }
 
-/**
- * Disposes every live character instance (flush → detach → dispose), leaving only the
- * permanent menu fallback. Enforces the mobile single-live invariant in one
- * place; never touches `openTabs`.
+// ==================
+//  Mobile bounded keep-alive (LRU recency + weighted eviction)
+// ==================
+
+/*
+ * Mobile moves OFF the single-live policy onto desktop-style keep-alive, but MEMORY-BOUNDED:
+ * a capped resident set of live character instances, with safe eviction of the least-recently-active
+ * tabs. Safety rests on a mount fact: on mobile only the ACTIVE tab's surface is mounted, so any
+ * non-active tab already flushed its edit buffers into its still-attached store on unmount - evicting
+ * it is synchronously safe. It is enforced as a POLICY INVARIANT, not a scheduling trick:
+ *
+ *   Eviction never targets the active tab (LRU index 0) nor the immediately-previous tab (index 1).
+ *   Previous is protected because framer-motion keeps the outgoing surface mounted through its slide-out;
+ *   everything below index 1 unmounted a full switch cycle ago.
+ *
+ * Evict != Close. Evict flushes, disposes the live instance, and drops it from the recency memory, but
+ * KEEPS the durable record AND the `openTabs` entry (the tab goes "cold" and rehydrates on next visit via
+ * the same path a boot-dormant tab uses). Only undo history and the in-memory dirty flag evaporate - never data.
  */
-function disposeLiveCharacterInstances(): void {
-   for (const id of getCharacterInstanceIds()) {
-      detachPersistenceHandle(id);
-      disposeInstance(id);
+
+/** Resident live-character budget (summed tab weight). Boards/notes will weigh more when mobile hosts them. */
+const MOBILE_RESIDENT_BUDGET = 5;
+
+/** Test-only budget override; `null` means use {@link MOBILE_RESIDENT_BUDGET}. */
+let mobileResidentBudgetOverride: number | null = null;
+
+function residentBudget(): number {
+   return mobileResidentBudgetOverride ?? MOBILE_RESIDENT_BUDGET;
+}
+
+/** Recency memory: live character tab ids, MOST-RECENTLY-ACTIVE FIRST. Empty/unused on desktop. */
+let mobileLruOrder: string[] = [];
+
+/** Monotonic guard so a superseding {@link TabManagerState.actions.mobileSetActiveTab} wins (latest-wins). */
+let mobileSwitchToken = 0;
+
+/** Moves `id` to the front of the recency order (most-recently-active). */
+function touchLru(id: string): void {
+   mobileLruOrder = [id, ...mobileLruOrder.filter((existing) => existing !== id)];
+}
+
+/** Removes `id` from the recency order. */
+function dropLru(id: string): void {
+   mobileLruOrder = mobileLruOrder.filter((existing) => existing !== id);
+}
+
+/** Resident weight of a tab. Characters weigh 1; the seam for heavier future board/note residents. */
+function tabWeight(_tab: OpenTab): number {
+   return 1;
+}
+
+/** The `OpenTab` for `id`, or a synthetic character stand-in when the tab is momentarily absent. */
+function tabForId(id: string): OpenTab {
+   return useTabManagerStore.getState().openTabs.find((tab) => tab.id === id) ?? { id, type: 'character' };
+}
+
+/**
+ * The recency order reconciled against the actually-live character instances: drops disposed ids and
+ * appends any live id missing from the memory (defensive), self-healing `mobileLruOrder` in the process.
+ * The registry is the source of truth for what is resident; this only orders it by recency.
+ */
+function residentLruOrder(): string[] {
+   const liveIds = getCharacterInstanceIds();
+   const liveSet = new Set(liveIds);
+   const ordered = mobileLruOrder.filter((id) => liveSet.has(id));
+   for (const id of liveIds) if (!ordered.includes(id)) ordered.push(id);
+   mobileLruOrder = ordered;
+   return ordered;
+}
+
+/**
+ * Ids to evict, TAIL-FIRST (least-recently-active), excluding the active tab (index 0) and the
+ * immediately-previous tab (index 1), until the summed weight of the remaining resident set is within budget.
+ */
+function selectMobileEvictionCandidates(): string[] {
+   const order = residentLruOrder();
+   const protectedCount = Math.min(2, order.length);
+   const budget = residentBudget();
+   let weight = order.reduce((sum, id) => sum + tabWeight(tabForId(id)), 0);
+
+   const candidates: string[] = [];
+   for (let i = order.length - 1; i >= protectedCount && weight > budget; i--) {
+      candidates.push(order[i]);
+      weight -= tabWeight(tabForId(order[i]));
+   }
+   return candidates;
+}
+
+/**
+ * Safe eviction of one resident tab: capture its last-known denorm BEFORE it goes cold, flush its
+ * pending save and tear down its handle, dispose the live instance, drop it from recency, and persist.
+ * The durable record and the `openTabs` entry stay - only the instance (with its undo history) is dropped.
+ */
+function evictCharacterInstance(id: string): void {
+   refreshTabDenorm(id);
+   detachPersistenceHandle(id);
+   disposeInstance(id);
+   dropLru(id);
+   persistWorkspace();
+}
+
+/** Evicts every over-budget candidate. */
+function runMobileEviction(): void {
+   for (const id of selectMobileEvictionCandidates()) {
+      evictCharacterInstance(id);
    }
 }
 
 /**
- * Tears down every live character instance the DISCARD way (drop the handle without flushing,
- * dispose, delete its working row) and prunes its tab from `openTabs`. The mobile overwrite
- * teardown: the outgoing working copy is thrown away, never flushed - flushing would race the
- * debounced save against the delete and could resurrect a just-deleted row. Contrast
- * {@link disposeLiveCharacterInstances}, which flushes and leaves the tab in place.
+ * Refreshes the denormalized display fields on tab `id` from its live instance. A cold tab (no
+ * instance, or an instance with a null `character`) keeps its last-known denorm untouched.
  */
-function discardLiveCharacterInstances(): void {
-   const liveIds = getCharacterInstanceIds();
-   for (const id of liveIds) {
-      discardPersistenceHandle(id);
-      disposeInstance(id);
-      void deleteCharacter(id).catch((error) => {
-         console.error('Failed to delete replaced character record:', error);
-      });
-   }
-   if (liveIds.length > 0) {
-      useTabManagerStore.setState((state) => ({
-         openTabs: state.openTabs.filter((tab) => !liveIds.includes(tab.id)),
-      }));
-   }
+function refreshTabDenorm(id: string): void {
+   const character = peekInstance(id)?.getState().character;
+   if (!character) return;
+   const dirty = peekInstance(id)!.getState().hasUnsavedChanges;
+   useTabManagerStore.setState((state) => ({
+      openTabs: state.openTabs.map((tab) =>
+         tab.id === id ? { ...tab, title: character.name, game: character.game, dirty } : tab,
+      ),
+   }));
+}
+
+/**
+ * Mobile: attach a handle to a freshly loaded character instance, append + activate its tab, seed its
+ * recency + denorm, persist, and run eviction. Shared by the open-new / new / import paths.
+ */
+function mobileAppendCharacterTab(character: Character, drawerItemId?: string): void {
+   const instance = getOrCreateInstance(character.id);
+   attachPersistenceHandle(character.id, instance);
+   instance.getState().actions.loadCharacter(character, drawerItemId);
+   // From the drawer: matches its saved copy, so it starts clean. New/import (no link): stays dirty.
+   if (drawerItemId) instance.getState().actions.setHasUnsavedChanges(false);
+   appendAndActivate(character.id);
+   touchLru(character.id);
+   refreshTabDenorm(character.id);
+   persistWorkspace();
+   runMobileEviction();
+}
+
+/** Test-only override for the mobile resident budget. Pass `null` to restore the default. */
+export function __setMobileResidentBudgetForTest(budget: number | null): void {
+   mobileResidentBudgetOverride = budget;
+}
+
+/** Test-only reset of the mobile keep-alive module state (recency memory + budget override). */
+export function __resetMobileKeepAliveForTest(): void {
+   mobileLruOrder = [];
+   mobileResidentBudgetOverride = null;
 }
 
 export const useTabManagerStore = create<TabManagerState>(() => ({
@@ -440,6 +567,7 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
             // Discard the handle WITHOUT flushing (no point saving what we delete).
             discardPersistenceHandle(id);
             disposeInstance(id);
+            dropLru(id); // keep the mobile recency memory honest
             void deleteCharacter(id).catch((error) => {
                console.error('Failed to delete closed character record:', error);
             });
@@ -604,51 +732,63 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
       },
 
       // ==================
-      //  Mobile (single live character instance)
+      //  Mobile (bounded keep-alive)
       // ==================
+      mobileSetActiveTab: async (id) => {
+         const { openTabs, activeTabId } = useTabManagerStore.getState();
+         const tab = openTabs.find((openTab) => openTab.id === id);
+         if (!tab || tab.type !== 'character') return; // character-only in this slice
+         if (activeTabId === id) return; // already active (the UI handles a pure dismiss)
+
+         const token = ++mobileSwitchToken;
+         const instance = getOrCreateInstance(id);
+         if (instance.getState().character === null) {
+            // Cold tab: hydrate from storage BEFORE flipping the pointer, so the sheet never reads a null
+            // character and bounces to the menu. The flip and the pointer move happen only after this resolves.
+            const ok = await hydrateInstanceFromStorage(id);
+            if (!ok) {
+               // Stale tab (record gone): drop the empty instance we just materialized so it never counts
+               // as a resident, and leave the tab entry for the UI to reconcile.
+               disposeInstance(id);
+               return;
+            }
+            if (token !== mobileSwitchToken) return; // a newer switch won; leave this hydrated instance for eviction
+         }
+         activateCharacterPointers(id);
+         touchLru(id);
+         useTabManagerStore.setState({ activeTabId: id });
+         refreshTabDenorm(id);
+         persistWorkspace();
+         runMobileEviction(); // protects the new active (idx 0) + previous (idx 1)
+      },
       mobileOpenCharacter: (character, drawerItemId) => {
-         // Already the live active character → nothing to do.
-         if (useTabManagerStore.getState().activeTabId === character.id) return;
-         disposeLiveCharacterInstances();
-         const instance = getOrCreateInstance(character.id);
-         attachPersistenceHandle(character.id, instance);
-         instance.getState().actions.loadCharacter(character, drawerItemId);
-         if (drawerItemId) instance.getState().actions.setHasUnsavedChanges(false);
-         appendAndActivate(character.id);
+         const { openTabs, activeTabId } = useTabManagerStore.getState();
+         if (activeTabId === character.id) return; // already active
+         // Focus-or-add: an already-open character is focused (keep-alive), never reloaded.
+         if (openTabs.some((tab) => tab.id === character.id)) {
+            void useTabManagerStore.getState().actions.mobileSetActiveTab(character.id);
+            return;
+         }
+         mobileAppendCharacterTab(character, drawerItemId);
       },
       mobileReplaceWithNewCharacter: (game) => {
-         // TRUE overwrite: discard the outgoing working copy (never flush), then build the new one.
-         discardLiveCharacterInstances();
-         const character = buildNewCharacter(game);
-         const instance = getOrCreateInstance(character.id);
-         attachPersistenceHandle(character.id, instance);
-         instance.getState().actions.loadCharacter(character);
-         appendAndActivate(character.id);
+         // Opens a brand-new character as a new resident tab (keep-alive; the previous tabs stay live within budget).
+         mobileAppendCharacterTab(buildNewCharacter(game));
       },
       mobileReplaceWithImportedCharacter: (character) => {
          // An import is a fresh identity: re-id the whole aggregate (new character/card/journal ids,
-         // sheetLayout remapped, journal pages/bookmarks + asset hashes preserved, drawer link cleared).
-         // The fresh id also keeps the async delete of the outgoing row from reaping the freshly-loaded one.
-         const incoming = reIdCharacterAggregate(character);
-         // TRUE overwrite with an imported sheet: discard the outgoing working copy, then load the
-         // import (no drawer link, so it starts dirty).
-         discardLiveCharacterInstances();
-         const instance = getOrCreateInstance(incoming.id);
-         attachPersistenceHandle(incoming.id, instance);
-         instance.getState().actions.loadCharacter(incoming);
-         appendAndActivate(incoming.id);
+         // sheetLayout remapped, journal pages/bookmarks + asset hashes preserved, drawer link cleared),
+         // then open it as a new resident tab (no drawer link, so it starts dirty).
+         mobileAppendCharacterTab(reIdCharacterAggregate(character));
       },
       mobileReturnToMenu: () => {
-         // Dispose the live character (don't surface a hidden neighbour), then show
-         // the menu while keeping the shared `openTabs`.
-         disposeLiveCharacterInstances();
-         deactivateToMenu();
+         // Keep-alive: no state change. The page's own navigation shows the menu; tabs and live instances stay put.
       },
       mobileCloseSheet: () => {
-         // Discard the live character (prune its tab + drop its working row, no flush), then show the
-         // menu. The discard never flushes, so a Save & Close must finish its save before calling this.
-         discardLiveCharacterInstances();
-         deactivateToMenu();
+         // Per-tab destructive close of the active tab (delete its record, land on a neighbour or the menu).
+         // Never flushes, so a Save & Close must finish its save before calling this.
+         const { activeTabId } = useTabManagerStore.getState();
+         if (activeTabId !== null) useTabManagerStore.getState().actions.closeTab(activeTabId);
       },
    },
 }));
@@ -812,7 +952,10 @@ async function bootMobile(workspace: Workspace): Promise<void> {
    finishBootHydration();
 
    useTabManagerStore.setState({ openTabs: tabs, activeTabId: activeId });
-   writeWorkspace({ openTabs: tabs, activeId });
+   // Boot hydrates only the active tab, so it is the sole resident; seed the recency memory + its denorm.
+   mobileLruOrder = activeId ? [activeId] : [];
+   if (activeId) refreshTabDenorm(activeId);
+   writeWorkspace({ openTabs: useTabManagerStore.getState().openTabs, activeId });
 }
 
 /**
