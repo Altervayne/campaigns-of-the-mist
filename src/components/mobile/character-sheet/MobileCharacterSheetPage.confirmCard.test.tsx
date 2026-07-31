@@ -17,17 +17,18 @@ import type { CreateCardOptions } from '@/lib/types/creation';
 
 const character = { id: 'char-1', game: 'LEGENDS', cards: [], trackers: { statuses: [], storyTags: [], storyThemes: [] } } as unknown as Character;
 
-const mocks = vi.hoisted(() => ({ addCard: vi.fn(() => 'new-card') }));
+const mocks = vi.hoisted(() => ({ addCard: vi.fn(() => 'new-card'), addJournal: vi.fn(() => 'new-journal') }));
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
 // The sheet surfaces its nav state so the assertion reads the value the page actually handed down.
 vi.mock('@/components/mobile/character-sheet/MobileCharacterSheet', () => ({
-   default: (props: { isReorderingCards?: boolean; initialCardId?: string | null; onReorderingCardsChange?: (v: boolean) => void; onOpenAddCard?: () => void }) => (
-      <div data-testid="sheet" data-reordering={String(props.isReorderingCards)} data-initial-card={String(props.initialCardId)}>
+   default: (props: { isReorderingCards?: boolean; initialItemId?: string | null; onReorderingCardsChange?: (v: boolean) => void; onOpenAddCard?: () => void; onCreateJournal?: () => void }) => (
+      <div data-testid="sheet" data-reordering={String(props.isReorderingCards)} data-initial-item={String(props.initialItemId)}>
          <button data-testid="enter-overview" onClick={() => props.onReorderingCardsChange?.(true)} />
          <button data-testid="open-add-card" onClick={() => props.onOpenAddCard?.()} />
+         <button data-testid="create-journal" onClick={() => props.onCreateJournal?.()} />
       </div>
    ),
 }));
@@ -55,6 +56,7 @@ vi.mock('@/lib/stores/characterStore', async (importOriginal) => ({
    useCharacterStore: (selector: (state: { character: Character }) => unknown) => selector({ character }),
    useCharacterActions: () => ({
       addCard: mocks.addCard,
+      addJournal: mocks.addJournal,
       updateCardDetails: vi.fn(),
       addImportedCard: vi.fn(),
       addImportedTracker: vi.fn(),
@@ -107,7 +109,7 @@ describe('confirming a card created from the overview', () => {
 
       const sheet = screen.getByTestId('sheet');
       expect(sheet.getAttribute('data-reordering')).toBe('false');
-      expect(sheet.getAttribute('data-initial-card')).toBe('new-card');
+      expect(sheet.getAttribute('data-initial-item')).toBe('new-card');
    });
 
    it('records the destination in history with the overview left behind', () => {
@@ -127,5 +129,22 @@ describe('confirming a card created from the overview', () => {
       } finally {
          push.mockRestore();
       }
+   });
+});
+
+describe('creating a journal from the overview', () => {
+   it('leaves the overview and lands on the new journal', () => {
+      render(<MobileCharacterSheetPage />);
+
+      fireEvent.click(screen.getByTestId('enter-overview'));
+      expect(screen.getByTestId('sheet').getAttribute('data-reordering')).toBe('true');
+
+      fireEvent.click(screen.getByTestId('create-journal'));
+
+      const sheet = screen.getByTestId('sheet');
+      expect(mocks.addJournal).toHaveBeenCalled();
+      expect(sheet.getAttribute('data-reordering')).toBe('false');
+      // The land-on-item id is the returned journal id, so the carousel navigates to the new journal.
+      expect(sheet.getAttribute('data-initial-item')).toBe('new-journal');
    });
 });

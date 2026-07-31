@@ -39,6 +39,7 @@ interface MobileCardReorderViewProps {
 	isLeftHanded: boolean;
 	onSelectItem: (index: number) => void;
 	onOpenAddCard?: () => void;
+	onCreateJournal?: () => void;
 }
 
 /**
@@ -65,9 +66,10 @@ interface MobileCardReorderViewProps {
  * @param isMobileFABMode - Adds bottom padding so the FAB does not overlap the list.
  * @param isLeftHanded - Mirrors each grip handle to the left edge when true.
  * @param onSelectItem - Called with an item index when its row is tapped.
- * @param onOpenAddCard - Opens the card creator; the add row is omitted without it.
+ * @param onOpenAddCard - Opens the card creator; the add-card row is omitted without it.
+ * @param onCreateJournal - Creates a journal and lands on it; the add-journal row is omitted without it.
  */
-export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, onSelectItem, onOpenAddCard }: MobileCardReorderViewProps) {
+export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, onSelectItem, onOpenAddCard, onCreateJournal }: MobileCardReorderViewProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 	const sensors = useMobileDragSensors();
@@ -159,8 +161,9 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 					</SortableContext>
 				</DndContext>
 
-				{/* Add card: outside the sortable list so it never reads as a drop slot, and
-				    deliberately quieter than the rows it follows. */}
+				{/* Add rows: outside the sortable list so they never read as a drop slot, and
+				    deliberately quieter than the rows they follow. A journal takes no type, so its
+				    row creates and lands directly rather than opening a creator. */}
 				{onOpenAddCard && (
 					<button
 						type="button"
@@ -174,6 +177,21 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 					>
 						<PlusCircle className="h-5 w-5" />
 						<span className="text-sm font-medium">{t('CharacterSheetPage.addCard')}</span>
+					</button>
+				)}
+				{onCreateJournal && (
+					<button
+						type="button"
+						data-tutorial="card-overview-add-journal"
+						onClick={onCreateJournal}
+						className={cn(
+							"flex w-full h-16 items-center justify-center gap-2 rounded-lg",
+							"border-2 border-dashed border-border bg-muted/50 text-muted-foreground",
+							"hover:text-foreground hover:border-foreground transition-colors"
+						)}
+					>
+						<NotebookText className="h-5 w-5" />
+						<span className="text-sm font-medium">{t('CharacterSheetPage.addJournal')}</span>
 					</button>
 				)}
 			</div>

@@ -20,6 +20,7 @@ vi.mock('@/lib/stores/appGeneralStateStore', () => ({
 import MobileCardCarousel from './MobileCardCarousel';
 
 const addButton = () => document.querySelector('[data-tutorial="add-card-button"]') as HTMLElement | null;
+const addJournalButton = () => document.querySelector('[data-tutorial="carousel-add-journal"]') as HTMLElement | null;
 
 beforeEach(() => {
    mocks.isEditing = false;
@@ -49,5 +50,25 @@ describe('empty carousel add-card placeholder', () => {
       render(<MobileCardCarousel items={[]} currentIndex={0} />);
 
       expect(addButton()).toBeNull();
+   });
+
+   it('offers both Add Card and Add Journal, each wired to its handler', () => {
+      const onOpenAddCard = vi.fn();
+      const onCreateJournal = vi.fn();
+      render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={onOpenAddCard} onCreateJournal={onCreateJournal} />);
+
+      expect(addButton()).not.toBeNull();
+      expect(addJournalButton()).not.toBeNull();
+
+      fireEvent.click(addJournalButton()!);
+      expect(onCreateJournal).toHaveBeenCalledTimes(1);
+      expect(onOpenAddCard).not.toHaveBeenCalled();
+   });
+
+   it('omits Add Journal with no create handler', () => {
+      render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={() => {}} />);
+
+      expect(addButton()).not.toBeNull();
+      expect(addJournalButton()).toBeNull();
    });
 });

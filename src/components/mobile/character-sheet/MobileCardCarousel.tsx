@@ -6,6 +6,9 @@ import { resolveCardComponent } from '@/components/organisms/cards/resolveCardCo
 import { AddCardButton } from '@/components/molecules/AddThemeCardButton';
 import { MobileJournalCard } from '@/components/mobile/character-sheet/MobileJournalCard';
 
+// -- Icon Imports --
+import { NotebookText } from 'lucide-react';
+
 // -- Store Imports --
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
@@ -20,9 +23,10 @@ interface MobileCardCarouselProps {
 	items: ResolvedSheetItem[];
 	currentIndex: number;
 	onOpenAddCard?: () => void;
+	onCreateJournal?: () => void;
 }
 
-export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard }: MobileCardCarouselProps) {
+export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard, onCreateJournal }: MobileCardCarouselProps) {
 	const { t } = useTranslation();
 	const isEditing = useAppGeneralStateStore((state) => state.isEditing);
 
@@ -64,16 +68,32 @@ export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard 
 			? renderCard(item.card)
 			: <MobileJournalCard key={item.id} journal={item.journal} />;
 
-	// Empty state
+	// Empty state: with no cards AND no journals the overview does not exist, so this is the only route
+	// to creating either. Not edit-gated, and scroll-safe so both affordances clear a short stage.
 	if (items.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center h-full p-8 text-center">
-				<p className="text-lg text-muted-foreground mb-6">
-					{t('MobileCardCarousel.noCards')}
-				</p>
-				{/* Not edit-gated: with no items the overview does not exist, so this is the
-				    only route to creating one. */}
-				{onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
+			<div className="flex flex-col h-full overflow-y-auto">
+				<div className="m-auto flex flex-col items-center gap-4 p-8 text-center">
+					<p className="text-lg text-muted-foreground">
+						{t('MobileCardCarousel.noCards')}
+					</p>
+					{onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
+					{onCreateJournal && (
+						<button
+							type="button"
+							data-tutorial="carousel-add-journal"
+							onClick={onCreateJournal}
+							className={cn(
+								'flex w-62.5 h-16 items-center justify-center gap-2 rounded-lg',
+								'border-2 border-dashed border-border bg-muted/50 text-muted-foreground',
+								'hover:text-foreground hover:border-foreground transition-colors'
+							)}
+						>
+							<NotebookText className="h-5 w-5" />
+							<span className="text-sm font-medium">{t('CharacterSheetPage.addJournal')}</span>
+						</button>
+					)}
+				</div>
 			</div>
 		);
 	}

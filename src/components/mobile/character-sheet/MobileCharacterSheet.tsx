@@ -49,9 +49,10 @@ interface MobileCharacterSheetProps {
 	isReorderingCards?: boolean;
 	onReorderingCardsChange?: (isReordering: boolean) => void;
 	onOpenAddCard?: () => void;
+	onCreateJournal?: () => void;
 	onEditCard?: (card: Card) => void;
 	onEditPortrait?: () => void;
-	initialCardId?: string | null;
+	initialItemId?: string | null;
 }
 
 export default function MobileCharacterSheet({
@@ -63,9 +64,10 @@ export default function MobileCharacterSheet({
 	isReorderingCards: controlledIsReorderingCards,
 	onReorderingCardsChange: controlledOnReorderingCardsChange,
 	onOpenAddCard,
+	onCreateJournal,
 	onEditCard,
 	onEditPortrait,
-	initialCardId
+	initialItemId
 }: MobileCharacterSheetProps = {}) {
 	const { t } = useTranslation();
 	const [internalActiveTab, setInternalActiveTab] = useState<SheetTab>('trackers');
@@ -112,17 +114,17 @@ export default function MobileCharacterSheet({
 	// Card navigation state
 	const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-	// Navigate to a specific item when initialCardId changes
+	// Navigate to a specific item when initialItemId changes
 	useEffect(() => {
-		if (initialCardId) {
-			const itemIndex = layout.findIndex(item => item.id === initialCardId);
+		if (initialItemId) {
+			const itemIndex = layout.findIndex(item => item.id === initialItemId);
 			if (itemIndex !== -1) {
 				startTransition(() => {
 					setCurrentCardIndex(itemIndex);
 				});
 			}
 		}
-	}, [initialCardId]);
+	}, [initialItemId]);
    
 	// Toolbelt context state
 	const [selectedTrackerId, setSelectedTrackerId] = useState<string | null>(null);
@@ -254,6 +256,7 @@ export default function MobileCharacterSheet({
 									setIsReorderingCards(false);
 								}}
 								onOpenAddCard={onOpenAddCard}
+								onCreateJournal={onCreateJournal}
 							/>
 						) : (
 							<MobileCardArea
@@ -262,6 +265,7 @@ export default function MobileCharacterSheet({
 								isLeftHanded={isLeftHanded}
 								touchHandlers={cardAreaHandlers}
 								onOpenAddCard={onOpenAddCard}
+								onCreateJournal={onCreateJournal}
 							/>
 						)}
 

@@ -18,6 +18,7 @@ interface MobileCardAreaProps {
 	isLeftHanded: boolean;
 	touchHandlers: { onTouchStart: (event: TouchEvent) => void; onTouchEnd: (event: TouchEvent) => void };
 	onOpenAddCard?: () => void;
+	onCreateJournal?: () => void;
 }
 
 /**
@@ -57,7 +58,7 @@ const FAB_CLEARANCE_PADDING = 'calc(2 * max(0px, min(calc(201px - 50vw), calc(50
  *
  * @param isLeftHanded - The FAB rests on this (leading) side, so the card is shifted the other way: right when true, left otherwise.
  */
-export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard }: MobileCardAreaProps) {
+export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandlers, onOpenAddCard, onCreateJournal }: MobileCardAreaProps) {
 	// A journal fills the stage width and height and scrolls its own page body, so the centring, the
 	// FAB-clearance nudge (both assume a fixed-width centred card), and the outer scroll are all dropped.
 	const isJournal = items[currentIndex]?.kind === 'journal';
@@ -78,6 +79,7 @@ export function MobileCardArea({ items, currentIndex, isLeftHanded, touchHandler
 					items={items}
 					currentIndex={currentIndex}
 					onOpenAddCard={onOpenAddCard}
+					onCreateJournal={onCreateJournal}
 				/>
 			</div>
 		</div>

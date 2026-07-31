@@ -181,6 +181,17 @@ describe('addJournal', () => {
 
       expect(store.getState().character!.journals).toHaveLength(0);
    });
+
+   it('returns the new journal id, resolvable in journals and the manifest', () => {
+      const store = makeStore();
+      const id = store.getState().actions.addJournal();
+
+      expect(typeof id).toBe('string');
+      expect(id).not.toBe('');
+      const character = store.getState().character!;
+      expect(character.journals.map((j) => j.id)).toContain(id);
+      expect(character.sheetLayout).toContainEqual({ kind: 'journal', id });
+   });
 });
 
 describe('updateJournal', () => {

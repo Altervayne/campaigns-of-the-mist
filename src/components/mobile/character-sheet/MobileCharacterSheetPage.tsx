@@ -83,10 +83,11 @@ export default function MobileCharacterSheetPage() {
 
 	// Card creation state
 	const { t: tNotifications } = useTranslation();
-	const { addCard, updateCardDetails, addImportedCard, addImportedTracker } = useCharacterActions();
+	const { addCard, addJournal, updateCardDetails, addImportedCard, addImportedTracker } = useCharacterActions();
 	const { mobileOpenCharacter } = useTabManagerActions();
 	const [cardToEdit, setCardToEdit] = useState<Card | null>(null);
-	const [newlyCreatedCardId, setNewlyCreatedCardId] = useState<string | null>(null);
+	// The item (card or journal) the carousel lands on after a create.
+	const [newlyCreatedItemId, setNewlyCreatedItemId] = useState<string | null>(null);
 
 	// The portrait is offered as a card type by the creator, so its picker + crop stage live here: the
 	// creator is a full-screen tab and the sheet under it is unmounted while it is open.
@@ -96,11 +97,11 @@ export default function MobileCharacterSheetPage() {
 	// Track if we're handling a popstate event to avoid pushing duplicate history
 	const isNavigatingBack = useRef(false);
 
-	// Clear newly created card ID when navigating away from sheet tab
+	// Clear the newly created item ID when navigating away from the cards region.
 	useEffect(() => {
 		if (activeTab !== 'sheet' || sheetActiveTab !== 'cards') {
 			startTransition(() => {
-				setNewlyCreatedCardId(null);
+				setNewlyCreatedItemId(null);
 			});
 		}
 	}, [activeTab, sheetActiveTab]);
@@ -291,10 +292,22 @@ export default function MobileCharacterSheetPage() {
 			resolvedCardId = addCard(options);
 		}
 		setCardToEdit(null);
-		setNewlyCreatedCardId(resolvedCardId);
+		setNewlyCreatedItemId(resolvedCardId);
 		// Confirm lands on the card itself, so the overview is left behind when the add was
 		// launched from it. The destination is pushed as one entry rather than going through
 		// the nav helpers, whose `isReordering` reads the pre-exit render's value.
+		setIsReorderingCards(false);
+		setActiveTab('sheet');
+		setSheetActiveTab('cards');
+		pushHistoryState({ tab: 'sheet', sheetTab: 'cards', isReordering: false });
+	};
+
+	// A journal has no type/themebook, so there is no picker: create it, then land the carousel on the
+	// new (empty) journal via the same land-on-item state the card confirm uses. Reachable from the
+	// overview's add row (drops reordering) and the empty-state button.
+	const handleCreateJournal = () => {
+		const journalId = addJournal();
+		setNewlyCreatedItemId(journalId);
 		setIsReorderingCards(false);
 		setActiveTab('sheet');
 		setSheetActiveTab('cards');
@@ -349,9 +362,10 @@ export default function MobileCharacterSheetPage() {
 						isReorderingCards={isReorderingCards}
 						onReorderingCardsChange={setReorderingWithHistory}
 						onOpenAddCard={handleOpenAddCard}
+						onCreateJournal={handleCreateJournal}
 						onEditCard={handleEditCard}
 						onEditPortrait={handleEditPortrait}
-						initialCardId={newlyCreatedCardId}
+						initialItemId={newlyCreatedItemId}
 					/>
 				)}
 				{activeTab === 'drawer' && (

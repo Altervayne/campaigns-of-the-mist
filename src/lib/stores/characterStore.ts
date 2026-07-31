@@ -121,7 +121,7 @@ export interface CharacterState {
       setCardExpanded: (cardId: string, expanded: boolean) => void;
       // Journal Actions
       /** Appends a bare, empty Journal (the character's own notebook) to `character.journals`. */
-      addJournal: () => void;
+      addJournal: () => string;
       /** Imports a journal onto the sheet as a COPY: a fresh top-level id, pages/bookmarks preserved. */
       addImportedJournal: (journal: Journal) => void;
       /** Replaces a journal in `character.journals` with an edited aggregate (page/bookmark edits). */
@@ -605,11 +605,13 @@ export function createCharacterStore() {
                },
                // Journal Actions
                addJournal: () => {
+                  let newJournalId = '';
                   set((state) => {
                      if (!state.character) return {};
                      useAppGeneralStateStore.getState().actions.setLastModifiedStore('character');
                      // A bare, game-agnostic aggregate: a fresh notebook with no pages or bookmarks.
                      const newJournal: Journal = { id: cuid(), title: '', pages: [], bookmarks: [] };
+                     newJournalId = newJournal.id;
                      return {
                         character: {
                            ...state.character,
@@ -618,6 +620,7 @@ export function createCharacterStore() {
                         },
                      };
                   });
+                  return newJournalId;
                },
                addImportedJournal: (journal) => {
                   set((state) => {
