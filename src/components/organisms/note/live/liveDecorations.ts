@@ -26,7 +26,7 @@ import type { NoteHeading } from '@/lib/notes/noteOutline';
  *     a hidden marker takes NO space and NO cursor position - the caret steps cleanly over it (the "phantom
  *     gap" + untrustworthy-cursor fix). Reveal is PER LINE, Obsidian-style: on the line(s) the caret is on,
  *     markers are left raw (real width, editable); everywhere else they collapse. The styled TEXT (bold/
- *     italic/…) is always rendered via a mark class - that is the "live" in Live Preview.
+ *     italic/...) is always rendered via a mark class - that is the "live" in Live Preview.
  *  2. `{mention}` -> pill widget (off its own line), revealing the raw `{...}` when the caret is on that line.
  *     Same class-strings as the react-markdown `MentionPill`, so Live == Reading.
  *
@@ -64,7 +64,7 @@ const hrWidget = Decoration.replace({ widget: new HorizontalRuleWidget() });
 
 /** A rendered list marker (bullet/number), replacing the raw marker off the cursor line. Both this widget and
  * the raw marker (on the cursor line) carry the `cm-md-li-marker` class, a FIXED-WIDTH inline-block slot, so the
- * content's x is identical whether or not the caret is on the line - only the glyph (`-`/`•`, `1.`) differs. */
+ * content's x is identical whether or not the caret is on the line - only the glyph (`-`/`-`, `1.`) differs. */
 class ListMarkerWidget extends WidgetType {
    readonly label: string;
    constructor(label: string) {
@@ -214,7 +214,7 @@ function buildDecorations(view: EditorView, deadTooltip: string): { all: Decorat
                return;
             }
 
-            // A markdown link. Off the caret's line an INTERNAL link (`#section` / `cotm://…`) renders as a
+            // A markdown link. Off the caret's line an INTERNAL link (`#section` / `cotm://...`) renders as a
             // chip widget (atomic) that reveals the raw `[text](href)` when the caret enters the line; an
             // EXTERNAL link keeps its default underlined-text rendering (its brackets/URL collapse via
             // MARKER_NODES below). On the caret's line the whole link stays raw and editable.

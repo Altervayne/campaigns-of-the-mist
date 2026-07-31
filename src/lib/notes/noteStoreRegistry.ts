@@ -13,7 +13,7 @@ import type { NoteStore } from '@/lib/stores/noteStore';
  * resolve it through `ActiveNoteStoreContext`. This is NOT a React module - no JSX, no hooks.
  */
 
-/** noteId → store instance. Distinct instances are fully isolated. */
+/** noteId -> store instance. Distinct instances are fully isolated. */
 const registry = new Map<string, NoteStore>();
 
 /** The id of the instance `getActiveNoteStore()` resolves to, or `null` when no note tab is active. */

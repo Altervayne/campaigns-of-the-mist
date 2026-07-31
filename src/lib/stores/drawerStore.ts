@@ -281,7 +281,7 @@ export const useDrawerStore = create<DrawerState>()((set, get) => {
             // content's own `drawerItemId` becomes the drawer item id, so the two stay in sync.
             const resolvedPresetId = presetId ?? ('drawerItemId' in content && content.drawerItemId ? (content.drawerItemId as string) : undefined);
             // A FULL_CHARACTER_SHEET that already carries a `drawerItemId` is a LINKED SAVE: the Save-to-Drawer
-            // button, the tab→drawer drag, and Save-As all decide its identity UPSTREAM (Save and the tab-drag
+            // button, the tab->drawer drag, and Save-As all decide its identity UPSTREAM (Save and the tab-drag
             // KEEP the character's id and link it; Save-As forks to a fresh id via `forkCharacterToDrawerItem`).
             // Persist it VERBATIM so the drawer copy IS that character and the working tab stays linked to it -
             // re-id'ing here would strand the tab against a stray fork (the reported orphan bug). Boards / notes /

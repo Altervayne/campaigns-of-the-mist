@@ -526,7 +526,7 @@ function SpecialRow({ special, onChange, onRemove }: { special: ChallengeSpecial
    );
 }
 
-/** A −/value/+ stepper clamped to `[min, max]`. */
+/** A -/value/+ stepper clamped to `[min, max]`. */
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (value: number) => void }) {
    const set = (next: number) => onChange(Math.max(min, Math.min(max, next)));
    return (

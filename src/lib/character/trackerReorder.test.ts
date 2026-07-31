@@ -33,7 +33,7 @@ beforeEach(() => {
    };
 });
 
-describe('applyTrackerReorder — one branch per group', () => {
+describe('applyTrackerReorder - one branch per group', () => {
    it('reorders statuses', () => {
       const a = tracker('s1', 'STATUS');
       const b = tracker('s2', 'STATUS');
@@ -74,7 +74,7 @@ describe('applyTrackerReorder — one branch per group', () => {
    });
 });
 
-describe('applyTrackerReorder — no-op guards', () => {
+describe('applyTrackerReorder - no-op guards', () => {
    const expectNoWrite = () => {
       expect(actions.reorderStatuses).not.toHaveBeenCalled();
       expect(actions.reorderStoryTags).not.toHaveBeenCalled();

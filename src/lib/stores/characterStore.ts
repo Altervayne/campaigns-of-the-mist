@@ -257,7 +257,7 @@ export function createCharacterStore() {
                      if (!state.character) return {};
                      useAppGeneralStateStore.getState().actions.setLastModifiedStore('character');
                      // Link to a drawer item WITHOUT clearing the undo stack (unlike
-                     // loadCharacter): used by the tab→drawer save so dragging a
+                     // loadCharacter): used by the tab->drawer save so dragging a
                      // background tab to the drawer doesn't reset that tab's history.
                      return { character: { ...state.character, drawerItemId } };
                   });
@@ -397,7 +397,7 @@ export function createCharacterStore() {
                         );
 
                         // The replaced card's manifest slot points at its now-dead id; repoint it to the
-                        // new copy in place so the layout order is preserved. No original card → append.
+                        // new copy in place so the layout order is preserved. No original card -> append.
                         sheetLayout = originalUniqueCard
                            ? sheetLayout.map((entry) => (entry.id === originalUniqueCard.id ? { kind: 'card', id: newCardCopy.id } : entry))
                            : appendSheetLayoutEntry(sheetLayout, { kind: 'card', id: newCardCopy.id });

@@ -56,7 +56,7 @@ describe('hexTile', () => {
       const tile = hexTile(size);
       const points = pathPoints(tile.path);
       const half = (SQRT3 * size) / 2;
-      // Center is (width/2, height/2) = (half, 1.5·size); check the top and an upper-right vertex.
+      // Center is (width/2, height/2) = (half, 1.5-size); check the top and an upper-right vertex.
       expect(hasPoint(points, half, 0.5 * size)).toBe(true); // top: (half, 5)
       expect(hasPoint(points, tile.width, size)).toBe(true); // upper-right: (width, 10)
    });

@@ -128,10 +128,10 @@ describe('multi-tab lifecycle (keep-alive)', () => {
       expect(getOrCreateInstance('A')).toBe(instA); // A kept alive
       disposeInstance('B'); // clean up the re-created stub
 
-      actions.closeTab('C'); // active, rightmost → left neighbour A
+      actions.closeTab('C'); // active, rightmost -> left neighbour A
       expect(useTabManagerStore.getState().activeTabId).toBe('A');
 
-      actions.closeTab('A'); // last tab → menu fallback
+      actions.closeTab('A'); // last tab -> menu fallback
       expect(useTabManagerStore.getState().openTabs).toEqual([]);
       expect(useTabManagerStore.getState().activeTabId).toBeNull();
       expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
@@ -191,12 +191,12 @@ describe('unsaved-changes tracking', () => {
 
    it('marks clean after a save links the tab to a drawer item (beats the re-dirty subscription)', () => {
       const actions = useTabManagerStore.getState().actions;
-      actions.openCharacterTab(makeCharacter('A')); // imported → dirty
+      actions.openCharacterTab(makeCharacter('A')); // imported -> dirty
       const instA = getOrCreateInstance('A');
       instA.getState().actions.updateCharacterName('Edited');
       expect(instA.getState().hasUnsavedChanges).toBe(true);
 
-      // The tab→drawer save pattern: relink, then assert clean. linkToDrawerItem swaps
+      // The tab->drawer save pattern: relink, then assert clean. linkToDrawerItem swaps
       // the character reference, so the change subscription re-dirties synchronously;
       // the explicit clean must win.
       instA.getState().actions.linkToDrawerItem('drawer-9');
@@ -213,7 +213,7 @@ describe('focus-or-add', () => {
       instA.getState().actions.updateCharacterName('Edited');
       const pastBefore = instA.temporal.getState().pastStates.length;
 
-      // Re-open the same id with different content → must focus, not rebuild.
+      // Re-open the same id with different content -> must focus, not rebuild.
       actions.openCharacterTab(makeCharacter('B'));
       actions.openCharacterTab(makeCharacter('A', { name: 'WOULD-CLOBBER' }));
 
@@ -366,7 +366,7 @@ describe('mobile keep-alive lifecycle', () => {
       actions.mobileOpenCharacter(makeCharacter('A'));
       expect(await getCharacter('A')).toBeDefined();
 
-      actions.mobileCloseSheet(); // sole tab → lands on the menu
+      actions.mobileCloseSheet(); // sole tab -> lands on the menu
 
       expect(getCharacterInstanceIds()).toEqual([]); // no live instance
       expect(useTabManagerStore.getState().activeTabId).toBeNull();
@@ -455,7 +455,7 @@ describe('reorderTabs', () => {
       actions.openCharacterTab(makeCharacter('C'));
       actions.setActiveTab('A');
 
-      actions.reorderTabs('A', 'C'); // move A to C's slot → [B, C, A]
+      actions.reorderTabs('A', 'C'); // move A to C's slot -> [B, C, A]
 
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['B', 'C', 'A']);
       expect(useTabManagerStore.getState().activeTabId).toBe('A'); // unchanged by a reorder
@@ -527,7 +527,7 @@ describe('board tabs (plumbing, no UI)', () => {
       expect(useTabManagerStore.getState().activeTabId).toBe('A'); // left neighbour (a character)
       expect(getOrCreateBoardInstance(boardId)).not.toBe(boardInstance); // disposed (re-created here)
       expect(await getBoard(boardId)).toBeUndefined(); // record deleted "for good"
-      expect(getActiveBoardStore()).toBeNull(); // back on a character → board pointer cleared
+      expect(getActiveBoardStore()).toBeNull(); // back on a character -> board pointer cleared
       expect(getActiveCharacterStore()).toBe(getOrCreateInstance('A'));
       disposeBoardInstance(boardId); // clean up the re-created stub
    });
@@ -588,7 +588,7 @@ describe('board tabs (plumbing, no UI)', () => {
 
       // The full list is preserved (the board id stays dormant), but no board is hydrated or active.
       expect(useTabManagerStore.getState().openTabs.map((t) => t.id)).toEqual(['A', board.id]);
-      expect(useTabManagerStore.getState().activeTabId).toBeNull(); // mobile cannot show a board → menu
+      expect(useTabManagerStore.getState().activeTabId).toBeNull(); // mobile cannot show a board -> menu
       expect(getActiveBoardStore()).toBeNull();
       expect(getBoardInstanceIds()).toEqual([]); // no board instance hydrated
       expect(getActiveCharacterStore()).toBe(getOrCreateInstance(SINGLE_ACTIVE_INSTANCE_ID));
@@ -613,7 +613,7 @@ describe('cross-tab undo isolation + routing', () => {
       expect(instA.getState().character?.name).toBe('A0'); // A untouched
       expect(instA.temporal.getState().pastStates.length).toBe(aPastBefore); // A's undo stack untouched
 
-      // Switch to A → undo now routes to A, not B.
+      // Switch to A -> undo now routes to A, not B.
       actions.setActiveTab('A');
       instA.getState().actions.updateCharacterName('A1');
       getActiveCharacterStore()!.temporal.getState().undo();

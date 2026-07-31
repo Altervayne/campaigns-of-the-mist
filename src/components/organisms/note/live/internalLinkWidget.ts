@@ -21,7 +21,7 @@ import type { GeneralItemType } from '@/lib/types/drawer';
 /*
  * The CM6 live-editor widget for an internal-link chip. It renders the SAME class-strings/structure as the
  * react-markdown `InternalLinkChip` (imported single-sourced), so Live == Reading. Pure imperative DOM - no
- * React root per widget - matching the mention-pill widget. The underlying `[text](cotm://…)` doc text is
+ * React root per widget - matching the mention-pill widget. The underlying `[text](cotm://...)` doc text is
  * untouched; this only replaces its rendering off the caret's line (the raw markdown reveals on the line).
  *
  * Metadata parity: a section resolves synchronously (against the doc's headings, done in the decoration
@@ -157,7 +157,7 @@ export class InternalLinkWidget extends WidgetType {
       text.textContent = chipLabel(this.target, this.authorLabel, metadata);
    }
 
-   // Let a click through so the caret can land on the `[text](…)` to edit it (Live-Preview reveal-on-cursor).
+   // Let a click through so the caret can land on the `[text](...)` to edit it (Live-Preview reveal-on-cursor).
    ignoreEvent(): boolean {
       return false;
    }

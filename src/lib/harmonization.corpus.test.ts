@@ -76,7 +76,7 @@ describe.skipIf(!HAS_CORPUS)('real corpus round-trip (local-only)', () => {
          const isAlpha = parsed && typeof parsed === 'object' && 'compatibility' in parsed && 'themeOne' in parsed;
 
          if (isAlpha) {
-            // Pre-1.0 alpha format → the dedicated converter, whose output must itself harmonize clean.
+            // Pre-1.0 alpha format -> the dedicated converter, whose output must itself harmonize clean.
             const ch = transformLegacyCharacter(parsed).character;
             expect(Array.isArray(ch.cards) && Array.isArray(ch.journals) && Array.isArray(ch.sheetLayout)).toBe(true);
             const h = harmonizeData(ch, 'FULL_CHARACTER_SHEET') as Character;

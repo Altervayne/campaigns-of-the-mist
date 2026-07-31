@@ -36,7 +36,7 @@ describe('applyMentionToCharacter - status', () => {
       expect(outcome).toEqual({ kind: 'status-created', name: 'Bleeding' });
       expect(statuses(store)).toHaveLength(1);
       expect(statuses(store)[0].name).toBe('Bleeding');
-      // Tier 2 → box index 1 ticked, nothing cumulative below it.
+      // Tier 2 -> box index 1 ticked, nothing cumulative below it.
       expect(statuses(store)[0].tiers).toEqual([false, true, false, false, false, false]);
    });
 
@@ -44,7 +44,7 @@ describe('applyMentionToCharacter - status', () => {
       const store = makeStore();
       apply(store, { type: 'status', name: 'Bleeding', tier: 2, raw: 'Bleeding-2' });
 
-      // Same name (case/space-insensitive), same tier again → box 2 already ticked, bubbles to box 3.
+      // Same name (case/space-insensitive), same tier again -> box 2 already ticked, bubbles to box 3.
       const outcome = apply(store, { type: 'status', name: '  bleeding  ', tier: 2, raw: 'bleeding-2' });
 
       expect(outcome).toEqual({ kind: 'status-raised', name: '  bleeding  ' });

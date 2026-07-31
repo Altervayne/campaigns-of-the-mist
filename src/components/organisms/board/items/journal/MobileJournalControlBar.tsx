@@ -23,8 +23,8 @@ interface MobileJournalControlBarProps extends JournalControlsContext {
 
 /**
  * The journal's mobile control surface, on `--paper` tokens so it reads as part of the notebook (not app
- * chrome). Two strata: a read strip (prev · N/M · pages · bookmarks · next) and, while editing, an edit strip
- * above it (add page · remove page · bookmark this page). Every target is a >=44px paper-band button with a
+ * chrome). Two strata: a read strip (prev - N/M - pages - bookmarks - next) and, while editing, an edit strip
+ * above it (add page - remove page - bookmark this page). Every target is a >=44px paper-band button with a
  * 24px glyph. Page turns happen only here - a swipe navigates sheet items, never pages. The pages overview and
  * bookmark list open as their own mobile bottom sheets (thumb-sized rows) rather than the desktop popovers. In
  * FAB mode a leading-edge slot is reserved so the floating navigation FAB clears the controls; side-panel mode

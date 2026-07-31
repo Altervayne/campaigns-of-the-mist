@@ -118,7 +118,7 @@ interface JournalItemProps {
 
 export function JournalItem({ item, content, isSelected, isEditing, autoFocusEditor = false, toolbarSlot, sideSlot, toolbarControlClassName, bookmarkMode = 'side-tabs', touch = false, pageBottomInset, renderControls, onMentionClick, onContentChange, onRequestSelect }: JournalItemProps) {
    // A tapped `{mention}` mints a board-native tracker beside the journal (create-only, board scope); a host
-   // that supplies its own handler (the sheet journal → create-or-raise on the character) overrides it.
+   // that supplies its own handler (the sheet journal -> create-or-raise on the character) overrides it.
    const boardMint = useBoardMentionMint(item);
    const handleMentionClick = onMentionClick ?? boardMint;
 

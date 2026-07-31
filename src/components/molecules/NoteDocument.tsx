@@ -63,7 +63,7 @@ interface NoteDocumentProps {
    /** The note-level cover image; floated top-left so the opening text wraps beside it. */
    cover?: NoteCoverData;
    onMentionClick?: (segment: MentionSegment) => void;
-   /** Resolves an internal link (`#section` / `cotm://…`) on click; omit for a display-only render (chips stay inert). */
+   /** Resolves an internal link (`#section` / `cotm://...`) on click; omit for a display-only render (chips stay inert). */
    onLinkActivate?: (href: string) => void;
    /**
     * Board-tile variant: sizes the title + cover with the CONTAINER (the tile), not the viewport, so a note

@@ -15,7 +15,7 @@ export interface DragMorphSignal {
    descriptor: MorphDescriptor | null;
    /** The dwell key (restarts the ring on change), or null when no dwell is running. */
    springKey: string | null;
-   /** The spring's direction arrow (folder → in, back → up), or null. */
+   /** The spring's direction arrow (folder -> in, back -> up), or null. */
    springArrow: MorphArrow;
    /**
     * Force the clone to funnel + the cluster to show even with no descriptor/spring

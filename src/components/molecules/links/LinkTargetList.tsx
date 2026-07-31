@@ -205,7 +205,7 @@ export function LinkTargetList({ onPick, sections }: LinkTargetListProps) {
 
 /**
  * Compact one-line breadcrumb for a folder path: `''` at root, the leaf alone for one level, `Root / Leaf`
- * for two, `Root / … / Leaf` once deeper - so even a long path never blows out the row.
+ * for two, `Root / ... / Leaf` once deeper - so even a long path never blows out the row.
  */
 function formatFolderPath(names: string[]): string {
    if (names.length === 0) return '';

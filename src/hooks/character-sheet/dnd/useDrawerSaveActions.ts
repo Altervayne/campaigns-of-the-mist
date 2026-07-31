@@ -48,7 +48,7 @@ export function useDrawerSaveActions({ initiateItemDrop }: UseDrawerSaveActionsA
 
       const destinationFolderId = drawerDropFolderId(overIdStr, overType, over);
 
-      // A card, tracker, OR journal: mapItemToStorableInfo forks on the shape (a journal → ['JOURNAL','NEUTRAL']).
+      // A card, tracker, OR journal: mapItemToStorableInfo forks on the shape (a journal -> ['JOURNAL','NEUTRAL']).
       const storableInfo = mapItemToStorableInfo(activeDragItem as CardData | Tracker | Journal);
       if (!storableInfo) return;
       const [generalType, gameSystem] = storableInfo;

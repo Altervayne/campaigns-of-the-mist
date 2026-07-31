@@ -3,7 +3,7 @@
  * generous tab-lane hit test, the cross-surface context derivation, the spring
  * dwell controller, and the per-context morph descriptors. Kept free of React,
  * @dnd-kit, and any drawer/tab/character concept (lucide icons are imported only as
- * descriptor data) so the geometry, the kind→context mapping, and the descriptor
+ * descriptor data) so the geometry, the kind->context mapping, and the descriptor
  * resolution can be unit-tested in isolation; the stateful wiring lives in
  * {@link import('@/hooks/character-sheet/useCharacterSheetDnD')} and the morph engine.
  */
@@ -143,13 +143,13 @@ export function deriveDragContext(
       if (overZone === 'board') return 'add-to-board';
       if (overZone === 'play-area') return 'open';
       if (overZone === 'drawer-nav') return 'drawer-move';
-      // 'drawer-items' → null: the item keeps its full overlay for precise reordering.
+      // 'drawer-items' -> null: the item keeps its full overlay for precise reordering.
       return null;
    }
    if (kind === 'drawer-component') {
       if (overZone === 'sheet') return sheetCompatible ? 'add-to-sheet' : null;
       if (overZone === 'drawer-nav') return 'drawer-move';
-      // 'drawer-items' → null: full overlay for reordering among items.
+      // 'drawer-items' -> null: full overlay for reordering among items.
       return null;
    }
    if (kind === 'drawer-folder') {

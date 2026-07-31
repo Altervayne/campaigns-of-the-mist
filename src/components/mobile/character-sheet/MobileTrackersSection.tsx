@@ -135,7 +135,7 @@ export function MobileTrackersSection({ character, areTrackersEditable, isEditin
 								data-tutorial="add-status-button"
 								onClick={onAddStatus}
 								className={cn(
-									// Compact add affordance: a self-sizing ≥44px pill, not a full
+									// Compact add affordance: a self-sizing >=44px pill, not a full
 									// card-sized placeholder. `self-center` keeps the flex row from
 									// stretching it to the neighbouring tracker card's height.
 									"h-14 px-4 self-center border-2 border-dashed border-primary/25",

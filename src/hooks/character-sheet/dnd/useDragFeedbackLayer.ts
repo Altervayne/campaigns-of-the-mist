@@ -72,7 +72,7 @@ export function useDragFeedbackLayer({
    // Which sheet section to highlight for a compatible drawer-item drag ('cards'/'trackers').
    const [sheetHighlight, setSheetHighlight] = useState<'cards' | 'trackers' | null>(null);
    // Whether the dragged item can actually land on the current sheet (game match).
-   // Gates the 'add-to-sheet' glyph: no action possible → no glyph (still morphs).
+   // Gates the 'add-to-sheet' glyph: no action possible -> no glyph (still morphs).
    const sheetCompatibleRef = useRef(true);
    // Reactive flag for the whole drag of a game-incompatible component, driving the
    // large "can't drop here" overlay over the sheet (issue 5). Set once at drag start.

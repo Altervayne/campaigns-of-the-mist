@@ -38,7 +38,7 @@ interface FloatingBottomConfig {
  * whatever bottom chrome sits beneath it, and is staggered far enough from any
  * other cluster on the same edge that the two never overlap in any configuration.
  *
- * The offset is `bottom-nav height + card-nav-bar height + base gap + stagger ×
+ * The offset is `bottom-nav height + card-nav-bar height + base gap + stagger x
  * stagger-step`, all in rem, plus `env(safe-area-inset-bottom)` (the same inset
  * the `pb-safe` utility applies, made non-zero by the `viewport-fit=cover`
  * viewport). Callers describe their situation declaratively (which bottom chrome

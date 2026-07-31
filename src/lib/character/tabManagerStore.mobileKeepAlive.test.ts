@@ -106,7 +106,7 @@ describe('cold rehydrate', () => {
       actions().mobileOpenCharacter(makeCharacter('A', { name: 'Alpha' }));
       getOrCreateInstance('A').getState().actions.updateCharacterName('Alpha-SAVED');
       actions().mobileOpenCharacter(makeCharacter('B'));
-      actions().mobileOpenCharacter(makeCharacter('C')); // budget 2 → A (LRU tail) evicted
+      actions().mobileOpenCharacter(makeCharacter('C')); // budget 2 -> A (LRU tail) evicted
       await tick(); // let the eviction flush's async write land
 
       expect(getCharacterInstanceIds()).not.toContain('A'); // instance gone (cold)

@@ -41,7 +41,7 @@ interface MobileSortableTrackerProps {
  * Selection for the toolbelt is by long-press on the body (a familiar mobile
  * pattern; the one-time long-press hint and the selected-state badge in
  * {@link SelectableTracker} make it discoverable and show its state). A dedicated
- * ≥44px grip handle owns drag-to-reorder. Handle and body are siblings (the
+ * >=44px grip handle owns drag-to-reorder. Handle and body are siblings (the
  * long-press handlers live inside `SelectableTracker`), so the @dnd-kit
  * `TouchSensor` and the long-press timer never share an element: dragging the
  * handle never selects, and selecting never starts a drag. The handle is rendered

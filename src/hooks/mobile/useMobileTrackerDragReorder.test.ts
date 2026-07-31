@@ -45,7 +45,7 @@ beforeEach(() => {
    cleanup();
 });
 
-describe('useMobileTrackerDragReorder — the drop, one case per group', () => {
+describe('useMobileTrackerDragReorder - the drop, one case per group', () => {
    it('reorders statuses', () => {
       const a = tracker('s1', 'STATUS');
       const b = tracker('s2', 'STATUS');
@@ -115,7 +115,7 @@ describe('useMobileTrackerDragReorder — the drop, one case per group', () => {
    });
 });
 
-describe('useMobileTrackerDragReorder — the SortableContext ids', () => {
+describe('useMobileTrackerDragReorder - the SortableContext ids', () => {
    it('emits one id array per group in list order', () => {
       const view = mount(character({
          statuses: [tracker('s1', 'STATUS'), tracker('s2', 'STATUS')],

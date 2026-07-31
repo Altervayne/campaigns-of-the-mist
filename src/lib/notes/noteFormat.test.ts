@@ -103,7 +103,7 @@ describe('computePrefixToggle', () => {
       // Caret alone on an empty line (start of an empty doc): bullet + numbered both prefix it.
       expect(applyLine('', computePrefixToggle('', 0, 0, 'bullet'))).toBe('- ');
       expect(applyLine('', computePrefixToggle('', 0, 0, 'numbered'))).toBe('1. ');
-      // An empty line between paragraphs: caret on it → prefixed.
+      // An empty line between paragraphs: caret on it -> prefixed.
       const body = 'a\n\nb';
       expect(applyLine(body, computePrefixToggle(body, 2, 2, 'bullet'))).toBe('a\n- \nb');
    });

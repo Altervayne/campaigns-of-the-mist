@@ -19,7 +19,7 @@ import type { BoardStore } from '@/lib/stores/boardStore';
  * `ActiveBoardStoreContext`. This is NOT a React module - no JSX, no hooks.
  */
 
-/** boardId → store instance. Distinct instances are fully isolated. */
+/** boardId -> store instance. Distinct instances are fully isolated. */
 const registry = new Map<string, BoardStore>();
 
 /** The id of the instance `getActiveBoardStore()` resolves to, or `null` when no board tab is active. */

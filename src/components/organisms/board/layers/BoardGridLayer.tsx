@@ -16,7 +16,7 @@ import type { BoardGrid, Viewport } from '@/lib/types/board';
  * Screen-space background behind the world layer: the CSS grid, the hex hive's SVG pattern, and the
  * empty-board cue. All three are inert and never track the world transform - they follow pan/zoom via
  * the adaptive spacing and the pattern/background offsets, not by living in the transformed layer.
- * `hexPatternId` is minted once per canvas by the parent so the SVG `fill="url(#…)"` reference and the
+ * `hexPatternId` is minted once per canvas by the parent so the SVG `fill="url(#...)"` reference and the
  * pattern def can never desync across boards.
  */
 export function BoardGridLayer({ grid, viewport, hexPatternId, itemCount }: { grid: BoardGrid; viewport: Viewport; hexPatternId: string; itemCount: number }) {

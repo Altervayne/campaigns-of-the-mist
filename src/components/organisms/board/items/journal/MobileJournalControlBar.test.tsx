@@ -8,8 +8,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { JournalControlsContext } from '@/components/organisms/board/items/JournalItem';
 
 /*
- * The bespoke mobile control surface: a read strip (prev · N/M · bookmarks · next) with an edit strip above
- * it while editing (add · remove · bookmark). Every control routes to the injected journal handler - never a
+ * The bespoke mobile control surface: a read strip (prev - N/M - bookmarks - next) with an edit strip above
+ * it while editing (add - remove - bookmark). Every control routes to the injected journal handler - never a
  * parallel implementation - with prev/next disabled at the ends and >=44px targets. In FAB mode it reserves a
  * leading-edge slot for the floating navigation FAB; side-panel mode is a flush full-width bar.
  */

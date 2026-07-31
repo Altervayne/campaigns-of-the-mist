@@ -158,7 +158,7 @@ export function useCharacterSheetDnD() {
       }
 
       // A tab drag is previewed via its own overlay branch, not as a sheet item.
-      // Auto-open the drawer so the tab→drawer save has visible drop targets (the
+      // Auto-open the drawer so the tab->drawer save has visible drop targets (the
       // chosen affordance; it does not auto-close).
       const untitledLabel = tNotifications('Tabs.untitled');
 
@@ -282,7 +282,7 @@ export function useCharacterSheetDnD() {
       setIsOverDrawer(isHoveringDrawer);
       setSheetHighlight(highlight);
       // Only the NON-drawer zones come from dnd-kit's `over`; the in-drawer zones are
-      // owned by the manual geometry target (set in handlePointerMove → updateContext),
+      // owned by the manual geometry target (set in handlePointerMove -> updateContext),
       // which is reliable full-row where dnd-kit's collision is center-only.
       overZoneRef.current = zone === 'play-area' || zone === 'sheet' || zone === 'board' ? zone : null;
       updateContext();

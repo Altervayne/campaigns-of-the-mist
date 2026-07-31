@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { TUTORIAL_Z } from '@/lib/tutorial/zLayers';
 import type { TutorialGestureCue as GestureCue } from '@/lib/tutorial/tutorialTypes';
 
-// 2π·16 - matches the app's `spring-ring` keyframe (a 16px-radius ring).
+// 2pi-16 - matches the app's `spring-ring` keyframe (a 16px-radius ring).
 const RING_CIRCUMFERENCE = 100.53;
 
 // Half-travel (the loop runs from -x to +x), at 'normal'. A swipe is a whole-surface sweep, a drag a

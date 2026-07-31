@@ -40,7 +40,7 @@ interface ToolbeltBottomSheetProps {
  * this component owns only the toolbelt-specific chrome and tile layout. The
  * `data-tutorial="toolbelt"` anchor is preserved for the mobile tour.
  *
- * The tiles are split into labelled sections by their `group` (Item · Edit · Add ·
+ * The tiles are split into labelled sections by their `group` (Item - Edit - Add -
  * Workspace). A section renders only when it has tiles, and a lone tile is folded
  * into a neighbour so no header ever sits over a single tile.
  *

@@ -2,7 +2,7 @@
 // service worker's manifest, and no precached chunk may exceed the budget.
 //
 // Workbox drops any file over `maximumFileSizeToCacheInBytes` (vite.config.ts) from the
-// precache manifest silently — no error, no warning. The route that needs that chunk then
+// precache manifest silently - no error, no warning. The route that needs that chunk then
 // fails offline with nothing to explain why. This check fails the build first: it diffs the
 // emitted precache candidates against the manifest, and holds every chunk under a budget set
 // well below the Workbox cap so a runaway is caught with runway, before it hits the cliff.
@@ -38,7 +38,7 @@ let sw;
 try {
    sw = readFileSync(SW, 'utf8');
 } catch {
-   console.error(`✖ precache check: ${SW} not found — run \`vite build\` first.`);
+   console.error(`precache check: ${SW} not found - run \`vite build\` first.`);
    process.exit(1);
 }
 
@@ -66,7 +66,7 @@ let failed = false;
 
 if (missing.length) {
    failed = true;
-   console.error(`\n✖ ${missing.length} asset(s) emitted but NOT precached — offline will break for these:`);
+   console.error(`\n${missing.length} asset(s) emitted but NOT precached - offline will break for these:`);
    for (const p of missing) {
       let size = '';
       try {
@@ -81,11 +81,11 @@ if (missing.length) {
 
 if (overBudget.length) {
    failed = true;
-   console.error(`\n✖ ${overBudget.length} precached chunk(s) over the ${mib(BUDGET_BYTES)} budget:`);
+   console.error(`\n${overBudget.length} precached chunk(s) over the ${mib(BUDGET_BYTES)} budget:`);
    for (const f of overBudget) console.error(`    ${mib(f.bytes)}  ${f.p}`);
    console.error('  Still under the Workbox cap for now, but split it before it hits the cliff and drops.');
 }
 
 if (failed) process.exit(1);
 
-console.log(`\n✓ precache OK: every candidate is precached, all chunks under ${mib(BUDGET_BYTES)}.`);
+console.log(`\nprecache OK: every candidate is precached, all chunks under ${mib(BUDGET_BYTES)}.`);

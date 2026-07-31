@@ -16,7 +16,7 @@ interface BrowseMenuTarget {
 
 /**
  * State for the browse tree's context menu: which row it acts on and where it
- * anchors. Opened from a row's overflow (⋯) button, which supplies the anchor
+ * anchors. Opened from a row's overflow (...) button, which supplies the anchor
  * point.
  *
  * @returns `isOpen`, the `target` row, the anchor `position`, the two per-kind

@@ -20,7 +20,7 @@ import type { Card as CardData, Tracker } from '@/lib/types/character';
  */
 
 // ##################################################
-// ###   Sheet → board via mid-drag spring nav    ###
+// ###   Sheet -> board via mid-drag spring nav    ###
 // ##################################################
 // A sheet item dropped on the board after spring-navigating to the board tab MID-DRAG:
 // BoardView's `board-drop-zone` droppable mounts during the drag, so dnd-kit never measures

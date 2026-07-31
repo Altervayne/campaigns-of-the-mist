@@ -9,7 +9,7 @@
  *   - Same-note section:  `#<slug>`
  *   - Entity (owns a tab): `cotm://note|board|character/<entityId>`
  *   - Tabless element:     `cotm://<type>/<drawerItemId>` (any other `cotm://` type, e.g. `item`)
- *   - External:            `http(s)://…`
+ *   - External:            `http(s)://...`
  * Id-kind rule: entity links carry an ENTITY id; element links carry a DRAWER ITEM id - the `type` segment
  * decides, so the resolver never mis-opens one for the other.
  */

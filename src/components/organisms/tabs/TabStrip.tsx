@@ -28,7 +28,7 @@ import type { DrawerItem } from '@/lib/types/drawer';
  * the SidebarMenu. Renders the open tabs in order, with a `+` that opens the
  * {@link NewTabDialog} right after the last tab.
  *
- * Layout: `[ ‹ ] [ scroll container: tabs … + ] [ › ]`. The tabs (and the trailing `+`)
+ * Layout: `[ < ] [ scroll container: tabs ... + ] [ > ]`. The tabs (and the trailing `+`)
  * live in a dedicated `min-w-0 flex-1` scroll container so the strip is capped to the
  * play-area width (between the sidebar and the drawer) and SCROLLS rather than pushing
  * them off-screen. The chevrons flank the container, appear only when the tabs overflow,
@@ -96,7 +96,7 @@ export function TabStrip({ forceDropHighlight = false }: { forceDropHighlight?: 
       updateScrollAffordances();
 
       const onWheel = (event: WheelEvent) => {
-         if (el.scrollWidth <= el.clientWidth) return; // no overflow → leave page scroll alone
+         if (el.scrollWidth <= el.clientWidth) return; // no overflow -> leave page scroll alone
          el.scrollLeft += event.deltaY;
          event.preventDefault();
       };

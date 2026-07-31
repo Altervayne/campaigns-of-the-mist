@@ -64,8 +64,8 @@ export function mapItemToStorableInfo(item: Card | Tracker | PostItNote | Journa
 /**
  * Which sheet section a drawer item type belongs to, so the play area can highlight
  * only the relevant region while still accepting a drop anywhere (the drop is routed
- * by type regardless). Card/theme types → the cards section; tracker types → the
- * trackers section; anything else (e.g. a full character sheet) → null.
+ * by type regardless). Card/theme types -> the cards section; tracker types -> the
+ * trackers section; anything else (e.g. a full character sheet) -> null.
  */
 export function sheetSectionForItemType(type: GeneralItemType): 'cards' | 'trackers' | null {
    switch (type) {

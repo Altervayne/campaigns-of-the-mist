@@ -30,7 +30,7 @@ import type { NoteImageAlign } from '@/lib/notes/noteImageHint';
  * "horrible" dead-handle inspector - you grab the actual image's corner and it grows under the cursor.
  *
  * Bridge decision (Rook's spike): IMPERATIVE, not React-in-widget. The widget talks to the ref-counted asset
- * cache directly (`acquireAssetUrl`/`releaseAssetUrl` ↔ `toDOM`/`destroy`), and reuses `NoteImage`'s figure
+ * cache directly (`acquireAssetUrl`/`releaseAssetUrl` <-> `toDOM`/`destroy`), and reuses `NoteImage`'s figure
  * class-strings (`noteImageClasses`) so Live == Reading with zero drift. Every buffer rewrite goes through
  * the SAME grammar helpers (`serializeImageHint`/`rewriteImageHintAt`) - the editor never hand-formats a
  * title - dispatched as a `view.dispatch({changes})` at the token's LIVE offset (found via
@@ -296,7 +296,7 @@ export class AssetImageWidget extends WidgetType {
    }
 }
 
-/** The prose column width, for the drag→% math (the nearest CM6 content element). */
+/** The prose column width, for the drag->% math (the nearest CM6 content element). */
 function columnWidth(view: EditorView, wrap: HTMLElement): number {
    const content = wrap.closest('.cm-content') as HTMLElement | null;
    return (content ?? view.contentDOM).getBoundingClientRect().width || 1;

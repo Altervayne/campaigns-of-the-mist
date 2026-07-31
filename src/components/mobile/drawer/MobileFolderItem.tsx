@@ -42,7 +42,7 @@ interface MobileFolderItemProps {
  *     the longer hold time is configured in `useMobileDragSensors` for the
  *     drawer specifically, so a quick tap stays a tap and a scroll fling stays
  *     a scroll, while a deliberate hold picks the row up.
- *   - **`⋯` button** as a real flex sibling on the trailing edge of the row
+ *   - **`...` button** as a real flex sibling on the trailing edge of the row
  *     (right for right-handed, left when left-handed): always-present fallback
  *     for the context menu (rename / move / duplicate / delete), so the menu
  *     is reachable without any gesture. Touch events on the button stop

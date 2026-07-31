@@ -44,7 +44,7 @@ interface MobileCardReorderViewProps {
 /**
  * The overview of the mobile character sheet: a vertical, drag-sortable list of the sheet's items -
  * cards and journals interleaved in manifest order. Each row pairs a tappable preview (tap jumps to
- * that item and leaves the overview) with a dedicated ≥44px grip handle that owns drag-to-reorder, so
+ * that item and leaves the overview) with a dedicated >=44px grip handle that owns drag-to-reorder, so
  * tapping a preview never starts a drag and dragging the handle never selects. The handle sits on the
  * handedness-leading edge (right by default, left when left-handed) and is touch-action: none so an
  * intentional drag is not pre-empted by the list's vertical scroll; @dnd-kit auto-scrolls the
@@ -136,7 +136,7 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 													{item.kind === 'card' ? renderCardPreview(item.card) : renderJournalRow(item.journal)}
 												</div>
 
-												{/* Drag handle (≥44px touch target) */}
+												{/* Drag handle (>=44px touch target) */}
 												<button
 													type="button"
 													aria-label={t('Common.dragHandle')}

@@ -50,7 +50,7 @@ export function routeManualDrawerDrop(
    const draggedId = active.id.toString();
    const isFolderDrag = dragKind === 'drawer-folder';
 
-   // Folder onto a reorder SLOT → place at that exact position, ahead of the generic
+   // Folder onto a reorder SLOT -> place at that exact position, ahead of the generic
    // folder-row / current-folder handling so the user lands where the highlighted slot
    // shows. When the dragged folder is already in this view it is a pure reorder; when
    // it arrived via a spring navigation it is moved into the current folder and then
@@ -112,7 +112,7 @@ export function routeManualDrawerDrop(
          else void moveItem(draggedId, currentFolderId ?? undefined);
          return true;
       }
-      // Already in the current folder → fall through to the dnd-kit reorder path below.
+      // Already in the current folder -> fall through to the dnd-kit reorder path below.
    }
    return false;
 }

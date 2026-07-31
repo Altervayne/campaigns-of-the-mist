@@ -35,7 +35,7 @@ import type { PortalAlign, PortalBoardContent, PortalStyle } from '@/lib/types/b
  * label flush can't clobber a target/visual change, and vice versa). App-theme chrome; the preview alone shows
  * the real style.
  *
- * The five styles fold onto `PortalStyle` = (visual kind + image mode) × (label present): text-only = no
+ * The five styles fold onto `PortalStyle` = (visual kind + image mode) x (label present): text-only = no
  * visual; icon+text = icon + label; icon-only = icon + empty label; image poster / image+text composed = image
  * (mode) + label. The selected kind is EXPLICIT editor state, not re-derived from the data each render: icon+text
  * and icon-only share a visual and differ only by the label, so an empty label in icon+text would read back as

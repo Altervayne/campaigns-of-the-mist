@@ -43,7 +43,7 @@ const relativeFormatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'aut
 const absoluteDateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
 const absoluteDateTimeFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
-/** A short, locale-aware relative string ("now", "5 minutes ago", …), absolute (medium date) past the ladder. */
+/** A short, locale-aware relative string ("now", "5 minutes ago", ...), absolute (medium date) past the ladder. */
 export function formatRelativeItemDate(ms: number, now: number = Date.now()): string {
    const step = relativeDateLadder(now - ms);
    if ('absolute' in step) return absoluteDateFormatter.format(ms);

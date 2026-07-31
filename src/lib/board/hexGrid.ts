@@ -39,8 +39,8 @@ function polygonPath(points: [number, number][]): string {
 }
 
 /**
- * Builds the honeycomb tile for a hex of circumradius `size`. The repeat rectangle is `√3·size` x
- * `3·size`. It draws EVERY hex whose outline touches the tile - the four corners plus the centre -
+ * Builds the honeycomb tile for a hex of circumradius `size`. The repeat rectangle is `sqrt3-size` x
+ * `3-size`. It draws EVERY hex whose outline touches the tile - the four corners plus the centre -
  * not just the two of the fundamental domain: the pattern clips each tile, and an edge shared by two
  * corner hexes would be clipped away by BOTH owners, leaving a gap. Drawing all five means every edge
  * that falls inside the tile is drawn by some hex; the overlapping strokes coincide.

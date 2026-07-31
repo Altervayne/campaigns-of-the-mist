@@ -7,7 +7,7 @@ import { DRAWER_ROOT_PARENT_ID } from './drawerRecords';
  *
  * Async replacement for the old tree-walking `getItemDisplayPath`: returns
  * `"Drawer Root"` when the item sits at the root, otherwise the bracketed folder
- * path to its containing folder, e.g. `"[Campaign]→[NPCs]"`. Resolved from the
+ * names joined by an arrow, down to its containing folder. Resolved from the
  * normalized store via the repository (the item's parent, then that folder's
  * breadcrumb). Returns `"Drawer Root"` if the item cannot be found.
  *

@@ -26,7 +26,7 @@ import type { ToolbeltAction, ToolbeltGroup } from '@/lib/types/toolbelt';
 
 
 
-// The ring is ordered edit → add → workspace → item (context actions last, where they've
+// The ring is ordered edit -> add -> workspace -> item (context actions last, where they've
 // always sat), and each group is headed by a title separator so a scanning thumb can find
 // its way. A separator is a FULL-HEIGHT row (one ITEM_HEIGHT slot, exactly like an action),
 // so the index-based measurement math below still runs on a uniform-height list; it is

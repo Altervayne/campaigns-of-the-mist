@@ -639,7 +639,7 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          useTabManagerStore.setState({ activeTabId: id });
          persistWorkspace();
          // Device-flip safety net: if this tab has no live character (e.g. the user
-         // resized mobile→desktop without a reload, so mobile only hydrated the active
+         // resized mobile->desktop without a reload, so mobile only hydrated the active
          // one), hydrate it from storage on demand. A reload otherwise reconciles it.
          if (instance.getState().character === null) {
             void hydrateInstanceFromStorage(id);
@@ -932,7 +932,7 @@ function hydrateTabFromStorage(tab: OpenTab): Promise<boolean> {
 function resolveIntendedActiveId(workspace: Workspace): string | null {
    if (workspace.activeId === null) return null; // deactivated: stay at the menu
    if (workspace.openTabs.some((tab) => tab.id === workspace.activeId)) return workspace.activeId;
-   return workspace.openTabs[0]?.id ?? null; // stale active → first tab
+   return workspace.openTabs[0]?.id ?? null; // stale active -> first tab
 }
 
 /**
@@ -965,11 +965,11 @@ async function bootDesktop(workspace: Workspace): Promise<void> {
    let activeId = useTabManagerStore.getState().activeTabId;
    if (activeId === null) {
       if (intendedActiveId !== null && ordered.length > 0) {
-         // We intended to restore a tab but its record was stale → first survivor.
+         // We intended to restore a tab but its record was stale -> first survivor.
          activatePointersForTab(ordered[0]);
          activeId = ordered[0].id;
       } else {
-         // Deactivated (intended the menu), or nothing survived → menu.
+         // Deactivated (intended the menu), or nothing survived -> menu.
          activateMenuPointers();
       }
    }

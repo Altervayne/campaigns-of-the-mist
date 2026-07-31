@@ -1,4 +1,4 @@
-﻿// -- React Imports --
+// -- React Imports --
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

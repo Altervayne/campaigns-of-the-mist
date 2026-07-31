@@ -48,8 +48,8 @@ export function classifyDrag(active: DragStartEvent['active']): DragKind {
 
 /**
  * The destination folder id for a drop onto a drawer target: an explicit folder row, a folder's items
- * drop-zone (root → undefined), or a Back button's parent. Undefined when the target is none of these.
- * Shared by every tab→drawer save so the character/board/note paths route identically.
+ * drop-zone (root -> undefined), or a Back button's parent. Undefined when the target is none of these.
+ * Shared by every tab->drawer save so the character/board/note paths route identically.
  */
 export function drawerDropFolderId(overIdStr: string, overType: string, over: NonNullable<DragOverEvent['over']>): string | undefined {
    if (overType === 'drawer-folder') return overIdStr;

@@ -54,7 +54,7 @@ beforeEach(() => {
    cleanup();
 });
 
-describe('handleSheetTrackerReorder — one case per group', () => {
+describe('handleSheetTrackerReorder - one case per group', () => {
    it('reorders statuses', () => {
       const a = tracker('s1', 'STATUS');
       const b = tracker('s2', 'STATUS');
@@ -86,7 +86,7 @@ describe('handleSheetTrackerReorder — one case per group', () => {
    });
 });
 
-describe('handleSheetTrackerReorder — no-op guards', () => {
+describe('handleSheetTrackerReorder - no-op guards', () => {
    it('writes nothing without a character', () => {
       drop(null, tracker('s1', 'STATUS'), tracker('s2', 'STATUS'));
       expectNoWrite();

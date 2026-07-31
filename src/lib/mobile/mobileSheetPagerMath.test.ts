@@ -13,7 +13,7 @@ import {
    resolvePagerSettle,
 } from './mobileSheetPagerMath';
 
-describe('mobileSheetPagerMath — axis gate', () => {
+describe('mobileSheetPagerMath - axis gate', () => {
    it('claims a clearly-horizontal drag', () => {
       expect(isHorizontalPagerDrag(40, 5)).toBe(true);
       expect(isVerticalPagerDrag(40, 5)).toBe(false);
@@ -35,7 +35,7 @@ describe('mobileSheetPagerMath — axis gate', () => {
    });
 });
 
-describe('mobileSheetPagerMath — settle resolver', () => {
+describe('mobileSheetPagerMath - settle resolver', () => {
    it('advances a page on a distance-threshold drag', () => {
       expect(resolvePagerSettle({ currentPage: 1, deltaX: -PAGER_SETTLE_DISTANCE, velocity: 0, lastPage: 4 })).toBe(2);
       expect(resolvePagerSettle({ currentPage: 1, deltaX: PAGER_SETTLE_DISTANCE, velocity: 0, lastPage: 4 })).toBe(0);
@@ -56,7 +56,7 @@ describe('mobileSheetPagerMath — settle resolver', () => {
    });
 });
 
-describe('mobileSheetPagerMath — drag offset', () => {
+describe('mobileSheetPagerMath - drag offset', () => {
    it('tracks the finger 1:1 in-range', () => {
       expect(resolvePagerDragOffset({ baseX: -200, deltaX: -60, startPage: 1, lastPage: 4 })).toBe(-260);
    });
@@ -71,7 +71,7 @@ describe('mobileSheetPagerMath — drag offset', () => {
    });
 });
 
-describe('mobileSheetPagerMath — page track offset', () => {
+describe('mobileSheetPagerMath - page track offset', () => {
    it('resolves the resting offset for a page from the live width', () => {
       expect(resolvePageTrackOffset({ page: 1, liveWidth: 375, fallbackWidth: 0 })).toBe(-375);
       expect(resolvePageTrackOffset({ page: 0, liveWidth: 375, fallbackWidth: 375 })).toBe(0);

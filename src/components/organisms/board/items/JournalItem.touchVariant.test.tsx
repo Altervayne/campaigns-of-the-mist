@@ -46,7 +46,7 @@ const mount = (touch: boolean) =>
       />,
    );
 
-// Omits `touch` entirely — the board/sheet-card hosts pass nothing, so this is the path they render on.
+// Omits `touch` entirely - the board/sheet-card hosts pass nothing, so this is the path they render on.
 // Pins the DEFAULT (not the prop): flipping the default to `true` regresses every desktop journal here.
 const mountHostDefault = () =>
    render(

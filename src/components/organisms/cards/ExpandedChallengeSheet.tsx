@@ -241,7 +241,7 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
             <SheetImageBand url={url} name={name} isEditing={isEditing} commitImage={commitImage} />
 
             {/* Right column: title + level on one row, then types, then flavor. Bounded to the image
-                band's height (h-52); title·stars + types stay pinned while the flavor scrolls. */}
+                band's height (h-52); title-stars + types stay pinned while the flavor scrolls. */}
             <div className="flex h-52 min-w-0 flex-1 flex-col gap-1.5">
                {/* Stars sit immediately after the name (wrapping below only when the name runs long). The
                    expanded sheet is the full edit surface, so name + level are both editable here. */}

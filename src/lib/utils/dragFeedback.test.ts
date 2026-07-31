@@ -82,43 +82,43 @@ describe('isOverTabLaneFor (drag-kind guard)', () => {
    });
 });
 
-describe('deriveDragContext (kind + over-zone → action)', () => {
-   it('a character over the tab lane → open-tab (lane wins over play area)', () => {
+describe('deriveDragContext (kind + over-zone -> action)', () => {
+   it('a character over the tab lane -> open-tab (lane wins over play area)', () => {
       expect(deriveDragContext('drawer-character', 'play-area', true)).toBe('open-tab');
       expect(deriveDragContext('drawer-character', null, true)).toBe('open-tab');
    });
 
-   it('a character over the play area (not the lane) → open', () => {
+   it('a character over the play area (not the lane) -> open', () => {
       expect(deriveDragContext('drawer-character', 'play-area', false)).toBe('open');
    });
 
-   it('a component over the sheet → add-to-sheet', () => {
+   it('a component over the sheet -> add-to-sheet', () => {
       expect(deriveDragContext('drawer-component', 'sheet', false)).toBe('add-to-sheet');
    });
 
-   it('a tab or a character over the board → add-to-board', () => {
+   it('a tab or a character over the board -> add-to-board', () => {
       expect(deriveDragContext('tab', 'board', false)).toBe('add-to-board');
       expect(deriveDragContext('drawer-character', 'board', false)).toBe('add-to-board');
    });
 
-   it('other kinds over the board → null (only a tab or a character become an element)', () => {
+   it('other kinds over the board -> null (only a tab or a character become an element)', () => {
       expect(deriveDragContext('drawer-component', 'board', false)).toBeNull();
       expect(deriveDragContext('drawer-folder', 'board', false)).toBeNull();
       expect(deriveDragContext('sheet-item', 'board', false)).toBeNull();
    });
 
-   it('a sheet item over the drawer → save-to-drawer (items or nav area)', () => {
+   it('a sheet item over the drawer -> save-to-drawer (items or nav area)', () => {
       expect(deriveDragContext('sheet-item', 'drawer-items', false)).toBe('save-to-drawer');
       expect(deriveDragContext('sheet-item', 'drawer-nav', false)).toBe('save-to-drawer');
    });
 
-   it('a drawer-sourced drag over the drawer NAV area → drawer-move', () => {
+   it('a drawer-sourced drag over the drawer NAV area -> drawer-move', () => {
       expect(deriveDragContext('drawer-folder', 'drawer-nav', false)).toBe('drawer-move');
       expect(deriveDragContext('drawer-component', 'drawer-nav', false)).toBe('drawer-move');
       expect(deriveDragContext('drawer-character', 'drawer-nav', false)).toBe('drawer-move');
    });
 
-   it('a drawer item over the ITEMS area → null (keeps its full overlay for reordering)', () => {
+   it('a drawer item over the ITEMS area -> null (keeps its full overlay for reordering)', () => {
       expect(deriveDragContext('drawer-component', 'drawer-items', false)).toBeNull();
       expect(deriveDragContext('drawer-character', 'drawer-items', false)).toBeNull();
       // A folder has no items-area reorder, so it still reads as a move there.
@@ -131,13 +131,13 @@ describe('deriveDragContext (kind + over-zone → action)', () => {
       expect(deriveDragContext('drawer-component', 'sheet', false)).toBe('add-to-sheet');
    });
 
-   it('suppresses add-to-sheet for an incompatible game (no possible action → no glyph)', () => {
+   it('suppresses add-to-sheet for an incompatible game (no possible action -> no glyph)', () => {
       expect(deriveDragContext('drawer-component', 'sheet', false, false)).toBeNull();
       // Still adds when compatible (default true / explicit true).
       expect(deriveDragContext('drawer-component', 'sheet', false, true)).toBe('add-to-sheet');
    });
 
-   it('plain reorders / non-actionable hovers → null', () => {
+   it('plain reorders / non-actionable hovers -> null', () => {
       expect(deriveDragContext('tab', null, false)).toBeNull();
       expect(deriveDragContext('drawer-folder', null, false)).toBeNull();
       expect(deriveDragContext('drawer-character', null, false)).toBeNull();
@@ -186,7 +186,7 @@ describe('resolveSpringTarget (dwell hit-test)', () => {
    });
 
    it('excludes the folder being dragged', () => {
-      // Cursor squarely over f2, but f2 is the dragged folder → no target.
+      // Cursor squarely over f2, but f2 is the dragged folder -> no target.
       expect(resolveSpringTarget(folders, back, 100, 100, 'f2')).toBeNull();
    });
 
@@ -196,8 +196,8 @@ describe('resolveSpringTarget (dwell hit-test)', () => {
 });
 
 describe('resolveDrawerDropTarget (manual in-drawer drop hit-test)', () => {
-   // The items body (catch-all = current folder) sits BELOW the folder rows (y 40–160).
-   // Chrome above it - Back (y 0–30), the breadcrumb/header, the folder-nav gaps - is not
+   // The items body (catch-all = current folder) sits BELOW the folder rows (y 40-160).
+   // Chrome above it - Back (y 0-30), the breadcrumb/header, the folder-nav gaps - is not
    // part of the items area, so it resolves to no target (no glyph).
    const itemsArea: LaneRect = { left: 0, right: 200, top: 200, bottom: 600, height: 400 };
 
@@ -216,8 +216,8 @@ describe('resolveDrawerDropTarget (manual in-drawer drop hit-test)', () => {
    });
 
    it('excludes the dragged folder (its row over chrome falls through to no target)', () => {
-      // Over f2's row but f2 is the dragged folder → not a folder target; its row is not in
-      // the items body either → no target.
+      // Over f2's row but f2 is the dragged folder -> not a folder target; its row is not in
+      // the items body either -> no target.
       expect(resolveDrawerDropTarget(folders, itemsArea, 100, 100, 'f2')).toBeNull();
    });
 
@@ -308,7 +308,7 @@ describe('drawerDropTargetKey (change-keyed indicator state)', () => {
    });
 });
 
-describe('springDirection (dwell → arrow)', () => {
+describe('springDirection (dwell -> arrow)', () => {
    it('maps a folder target to the "in" arrow', () => {
       expect(springDirection({ kind: 'folder', id: 'f1' })).toBe('in');
    });
@@ -338,7 +338,7 @@ describe('resolveTabSpringTarget (tab auto-nav hit-test)', () => {
    });
 });
 
-describe('MORPH_DESCRIPTORS (context → descriptor)', () => {
+describe('MORPH_DESCRIPTORS (context -> descriptor)', () => {
    const contexts: NonNullable<DragContext>[] = ['open-tab', 'open', 'add-to-sheet', 'add-to-board', 'save-to-drawer', 'drawer-move'];
 
    it('resolves every drag context to a descriptor with an icon + label', () => {

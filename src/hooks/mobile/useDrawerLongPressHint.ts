@@ -22,7 +22,7 @@ export function useDrawerLongPressHint() {
 
 	// One-time long-press hint: shown once when gesture tips are enabled, then
 	// remembered so it never repeats. Gated on the setting (never shown when off).
-	// The overflow (⋯) button on each row is the always-present fallback.
+	// The overflow (...) button on each row is the always-present fallback.
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 	const hasSeenDrawerMenuHint = useAppSettingsStore((state) => state.hasSeenDrawerMenuHint);
 	const { setHasSeenDrawerMenuHint } = useAppSettingsActions();

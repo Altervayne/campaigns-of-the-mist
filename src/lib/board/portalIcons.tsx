@@ -187,7 +187,7 @@ export function smartPortalIconName(target: PortalTarget): string {
    }
 }
 
-/** The i18n key naming a portal's activation OUTCOME (for the tooltip): "Open board", "Show on this board", … */
+/** The i18n key naming a portal's activation OUTCOME (for the tooltip): "Open board", "Show on this board", ... */
 export function portalOutcomeKey(target: PortalTarget): string {
    switch (target.kind) {
       case 'entity':

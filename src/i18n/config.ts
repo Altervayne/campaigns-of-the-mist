@@ -25,7 +25,7 @@ i18n
     saveMissing: import.meta.env.DEV,
     missingKeyHandler: (_lngs, _ns, key) => {
       if (import.meta.env.DEV && !i18n.exists(key, { lng: 'en' })) {
-        console.error(`[i18n] Missing key — renders as its raw path to users: "${key}"`);
+        console.error(`[i18n] Missing key - renders as its raw path to users: "${key}"`);
       }
     },
     interpolation: {

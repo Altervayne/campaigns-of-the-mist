@@ -45,7 +45,7 @@ interface MobileSheetPagerProps {
  * The mobile character sheet's horizontal navigation as one continuous finger-tracking pager. Pages are
  * `[trackers, ...items]`; the track's `translateX` follows the finger 1:1 and springs to the nearest page
  * on release (honoring flick velocity), and the tab bar / nav bar jump into the same track by moving
- * `committedPage`. Only `committedPage ± 1` mount (cards are heavy); slots sit at their true page offset via
+ * `committedPage`. Only the committed page and its two neighbors mount (cards are heavy); slots sit at their true page offset via
  * `left: page * 100%`, so the sparse window still positions correctly.
  *
  * State of record is the host's tab + card index; this owns only the visual track offset. A single

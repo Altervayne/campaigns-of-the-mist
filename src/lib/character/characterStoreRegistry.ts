@@ -27,7 +27,7 @@ import type { CharacterStore } from '@/lib/stores/characterStore';
  */
 export const SINGLE_ACTIVE_INSTANCE_ID = '__single-active__';
 
-/** characterId → store instance. Distinct instances are fully isolated. */
+/** characterId -> store instance. Distinct instances are fully isolated. */
 const registry = new Map<string, CharacterStore>();
 
 /** The id of the instance `getActiveCharacterStore()` resolves to, or `null` when none is active. */

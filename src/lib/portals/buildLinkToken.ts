@@ -60,7 +60,7 @@ export function detectExternalUrl(input: string): string | null {
    const value = input.trim();
    if (!value || /\s/.test(value)) return null;
    if (/^https?:\/\//i.test(value)) return value;
-   if (/^[a-z][a-z\d+.-]*:\/\//i.test(value)) return value; // another explicit scheme (ftp://, …)
+   if (/^[a-z][a-z\d+.-]*:\/\//i.test(value)) return value; // another explicit scheme (ftp://, ...)
    // Bare host shape: at least one dot with a 2+ letter TLD, optional port/path/query/hash, no scheme.
    if (/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(value)) return `https://${value}`;
    return null;
