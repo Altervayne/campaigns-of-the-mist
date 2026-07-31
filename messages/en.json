@@ -2271,7 +2271,7 @@
       "noCards": "No cards yet"
    },
    "MobileBottomTabs": {
-      "sheet": "Sheet",
+      "sheet": "Workspace",
       "sheetDisabled": "No sheet loaded",
       "drawer": "Drawer",
       "menu": "Menu",
@@ -2279,11 +2279,17 @@
    },
    "MobileFAB": {
       "drawer": "Drawer",
-      "sheet": "Sheet",
+      "sheet": "Workspace",
       "menu": "Menu",
       "settings": "Settings",
       "open": "Open menu",
       "close": "Close"
+   },
+   "Workspace": {
+      "switcherTitle": "Workspaces",
+      "openSwitcher": "Switch workspace",
+      "newWorkspace": "New workspace",
+      "desktopOnly": "Desktop only"
    },
    "Toolbelt": {
       "title": "Toolbelt",

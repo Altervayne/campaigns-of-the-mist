@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Component Imports --
 import MobileCharacterSheet from '@/components/mobile/character-sheet/MobileCharacterSheet';
+import { MobileWorkspaceSwitcher } from '@/components/mobile/character-sheet/MobileWorkspaceSwitcher';
 import MobileBottomTabs from '@/components/mobile/menu/MobileBottomTabs';
 import MobileFAB from '@/components/mobile/menu/MobileFAB';
 import MobileSettings from '@/components/mobile/menu/MobileSettings';
@@ -73,6 +74,7 @@ export default function MobileCharacterSheetPage() {
 	const [isMenuFABExpanded, setIsMenuFABExpanded] = useState(false);
 	const [isToolbeltOpen, setIsToolbeltOpen] = useState(false);
 	const [isReorderingCards, setIsReorderingCards] = useState(false);
+	const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
 	const isMobileFABMode = useAppSettingsStore((state) => state.isMobileFABMode);
 	const character = useCharacterStore((state) => state.character);
 	const isBootHydrating = useIsBootHydrating();
@@ -364,6 +366,7 @@ export default function MobileCharacterSheetPage() {
 						onOpenAddCard={handleOpenAddCard}
 						onEditCard={handleEditCard}
 						onEditPortrait={handleEditPortrait}
+						onOpenSwitcher={() => setIsSwitcherOpen(true)}
 						initialItemId={newlyCreatedItemId}
 					/>
 				)}
@@ -467,6 +470,16 @@ export default function MobileCharacterSheetPage() {
 
 			{/* App-wide dice tray (shared with desktop); overlays any tab, opened from the toolbelt. */}
 			<MobileDiceTraySheet />
+
+			{/* Workspace switcher: slides in from the leading edge; a row switch lands back on the sheet. */}
+			<MobileWorkspaceSwitcher
+				isOpen={isSwitcherOpen}
+				onClose={() => setIsSwitcherOpen(false)}
+				onSwitched={() => {
+					setIsSwitcherOpen(false);
+					navigateToTab('sheet');
+				}}
+			/>
 		</div>
 	);
 }

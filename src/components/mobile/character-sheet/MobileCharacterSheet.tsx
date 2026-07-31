@@ -14,7 +14,7 @@ import { MobileCardArea } from '@/components/mobile/character-sheet/MobileCardAr
 import { MobileCardNavigationBar } from '@/components/mobile/character-sheet/MobileCardNavigationBar';
 
 // -- Icon Imports --
-import { Check } from 'lucide-react';
+import { Check, Layers } from 'lucide-react';
 
 // -- Store Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
@@ -51,6 +51,7 @@ interface MobileCharacterSheetProps {
 	onOpenAddCard?: () => void;
 	onEditCard?: (card: Card) => void;
 	onEditPortrait?: () => void;
+	onOpenSwitcher?: () => void;
 	initialItemId?: string | null;
 }
 
@@ -65,6 +66,7 @@ export default function MobileCharacterSheet({
 	onOpenAddCard,
 	onEditCard,
 	onEditPortrait,
+	onOpenSwitcher,
 	initialItemId
 }: MobileCharacterSheetProps = {}) {
 	const { t } = useTranslation();
@@ -212,6 +214,19 @@ export default function MobileCharacterSheet({
 				name={character.name}
 				onCommit={updateCharacterName}
 				placeholder={t('CharacterSheetPage.characterNamePlaceholder')}
+				isLeftHanded={isLeftHanded}
+				trigger={onOpenSwitcher && (
+					<IconButton
+						variant="secondary"
+						size="sm"
+						onClick={onOpenSwitcher}
+						aria-label={t('Workspace.openSwitcher')}
+						// Clear of the screen edge, on whichever side the trigger docks.
+						className={cn('shrink-0', isLeftHanded ? 'ml-1' : 'mr-1')}
+					>
+						<Layers className="h-5 w-5" />
+					</IconButton>
+				)}
 			/>
 
 			{/* Tab Navigation - Hidden when reordering cards */}

@@ -1,3 +1,6 @@
+// -- React Imports --
+import type { ReactNode } from 'react';
+
 // -- Custom Hooks --
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 
@@ -10,6 +13,10 @@ interface MobileCharacterNameHeaderProps {
 	name: string;
 	onCommit: (value: string) => void;
 	placeholder: string;
+	/** Optional control docked on the handedness-leading edge (the workspace switcher trigger). */
+	trigger?: ReactNode;
+	/** Places the trigger on the leading edge: left when true, else right. */
+	isLeftHanded?: boolean;
 }
 
 /**
@@ -20,11 +27,17 @@ interface MobileCharacterNameHeaderProps {
  * styling differs from the shared desktop header (full-bleed bold input with a
  * primary-tinted focus state and no drawer-tour anchor).
  */
-export function MobileCharacterNameHeader({ name, onCommit, placeholder }: MobileCharacterNameHeaderProps) {
+export function MobileCharacterNameHeader({ name, onCommit, placeholder, trigger, isLeftHanded = false }: MobileCharacterNameHeaderProps) {
 	const [localName, setLocalName] = useInputDebouncer(name, onCommit);
 
 	return (
-		<header className="px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] bg-popover border-b border-border flex items-center gap-3">
+		<header
+			className={cn(
+				"px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] bg-popover border-b border-border flex items-center gap-3",
+				// The trigger docks on the leading edge; reversing the row moves it left for a left-handed layout.
+				isLeftHanded && "flex-row-reverse"
+			)}
+		>
 			<input
 				type="text"
 				data-tutorial="character-name-input"
@@ -37,6 +50,7 @@ export function MobileCharacterNameHeader({ name, onCommit, placeholder }: Mobil
 				)}
 				placeholder={placeholder}
 			/>
+			{trigger}
 		</header>
 	);
 }

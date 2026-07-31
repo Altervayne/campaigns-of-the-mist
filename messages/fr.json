@@ -2159,6 +2159,12 @@
       "open": "Ouvrir le menu",
       "close": "Fermer"
    },
+   "Workspace": {
+      "switcherTitle": "[TO COMPLETE]",
+      "openSwitcher": "[TO COMPLETE]",
+      "newWorkspace": "[TO COMPLETE]",
+      "desktopOnly": "[TO COMPLETE]"
+   },
    "Toolbelt": {
       "title": "Ceinture à outils",
       "noActions": "Aucune action disponible",
