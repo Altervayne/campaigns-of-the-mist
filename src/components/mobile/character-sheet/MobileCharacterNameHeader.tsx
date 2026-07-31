@@ -44,7 +44,8 @@ export function MobileCharacterNameHeader({ name, onCommit, placeholder, trigger
 				value={localName}
 				onChange={(e) => setLocalName(e.target.value)}
 				className={cn(
-					"flex-1 text-2xl font-bold bg-transparent outline-none transition-colors",
+					// min-w-0 lets the input shrink below its intrinsic text width so the trigger stays in bounds.
+					"min-w-0 flex-1 text-2xl font-bold bg-transparent outline-none transition-colors",
 					"placeholder:text-muted-foreground/50",
 					"focus:text-primary"
 				)}

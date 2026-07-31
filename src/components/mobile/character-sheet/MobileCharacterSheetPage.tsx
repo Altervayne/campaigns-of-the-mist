@@ -477,7 +477,9 @@ export default function MobileCharacterSheetPage() {
 				onClose={() => setIsSwitcherOpen(false)}
 				onSwitched={() => {
 					setIsSwitcherOpen(false);
-					navigateToTab('sheet');
+					// Already on the sheet (the only place the switcher opens from): the active character
+					// change re-renders it in place, so pushing another 'sheet' entry would just cost a back-press.
+					if (activeTab !== 'sheet') navigateToTab('sheet');
 				}}
 			/>
 		</div>

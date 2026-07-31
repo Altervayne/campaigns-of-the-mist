@@ -209,3 +209,52 @@ describe('latest-wins', () => {
       expect(getActiveCharacterStore()?.getState().character?.name).toBe('Yolanda');
    });
 });
+
+describe('mobileCloseTab', () => {
+   it('closing a background tab reaps its record and prunes its tab, leaving the active tab untouched', async () => {
+      __setMobileResidentBudgetForTest(5);
+      await saveCharacter(makeCharacter('A', { name: 'Alpha' }));
+      actions().mobileOpenCharacter(makeCharacter('A', { name: 'Alpha' }), 'drawer-A');
+      actions().mobileOpenCharacter(makeCharacter('B', { name: 'Bravo' })); // B active, A background
+      expect(await getCharacter('A')).toBeDefined();
+
+      await actions().mobileCloseTab('A');
+      await tick(); // let the fire-and-forget delete land
+
+      expect(openIds()).toEqual(['B']); // A's tab pruned
+      expect(await getCharacter('A')).toBeUndefined(); // record reaped
+      expect(useTabManagerStore.getState().activeTabId).toBe('B'); // active untouched
+      expect(getCharacterInstanceIds()).toContain('B');
+   });
+
+   it('closing the active tab lands on a COLD neighbour, hydrated to a non-null character (no bounce)', async () => {
+      __setMobileResidentBudgetForTest(2);
+      actions().mobileOpenCharacter(makeCharacter('A', { name: 'Alpha' }));
+      actions().mobileOpenCharacter(makeCharacter('B', { name: 'Bravo' }));
+      actions().mobileOpenCharacter(makeCharacter('C', { name: 'Cara' }));
+      await tick(); // let the eviction-flush saves (incl. cold A's) land so reactivation can rehydrate
+      await actions().mobileSetActiveTab('A'); // A active; B is squeezed cold by the budget
+      await tick();
+      expect(getCharacterInstanceIds()).not.toContain('B'); // B cold (record was flushed on eviction)
+
+      await actions().mobileCloseTab('A'); // right neighbour is B (cold): must hydrate BEFORE the pointer flips
+      await tick();
+
+      expect(useTabManagerStore.getState().activeTabId).toBe('B');
+      const active = getActiveCharacterStore();
+      expect(active?.getState().character).not.toBeNull(); // no null-character landing
+      expect(active?.getState().character?.name).toBe('Bravo');
+   });
+
+   it('closing the last tab lands on the menu (null active, null character)', async () => {
+      __setMobileResidentBudgetForTest(5);
+      actions().mobileOpenCharacter(makeCharacter('A', { name: 'Alpha' }));
+
+      await actions().mobileCloseTab('A');
+      await tick();
+
+      expect(openIds()).toEqual([]);
+      expect(useTabManagerStore.getState().activeTabId).toBeNull();
+      expect(getActiveCharacterStore()?.getState().character ?? null).toBeNull();
+   });
+});

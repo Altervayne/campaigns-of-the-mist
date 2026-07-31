@@ -174,13 +174,21 @@ interface TabManagerState {
       /** Mobile open-or-focus: focuses an already-open character (keep-alive), else loads it as a new resident tab. */
       mobileOpenCharacter: (character: Character, drawerItemId?: string) => void;
       /** Mobile "New character": builds a character of `game` and opens it as a new resident tab (append + activate + evict). */
-      mobileReplaceWithNewCharacter: (game: GameSystem) => void;
+      mobileCreateCharacterTab: (game: GameSystem) => void;
       /** Mobile "Import": re-ids the imported aggregate and opens it as a new resident tab (no drawer link, stays dirty). */
-      mobileReplaceWithImportedCharacter: (character: Character) => void;
+      mobileImportCharacterTab: (character: Character) => void;
       /** Mobile "Return to Menu": no-op on state. Keep-alive keeps every tab and live instance; the page shows the menu. */
       mobileReturnToMenu: () => void;
       /**
-       * Mobile "Close Sheet": per-tab destructive close of the active tab (delegates to {@link closeTab}),
+       * Mobile per-tab destructive close of tab `id`: disposes its instance and deletes its working record,
+       * then prunes the tab + recency. When the active tab is closed it lands on the nearest CHARACTER
+       * neighbour (right then left), hydrating it BEFORE the pointer flips so a cold neighbour never lands
+       * a null character; with no character neighbour it lands on the menu. Never flushes, so a save the
+       * user wanted must complete BEFORE this runs.
+       */
+      mobileCloseTab: (id: string) => Promise<void>;
+      /**
+       * Mobile "Close Sheet": per-tab destructive close of the active tab (delegates to {@link mobileCloseTab}),
        * landing on a neighbour or the menu and deleting the working record. Never flushes, so a save the
        * user wanted must complete BEFORE this runs.
        */
@@ -771,11 +779,11 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          }
          mobileAppendCharacterTab(character, drawerItemId);
       },
-      mobileReplaceWithNewCharacter: (game) => {
+      mobileCreateCharacterTab: (game) => {
          // Opens a brand-new character as a new resident tab (keep-alive; the previous tabs stay live within budget).
          mobileAppendCharacterTab(buildNewCharacter(game));
       },
-      mobileReplaceWithImportedCharacter: (character) => {
+      mobileImportCharacterTab: (character) => {
          // An import is a fresh identity: re-id the whole aggregate (new character/card/journal ids,
          // sheetLayout remapped, journal pages/bookmarks + asset hashes preserved, drawer link cleared),
          // then open it as a new resident tab (no drawer link, so it starts dirty).
@@ -784,11 +792,50 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
       mobileReturnToMenu: () => {
          // Keep-alive: no state change. The page's own navigation shows the menu; tabs and live instances stay put.
       },
+      mobileCloseTab: async (id) => {
+         const { openTabs, activeTabId } = useTabManagerStore.getState();
+         const index = openTabs.findIndex((tab) => tab.id === id);
+         if (index === -1) return;
+         const wasActive = activeTabId === id;
+         // Landing neighbour picked BEFORE removal: nearest CHARACTER tab (right then left), skipping the
+         // desktop-only board/note tabs a mobile sheet can't host.
+         const neighbour =
+            [...openTabs.slice(index + 1), ...openTabs.slice(0, index).reverse()].find((tab) => tab.type === 'character') ?? null;
+
+         // Tear down the closing character for good: discard the handle WITHOUT flushing (no point saving
+         // what we delete), dispose the instance, drop its recency, and reap the working record.
+         discardPersistenceHandle(id);
+         disposeInstance(id);
+         dropLru(id);
+         void deleteCharacter(id).catch((error) => {
+            console.error('Failed to delete closed character record:', error);
+         });
+         useTabManagerStore.setState({
+            openTabs: openTabs.filter((tab) => tab.id !== id),
+            activeTabId: wasActive ? null : activeTabId,
+         });
+
+         if (!wasActive) {
+            // Closed a background tab: the active one is untouched.
+            persistWorkspace();
+            return;
+         }
+         if (neighbour) {
+            // `activeTabId` is null now, so `mobileSetActiveTab` takes its hydrate-before-flip path - a cold
+            // neighbour is loaded before the pointer moves, so the sheet never reads a null character.
+            await useTabManagerStore.getState().actions.mobileSetActiveTab(neighbour.id);
+         } else {
+            // No character neighbour left: land on the menu (the page shows the menu on a null character).
+            activateMenuPointers();
+            persistWorkspace();
+         }
+      },
       mobileCloseSheet: () => {
-         // Per-tab destructive close of the active tab (delete its record, land on a neighbour or the menu).
-         // Never flushes, so a Save & Close must finish its save before calling this.
+         // Fire-and-forget the async per-tab close of the active tab so the callers' sync `() => void` sites
+         // are unchanged. Deletes the record and lands on a neighbour or the menu; never flushes, so a
+         // Save & Close must finish its save before calling this.
          const { activeTabId } = useTabManagerStore.getState();
-         if (activeTabId !== null) useTabManagerStore.getState().actions.closeTab(activeTabId);
+         if (activeTabId !== null) void useTabManagerStore.getState().actions.mobileCloseTab(activeTabId);
       },
    },
 }));

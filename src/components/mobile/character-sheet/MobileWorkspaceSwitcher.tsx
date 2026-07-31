@@ -1,11 +1,15 @@
 // -- React Imports --
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Component Imports --
+import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { MobileSideSheet } from '@/components/mobile/shared/MobileSideSheet';
+import { MobileBottomSheet } from '@/components/mobile/shared/MobileBottomSheet';
 import { MobileWorkspaceRow } from '@/components/mobile/character-sheet/MobileWorkspaceRow';
+import { MobileWorkspaceChooser } from '@/components/mobile/menu/MobileWorkspaceChooser';
 
 // -- Icon Imports --
 import { Plus, X } from 'lucide-react';
@@ -37,8 +41,8 @@ function rowTitle(tab: OpenTab, isActive: boolean, activeName: string | undefine
 /**
  * Slide-in panel listing the open workspaces. A character row switches to that tab (lossless
  * keep-alive via `mobileSetActiveTab`); board/note tabs are desktop-only and render inert.
- * The panel pins to the handedness-leading edge and slides in from there. The "New workspace"
- * button is inert here; its chooser is wired separately.
+ * The panel pins to the handedness-leading edge and slides in from there. "New workspace" opens
+ * the shared chooser in a bottom sheet (the mobile equivalent of desktop's NewTabDialog).
  */
 export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileWorkspaceSwitcherProps) {
 	const { t } = useTranslation();
@@ -48,10 +52,35 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 	const openTabs = useTabManagerStore((state) => state.openTabs);
 	const activeTabId = useTabManagerStore((state) => state.activeTabId);
 	const activeCharacterName = useCharacterStore((state) => state.character?.name);
-	const { mobileSetActiveTab } = useTabManagerActions();
+	const activeDirty = useCharacterStore((state) => state.hasUnsavedChanges);
+	const { mobileSetActiveTab, mobileCloseTab } = useTabManagerActions();
+
+	const [isChooserOpen, setIsChooserOpen] = useState(false);
+	const [pendingClose, setPendingClose] = useState<OpenTab | null>(null);
+
+	// The active tab's dirtiness is read live (its edits outrun the denormalized flag); a background tab uses
+	// its denormalized flag, and an unknown (never-refreshed cross-device) tab is treated as possibly-dirty.
+	const isTabDirty = (tab: OpenTab) => (tab.id === activeTabId ? activeDirty : tab.dirty ?? true);
 
 	const handleSelect = (id: string) => {
 		if (id !== activeTabId) void mobileSetActiveTab(id);
+		onSwitched();
+	};
+
+	// Reap the tab after the confirm, then dismiss the switcher if it was the last one (nothing left to switch).
+	const handleConfirmClose = () => {
+		const id = pendingClose?.id;
+		setPendingClose(null);
+		if (!id) return;
+		void mobileCloseTab(id).then(() => {
+			if (useTabManagerStore.getState().openTabs.length === 0) onClose();
+		});
+	};
+
+	// A create/import from the chooser appends + activates a resident tab; dismiss the chooser and
+	// hand off to the host, which closes the switcher and lands on the new sheet.
+	const handleCreated = () => {
+		setIsChooserOpen(false);
 		onSwitched();
 	};
 
@@ -60,39 +89,76 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 		side === 'right' ? { paddingRight: 'env(safe-area-inset-right)' } : { paddingLeft: 'env(safe-area-inset-left)' };
 
 	return (
-		<MobileSideSheet isOpen={isOpen} onClose={onClose} side={side}>
-			<div className="flex h-full flex-col pt-safe pb-safe" style={insetStyle}>
-				{/* Header */}
+		<>
+			<MobileSideSheet isOpen={isOpen} onClose={onClose} side={side}>
+				<div className="flex h-full flex-col pt-safe pb-safe" style={insetStyle}>
+					{/* Header */}
+					<div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+						<h2 className="text-lg font-semibold text-foreground">{t('Workspace.switcherTitle')}</h2>
+						<IconButton variant="ghost" size="sm" onClick={onClose} aria-label={t('Common.close')}>
+							<X className="h-5 w-5" />
+						</IconButton>
+					</div>
+
+					{/* Open workspaces */}
+					<div className="flex-1 space-y-1 overflow-y-auto p-2">
+						{openTabs.map((tab) => (
+							<MobileWorkspaceRow
+								key={tab.id}
+								tab={tab}
+								isActive={tab.id === activeTabId}
+								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, t('Tabs.untitled'))}
+								isDirty={isTabDirty(tab)}
+								onSelect={() => handleSelect(tab.id)}
+								onRequestClose={tab.type === 'character' ? () => setPendingClose(tab) : undefined}
+							/>
+						))}
+					</div>
+
+					{/* New workspace: opens the shared chooser in a bottom sheet. */}
+					<div className="border-t border-border p-2">
+						<button
+							onClick={() => setIsChooserOpen(true)}
+							className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors active:bg-muted/50"
+						>
+							<span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground">
+								<Plus className="h-4 w-4" />
+							</span>
+							<span className="text-sm font-medium text-foreground">{t('Workspace.newWorkspace')}</span>
+						</button>
+					</div>
+				</div>
+			</MobileSideSheet>
+
+			{/* Creator sheet: the shared chooser, sheet-wrapped (mobile's NewTabDialog). Kept a SIBLING of the
+			    side sheet, not a child, so its full-screen `fixed` layers anchor to the viewport rather than the
+			    side panel's transformed box. A create/import lands on the new sheet. */}
+			<MobileBottomSheet isOpen={isChooserOpen} onClose={() => setIsChooserOpen(false)} fullHeight>
 				<div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-					<h2 className="text-lg font-semibold text-foreground">{t('Workspace.switcherTitle')}</h2>
-					<IconButton variant="ghost" size="sm" onClick={onClose} aria-label={t('Common.close')}>
+					<h2 className="text-lg font-semibold text-foreground">{t('Workspace.newWorkspace')}</h2>
+					<IconButton variant="ghost" size="sm" onClick={() => setIsChooserOpen(false)} aria-label={t('Common.close')}>
 						<X className="h-5 w-5" />
 					</IconButton>
 				</div>
+				<MobileWorkspaceChooser onCreated={handleCreated} />
+			</MobileBottomSheet>
 
-				{/* Open workspaces */}
-				<div className="flex-1 space-y-1 overflow-y-auto p-2">
-					{openTabs.map((tab) => (
-						<MobileWorkspaceRow
-							key={tab.id}
-							tab={tab}
-							isActive={tab.id === activeTabId}
-							title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, t('Tabs.untitled'))}
-							onSelect={() => handleSelect(tab.id)}
-						/>
-					))}
+			{/* Close confirm: dirty-aware. A SIBLING at the same overlay layer, later in DOM, so it paints above
+			    the side sheet. Kept a quick Cancel/Close - the toolbelt's Save-&-Close handles the active sheet. */}
+			<MobileBottomSheet isOpen={pendingClose !== null} onClose={() => setPendingClose(null)}>
+				<div className="space-y-4 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+					<div className="space-y-1">
+						<h2 className="text-lg font-semibold text-foreground">{t('Workspace.closeConfirmTitle')}</h2>
+						<p className="text-sm text-muted-foreground">
+							{pendingClose && isTabDirty(pendingClose) ? t('Workspace.closeConfirmDirtyBody') : t('Workspace.closeConfirmCleanBody')}
+						</p>
+					</div>
+					<div className="flex gap-2">
+						<Button variant="outline" className="flex-1" onClick={() => setPendingClose(null)}>{t('Common.cancel')}</Button>
+						<Button variant="destructive" className="flex-1" onClick={handleConfirmClose}>{t('Common.close')}</Button>
+					</div>
 				</div>
-
-				{/* New workspace: chooser wired separately; inert for now. */}
-				<div className="border-t border-border p-2">
-					<button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors active:bg-muted/50">
-						<span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground">
-							<Plus className="h-4 w-4" />
-						</span>
-						<span className="text-sm font-medium text-foreground">{t('Workspace.newWorkspace')}</span>
-					</button>
-				</div>
-			</div>
-		</MobileSideSheet>
+			</MobileBottomSheet>
+		</>
 	);
 }

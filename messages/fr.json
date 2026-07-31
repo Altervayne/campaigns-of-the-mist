@@ -2163,7 +2163,10 @@
       "switcherTitle": "[TO COMPLETE]",
       "openSwitcher": "[TO COMPLETE]",
       "newWorkspace": "[TO COMPLETE]",
-      "desktopOnly": "[TO COMPLETE]"
+      "desktopOnly": "[TO COMPLETE]",
+      "closeConfirmTitle": "[TO COMPLETE]",
+      "closeConfirmDirtyBody": "[TO COMPLETE]",
+      "closeConfirmCleanBody": "[TO COMPLETE]"
    },
    "Toolbelt": {
       "title": "Ceinture à outils",
@@ -2308,6 +2311,7 @@
       "done": "Valider",
       "back": "Retour",
       "name": "Nom",
-      "close": "Fermer"
+      "close": "Fermer",
+      "cancel": "[TO COMPLETE]"
    }
 }

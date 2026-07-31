@@ -48,11 +48,11 @@ describe('MobileWorkspaceSwitcher', () => {
 
       const { getByText } = render(<MobileWorkspaceSwitcher isOpen onClose={() => {}} onSwitched={() => {}} />);
 
-      // Active row reflects the live character name; cold row falls back to its denorm title.
-      const activeRow = getByText('Alice Live').closest('button');
-      expect(activeRow).not.toBeNull();
-      expect(activeRow!.className).toContain('border-primary');
-      expect(getByText('Bob').closest('button')!.className).not.toContain('border-primary');
+      // Active row reflects the live character name; cold row falls back to its denorm title. The active
+      // accent lives on the row's wrapper (the switch button's parent), beside the per-row close control.
+      const activeRow = getByText('Alice Live').closest('button')!.parentElement!;
+      expect(activeRow.className).toContain('border-primary');
+      expect(getByText('Bob').closest('button')!.parentElement!.className).not.toContain('border-primary');
    });
 
    it('switches on a character-row tap and closes', () => {

@@ -319,11 +319,11 @@ describe('mobile keep-alive lifecycle', () => {
       expect(useTabManagerStore.getState().activeTabId).toBe('B');
    });
 
-   it('mobileReplaceWithNewCharacter opens a NEW resident tab and keeps the previous (keep-alive)', () => {
+   it('mobileCreateCharacterTab opens a NEW resident tab and keeps the previous (keep-alive)', () => {
       const actions = useTabManagerStore.getState().actions;
 
       actions.mobileOpenCharacter(makeCharacter('A'));
-      actions.mobileReplaceWithNewCharacter('LEGENDS');
+      actions.mobileCreateCharacterTab('LEGENDS');
       const created = useTabManagerStore.getState().activeTabId!;
 
       expect(created).not.toBe('A');
@@ -333,11 +333,11 @@ describe('mobile keep-alive lifecycle', () => {
       expect(getCharacterInstanceIds().sort()).toEqual(['A', created].sort());
    });
 
-   it('mobileReplaceWithImportedCharacter opens the import as a NEW resident tab under a fresh id, keeping the previous', () => {
+   it('mobileImportCharacterTab opens the import as a NEW resident tab under a fresh id, keeping the previous', () => {
       const actions = useTabManagerStore.getState().actions;
 
       actions.mobileOpenCharacter(makeCharacter('A'));
-      actions.mobileReplaceWithImportedCharacter(makeCharacter('B'));
+      actions.mobileImportCharacterTab(makeCharacter('B'));
 
       // A is kept; the import rides in on a FRESH id (an import is a new entity, never the file's id).
       const liveIds = getCharacterInstanceIds();

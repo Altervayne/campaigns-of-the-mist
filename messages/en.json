@@ -2289,7 +2289,10 @@
       "switcherTitle": "Workspaces",
       "openSwitcher": "Switch workspace",
       "newWorkspace": "New workspace",
-      "desktopOnly": "Desktop only"
+      "desktopOnly": "Desktop only",
+      "closeConfirmTitle": "Close workspace?",
+      "closeConfirmDirtyBody": "Unsaved changes will be lost.",
+      "closeConfirmCleanBody": "You can reopen it from your drawer."
    },
    "Toolbelt": {
       "title": "Toolbelt",
@@ -2434,6 +2437,7 @@
       "done": "Done",
       "back": "Back",
       "name": "Name",
-      "close": "Close"
+      "close": "Close",
+      "cancel": "Cancel"
    }
 }
