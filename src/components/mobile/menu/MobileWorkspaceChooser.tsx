@@ -101,8 +101,10 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 			    short viewports get more room. `min-h-0` lets this flex child shrink and scroll. */}
 			<div className="flex-1 min-h-0 overflow-y-auto">
 				{header}
-				{/* Game Selection - `pt-2` gives the selected card's ring (`ring-4`) room so its halo is not clipped. */}
+				{/* Game Selection - `pt-2` gives the selected card's ring (`ring-4`) room so its halo is not clipped.
+				    Headed by its type category; the second category (boards/notes) joins once they reach mobile. */}
 				<div className="px-6 pt-2 pb-6">
+					<h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.characterSheetType')}</h3>
 					<div className="space-y-3">
 						{gameOptions.map((option, index) => (
 							<motion.div
