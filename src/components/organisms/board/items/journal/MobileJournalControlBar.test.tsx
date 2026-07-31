@@ -16,10 +16,6 @@ import type { JournalControlsContext } from '@/components/organisms/board/items/
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 
-// Radix's popover trigger observes its size; jsdom ships no ResizeObserver.
-class ResizeObserverStub { observe() {} unobserve() {} disconnect() {} }
-globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
-
 import { MobileJournalControlBar } from './MobileJournalControlBar';
 
 const handlers = () => ({
@@ -30,6 +26,7 @@ const handlers = () => ({
    onRemovePage: vi.fn(),
    onToggleBookmark: vi.fn(),
    onJumpToPage: vi.fn(),
+   onReorderPages: vi.fn(),
    onRemoveBookmark: vi.fn(),
    onSetBookmarkLabel: vi.fn(),
 });
@@ -39,6 +36,8 @@ const renderBar = (overrides: Partial<JournalControlsContext & { isMobileFABMode
    const props = {
       pageIndex: 1,
       pageCount: 3,
+      pages: [{ id: 'p1', text: 'Alpha' }, { id: 'p2', text: '' }, { id: 'p3', text: 'Gamma' }],
+      activePageId: 'p2',
       isSelected: false,
       isEditing: false,
       tabs: [],
@@ -106,6 +105,24 @@ describe('MobileJournalControlBar', () => {
       for (const label of ['BoardView.prevPage', 'BoardView.nextPage', 'BoardView.addPage', 'BoardView.removePage']) {
          expect(screen.getByLabelText(label).className).toContain('min-h-11');
       }
+   });
+
+   it('opens the pages overview sheet from the pages button', () => {
+      renderBar();
+      expect(screen.queryByRole('heading', { name: 'BoardView.journalPages' })).toBeNull();
+
+      fireEvent.click(screen.getByLabelText('BoardView.journalPages'));
+      expect(screen.getByRole('heading', { name: 'BoardView.journalPages' })).toBeTruthy();
+   });
+
+   it('opens the bookmark sheet from the bookmarks button', () => {
+      renderBar({ tabs: [] });
+      expect(screen.queryByRole('heading', { name: 'BoardView.journalBookmarks' })).toBeNull();
+
+      fireEvent.click(screen.getByLabelText('BoardView.journalBookmarks'));
+      // The sheet mounts with its heading and, given no bookmarks, the empty-state line.
+      expect(screen.getByRole('heading', { name: 'BoardView.journalBookmarks' })).toBeTruthy();
+      expect(screen.getByText('BoardView.journalNoBookmarks')).toBeTruthy();
    });
 
    // The reservation lives on the paper-filled strip (not the bg-less wrapper) so the notebook color runs

@@ -33,9 +33,11 @@ interface MobileAddCardProps {
 	game: GameSystem;
 	/** Mints the portrait singleton and picks its image. Omitted once the sheet has one. */
 	onCreatePortrait?: () => void;
+	/** Creates a journal and lands the sheet on it, closing this screen. */
+	onCreateJournal?: () => void;
 }
 
-export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game, onCreatePortrait }: MobileAddCardProps) {
+export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game, onCreatePortrait, onCreateJournal }: MobileAddCardProps) {
 	const { t } = useTranslation();
 	const { t: tTheme } = useTranslation();
 
@@ -181,6 +183,7 @@ export default function MobileAddCard({ onBack, onConfirm, mode, cardData, game,
 						cardType={cardType}
 						onSelect={setCardType}
 						onSelectPortrait={mode === 'create' && onCreatePortrait ? handleSelectPortrait : undefined}
+						onSelectJournal={mode === 'create' ? onCreateJournal : undefined}
 					/>
 
 					{/* Theme Type & Themebook (only for CHARACTER_THEME) */}

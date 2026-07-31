@@ -20,7 +20,7 @@ import { useJournalPageIndex } from '@/hooks/board/useJournalPageIndex';
 import { useJournalTitleBuffer } from '@/hooks/board/useJournalTitleBuffer';
 
 // -- Type Imports --
-import type { BoardItem, BoardItemContent, JournalBoardContent, JournalBookmark } from '@/lib/types/board';
+import type { BoardItem, BoardItemContent, JournalBoardContent, JournalBookmark, JournalPage } from '@/lib/types/board';
 import type { MentionSegment } from '@/lib/challenge/parseMentions';
 
 /**
@@ -31,6 +31,9 @@ import type { MentionSegment } from '@/lib/challenge/parseMentions';
 export interface JournalControlsContext {
    pageIndex: number;
    pageCount: number;
+   /** The rendered pages, in order, for a bar that surfaces a page overview / reorder. */
+   pages: JournalPage[];
+   activePageId: string;
    isSelected: boolean;
    isEditing: boolean;
    tabs: { bookmark: JournalBookmark; page: number }[];
@@ -46,6 +49,8 @@ export interface JournalControlsContext {
    onRemovePage: () => void;
    onToggleBookmark: () => void;
    onJumpToPage: (pageId: string) => void;
+   /** Drag-reorder pages by id; the reader follows the current page by id, never a slot. */
+   onReorderPages: (activeId: string, overId: string) => void;
    onRemoveBookmark: (id: string) => void;
    onSetBookmarkLabel: (id: string, label: string) => void;
 }
@@ -187,6 +192,8 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
             renderControls({
                pageIndex,
                pageCount: pages.length,
+               pages,
+               activePageId: activePage.id,
                isSelected,
                isEditing,
                tabs,
@@ -200,6 +207,7 @@ export function JournalItem({ item, content, isSelected, isEditing, autoFocusEdi
                onRemovePage: removePage,
                onToggleBookmark: toggleBookmark,
                onJumpToPage: jumpToPage,
+               onReorderPages: reorderPages,
                onRemoveBookmark: removeBookmark,
                onSetBookmarkLabel: setBookmarkLabel,
             })

@@ -282,6 +282,7 @@
       "journalBookmarkPlaceholder": "Bookmark",
       "journalBookmarks": "Bookmarks",
       "journalNoBookmarks": "No bookmarks yet",
+      "journalPages": "Pages",
       "journalReorderPages": "Reorder pages",
       "journalPageLabel": "Page {{number}}",
       "journalEmptyPage": "Empty page",

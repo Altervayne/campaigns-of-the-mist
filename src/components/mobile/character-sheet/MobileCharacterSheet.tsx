@@ -49,7 +49,6 @@ interface MobileCharacterSheetProps {
 	isReorderingCards?: boolean;
 	onReorderingCardsChange?: (isReordering: boolean) => void;
 	onOpenAddCard?: () => void;
-	onCreateJournal?: () => void;
 	onEditCard?: (card: Card) => void;
 	onEditPortrait?: () => void;
 	initialItemId?: string | null;
@@ -64,7 +63,6 @@ export default function MobileCharacterSheet({
 	isReorderingCards: controlledIsReorderingCards,
 	onReorderingCardsChange: controlledOnReorderingCardsChange,
 	onOpenAddCard,
-	onCreateJournal,
 	onEditCard,
 	onEditPortrait,
 	initialItemId
@@ -256,7 +254,6 @@ export default function MobileCharacterSheet({
 									setIsReorderingCards(false);
 								}}
 								onOpenAddCard={onOpenAddCard}
-								onCreateJournal={onCreateJournal}
 							/>
 						) : (
 							<MobileCardArea
@@ -265,7 +262,6 @@ export default function MobileCharacterSheet({
 								isLeftHanded={isLeftHanded}
 								touchHandlers={cardAreaHandlers}
 								onOpenAddCard={onOpenAddCard}
-								onCreateJournal={onCreateJournal}
 							/>
 						)}
 

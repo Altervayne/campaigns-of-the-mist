@@ -17,8 +17,8 @@ interface AddCardButtonProps {
 
 /**
  * The zero-card placeholder on the mobile carousel: a dashed stand-in at the card
- * footprint that opens the card creator. Its type scale is sized for that 250px
- * footprint, not a desktop column.
+ * footprint that opens the add menu (card, portrait, or journal). Its type scale is
+ * sized for that 250px footprint, not a desktop column.
  */
 export function AddCardButton({ onClick }: AddCardButtonProps) {
    const { t: t } = useTranslation();
@@ -34,7 +34,7 @@ export function AddCardButton({ onClick }: AddCardButtonProps) {
          )}
       >
          <PlusCircle className="w-7 h-7" />
-         <span className="text-lg font-semibold">{t('CharacterSheetPage.addCard')}</span>
+         <span className="text-lg font-semibold">{t('CharacterSheetPage.addElement')}</span>
       </div>
    );
 }

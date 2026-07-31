@@ -39,7 +39,6 @@ interface MobileCardReorderViewProps {
 	isLeftHanded: boolean;
 	onSelectItem: (index: number) => void;
 	onOpenAddCard?: () => void;
-	onCreateJournal?: () => void;
 }
 
 /**
@@ -52,9 +51,10 @@ interface MobileCardReorderViewProps {
  * surrounding scroll container while dragging near its edges.
  *
  * This is the cards tab's collection view - the carousel is a detail view with no natural place to add
- * - so the add affordance lives here, as a dashed row after the list. It sits OUTSIDE the
- * `SortableContext`: a dashed row among sortable rows reads as a drop slot. It carries no grip and
- * neutral tokens only, so it never competes with scanning the list.
+ * - so the single "Add..." affordance lives here, as a dashed row after the list that opens the creator
+ * (card, portrait, or journal). It sits OUTSIDE the `SortableContext`: a dashed row among sortable rows
+ * reads as a drop slot. It carries no grip and neutral tokens only, so it never competes with scanning
+ * the list.
  *
  * Reordering is wired through {@link useMobileCardDragReorder} (dispatching the id-based
  * `reorderSheetLayout` store action over the manifest, the same path desktop uses). Card previews
@@ -66,10 +66,9 @@ interface MobileCardReorderViewProps {
  * @param isMobileFABMode - Adds bottom padding so the FAB does not overlap the list.
  * @param isLeftHanded - Mirrors each grip handle to the left edge when true.
  * @param onSelectItem - Called with an item index when its row is tapped.
- * @param onOpenAddCard - Opens the card creator; the add-card row is omitted without it.
- * @param onCreateJournal - Creates a journal and lands on it; the add-journal row is omitted without it.
+ * @param onOpenAddCard - Opens the creator; the add row is omitted without it.
  */
-export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, onSelectItem, onOpenAddCard, onCreateJournal }: MobileCardReorderViewProps) {
+export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, onSelectItem, onOpenAddCard }: MobileCardReorderViewProps) {
 	const { t } = useTranslation();
 	const areGestureHintsEnabled = useAppSettingsStore((state) => state.areGestureHintsEnabled);
 	const sensors = useMobileDragSensors();
@@ -161,9 +160,8 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 					</SortableContext>
 				</DndContext>
 
-				{/* Add rows: outside the sortable list so they never read as a drop slot, and
-				    deliberately quieter than the rows they follow. A journal takes no type, so its
-				    row creates and lands directly rather than opening a creator. */}
+				{/* Add row: outside the sortable list so it never reads as a drop slot, and deliberately
+				    quieter than the rows it follows. Opens the creator, which offers every sheet element. */}
 				{onOpenAddCard && (
 					<button
 						type="button"
@@ -176,22 +174,7 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 						)}
 					>
 						<PlusCircle className="h-5 w-5" />
-						<span className="text-sm font-medium">{t('CharacterSheetPage.addCard')}</span>
-					</button>
-				)}
-				{onCreateJournal && (
-					<button
-						type="button"
-						data-tutorial="card-overview-add-journal"
-						onClick={onCreateJournal}
-						className={cn(
-							"flex w-full h-16 items-center justify-center gap-2 rounded-lg",
-							"border-2 border-dashed border-border bg-muted/50 text-muted-foreground",
-							"hover:text-foreground hover:border-foreground transition-colors"
-						)}
-					>
-						<NotebookText className="h-5 w-5" />
-						<span className="text-sm font-medium">{t('CharacterSheetPage.addJournal')}</span>
+						<span className="text-sm font-medium">{t('CharacterSheetPage.addElement')}</span>
 					</button>
 				)}
 			</div>

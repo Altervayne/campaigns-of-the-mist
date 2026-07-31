@@ -2,7 +2,7 @@
 
 // -- Testing Imports --
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 
 // -- Type Imports --
 import type { ReactNode } from 'react';
@@ -40,7 +40,7 @@ import { MobileCardReorderView } from './MobileCardReorderView';
 const cardItem = (id: string): ResolvedSheetItem =>
    ({ kind: 'card', id, card: { id, cardType: 'CHARACTER_THEME', details: { game: 'LEGENDS' } } } as unknown as ResolvedSheetItem);
 
-const mount = (onOpenAddCard?: () => void, onCreateJournal?: () => void) =>
+const mount = (onOpenAddCard?: () => void) =>
    render(
       <MobileCardReorderView
          items={[cardItem('c1'), cardItem('c2')]}
@@ -48,7 +48,6 @@ const mount = (onOpenAddCard?: () => void, onCreateJournal?: () => void) =>
          isLeftHanded={false}
          onSelectItem={() => {}}
          onOpenAddCard={onOpenAddCard}
-         onCreateJournal={onCreateJournal}
       />
    );
 
@@ -79,34 +78,12 @@ describe('card overview add row', () => {
 
       expect(document.querySelector('[data-tutorial="card-overview-add"]')).toBeNull();
    });
-});
 
-describe('card overview add-journal row', () => {
-   it('follows the add-card row, outside the sortable context, with no grip', () => {
-      mount(() => {}, () => {});
+   it('is the only add affordance - no separate journal row', () => {
+      mount(() => {});
 
-      const sortable = screen.getByTestId('sortable-context');
-      const addCard = document.querySelector('[data-tutorial="card-overview-add"]')!;
-      const addJournal = document.querySelector('[data-tutorial="card-overview-add-journal"]') as HTMLElement;
-
-      expect(addJournal).not.toBeNull();
-      expect(sortable.contains(addJournal)).toBe(false);
-      // Sits after the add-card row.
-      expect(addCard.compareDocumentPosition(addJournal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(within(addJournal).queryByLabelText('Common.dragHandle')).toBeNull();
-   });
-
-   it('creates a journal on tap', () => {
-      const onCreateJournal = vi.fn();
-      mount(() => {}, onCreateJournal);
-
-      fireEvent.click(document.querySelector('[data-tutorial="card-overview-add-journal"]')!);
-      expect(onCreateJournal).toHaveBeenCalledTimes(1);
-   });
-
-   it('is omitted with no create handler', () => {
-      mount(() => {}, undefined);
-
+      // A single "Add..." row now opens the creator; the retired standalone journal row must be gone.
+      expect(document.querySelector('[data-tutorial="card-overview-add"]')).not.toBeNull();
       expect(document.querySelector('[data-tutorial="card-overview-add-journal"]')).toBeNull();
    });
 });

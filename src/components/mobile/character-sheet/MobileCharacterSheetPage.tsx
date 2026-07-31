@@ -302,9 +302,9 @@ export default function MobileCharacterSheetPage() {
 		pushHistoryState({ tab: 'sheet', sheetTab: 'cards', isReordering: false });
 	};
 
-	// A journal has no type/themebook, so there is no picker: create it, then land the carousel on the
-	// new (empty) journal via the same land-on-item state the card confirm uses. Reachable from the
-	// overview's add row (drops reordering) and the empty-state button.
+	// A journal has no type/themebook, so it needs none of the creator's themebook steps: create it, then
+	// land the carousel on the new (empty) journal via the same land-on-item state the card confirm uses.
+	// Reached from the creator's Journal option, which acts immediately rather than arming Confirm.
 	const handleCreateJournal = () => {
 		const journalId = addJournal();
 		setNewlyCreatedItemId(journalId);
@@ -362,7 +362,6 @@ export default function MobileCharacterSheetPage() {
 						isReorderingCards={isReorderingCards}
 						onReorderingCardsChange={setReorderingWithHistory}
 						onOpenAddCard={handleOpenAddCard}
-						onCreateJournal={handleCreateJournal}
 						onEditCard={handleEditCard}
 						onEditPortrait={handleEditPortrait}
 						initialItemId={newlyCreatedItemId}
@@ -422,6 +421,7 @@ export default function MobileCharacterSheetPage() {
 						cardData={cardToEdit ?? undefined}
 						game={character.game}
 						onCreatePortrait={hasPortrait ? undefined : createPortrait}
+						onCreateJournal={handleCreateJournal}
 					/>
 				)}
 				{activeTab === 'editPortrait' && character && (

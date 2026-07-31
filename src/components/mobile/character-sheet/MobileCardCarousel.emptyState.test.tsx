@@ -52,22 +52,11 @@ describe('empty carousel add-card placeholder', () => {
       expect(addButton()).toBeNull();
    });
 
-   it('offers both Add Card and Add Journal, each wired to its handler', () => {
-      const onOpenAddCard = vi.fn();
-      const onCreateJournal = vi.fn();
-      render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={onOpenAddCard} onCreateJournal={onCreateJournal} />);
-
-      expect(addButton()).not.toBeNull();
-      expect(addJournalButton()).not.toBeNull();
-
-      fireEvent.click(addJournalButton()!);
-      expect(onCreateJournal).toHaveBeenCalledTimes(1);
-      expect(onOpenAddCard).not.toHaveBeenCalled();
-   });
-
-   it('omits Add Journal with no create handler', () => {
+   it('offers a single add affordance - no separate journal button', () => {
       render(<MobileCardCarousel items={[]} currentIndex={0} onOpenAddCard={() => {}} />);
 
+      // The "Add..." placeholder opens the creator, which offers card/portrait/journal; the retired
+      // standalone journal button must be gone.
       expect(addButton()).not.toBeNull();
       expect(addJournalButton()).toBeNull();
    });

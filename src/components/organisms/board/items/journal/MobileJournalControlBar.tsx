@@ -1,13 +1,15 @@
 // -- React Imports --
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Bookmark, BookmarkMinus, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
+import { BookMarked, Bookmark, BookmarkMinus, ChevronLeft, ChevronRight, ListOrdered, Minus, Plus } from 'lucide-react';
 
 // -- Component Imports --
-import { BookmarkPopover } from './BookmarkPopover';
 import { JournalControlButton } from './JournalControlButton';
 import { JournalPageIndicator } from './JournalPageIndicator';
+import { MobileJournalBookmarkSheet } from './MobileJournalBookmarkSheet';
+import { MobileJournalPagesSheet } from './MobileJournalPagesSheet';
 
 // -- Type Imports --
 import type { CSSProperties } from 'react';
@@ -21,14 +23,18 @@ interface MobileJournalControlBarProps extends JournalControlsContext {
 
 /**
  * The journal's mobile control surface, on `--paper` tokens so it reads as part of the notebook (not app
- * chrome). Two strata: a read strip (prev · N/M · bookmarks · next) and, while editing, an edit strip above
- * it (add page · remove page · bookmark this page). Every target is a >=44px paper-band button with a 24px
- * glyph. Page turns happen only here - a swipe navigates sheet items, never pages. In FAB mode a leading-edge
- * slot is reserved so the floating navigation FAB clears the controls; side-panel mode is a flush full-width bar.
+ * chrome). Two strata: a read strip (prev · N/M · pages · bookmarks · next) and, while editing, an edit strip
+ * above it (add page · remove page · bookmark this page). Every target is a >=44px paper-band button with a
+ * 24px glyph. Page turns happen only here - a swipe navigates sheet items, never pages. The pages overview and
+ * bookmark list open as their own mobile bottom sheets (thumb-sized rows) rather than the desktop popovers. In
+ * FAB mode a leading-edge slot is reserved so the floating navigation FAB clears the controls; side-panel mode
+ * is a flush full-width bar.
  */
 export function MobileJournalControlBar({
    pageIndex,
    pageCount,
+   pages,
+   activePageId,
    isEditing,
    tabs,
    isBookmarked,
@@ -41,12 +47,16 @@ export function MobileJournalControlBar({
    onRemovePage,
    onToggleBookmark,
    onJumpToPage,
+   onReorderPages,
    onRemoveBookmark,
    onSetBookmarkLabel,
    isMobileFABMode,
    isLeftHanded,
 }: MobileJournalControlBarProps) {
    const { t } = useTranslation();
+
+   const [pagesOpen, setPagesOpen] = useState(false);
+   const [bookmarksOpen, setBookmarksOpen] = useState(false);
 
    // The FAB (handedness-leading corner) rides above the sheet's card-nav bar, so its band overlaps this bar's
    // leading edge; reserve its footprint (44px + inset + gap = 4rem) there so no control sits under it. The
@@ -81,22 +91,39 @@ export function MobileJournalControlBar({
                <div className="flex items-center gap-0.5">
                   <JournalPageIndicator pageIndex={pageIndex} pageCount={pageCount} touch stopDrag={stopDrag} onGoToPageNumber={onGoToPageNumber} />
                </div>
-               <BookmarkPopover
-                  tabs={tabs}
-                  pageIndex={pageIndex}
-                  editable={isEditing}
-                  touch
-                  stopDrag={stopDrag}
-                  onJump={onJumpToPage}
-                  onRemove={onRemoveBookmark}
-                  onLabelCommit={onSetBookmarkLabel}
-               />
+               <JournalControlButton title={t('BoardView.journalPages')} touch onPointerDown={stopDrag} onClick={() => setPagesOpen(true)}>
+                  <ListOrdered className="h-6 w-6" />
+               </JournalControlButton>
+               <JournalControlButton title={t('BoardView.journalBookmarks')} touch onPointerDown={stopDrag} onClick={() => setBookmarksOpen(true)}>
+                  <BookMarked className="h-6 w-6" />
+               </JournalControlButton>
             </div>
 
             <JournalControlButton title={t('BoardView.nextPage')} disabled={pageIndex === pageCount - 1} touch onPointerDown={stopDrag} onClick={onNext}>
                <ChevronRight className="h-6 w-6" />
             </JournalControlButton>
          </div>
+
+         <MobileJournalPagesSheet
+            isOpen={pagesOpen}
+            onClose={() => setPagesOpen(false)}
+            pages={pages}
+            activePageId={activePageId}
+            editable={isEditing}
+            isLeftHanded={isLeftHanded}
+            onJump={onJumpToPage}
+            onReorder={onReorderPages}
+         />
+         <MobileJournalBookmarkSheet
+            isOpen={bookmarksOpen}
+            onClose={() => setBookmarksOpen(false)}
+            tabs={tabs}
+            pageIndex={pageIndex}
+            editable={isEditing}
+            onJump={onJumpToPage}
+            onRemove={onRemoveBookmark}
+            onSetBookmarkLabel={onSetBookmarkLabel}
+         />
       </div>
    );
 }

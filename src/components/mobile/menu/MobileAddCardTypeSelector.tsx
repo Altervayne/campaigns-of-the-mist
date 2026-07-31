@@ -15,8 +15,9 @@ import type { GameSystem } from '@/lib/types/drawer';
 
 type CardTypeSelection = 'CHARACTER_THEME' | 'GROUP_THEME' | 'LOADOUT_THEME';
 
-// The portrait's type is fixed, so its icon resolves once rather than on every render.
+// The portrait and journal types are fixed, so their icons resolve once rather than on every render.
 const PortraitIcon = getItemTypeIconComponent('IMAGE_CARD');
+const JournalIcon = getItemTypeIconComponent('JOURNAL');
 
 interface MobileAddCardTypeSelectorProps {
 	game: GameSystem;
@@ -25,6 +26,8 @@ interface MobileAddCardTypeSelectorProps {
 	onSelect: (cardType: CardTypeSelection) => void;
 	/** Offered only while the sheet has no portrait: the type is a singleton. Acts immediately. */
 	onSelectPortrait?: () => void;
+	/** Offered in create mode: a journal has no themebook/type, so it acts immediately. */
+	onSelectJournal?: () => void;
 }
 
 /**
@@ -34,10 +37,11 @@ interface MobileAddCardTypeSelectorProps {
  * labels branch on `game`, and every button is disabled in edit mode (the card
  * type can't be changed after creation), exactly as before.
  *
- * Portrait joins the list when its handler is supplied, mirroring the desktop add
- * menu. It carries the shared drawer icon to mark that it acts rather than selects.
+ * Portrait and Journal join the list when their handlers are supplied, mirroring the
+ * desktop add menu. Neither carries a themebook/type, so both act immediately rather
+ * than selecting a type; each wears the shared drawer icon to mark that it acts.
  */
-export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSelectPortrait }: MobileAddCardTypeSelectorProps) {
+export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSelectPortrait, onSelectJournal }: MobileAddCardTypeSelectorProps) {
 	const { t } = useTranslation();
 
 	return (
@@ -83,6 +87,17 @@ export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSe
 					>
 						<PortraitIcon className="mr-2 h-4 w-4" />
 						{t('CharacterSheetPage.addPortrait')}
+					</Button>
+				)}
+
+				{onSelectJournal && (
+					<Button
+						variant="outline"
+						onClick={onSelectJournal}
+						className="h-auto min-h-12 text-base justify-start"
+					>
+						<JournalIcon className="mr-2 h-4 w-4" />
+						{t('CharacterSheetPage.addJournal')}
 					</Button>
 				)}
 			</div>

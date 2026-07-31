@@ -22,6 +22,7 @@ export function BookmarkListRow({
    editable,
    placeholder,
    removeLabel,
+   touch = false,
    onJump,
    onRemove,
    onLabelCommit,
@@ -32,6 +33,8 @@ export function BookmarkListRow({
    editable: boolean;
    placeholder: string;
    removeLabel: string;
+   /** Mobile sheet: grow the row and its controls to >=44px, 16px label input (no iOS focus-zoom). */
+   touch?: boolean;
    onJump: () => void;
    onRemove: () => void;
    onLabelCommit: (value: string) => void;
@@ -59,7 +62,8 @@ export function BookmarkListRow({
 
    return (
       <div className={cn(
-         'flex items-center gap-1 rounded-sm px-1.5 py-1 text-xs',
+         'flex items-center rounded-sm',
+         touch ? 'gap-2 px-2 py-1 text-sm min-h-11' : 'gap-1 px-1.5 py-1 text-xs',
          active ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
       )}>
          {/* The page badge doubles as the jump target, so a labelled row still shows (and jumps to) its page. */}
@@ -67,7 +71,10 @@ export function BookmarkListRow({
             type="button"
             aria-label={String(pageNumber)}
             onClick={onJump}
-            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded bg-muted px-1 tabular-nums text-[0.65rem] text-muted-foreground hover:bg-primary hover:text-primary-foreground cursor-pointer"
+            className={cn(
+               'flex shrink-0 items-center justify-center rounded bg-muted tabular-nums text-muted-foreground hover:bg-primary hover:text-primary-foreground cursor-pointer',
+               touch ? 'h-9 min-w-9 px-2 text-sm' : 'h-5 min-w-5 px-1 text-[0.65rem]',
+            )}
          >
             {pageNumber}
          </button>
@@ -78,7 +85,7 @@ export function BookmarkListRow({
                onChange={(event) => setValue(event.target.value)}
                onBlur={commit}
                placeholder={placeholder}
-               className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50"
+               className={cn('min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50', touch && 'text-base')}
             />
          ) : (
             <button
@@ -96,9 +103,12 @@ export function BookmarkListRow({
                title={removeLabel}
                aria-label={removeLabel}
                onClick={onRemove}
-               className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-background/50 hover:text-destructive cursor-pointer"
+               className={cn(
+                  'flex shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background/50 hover:text-destructive cursor-pointer',
+                  touch ? 'h-11 w-11' : 'p-0.5',
+               )}
             >
-               <X className="h-3 w-3" />
+               <X className={touch ? 'h-5 w-5' : 'h-3 w-3'} />
             </button>
          )}
       </div>

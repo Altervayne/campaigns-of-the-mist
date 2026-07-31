@@ -6,9 +6,6 @@ import { resolveCardComponent } from '@/components/organisms/cards/resolveCardCo
 import { AddCardButton } from '@/components/molecules/AddThemeCardButton';
 import { MobileJournalCard } from '@/components/mobile/character-sheet/MobileJournalCard';
 
-// -- Icon Imports --
-import { NotebookText } from 'lucide-react';
-
 // -- Store Imports --
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
@@ -23,10 +20,9 @@ interface MobileCardCarouselProps {
 	items: ResolvedSheetItem[];
 	currentIndex: number;
 	onOpenAddCard?: () => void;
-	onCreateJournal?: () => void;
 }
 
-export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard, onCreateJournal }: MobileCardCarouselProps) {
+export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard }: MobileCardCarouselProps) {
 	const { t } = useTranslation();
 	const isEditing = useAppGeneralStateStore((state) => state.isEditing);
 
@@ -68,8 +64,8 @@ export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard,
 			? renderCard(item.card)
 			: <MobileJournalCard key={item.id} journal={item.journal} />;
 
-	// Empty state: with no cards AND no journals the overview does not exist, so this is the only route
-	// to creating either. Not edit-gated, and scroll-safe so both affordances clear a short stage.
+	// Empty state: with no cards AND no journals the overview does not exist, so this "Add..." placeholder
+	// is the only route to creating any sheet element. Not edit-gated, and scroll-safe on a short stage.
 	if (items.length === 0) {
 		return (
 			<div className="flex flex-col h-full overflow-y-auto">
@@ -78,21 +74,6 @@ export default function MobileCardCarousel({ items, currentIndex, onOpenAddCard,
 						{t('MobileCardCarousel.noCards')}
 					</p>
 					{onOpenAddCard && <AddCardButton onClick={onOpenAddCard} />}
-					{onCreateJournal && (
-						<button
-							type="button"
-							data-tutorial="carousel-add-journal"
-							onClick={onCreateJournal}
-							className={cn(
-								'flex w-62.5 h-16 items-center justify-center gap-2 rounded-lg',
-								'border-2 border-dashed border-border bg-muted/50 text-muted-foreground',
-								'hover:text-foreground hover:border-foreground transition-colors'
-							)}
-						>
-							<NotebookText className="h-5 w-5" />
-							<span className="text-sm font-medium">{t('CharacterSheetPage.addJournal')}</span>
-						</button>
-					)}
 				</div>
 			</div>
 		);

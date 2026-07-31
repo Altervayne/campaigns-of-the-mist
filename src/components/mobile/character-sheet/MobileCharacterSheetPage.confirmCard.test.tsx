@@ -24,25 +24,29 @@ vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success: v
 
 // The sheet surfaces its nav state so the assertion reads the value the page actually handed down.
 vi.mock('@/components/mobile/character-sheet/MobileCharacterSheet', () => ({
-   default: (props: { isReorderingCards?: boolean; initialItemId?: string | null; onReorderingCardsChange?: (v: boolean) => void; onOpenAddCard?: () => void; onCreateJournal?: () => void }) => (
+   default: (props: { isReorderingCards?: boolean; initialItemId?: string | null; onReorderingCardsChange?: (v: boolean) => void; onOpenAddCard?: () => void }) => (
       <div data-testid="sheet" data-reordering={String(props.isReorderingCards)} data-initial-item={String(props.initialItemId)}>
          <button data-testid="enter-overview" onClick={() => props.onReorderingCardsChange?.(true)} />
          <button data-testid="open-add-card" onClick={() => props.onOpenAddCard?.()} />
-         <button data-testid="create-journal" onClick={() => props.onCreateJournal?.()} />
       </div>
    ),
 }));
 // Faithful to the real creator, which calls `onConfirm` and then `onBack` - the trailing back is what
-// makes the confirm path's own history push the second-to-last entry rather than the last.
+// makes the confirm path's own history push the second-to-last entry rather than the last. The Journal
+// option acts immediately via `onCreateJournal` (no themebook steps, no trailing back - the handler
+// lands the sheet itself).
 vi.mock('@/components/mobile/menu/MobileAddCard', () => ({
-   default: ({ onConfirm, onBack }: { onConfirm: (options: CreateCardOptions) => void; onBack: () => void }) => (
-      <button
-         data-testid="confirm-card"
-         onClick={() => {
-            onConfirm({ themebook: 'tb', themeType: 'tt' } as unknown as CreateCardOptions);
-            onBack();
-         }}
-      />
+   default: ({ onConfirm, onBack, onCreateJournal }: { onConfirm: (options: CreateCardOptions) => void; onBack: () => void; onCreateJournal?: () => void }) => (
+      <>
+         <button
+            data-testid="confirm-card"
+            onClick={() => {
+               onConfirm({ themebook: 'tb', themeType: 'tt' } as unknown as CreateCardOptions);
+               onBack();
+            }}
+         />
+         <button data-testid="select-journal" onClick={() => onCreateJournal?.()} />
+      </>
    ),
 }));
 vi.mock('@/components/mobile/menu/MobileBottomTabs', () => ({ default: () => null }));
@@ -132,14 +136,15 @@ describe('confirming a card created from the overview', () => {
    });
 });
 
-describe('creating a journal from the overview', () => {
-   it('leaves the overview and lands on the new journal', () => {
+describe('creating a journal from the add menu', () => {
+   it('leaves the creator and lands on the new journal', () => {
       render(<MobileCharacterSheetPage />);
 
+      // Open the creator from the overview, then pick Journal: it has no themebook steps, so it
+      // creates and lands immediately.
       fireEvent.click(screen.getByTestId('enter-overview'));
-      expect(screen.getByTestId('sheet').getAttribute('data-reordering')).toBe('true');
-
-      fireEvent.click(screen.getByTestId('create-journal'));
+      fireEvent.click(screen.getByTestId('open-add-card'));
+      fireEvent.click(screen.getByTestId('select-journal'));
 
       const sheet = screen.getByTestId('sheet');
       expect(mocks.addJournal).toHaveBeenCalled();
