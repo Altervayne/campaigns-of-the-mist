@@ -128,3 +128,23 @@ describe('portrait actions', () => {
       expect(ids).not.toContain('edit-portrait');
    });
 });
+
+describe('journal actions', () => {
+   const journalContext: ToolbeltContext = { type: 'journal', journal: { id: 'j1', title: '', pages: [], bookmarks: [] } };
+
+   it('offers a destructive delete on the active journal (the desktop trash parity)', () => {
+      const actions = build(journalContext, 'cards').itemActions;
+      const del = actions.find((a) => a.id === 'delete-journal');
+
+      expect(del).toBeTruthy();
+      expect(del?.variant).toBe('destructive');
+      expect(() => del?.onClick()).not.toThrow();
+   });
+
+   it('does not offer card-only actions on a journal', () => {
+      const ids = itemIds(journalContext, 'cards');
+
+      expect(ids).not.toContain('flip-card');
+      expect(ids).not.toContain('delete-card');
+   });
+});

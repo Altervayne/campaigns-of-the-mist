@@ -165,9 +165,9 @@ export default function MobileCharacterSheet({
 	// Build toolbelt context based on active tab and selection
 	const toolbeltContext: ToolbeltContext = useMemo(() => {
 		if (activeTab === 'cards' && layout.length > 0) {
-			// A journal entry has no card-specific actions; the toolbelt defaults to none.
 			const activeItem = layout[safeCardIndex];
 			if (activeItem?.kind === 'card') return { type: 'card', card: activeItem.card };
+			if (activeItem?.kind === 'journal') return { type: 'journal', journal: activeItem.journal };
 		}
 		if (activeTab === 'trackers' && selectedTrackerId && character) {
 			// Check statuses
@@ -219,7 +219,7 @@ export default function MobileCharacterSheet({
 				<MobileCharacterSheetTabBar
 					activeTab={activeTab}
 					onTabChange={setActiveTab}
-					cardCount={character.cards.length}
+					cardCount={layout.length}
 				/>
 			)}
 

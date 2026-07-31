@@ -64,6 +64,7 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		loadCharacter,
 		flipCard,
 		deleteCard,
+		removeJournal,
 		updateCardViewMode,
 		removeStatus,
 		removeStoryTag,
@@ -396,6 +397,24 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 			};
 		}
 
+		// Journal actions - the active carousel item is a journal notebook. Parity with the desktop journal's
+		// toolbar trash; undo restores it. Page/bookmark structure lives in the journal's own control bar.
+		if (context.type === 'journal') {
+			pushItem({
+				id: 'delete-journal',
+				label: t('Toolbelt.delete'),
+				icon: Trash2,
+				variant: 'destructive',
+				onClick: () => removeJournal(context.journal.id),
+				show: true
+			});
+
+			return {
+				itemActions: itemActions.filter(a => a.show),
+				globalActions: globalActions.filter(a => a.show)
+			};
+		}
+
 		// Tracker actions
 		if (context.type === 'tracker') {
 			const tracker = context.tracker;
@@ -562,6 +581,7 @@ export function useToolbeltActions(context: ToolbeltContext, activeTab?: 'tracke
 		loadCharacter,
 		flipCard,
 		deleteCard,
+		removeJournal,
 		updateCardViewMode,
 		removeStatus,
 		removeStoryTag,

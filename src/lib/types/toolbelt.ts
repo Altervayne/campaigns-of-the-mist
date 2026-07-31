@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import type { Card, StatusTracker, StoryTagTracker, StoryThemeTracker } from './character';
+import type { Journal } from './board';
 
 export type ToolbeltMode = 'side-panel' | 'fab';
 
@@ -30,5 +31,6 @@ export interface ToolbeltActions {
 
 export type ToolbeltContext =
 	| { type: 'card'; card: Card }
+	| { type: 'journal'; journal: Journal }
 	| { type: 'tracker'; tracker: StatusTracker | StoryTagTracker | StoryThemeTracker }
 	| { type: 'none' };
