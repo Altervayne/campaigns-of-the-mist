@@ -1,10 +1,18 @@
 // -- Library Imports --
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// -- Board reference re-freeze (mocked: a drawer-less note close must call it before reaping the row) --
+const { refreezeSpy } = vi.hoisted(() => ({ refreezeSpy: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('@/lib/board/refreezeNoteReferences', () => ({
+   refreezeDrawerlessNoteReferences: refreezeSpy,
+   stampNoteReferencesDrawerSource: vi.fn().mockResolvedValue(undefined),
+}));
 
 // -- Local Imports --
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
 import {
    useTabManagerStore,
+   runCharacterBoot,
    __setMobileResidentBudgetForTest,
    __resetMobileKeepAliveForTest,
 } from './tabManagerStore';
@@ -15,9 +23,17 @@ import {
    getCharacterInstanceIds,
    getOrCreateInstance,
 } from './characterStoreRegistry';
+import {
+   disposeNoteInstance,
+   getActiveNoteStore,
+   getNoteInstanceIds,
+   getOrCreateNoteInstance,
+} from '@/lib/notes/noteStoreRegistry';
 import { detachPersistenceHandle } from './characterPersistence';
 import { saveCharacter, getCharacter } from './characterRepository';
-import { readWorkspace } from './workspaceSession';
+import { createNote, getNote } from '@/lib/notes/noteRepository';
+import { readWorkspace, writeWorkspace } from './workspaceSession';
+import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 // -- Type Imports --
 import type { Character } from '@/lib/types/character';
@@ -66,9 +82,13 @@ const openIds = () => useTabManagerStore.getState().openTabs.map((tab) => tab.id
 beforeEach(async () => {
    installLocalStorageShim();
    await drawerDatabase.characters.clear();
+   await drawerDatabase.notes.clear();
+   await drawerDatabase.items.clear();
    await drawerDatabase.meta.clear();
    useTabManagerStore.setState({ openTabs: [], activeTabId: null });
    __resetMobileKeepAliveForTest();
+   refreezeSpy.mockClear();
+   refreezeSpy.mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -76,9 +96,11 @@ afterEach(async () => {
       detachPersistenceHandle(id);
       disposeInstance(id);
    });
+   getNoteInstanceIds().forEach((id) => disposeNoteInstance(id));
    detachPersistenceHandle(SINGLE_ACTIVE_INSTANCE_ID);
    disposeInstance(SINGLE_ACTIVE_INSTANCE_ID);
    useTabManagerStore.setState({ openTabs: [], activeTabId: null });
+   useAppSettingsStore.setState({ deviceTypeOverride: undefined });
    __resetMobileKeepAliveForTest();
    await tick();
 });
@@ -256,5 +278,105 @@ describe('mobileCloseTab', () => {
       expect(openIds()).toEqual([]);
       expect(useTabManagerStore.getState().activeTabId).toBeNull();
       expect(getActiveCharacterStore()?.getState().character ?? null).toBeNull();
+   });
+});
+
+describe('note keep-alive (lossless switch)', () => {
+   it('switching away from and back to a note tab preserves the live instance and its edits', async () => {
+      __setMobileResidentBudgetForTest(5);
+      await actions().mobileCreateNoteTab();
+      const noteId = useTabManagerStore.getState().activeTabId!;
+      const inst = getOrCreateNoteInstance(noteId);
+      inst.getState().actions.updateTitle('Edited-Note');
+
+      actions().mobileOpenCharacter(makeCharacter('C', { name: 'Cara' }));
+      await actions().mobileSetActiveTab(noteId);
+
+      expect(getOrCreateNoteInstance(noteId)).toBe(inst); // same instance, never disposed
+      expect(inst.getState().note?.title).toBe('Edited-Note'); // edits survived
+      expect(getNoteInstanceIds()).toContain(noteId); // still resident
+      expect(useTabManagerStore.getState().activeTabId).toBe(noteId);
+      expect(getActiveNoteStore()).toBe(inst); // active note pointer follows the switch
+   });
+});
+
+describe('note eviction', () => {
+   it('evicts a note (flushing first), keeping its record and tab, dropping only the instance', async () => {
+      __setMobileResidentBudgetForTest(2);
+      await actions().mobileCreateNoteTab(); // note weighs 2
+      const noteId = useTabManagerStore.getState().activeTabId!;
+      const flushSpy = vi.spyOn(getOrCreateNoteInstance(noteId).getState().actions, 'flush');
+
+      // Two characters squeeze the note past the active+previous protection (weight 1+1+2 over budget 2).
+      actions().mobileOpenCharacter(makeCharacter('A'));
+      actions().mobileOpenCharacter(makeCharacter('B'));
+      await tick();
+
+      expect(flushSpy).toHaveBeenCalled(); // eviction flushed before disposing
+      expect(getNoteInstanceIds()).not.toContain(noteId); // instance gone (cold)
+      expect(openIds()).toContain(noteId); // tab entry kept
+      expect(await getNote(noteId)).toBeDefined(); // durable record kept
+   });
+});
+
+describe('active + previous protection with a mix of character and note tabs', () => {
+   it('protects a note tab as the active AND as the immediately-previous resident', async () => {
+      __setMobileResidentBudgetForTest(2);
+      actions().mobileOpenCharacter(makeCharacter('A'));
+      actions().mobileOpenCharacter(makeCharacter('B'));
+      await actions().mobileCreateNoteTab(); // note active (idx 0), B previous (idx 1); A evicted
+      const noteId = useTabManagerStore.getState().activeTabId!;
+      await tick();
+
+      expect(getNoteInstanceIds()).toContain(noteId); // note protected as active
+      expect(getCharacterInstanceIds()).toContain('B'); // previous protected
+      expect(getCharacterInstanceIds()).not.toContain('A'); // tail evicted
+
+      // Open a new character: the note slides to previous (idx 1) and must stay protected.
+      actions().mobileOpenCharacter(makeCharacter('C'));
+      await tick();
+      expect(getNoteInstanceIds()).toContain(noteId); // note protected as previous
+      expect(getCharacterInstanceIds()).toContain('C'); // new active protected
+      expect(getCharacterInstanceIds()).not.toContain('B'); // pushed past protection, evicted
+   });
+});
+
+describe('bootMobile restores a note active-tab', () => {
+   it('hydrates and activates a note intended-active (not a menu bounce)', async () => {
+      const record = await createNote();
+      writeWorkspace({ openTabs: [{ id: record.id, type: 'note' }], activeId: record.id });
+      useAppSettingsStore.setState({ deviceTypeOverride: 'mobile' });
+
+      await runCharacterBoot();
+
+      expect(useTabManagerStore.getState().activeTabId).toBe(record.id); // not bounced to menu
+      expect(getNoteInstanceIds()).toContain(record.id); // instance resident
+      expect(getActiveNoteStore()?.getState().note).not.toBeNull(); // hydrated
+      expect(openIds()).toEqual([record.id]);
+   });
+});
+
+describe('mobileCloseTab on a drawer-less note', () => {
+   it('re-freezes board references BEFORE reaping the row, then lands on a valid neighbour', async () => {
+      __setMobileResidentBudgetForTest(5);
+      // The re-freeze must see the row still present (delete happens after it resolves).
+      refreezeSpy.mockImplementation(async (id: string) => {
+         expect(await getNote(id)).toBeDefined();
+      });
+
+      actions().mobileOpenCharacter(makeCharacter('A', { name: 'Alpha' }));
+      await actions().mobileCreateNoteTab(); // drawer-less note (no drawer link), active
+      const noteId = useTabManagerStore.getState().activeTabId!;
+      getOrCreateNoteInstance(noteId).getState().actions.updateBody('DRAWERLESS-LATEST');
+
+      await actions().mobileCloseTab(noteId);
+      await tick();
+
+      expect(refreezeSpy).toHaveBeenCalledTimes(1);
+      expect(refreezeSpy).toHaveBeenCalledWith(noteId, expect.objectContaining({ body: 'DRAWERLESS-LATEST' }));
+      expect(await getNote(noteId)).toBeUndefined(); // row reaped after the re-freeze
+      expect(useTabManagerStore.getState().activeTabId).toBe('A'); // landed on the character neighbour
+      expect(getActiveCharacterStore()?.getState().character?.name).toBe('Alpha'); // neighbour hydrated
+      expect(getNoteInstanceIds()).not.toContain(noteId);
    });
 });

@@ -34,6 +34,15 @@ export function getOrCreateNoteInstance(id: string): NoteStore {
 }
 
 /**
+ * The instance for `id`, or `undefined` when the id is not registered. Never creates one, so a caller
+ * can inspect a tab's liveness (or read its denorm) without materializing an empty instance, which would
+ * otherwise register as a live resident note.
+ */
+export function peekNoteInstance(id: string): NoteStore | undefined {
+   return registry.get(id);
+}
+
+/**
  * The currently active note store instance, or `null` when no note tab is active
  * (e.g. a character/board tab or the menu). Never creates an instance.
  */

@@ -87,9 +87,9 @@ export interface NoteState {
       /** Opens the note surface's link picker (from the palette's Insert-link command). No-op when no surface is mounted. */
       openLinkPicker: () => void;
       /**
-       * Immediately persists the current document onto its row, bypassing the debounce.
-       * The Note tab surface calls this on unmount (a tab switch fires no blur), so the
-       * last keystroke is never lost to a cancelled debounce timer.
+       * Immediately persists the current document onto its row AND disarms any pending debounce.
+       * The Note tab surface calls this on unmount (a tab switch fires no blur), and eviction calls it
+       * before disposing the instance, so the last keystroke lands and no stale timer can fire late.
        */
       flush: () => void;
       /**
@@ -127,15 +127,27 @@ function markNoteModified(): void {
    useAppGeneralStateStore.getState().actions.setLastModifiedStore('note');
 }
 
-/** A trailing-edge debouncer; at most one timer in flight. No new dependency. */
-function createDebouncer<T>(delay: number, run: (value: T) => void): (value: T) => void {
+/**
+ * A trailing-edge debouncer with an explicit `cancel`, so `flush` can write-now AND disarm the pending
+ * timer. Without the cancel, an evicted-then-revisited note could let a stale late write clobber a fresh
+ * edit. At most one timer in flight. No new dependency.
+ */
+function createDebouncer<T>(delay: number, run: (value: T) => void): { run: (value: T) => void; cancel: () => void } {
    let timer: ReturnType<typeof setTimeout> | null = null;
-   return (value: T) => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-         timer = null;
-         run(value);
-      }, delay);
+   return {
+      run: (value: T) => {
+         if (timer) clearTimeout(timer);
+         timer = setTimeout(() => {
+            timer = null;
+            run(value);
+         }, delay);
+      },
+      cancel: () => {
+         if (timer) {
+            clearTimeout(timer);
+            timer = null;
+         }
+      },
    };
 }
 
@@ -201,7 +213,7 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, title };
                markDirty();
                set({ note: next });
-               debouncedSave(next);
+               debouncedSave.run(next);
             },
 
             updateBody: (body) => {
@@ -210,7 +222,7 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, body };
                markDirty();
                set({ note: next });
-               debouncedSave(next);
+               debouncedSave.run(next);
             },
 
             setCover: (cover) => {
@@ -219,7 +231,7 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, cover };
                markDirty();
                set({ note: next });
-               debouncedSave(next);
+               debouncedSave.run(next);
             },
 
             updateCover: (patch) => {
@@ -228,7 +240,7 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, cover: { ...note.cover, ...patch } };
                markDirty();
                set({ note: next });
-               debouncedSave(next);
+               debouncedSave.run(next);
             },
 
             clearCover: () => {
@@ -237,7 +249,7 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, cover: undefined };
                markDirty();
                set({ note: next });
-               debouncedSave(next);
+               debouncedSave.run(next);
             },
 
             setHasUnsavedChanges: (value) => {
@@ -263,6 +275,9 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
             openLinkPicker: () => linkPickerOpener?.(),
 
             flush: () => {
+               // Disarm the pending debounce FIRST, then write now: a still-armed timer holds a stale
+               // snapshot that would fire late and clobber a fresher edit after a revisit.
+               debouncedSave.cancel();
                const note = get().note;
                if (!note) return;
                void patchNote(note.id, { title: note.title, body: note.body, cover: note.cover }).catch((error) => {

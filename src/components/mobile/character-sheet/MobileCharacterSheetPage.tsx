@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Component Imports --
 import MobileCharacterSheet from '@/components/mobile/character-sheet/MobileCharacterSheet';
+import MobileNoteSurface from '@/components/mobile/character-sheet/MobileNoteSurface';
 import { MobileWorkspaceSwitcher } from '@/components/mobile/character-sheet/MobileWorkspaceSwitcher';
 import MobileBottomTabs from '@/components/mobile/menu/MobileBottomTabs';
 import MobileFAB from '@/components/mobile/menu/MobileFAB';
@@ -31,7 +32,7 @@ import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useTutorialStore } from '@/lib/tutorial/tutorialStore';
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
 import { getActiveCharacterStore } from '@/lib/character/characterStoreRegistry';
-import { useTabManagerActions } from '@/lib/character/tabManagerStore';
+import { useTabManagerActions, useTabManagerStore } from '@/lib/character/tabManagerStore';
 import { useIsBootHydrating, useCharacterBootStore } from '@/lib/character/characterPersistence';
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
@@ -54,12 +55,15 @@ type NavigationTabId = 'sheet' | 'drawer' | 'menu';
 const CHROME_TABS = new Set<TabId>(['settings', 'settingsGeneral', 'settingsAppearance', 'settingsData', 'settingsLearn', 'themeEditor', 'about', 'patchNotes', 'announcements', 'addCard', 'editPortrait']);
 
 // The landing tab when the app opens, or history resets with nothing pushed: the
-// sheet when a character is loaded (or still loading at boot), otherwise the Menu -
-// its main-menu home - so we never open onto the greyed, character-less sheet.
+// sheet slot when a surface is live - a character (or still loading at boot) or an active
+// note tab - otherwise the Menu (its main-menu home), so we never open onto the greyed,
+// surface-less sheet. Read non-reactively: this seeds initial state, not a subscription.
 function resolveDefaultTab(): TabId {
 	const bootExpectsCharacter = useCharacterBootStore.getState().isBootHydrating;
 	const hasCharacter = (getActiveCharacterStore()?.getState().character ?? null) !== null;
-	return bootExpectsCharacter || hasCharacter ? 'sheet' : 'menu';
+	const { openTabs, activeTabId } = useTabManagerStore.getState();
+	const activeIsNote = openTabs.find((tab) => tab.id === activeTabId)?.type === 'note';
+	return bootExpectsCharacter || hasCharacter || activeIsNote ? 'sheet' : 'menu';
 }
 
 interface HistoryState {
@@ -78,8 +82,11 @@ export default function MobileCharacterSheetPage() {
 	const isMobileFABMode = useAppSettingsStore((state) => state.isMobileFABMode);
 	const character = useCharacterStore((state) => state.character);
 	const isBootHydrating = useIsBootHydrating();
-	// With no character loaded there is no sheet to show; the Sheet nav option greys out.
-	const hasSheet = character !== null;
+	// The active tab's kind, reactive: a note tab keeps the workspace (sheet) slot even with no character.
+	const activeTabType = useTabManagerStore((state) => state.openTabs.find((tab) => tab.id === state.activeTabId)?.type ?? null);
+	// A surface is live when a character is loaded OR the active tab is a note; with neither there is
+	// nothing to show in the sheet slot, so the Sheet nav option greys out.
+	const hasSurface = character !== null || activeTabType === 'note';
 	const pendingMobileNavActions = useAppGeneralStateStore((state) => state.pendingMobileNavActions);
 	const { setMobileOnboardingOpen, setMobileNavSnapshot, clearMobileNavActions } = useAppGeneralStateActions();
 
@@ -193,15 +200,15 @@ export default function MobileCharacterSheetPage() {
 		};
 	}, []);
 
-	// A character disposed while its sheet is open (Unload, or the overwrite discard) would
-	// strand the user on an empty sheet, so redirect to the Menu the moment it goes away.
-	// Skipped while boot is still hydrating, when a character may yet be on its way in.
+	// A surface disposed while its slot is open (character Unload / overwrite discard, or a closed note
+	// tab) would strand the user on an empty sheet, so redirect to the Menu the moment none is live.
+	// Skipped while boot is still hydrating, when a surface may yet be on its way in.
 	useEffect(() => {
-		if (!isBootHydrating && !character && activeTab === 'sheet') {
+		if (!isBootHydrating && !hasSurface && activeTab === 'sheet') {
 			navigateToTab('menu');
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [character, activeTab, isBootHydrating]);
+	}, [hasSurface, activeTab, isBootHydrating]);
 
 	// Publish the nav position to the store's mirror so a tutorial can snapshot it at run start and restore it
 	// on exit, and so a step can gate on a mode the user enters here. Nothing reads it back to drive this page.
@@ -370,6 +377,9 @@ export default function MobileCharacterSheetPage() {
 						initialItemId={newlyCreatedItemId}
 					/>
 				)}
+				{activeTab === 'sheet' && !character && activeTabType === 'note' && (
+					<MobileNoteSurface />
+				)}
 				{activeTab === 'drawer' && (
 					<MobileDrawer onAddToCharacter={handleAddDrawerItemToCharacter} onLoadCharacter={handleLoadCharacterFromDrawer} />
 				)}
@@ -440,7 +450,7 @@ export default function MobileCharacterSheetPage() {
 						onTabChange={navigateToTab}
 						isToolbeltOpen={isToolbeltOpen}
 						onToggleToolbelt={() => setIsToolbeltOpen((open) => !open)}
-						hasSheet={hasSheet}
+						hasSheet={hasSurface}
 					/>
 				) : (
 					<MobileFAB
@@ -453,7 +463,7 @@ export default function MobileCharacterSheetPage() {
 						isToolbeltOpen={isToolbeltOpen}
 						isExpanded={isMenuFABExpanded}
 						onIsExpandedChange={setIsMenuFABExpanded}
-						hasSheet={hasSheet}
+						hasSheet={hasSurface}
 					/>
 				)
 			)}

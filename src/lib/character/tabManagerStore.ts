@@ -26,7 +26,7 @@ import { getEffectiveDeviceType } from '@/hooks/useDeviceType';
 import { disposeBoardInstance, getOrCreateBoardInstance, setActiveBoardInstance } from '@/lib/board/boardStoreRegistry';
 import { createBoard, deleteBoard, loadBoard } from '@/lib/board/boardRepository';
 import { refreezeDrawerlessNoteReferences } from '@/lib/board/refreezeNoteReferences';
-import { disposeNoteInstance, getOrCreateNoteInstance, setActiveNoteInstance } from '@/lib/notes/noteStoreRegistry';
+import { disposeNoteInstance, getNoteInstanceIds, getOrCreateNoteInstance, peekNoteInstance, setActiveNoteInstance } from '@/lib/notes/noteStoreRegistry';
 import { createNote, deleteNote, getNote } from '@/lib/notes/noteRepository';
 
 // -- Journey (portal trail) Imports --
@@ -165,14 +165,19 @@ interface TabManagerState {
 
       // -- Mobile (bounded keep-alive) --
       /**
-       * Mobile tab switch (character-only). Keep-alive: hydrates a cold tab from storage BEFORE flipping the
-       * active pointer (so the sheet never reads a null character), then activates it, records it as most-recently
-       * active, and runs weighted eviction of the least-recently-active resident tabs. A no-op for a non-character
-       * tab or the already-active tab. Latest-wins: a superseding switch abandons this one without stealing the pointer.
+       * Mobile tab switch (character or note; boards can't host on mobile yet). Keep-alive: hydrates a cold tab
+       * from storage BEFORE flipping the active pointer (so the surface never reads a null character/note), then
+       * activates it, records it as most-recently active, and runs weighted eviction of the least-recently-active
+       * resident tabs. A no-op for a board tab or the already-active tab. Latest-wins: a superseding switch abandons
+       * this one without stealing the pointer.
        */
       mobileSetActiveTab: (id: string) => Promise<void>;
       /** Mobile open-or-focus: focuses an already-open character (keep-alive), else loads it as a new resident tab. */
       mobileOpenCharacter: (character: Character, drawerItemId?: string) => void;
+      /** Mobile "New note": creates a note row and opens it as a new resident tab (append + activate + evict). */
+      mobileCreateNoteTab: () => Promise<void>;
+      /** Mobile open-or-focus a note: focuses an already-open note (keep-alive), else hydrates it as a new resident tab. */
+      mobileOpenNoteTab: (noteId: string) => Promise<void>;
       /** Mobile "New character": builds a character of `game` and opens it as a new resident tab (append + activate + evict). */
       mobileCreateCharacterTab: (game: GameSystem) => void;
       /** Mobile "Import": re-ids the imported aggregate and opens it as a new resident tab (no drawer link, stays dirty). */
@@ -180,10 +185,11 @@ interface TabManagerState {
       /** Mobile "Return to Menu": no-op on state. Keep-alive keeps every tab and live instance; the page shows the menu. */
       mobileReturnToMenu: () => void;
       /**
-       * Mobile per-tab destructive close of tab `id`: disposes its instance and deletes its working record,
-       * then prunes the tab + recency. When the active tab is closed it lands on the nearest CHARACTER
-       * neighbour (right then left), hydrating it BEFORE the pointer flips so a cold neighbour never lands
-       * a null character; with no character neighbour it lands on the menu. Never flushes, so a save the
+       * Mobile per-tab destructive close of tab `id`: tears down its instance by kind and deletes its working
+       * record (a drawer-less note re-freezes its board references first), then prunes the tab + recency. When
+       * the active tab is closed it lands on the nearest HOSTABLE neighbour - a character or note (right then
+       * left), skipping desktop-only boards - hydrating it BEFORE the pointer flips so a cold neighbour never
+       * lands a null surface; with no hostable neighbour it lands on the menu. Never flushes, so a save the
        * user wanted must complete BEFORE this runs.
        */
       mobileCloseTab: (id: string) => Promise<void>;
@@ -339,7 +345,7 @@ function deactivateToMenu(): void {
  * the same path a boot-dormant tab uses). Only undo history and the in-memory dirty flag evaporate - never data.
  */
 
-/** Resident live-character budget (summed tab weight). Boards/notes will weigh more when mobile hosts them. */
+/** Resident instance budget (summed tab weight). Notes weigh 2; boards will weigh more once mobile hosts them. */
 const MOBILE_RESIDENT_BUDGET = 5;
 
 /** Test-only budget override; `null` means use {@link MOBILE_RESIDENT_BUDGET}. */
@@ -349,7 +355,7 @@ function residentBudget(): number {
    return mobileResidentBudgetOverride ?? MOBILE_RESIDENT_BUDGET;
 }
 
-/** Recency memory: live character tab ids, MOST-RECENTLY-ACTIVE FIRST. Empty/unused on desktop. */
+/** Recency memory: live resident tab ids (character + note), MOST-RECENTLY-ACTIVE FIRST. Empty/unused on desktop. */
 let mobileLruOrder: string[] = [];
 
 /** Monotonic guard so a superseding {@link TabManagerState.actions.mobileSetActiveTab} wins (latest-wins). */
@@ -365,9 +371,9 @@ function dropLru(id: string): void {
    mobileLruOrder = mobileLruOrder.filter((existing) => existing !== id);
 }
 
-/** Resident weight of a tab. Characters weigh 1; the seam for heavier future board/note residents. */
-function tabWeight(_tab: OpenTab): number {
-   return 1;
+/** Resident weight of a tab: notes weigh 2 (heavier: cover + inline images), characters 1. */
+function tabWeight(tab: OpenTab): number {
+   return tab.type === 'note' ? 2 : 1;
 }
 
 /** The `OpenTab` for `id`, or a synthetic character stand-in when the tab is momentarily absent. */
@@ -375,13 +381,18 @@ function tabForId(id: string): OpenTab {
    return useTabManagerStore.getState().openTabs.find((tab) => tab.id === id) ?? { id, type: 'character' };
 }
 
+/** Every live resident instance id across the mobile-hosted registries (board hosting is a later seam). */
+function residentInstanceIds(): string[] {
+   return [...getCharacterInstanceIds(), ...getNoteInstanceIds()];
+}
+
 /**
- * The recency order reconciled against the actually-live character instances: drops disposed ids and
+ * The recency order reconciled against the actually-live instances: drops disposed ids and
  * appends any live id missing from the memory (defensive), self-healing `mobileLruOrder` in the process.
- * The registry is the source of truth for what is resident; this only orders it by recency.
+ * The registries are the source of truth for what is resident; this only orders it by recency.
  */
 function residentLruOrder(): string[] {
-   const liveIds = getCharacterInstanceIds();
+   const liveIds = residentInstanceIds();
    const liveSet = new Set(liveIds);
    const ordered = mobileLruOrder.filter((id) => liveSet.has(id));
    for (const id of liveIds) if (!ordered.includes(id)) ordered.push(id);
@@ -408,36 +419,59 @@ function selectMobileEvictionCandidates(): string[] {
 }
 
 /**
- * Safe eviction of one resident tab: capture its last-known denorm BEFORE it goes cold, flush its
- * pending save and tear down its handle, dispose the live instance, drop it from recency, and persist.
- * The durable record and the `openTabs` entry stay - only the instance (with its undo history) is dropped.
+ * Safe eviction of one resident tab: capture its last-known denorm BEFORE it goes cold, tear down its
+ * live instance by kind (a note flushes its pending save then disposes; a character flushes and detaches
+ * its handle), drop it from recency, and persist. The durable record and the `openTabs` entry stay - only
+ * the instance (with its undo history) is dropped.
  */
-function evictCharacterInstance(id: string): void {
-   refreshTabDenorm(id);
-   detachPersistenceHandle(id);
-   disposeInstance(id);
-   dropLru(id);
+function evictInstance(tab: OpenTab): void {
+   refreshTabDenorm(tab.id);
+   if (tab.type === 'note') {
+      getOrCreateNoteInstance(tab.id).getState().actions.flush();
+      disposeNoteInstance(tab.id);
+   } else {
+      detachPersistenceHandle(tab.id);
+      disposeInstance(tab.id);
+   }
+   dropLru(tab.id);
    persistWorkspace();
 }
 
 /** Evicts every over-budget candidate. */
 function runMobileEviction(): void {
    for (const id of selectMobileEvictionCandidates()) {
-      evictCharacterInstance(id);
+      evictInstance(tabForId(id));
    }
 }
 
 /**
  * Refreshes the denormalized display fields on tab `id` from its live instance. A cold tab (no
- * instance, or an instance with a null `character`) keeps its last-known denorm untouched.
+ * instance, or an instance with a null document) keeps its last-known denorm untouched. Type-aware:
+ * a note takes its title from `note.title` and carries no game; a character takes name + game.
  */
 function refreshTabDenorm(id: string): void {
+   const tab = useTabManagerStore.getState().openTabs.find((openTab) => openTab.id === id);
+   if (!tab) return;
+
+   if (tab.type === 'note') {
+      const state = peekNoteInstance(id)?.getState();
+      const note = state?.note;
+      if (!note) return;
+      const dirty = state!.hasUnsavedChanges;
+      useTabManagerStore.setState((current) => ({
+         openTabs: current.openTabs.map((openTab) =>
+            openTab.id === id ? { ...openTab, title: note.title, game: undefined, dirty } : openTab,
+         ),
+      }));
+      return;
+   }
+
    const character = peekInstance(id)?.getState().character;
    if (!character) return;
    const dirty = peekInstance(id)!.getState().hasUnsavedChanges;
-   useTabManagerStore.setState((state) => ({
-      openTabs: state.openTabs.map((tab) =>
-         tab.id === id ? { ...tab, title: character.name, game: character.game, dirty } : tab,
+   useTabManagerStore.setState((current) => ({
+      openTabs: current.openTabs.map((openTab) =>
+         openTab.id === id ? { ...openTab, title: character.name, game: character.game, dirty } : openTab,
       ),
    }));
 }
@@ -455,6 +489,18 @@ function mobileAppendCharacterTab(character: Character, drawerItemId?: string): 
    appendAndActivate(character.id);
    touchLru(character.id);
    refreshTabDenorm(character.id);
+   persistWorkspace();
+   runMobileEviction();
+}
+
+/**
+ * Mobile: append + activate an already-hydrated note tab, seed its recency + denorm, persist, and run
+ * eviction. Shared by the create-new / open paths (the caller hydrates the instance first).
+ */
+function mobileAppendNoteTab(noteId: string): void {
+   appendAndActivateNote(noteId);
+   touchLru(noteId);
+   refreshTabDenorm(noteId);
    persistWorkspace();
    runMobileEviction();
 }
@@ -745,10 +791,35 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
       mobileSetActiveTab: async (id) => {
          const { openTabs, activeTabId } = useTabManagerStore.getState();
          const tab = openTabs.find((openTab) => openTab.id === id);
-         if (!tab || tab.type !== 'character') return; // character-only in this slice
+         if (!tab || tab.type === 'board') return; // boards can't host on mobile yet (later seam)
          if (activeTabId === id) return; // already active (the UI handles a pure dismiss)
 
          const token = ++mobileSwitchToken;
+
+         if (tab.type === 'note') {
+            // Note branch: mirrors the character hydrate-before-flip, keyed on the note's own cold check.
+            const instance = getOrCreateNoteInstance(id);
+            if (instance.getState().noteId === null) {
+               // Cold tab: hydrate from storage BEFORE flipping the pointer, so the surface never reads a
+               // null note. The flip and the pointer move happen only after this resolves.
+               const ok = await hydrateNoteInstanceFromStorage(id);
+               if (!ok) {
+                  // Stale tab (record gone): drop the empty instance we just materialized so it never counts
+                  // as a resident, and leave the tab entry for the UI to reconcile.
+                  disposeNoteInstance(id);
+                  return;
+               }
+               if (token !== mobileSwitchToken) return; // a newer switch won; leave this hydrated instance for eviction
+            }
+            activateNotePointers(id);
+            touchLru(id);
+            useTabManagerStore.setState({ activeTabId: id });
+            refreshTabDenorm(id);
+            persistWorkspace();
+            runMobileEviction(); // protects the new active (idx 0) + previous (idx 1)
+            return;
+         }
+
          const instance = getOrCreateInstance(id);
          if (instance.getState().character === null) {
             // Cold tab: hydrate from storage BEFORE flipping the pointer, so the sheet never reads a null
@@ -779,6 +850,25 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          }
          mobileAppendCharacterTab(character, drawerItemId);
       },
+      mobileCreateNoteTab: async () => {
+         // The note row must exist before we can key a tab/instance by its id.
+         const note = await createNote();
+         const instance = getOrCreateNoteInstance(note.id);
+         await instance.getState().actions.hydrate(note.id);
+         mobileAppendNoteTab(note.id);
+      },
+      mobileOpenNoteTab: async (noteId) => {
+         const { openTabs, activeTabId } = useTabManagerStore.getState();
+         if (activeTabId === noteId) return; // already active
+         // Focus-or-add: an already-open note is focused (keep-alive), never re-hydrated.
+         if (openTabs.some((tab) => tab.id === noteId)) {
+            await useTabManagerStore.getState().actions.mobileSetActiveTab(noteId);
+            return;
+         }
+         const instance = getOrCreateNoteInstance(noteId);
+         await instance.getState().actions.hydrate(noteId);
+         mobileAppendNoteTab(noteId);
+      },
       mobileCreateCharacterTab: (game) => {
          // Opens a brand-new character as a new resident tab (keep-alive; the previous tabs stay live within budget).
          mobileAppendCharacterTab(buildNewCharacter(game));
@@ -796,20 +886,39 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          const { openTabs, activeTabId } = useTabManagerStore.getState();
          const index = openTabs.findIndex((tab) => tab.id === id);
          if (index === -1) return;
+         const closing = openTabs[index];
          const wasActive = activeTabId === id;
-         // Landing neighbour picked BEFORE removal: nearest CHARACTER tab (right then left), skipping the
-         // desktop-only board/note tabs a mobile sheet can't host.
+         // Landing neighbour picked BEFORE removal: nearest HOSTABLE tab (right then left), skipping the
+         // desktop-only board tabs a mobile workspace can't host. A note neighbour is a valid landing.
          const neighbour =
-            [...openTabs.slice(index + 1), ...openTabs.slice(0, index).reverse()].find((tab) => tab.type === 'character') ?? null;
+            [...openTabs.slice(index + 1), ...openTabs.slice(0, index).reverse()].find((tab) => tab.type !== 'board') ?? null;
 
-         // Tear down the closing character for good: discard the handle WITHOUT flushing (no point saving
-         // what we delete), dispose the instance, drop its recency, and reap the working record.
-         discardPersistenceHandle(id);
-         disposeInstance(id);
+         // Tear down the closing tab for good, by kind. Never flushes a character (no point saving what we
+         // delete). For a note, copy the desktop split: a DRAWER-BACKED note's row just reaps (the drawer item
+         // is the durable source); a DRAWER-LESS note first RE-FREEZES every board tile referencing it into a
+         // self-contained copy of its latest content, then reaps - so nothing drawer-less survives close.
+         if (closing.type === 'note') {
+            const state = getOrCreateNoteInstance(id).getState();
+            const drawerItemId = state.drawerItemId;
+            const latestNote = state.note;
+            disposeNoteInstance(id);
+            if (drawerItemId) {
+               void deleteNote(id).catch((error) => {
+                  console.error('Failed to delete closed note record:', error);
+               });
+            } else {
+               void (latestNote ? refreezeDrawerlessNoteReferences(id, latestNote) : Promise.resolve())
+                  .then(() => deleteNote(id))
+                  .catch((error) => { console.error('Failed to re-freeze/reap closed note record:', error); });
+            }
+         } else {
+            discardPersistenceHandle(id);
+            disposeInstance(id);
+            void deleteCharacter(id).catch((error) => {
+               console.error('Failed to delete closed character record:', error);
+            });
+         }
          dropLru(id);
-         void deleteCharacter(id).catch((error) => {
-            console.error('Failed to delete closed character record:', error);
-         });
          useTabManagerStore.setState({
             openTabs: openTabs.filter((tab) => tab.id !== id),
             activeTabId: wasActive ? null : activeTabId,
@@ -988,11 +1097,15 @@ async function bootMobile(workspace: Workspace): Promise<void> {
    const intendedActiveTab = intendedActiveId !== null ? tabs.find((tab) => tab.id === intendedActiveId) ?? null : null;
 
    let activeId: string | null = null;
-   // Boards and notes are desktop-only: never hydrate or activate one on mobile (they stay
-   // dormant ids in `openTabs`). A board/note intended-active lands on the menu instead.
-   if (intendedActiveTab?.type === 'character' && (await hydrateInstanceFromStorage(intendedActiveTab.id))) {
+   // Boards can't host on mobile yet: never hydrate or activate one (it stays a dormant id in `openTabs`,
+   // and a board intended-active lands on the menu). A character or note intended-active hydrates and
+   // activates via the shared per-kind dispatch.
+   if (
+      (intendedActiveTab?.type === 'character' || intendedActiveTab?.type === 'note') &&
+      (await hydrateTabFromStorage(intendedActiveTab))
+   ) {
       activeId = intendedActiveTab.id;
-      activateCharacterPointers(activeId);
+      activatePointersForTab(intendedActiveTab);
    } else {
       activateMenuPointers();
    }
