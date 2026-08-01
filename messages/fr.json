@@ -40,7 +40,6 @@
    },
    "NoteView": {
       "titlePlaceholder": "Note sans titre",
-      "mobilePlaceholder": "[TO COMPLETE]",
       "bodyPlaceholder": "Commencez à écrire un document en markdown...",
       "emptyPreview": "Cette note est vide. Passez en mode Vue-Réelle pour commencer à écrire.",
       "mode": {
@@ -121,6 +120,16 @@
          "change": "Modifier la couverture",
          "remove": "Supprimer la couverture",
          "aspect": "Rapport de taille"
+      },
+      "mobile": {
+         "read": "[TO COMPLETE]",
+         "edit": "[TO COMPLETE]",
+         "more": "[TO COMPLETE]",
+         "viewSource": "[TO COMPLETE]",
+         "exitSource": "[TO COMPLETE]",
+         "undo": "[TO COMPLETE]",
+         "redo": "[TO COMPLETE]",
+         "emptyReading": "[TO COMPLETE]"
       }
    },
    "BoardView": {

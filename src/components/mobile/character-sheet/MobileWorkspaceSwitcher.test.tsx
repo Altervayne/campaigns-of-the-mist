@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 
 /*
- * The switcher lists the open workspaces: character rows switch (lossless keep-alive), board/note
+ * The switcher lists the open workspaces: character + note rows switch (lossless keep-alive), board
  * rows are desktop-only and render inert. The active row carries the accent and reflects the live name.
  */
 

@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useState, useEffect, useRef, startTransition } from 'react';
+import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 
 // -- Library Imports --
 import toast from 'react-hot-toast';
@@ -79,6 +79,9 @@ export default function MobileCharacterSheetPage() {
 	const [isToolbeltOpen, setIsToolbeltOpen] = useState(false);
 	const [isReorderingCards, setIsReorderingCards] = useState(false);
 	const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
+	// True while an active note tab shows its docked editing bar; the nav FAB seats into the bar when so.
+	const [isNoteEditing, setIsNoteEditing] = useState(false);
+	const handleNoteEditingActiveChange = useCallback((active: boolean) => setIsNoteEditing(active), []);
 	const isMobileFABMode = useAppSettingsStore((state) => state.isMobileFABMode);
 	const character = useCharacterStore((state) => state.character);
 	const isBootHydrating = useIsBootHydrating();
@@ -378,7 +381,7 @@ export default function MobileCharacterSheetPage() {
 					/>
 				)}
 				{activeTab === 'sheet' && !character && activeTabType === 'note' && (
-					<MobileNoteSurface />
+					<MobileNoteSurface onOpenSwitcher={() => setIsSwitcherOpen(true)} onEditingActiveChange={handleNoteEditingActiveChange} />
 				)}
 				{activeTab === 'drawer' && (
 					<MobileDrawer onAddToCharacter={handleAddDrawerItemToCharacter} onLoadCharacter={handleLoadCharacterFromDrawer} />
@@ -464,6 +467,7 @@ export default function MobileCharacterSheetPage() {
 						isExpanded={isMenuFABExpanded}
 						onIsExpandedChange={setIsMenuFABExpanded}
 						hasSheet={hasSurface}
+						seatedInNoteBar={activeTabType === 'note' && isNoteEditing}
 					/>
 				)
 			)}

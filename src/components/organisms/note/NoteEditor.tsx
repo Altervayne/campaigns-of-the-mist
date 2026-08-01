@@ -63,6 +63,8 @@ export interface NoteEditorHandle {
    splice: (from: number, to: number, insert: string, selectAt?: number) => void;
    /** Scrolls a document offset to the top of the viewport and lands the caret there (outline navigation). */
    scrollToPos: (pos: number) => void;
+   /** Focuses the editor without changing the selection (mobile first-run autofocus on a just-created note). */
+   focus: () => void;
    /** Sets the note title in CM6 state (history-captured), WITHOUT stealing focus from the title input. */
    setTitle: (title: string) => void;
    /** Sets a fresh cover (history-captured). */
@@ -486,6 +488,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
          }
          view.focus();
       },
+      focus: () => viewRef.current?.focus(),
       setTitle: (nextTitle) => {
          const view = viewRef.current;
          if (!view || getNoteTitle(view.state) === nextTitle) return;

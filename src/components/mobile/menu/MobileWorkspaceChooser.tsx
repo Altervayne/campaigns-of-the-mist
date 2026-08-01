@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { MobileMainMenuGameCard } from '@/components/mobile/menu/MobileMainMenuGameCard';
 
 // -- Icon Imports --
-import { Plus, Import } from 'lucide-react';
+import { Plus, Import, NotebookPen } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -18,11 +18,14 @@ import { harmonizeData } from '@/lib/harmonization';
 import { ACCEPT_ENTITY_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Constants --
-import { GAME_VISUALS, GAME_CARD_OPTIONS } from '@/lib/constants/gameVisuals';
+import { GAME_VISUALS, GAME_CARD_OPTIONS, NOTE_VISUAL } from '@/lib/constants/gameVisuals';
 
 // -- Store Imports --
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
-import { useTabManagerActions } from '@/lib/character/tabManagerStore';
+import { useTabManagerActions, useTabManagerStore } from '@/lib/character/tabManagerStore';
+
+// -- Autofocus Seam --
+import { markNoteJustCreated } from '@/lib/notes/noteAutofocus';
 
 // -- Type Imports --
 import type { GameSystem } from '@/lib/types/drawer';
@@ -47,7 +50,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 	const { t } = useTranslation();
 	const contextualGame = useAppSettingsStore((state) => state.contextualGame);
 	const { setContextualGame } = useAppSettingsActions();
-	const { mobileCreateCharacterTab, mobileImportCharacterTab } = useTabManagerActions();
+	const { mobileCreateCharacterTab, mobileImportCharacterTab, mobileCreateNoteTab } = useTabManagerActions();
 
 	const handleCreateCharacter = () => {
 		mobileCreateCharacterTab(contextualGame);
@@ -95,6 +98,13 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 		setContextualGame(game);
 	};
 
+	// The just-created note becomes the active tab; mark it so its surface autofocuses the body on first mount.
+	const handleCreateNote = async () => {
+		await mobileCreateNoteTab();
+		markNoteJustCreated(useTabManagerStore.getState().activeTabId);
+		onCreated?.();
+	};
+
 	return (
 		<div className="flex flex-1 min-h-0 flex-col">
 			{/* Scroll region: the header (when present) scrolls together with the game list so
@@ -102,7 +112,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 			<div className="flex-1 min-h-0 overflow-y-auto">
 				{header}
 				{/* Game Selection - `pt-2` gives the selected card's ring (`ring-4`) room so its halo is not clipped.
-				    Headed by its type category; the second category (boards/notes) joins once they reach mobile. */}
+				    Headed by its type category; the game-agnostic workspace category follows below. */}
 				<div className="px-6 pt-2 pb-6">
 					<h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.characterSheetType')}</h3>
 					<div className="space-y-3">
@@ -121,6 +131,24 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 							</motion.div>
 						))}
 					</div>
+
+					{/* The second type category: game-agnostic workspaces. Notes are the first to reach mobile;
+					    the card uses the shared NOTE_VISUAL so it matches the game cards and the desktop picker. */}
+					<h3 className="mb-3 mt-6 text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.workspaceType')}</h3>
+					<motion.div
+						initial={{ opacity: 0, x: -20 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ delay: 0.1 * (gameOptions.length + 1), duration: 0.3 }}
+					>
+						<MobileMainMenuGameCard
+							title={t('Tabs.newTabDialog.newNoteTitle')}
+							subtitle={t('Tabs.newTabDialog.newNoteSubtitle')}
+							icon={<NotebookPen className={cn('h-6 w-6', NOTE_VISUAL.accentText)} />}
+							gradient={NOTE_VISUAL.gradient}
+							isSelected={false}
+							onClick={handleCreateNote}
+						/>
+					</motion.div>
 				</div>
 			</div>
 

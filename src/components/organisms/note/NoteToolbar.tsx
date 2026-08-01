@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
@@ -15,15 +15,14 @@ import { cn } from '@/lib/utils';
 // -- Basic UI Imports --
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-// -- Markdown Helpers --
-import { computeWrapToggle, computePrefixToggle, computeHeadingCycle, buildTable, FORMAT_MARKERS } from '@/lib/notes/noteFormat';
+// -- Hook Imports --
+import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
 
 // -- Component Imports --
 import { NoteLinkPicker } from '@/components/organisms/note/NoteLinkPicker';
 
 // -- Type Imports --
 import type { NoteEditorHandle } from '@/components/organisms/note/NoteEditor';
-import type { LinePrefixKind, FormatKind } from '@/lib/notes/noteFormat';
 import type { LinkEditSeed } from '@/components/organisms/note/live/linkNode';
 
 /*
@@ -107,64 +106,8 @@ export function NoteToolbar({
       return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('resize', check); };
    }, []);
 
-   /** Applies a whole-line(s) edit computed from the current buffer + selection, at real offsets. */
-   const applyLineEdit = useCallback(
-      (compute: (body: string, from: number, to: number) => { from: number; to: number; insert: string; selectAt: number }) => {
-         const editor = getEditor();
-         if (!editor) return;
-         const { from, to } = editor.getSelection();
-         const edit = compute(editor.getValue(), from, to);
-         editor.splice(edit.from, edit.to, edit.insert, edit.selectAt);
-      },
-      [getEditor],
-   );
-
-   const toggleList = useCallback((kind: LinePrefixKind) => applyLineEdit((body, from, to) => computePrefixToggle(body, from, to, kind)), [applyLineEdit]);
-   const cycleHeading = useCallback(() => applyLineEdit((body, from) => computeHeadingCycle(body, from)), [applyLineEdit]);
-
-   /** Toggles an inline wrap (bold/italic/strike) on the current selection - the same helpers the floating bar
-    *  uses. A no-op on a collapsed caret (there's nothing to wrap). */
-   const toggleFormat = useCallback((kind: FormatKind) => {
-      const editor = getEditor();
-      if (!editor) return;
-      const { from, to } = editor.getSelection();
-      const edit = computeWrapToggle(editor.getValue(), from, to, FORMAT_MARKERS[kind]);
-      if (!edit) return;
-      editor.splice(edit.from, edit.to, edit.insert, edit.selection.head);
-   }, [getEditor]);
-
-   /** Inserts a block snippet at the guarded caret with blank-line spacing (used by table + horizontal rule). */
-   const insertBlock = useCallback((snippet: string) => {
-      const editor = getEditor();
-      if (!editor) return;
-      const from = editor.getInsertionPos();
-      const body = editor.getValue();
-      const before = body.slice(0, from);
-      const after = body.slice(from);
-      // Pad each side to a blank line unless it's already a paragraph boundary - the snippet reads as its own block.
-      const lead = before === '' || before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
-      const trail = after === '' || after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
-      editor.splice(from, from, `${lead}${snippet}${trail}`, from + lead.length);
-   }, [getEditor]);
-
-   const insertTable = useCallback((rows: number, cols: number) => insertBlock(buildTable(rows, cols)), [insertBlock]);
-
-   /**
-    * Inserts a horizontal rule GUARANTEEING a blank line before + after (collapsing any adjacent blank so it
-    * doesn't stack). `text` directly above `---` is a SETEXT heading underline (an invisible rule); the blank
-    * line forces a real thematic break regardless of the caret's line having text.
-    */
-   const insertHorizontalRule = useCallback(() => {
-      const editor = getEditor();
-      if (!editor) return;
-      const from = editor.getInsertionPos();
-      const body = editor.getValue();
-      const before = body.slice(0, from).replace(/[ \t\n]+$/, ''); // strip trailing whitespace/newlines
-      const after = body.slice(from).replace(/^[ \t\n]+/, '');       // strip leading whitespace/newlines
-      const lead = before === '' ? '' : '\n\n';
-      const insert = `${lead}---\n\n`; // always a blank line after too, leaving a fresh line to type on
-      editor.splice(before.length, body.length - after.length, insert, before.length + insert.length);
-   }, [getEditor]);
+   // The markdown format/insert actions, shared with the mobile editing bar (no duplicated markdown logic).
+   const { toggleFormat, cycleHeading, toggleList, insertTable, insertHorizontalRule } = useNoteFormatActions(getEditor);
 
    return (
       <div ref={rowRef} data-tutorial="note-toolbar" className="flex items-center gap-0.5 border-b border-border bg-popover px-2 py-1.5">

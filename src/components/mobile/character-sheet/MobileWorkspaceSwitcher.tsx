@@ -58,9 +58,10 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 	const [isChooserOpen, setIsChooserOpen] = useState(false);
 	const [pendingClose, setPendingClose] = useState<OpenTab | null>(null);
 
-	// The active tab's dirtiness is read live (its edits outrun the denormalized flag); a background tab uses
-	// its denormalized flag, and an unknown (never-refreshed cross-device) tab is treated as possibly-dirty.
-	const isTabDirty = (tab: OpenTab) => (tab.id === activeTabId ? activeDirty : tab.dirty ?? true);
+	// The active CHARACTER tab's dirtiness is read live (its edits outrun the denormalized flag); every other
+	// tab uses its denormalized flag, and an unknown (never-refreshed cross-device) tab is treated as
+	// possibly-dirty. The active note's live dirtiness lives in its own note store, not the character store.
+	const isTabDirty = (tab: OpenTab) => (tab.id === activeTabId && tab.type === 'character' ? activeDirty : tab.dirty ?? true);
 
 	const handleSelect = (id: string) => {
 		if (id !== activeTabId) void mobileSetActiveTab(id);
@@ -107,7 +108,7 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 								key={tab.id}
 								tab={tab}
 								isActive={tab.id === activeTabId}
-								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, t('Tabs.untitled'))}
+								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, tab.type === 'note' ? t('Tabs.untitledNote') : t('Tabs.untitled'))}
 								isDirty={isTabDirty(tab)}
 								onSelect={() => handleSelect(tab.id)}
 								onRequestClose={tab.type === 'character' ? () => setPendingClose(tab) : undefined}

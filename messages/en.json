@@ -40,7 +40,6 @@
    },
    "NoteView": {
       "titlePlaceholder": "Untitled note",
-      "mobilePlaceholder": "Notes editor arrives soon.",
       "bodyPlaceholder": "Write your document in Markdown...",
       "emptyPreview": "This note is empty. Switch to Live to start writing.",
       "mode": {
@@ -121,6 +120,16 @@
          "change": "Change cover",
          "remove": "Remove cover",
          "aspect": "Aspect ratio"
+      },
+      "mobile": {
+         "read": "Read",
+         "edit": "Edit",
+         "more": "More options",
+         "viewSource": "View source",
+         "exitSource": "Exit source",
+         "undo": "Undo",
+         "redo": "Redo",
+         "emptyReading": "This note is empty. Tap Edit to start writing."
       }
    },
    "BoardView": {

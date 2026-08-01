@@ -33,6 +33,8 @@ interface MobileFABProps {
 	onIsExpandedChange?: (isExpanded: boolean) => void;
 	/** Whether a character is loaded; the Sheet action greys out when false. */
 	hasSheet?: boolean;
+	/** A note tab's editing bar is docked at the bottom: seat the FAB into it (like the drawer toolbar). */
+	seatedInNoteBar?: boolean;
 }
 
 export default function MobileFAB({
@@ -45,7 +47,8 @@ export default function MobileFAB({
 	isToolbeltOpen,
 	isExpanded: controlledIsExpanded,
 	onIsExpandedChange,
-	hasSheet = true
+	hasSheet = true,
+	seatedInNoteBar = false
 }: MobileFABProps) {
 	const { t } = useTranslation();
 	const [internalIsExpanded, setInternalIsExpanded] = useState(false);
@@ -58,15 +61,13 @@ export default function MobileFAB({
 	// On the cards tab (collapsed), the FAB rides above the card navigation bar.
 	const isCardsFab = !isExpanded && activeTab === 'sheet' && sheetActiveTab === 'cards';
 
-	// On the drawer tab, the FAB sits at its base resting offset (no extra
-	// drawer-toolbar clearance) so it lands inside the toolbar's vertical band -
-	// the drawer reserves a horizontal slot on its handedness-leading edge so
-	// no toolbar button sits under it, and the FAB no longer overlaps the
-	// breadcrumbs above. It also drops its floating shadow and matches the
-	// toolbar buttons' icon size there, reading as the bar's primary button
-	// rather than a FAB crammed into the row. Keyed on the tab alone (not the
-	// collapsed state) so the styling stays stable while the menu is expanded.
+	// The FAB seats into a bottom bar on two surfaces: the drawer toolbar (drawer tab) and a note tab's
+	// docked editing bar. Both reserve a horizontal slot on the handedness-leading edge so no control sits
+	// under it. Seated, it drops its floating shadow, matches the bar buttons' 20px icon, and sits on the
+	// bar's baseline - reading as the bar's trailing button rather than a FAB crammed into the row. The two
+	// bars rest at slightly different offsets, so the vertical placement stays per-surface below.
 	const isDrawerFab = activeTab === 'drawer';
+	const seated = isDrawerFab || seatedInNoteBar;
 
 	const toggleExpanded = () => {
 		const newValue = !isExpanded;
@@ -193,22 +194,24 @@ export default function MobileFAB({
 						"fixed layer-panel",
 						// Cards/sheet tabs: float at the standard 16px corner inset (the
 						// card yields room via MobileSheetCardSlot's FAB_CLEARANCE_PADDING).
-						// Drawer tab: use the toolbar's own 12px (px-3) edge inset so the
-						// FAB lines up with the action buttons' horizontal rhythm - with the
-						// 4rem slot the drawer reserves, this leaves an 8px (gap-2) gap to
-						// the adjacent button, exactly like a real toolbar button.
-						isDrawerFab
+						// Seated (drawer/note bar): use the bar's own 12px (px-3) edge inset
+						// so the FAB lines up with the bar buttons' horizontal rhythm - with
+						// the 4rem slot the bar reserves, this leaves an 8px gap to the
+						// adjacent button, exactly like a real toolbar button.
+						seated
 							? (isLeft ? "left-3" : "right-3")
 							: (isLeft ? "left-4" : "right-4")
 					)}
-					// Drawer tab: sit on the toolbar buttons' baseline (the toolbar's
-					// `paddingBottom` of 0.5rem + safe area) so the FAB is vertically
-					// centred in the action-bar row instead of floating 0.5rem above it.
-					// Other tabs use the standard floating offset.
+					// Seated: sit on the bar buttons' baseline so the FAB is vertically
+					// centred in the row. The drawer toolbar carries a 0.5rem bottom pad;
+					// the note editing bar's row is inset by its 0.25rem (py-1) pad. Other
+					// tabs use the standard floating offset.
 					style={{
 						bottom: isDrawerFab
 							? 'calc(0.5rem + env(safe-area-inset-bottom))'
-							: getFloatingBottom({ clearsCardsNavBar: isCardsFab })
+							: seatedInNoteBar
+								? 'calc(0.25rem + env(safe-area-inset-bottom))'
+								: getFloatingBottom({ clearsCardsNavBar: isCardsFab })
 					}}
 					whileTap={{ scale: 0.95 }}
 					data-tutorial="mobile-fab"
@@ -217,13 +220,14 @@ export default function MobileFAB({
 						variant="default"
 						size="lg"
 						onClick={toggleExpanded}
-						// On the drawer tab the FAB is seated inside the bottom toolbar's
-						// row rather than floating in a corner, so it drops the floating
-						// drop-shadow and matches the toolbar buttons' 20px icon - it
-						// keeps its primary fill to stay recognizable as the nav control
-						// among the flat outline action buttons. Elsewhere it is a real
-						// floating FAB (shadow-2xl, 24px icon).
-						className={cn("h-11 w-11", isDrawerFab ? "shadow-none" : "shadow-2xl")}
+						// Seated inside a bottom bar rather than floating in a corner, so it
+						// drops the floating drop-shadow and matches the bar buttons' 20px
+						// icon - it keeps its primary fill to stay recognizable as the nav
+						// control among the flat outline buttons. It also matches the bar
+						// buttons' box size: 44px in the drawer toolbar, 36px in the denser
+						// note editing bar. Elsewhere it is a real floating FAB (shadow-2xl,
+						// 24px icon).
+						className={cn(seatedInNoteBar ? "h-9 w-9" : "h-11 w-11", seated ? "shadow-none" : "shadow-2xl")}
 						aria-label={isExpanded ? t('MobileFAB.close') : t('MobileFAB.open')}
 					>
 						<motion.div
@@ -231,9 +235,9 @@ export default function MobileFAB({
 							transition={{ duration: 0.2 }}
 						>
 							{isExpanded ? (
-								<X className={cn(isDrawerFab ? "h-5 w-5" : "h-6 w-6")} />
+								<X className={cn(seated ? "h-5 w-5" : "h-6 w-6")} />
 							) : (
-								<Menu className={cn(isDrawerFab ? "h-5 w-5" : "h-6 w-6")} />
+								<Menu className={cn(seated ? "h-5 w-5" : "h-6 w-6")} />
 							)}
 						</motion.div>
 					</IconButton>
