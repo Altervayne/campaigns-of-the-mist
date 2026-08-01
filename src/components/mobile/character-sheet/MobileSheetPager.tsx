@@ -75,7 +75,7 @@ export function MobileSheetPager({
    const [width, setWidth] = useState(0);
    const pageRef = useRef(committedPage);
 
-   // The single settle path: park at a page, animated (tap/release) or instant (mount/resize). Width is read
+   // The single settle path: park at a page, animated (finger-swipe release only) or instant (taps, mount, resize). Width is read
    // LIVE from the container (falling back to the cached measure) so a jump never resolves against a stale or
    // not-yet-measured width; if neither is known the settle defers without advancing `pageRef`, so the
    // width-effect re-runs it once a width is known - the fix for the track lagging a page behind on jumps.
@@ -105,12 +105,14 @@ export function MobileSheetPager({
       // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time bind; measure reads live refs.
    }, []);
 
-   // External jumps (tab bar, nav-bar arrows/dots, initial-item mount): animate to the new committed page. A
-   // finger-release already parked `pageRef` at its target, so this skips that self-caused change. `width` is
-   // a dependency so a jump that arrived before the pitch was known re-settles the instant it is measured.
+   // External jumps (tab bar, nav-bar arrows/dots, initial-item mount) snap INSTANTLY to the new committed
+   // page: only a finger-swipe settle is animated (via animateToPage), so tapping navigates crisply and a
+   // far jump never slides through the windowed-out (blank) pages between here and there. A finger-release
+   // already parked `pageRef` at its target, so this skips that self-caused change. `width` is a dependency
+   // so a jump that arrived before the pitch was known re-settles the instant it is measured.
    useEffect(() => {
       if (pageRef.current === committedPage) return;
-      settleToPage(committedPage, true);
+      settleToPage(committedPage, false);
       // eslint-disable-next-line react-hooks/exhaustive-deps -- settleToPage reads live width; only page/width changes should re-run.
    }, [committedPage, width]);
 
