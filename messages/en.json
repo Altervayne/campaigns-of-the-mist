@@ -2308,7 +2308,10 @@
       "desktopOnly": "Desktop only",
       "closeConfirmTitle": "Close workspace?",
       "closeConfirmDirtyBody": "Unsaved changes will be lost.",
-      "closeConfirmCleanBody": "You can reopen it from your drawer."
+      "closeConfirmCleanBody": "You can reopen it from your drawer.",
+      "closeNoteConfirmTitle": "Close note?",
+      "closeNoteConfirmDirtyBody": "This note will be permanently deleted. This cannot be undone.",
+      "closeNoteConfirmCleanBody": "This empty note will be discarded."
    },
    "Toolbelt": {
       "title": "Toolbelt",

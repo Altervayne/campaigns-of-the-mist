@@ -2,7 +2,7 @@
 
 // -- Testing Imports --
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 
 /*
  * The switcher lists the open workspaces: character + note rows switch (lossless keep-alive), board
@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
    activeTabId: null as string | null,
    activeName: undefined as string | undefined,
    mobileSetActiveTab: vi.fn(),
+   mobileCloseTab: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -27,7 +28,7 @@ vi.mock('@/lib/stores/characterStore', () => ({
 vi.mock('@/lib/character/tabManagerStore', () => ({
    useTabManagerStore: (selector: (state: { openTabs: unknown; activeTabId: unknown }) => unknown) =>
       selector({ openTabs: mocks.openTabs, activeTabId: mocks.activeTabId }),
-   useTabManagerActions: () => ({ mobileSetActiveTab: mocks.mobileSetActiveTab }),
+   useTabManagerActions: () => ({ mobileSetActiveTab: mocks.mobileSetActiveTab, mobileCloseTab: mocks.mobileCloseTab }),
 }));
 
 import { MobileWorkspaceSwitcher } from './MobileWorkspaceSwitcher';
@@ -35,6 +36,7 @@ import { MobileWorkspaceSwitcher } from './MobileWorkspaceSwitcher';
 afterEach(() => {
    cleanup();
    mocks.mobileSetActiveTab.mockReset();
+   mocks.mobileCloseTab.mockClear();
 });
 
 describe('MobileWorkspaceSwitcher', () => {
@@ -69,6 +71,30 @@ describe('MobileWorkspaceSwitcher', () => {
 
       expect(mocks.mobileSetActiveTab).toHaveBeenCalledWith('c2');
       expect(onSwitched).toHaveBeenCalledTimes(1);
+   });
+
+   it('closes a note row through a delete-worded confirm', () => {
+      mocks.openTabs = [
+         { id: 'c1', type: 'character', title: 'Alice', game: 'LEGENDS' },
+         { id: 'n1', type: 'note', title: 'My Note', dirty: true },
+      ];
+      mocks.activeTabId = 'c1';
+      mocks.activeName = 'Alice';
+
+      const { getByText, queryByText } = render(<MobileWorkspaceSwitcher isOpen onClose={() => {}} onSwitched={() => {}} />);
+
+      // The note row carries a close control (character-only before); the character close body must not show.
+      const noteRow = getByText('My Note').closest('button')!.parentElement!;
+      fireEvent.click(within(noteRow).getByLabelText('Common.close'));
+
+      // Note-specific, deletion-honest confirm (not the character's "unsaved changes" / "reopen from drawer").
+      expect(getByText('Workspace.closeNoteConfirmTitle')).not.toBeNull();
+      expect(getByText('Workspace.closeNoteConfirmDirtyBody')).not.toBeNull();
+      expect(queryByText('Workspace.closeConfirmDirtyBody')).toBeNull();
+
+      // Confirming reaps the note tab.
+      fireEvent.click(getByText('Common.close'));
+      expect(mocks.mobileCloseTab).toHaveBeenCalledWith('n1');
    });
 
    it('renders a board tab greyed and non-tappable', () => {

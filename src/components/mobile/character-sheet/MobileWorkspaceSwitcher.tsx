@@ -1,6 +1,6 @@
 // -- React Imports --
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import { useCallback, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Component Imports --
@@ -18,6 +18,7 @@ import { Plus, X } from 'lucide-react';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useCharacterStore } from '@/lib/stores/characterStore';
 import { useTabManagerStore, useTabManagerActions } from '@/lib/character/tabManagerStore';
+import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
 
 // -- Type Imports --
 import type { OpenTab } from '@/lib/character/tabManagerStore';
@@ -55,13 +56,32 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 	const activeDirty = useCharacterStore((state) => state.hasUnsavedChanges);
 	const { mobileSetActiveTab, mobileCloseTab } = useTabManagerActions();
 
+	// The active note's live dirtiness lives in its own store (its keystrokes outrun the denormalized flag).
+	// Null when the active tab is not a note. Subscribed via the maybe-null active-note instance.
+	const activeNoteStore = useActiveNoteInstance();
+	const subscribeNoteDirty = useCallback(
+		(onChange: () => void) => (activeNoteStore ? activeNoteStore.subscribe(onChange) : () => {}),
+		[activeNoteStore],
+	);
+	const readNoteDirty = useCallback(
+		() => (activeNoteStore ? activeNoteStore.getState().hasUnsavedChanges : null),
+		[activeNoteStore],
+	);
+	const activeNoteDirty = useSyncExternalStore(subscribeNoteDirty, readNoteDirty);
+
 	const [isChooserOpen, setIsChooserOpen] = useState(false);
 	const [pendingClose, setPendingClose] = useState<OpenTab | null>(null);
 
-	// The active CHARACTER tab's dirtiness is read live (its edits outrun the denormalized flag); every other
-	// tab uses its denormalized flag, and an unknown (never-refreshed cross-device) tab is treated as
-	// possibly-dirty. The active note's live dirtiness lives in its own note store, not the character store.
-	const isTabDirty = (tab: OpenTab) => (tab.id === activeTabId && tab.type === 'character' ? activeDirty : tab.dirty ?? true);
+	// The active tab's dirtiness is read live (its edits outrun the denormalized flag): a character from the
+	// character store, a note from its own store. Every other tab uses its denormalized flag, and an unknown
+	// (never-refreshed cross-device) tab is treated as possibly-dirty.
+	const isTabDirty = (tab: OpenTab): boolean => {
+		if (tab.id === activeTabId) {
+			if (tab.type === 'character') return activeDirty;
+			if (tab.type === 'note') return activeNoteDirty ?? (tab.dirty ?? true);
+		}
+		return tab.dirty ?? true;
+	};
 
 	const handleSelect = (id: string) => {
 		if (id !== activeTabId) void mobileSetActiveTab(id);
@@ -84,6 +104,14 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 		setIsChooserOpen(false);
 		onSwitched();
 	};
+
+	// Close confirm copy, by kind. A note is drawer-less on mobile, so closing it deletes the record outright
+	// (a character keeps its drawer copy) - the note body says so plainly rather than promising a reopen.
+	const pendingDirty = pendingClose ? isTabDirty(pendingClose) : false;
+	const confirmTitle = pendingClose?.type === 'note' ? t('Workspace.closeNoteConfirmTitle') : t('Workspace.closeConfirmTitle');
+	const confirmBody = pendingClose?.type === 'note'
+		? (pendingDirty ? t('Workspace.closeNoteConfirmDirtyBody') : t('Workspace.closeNoteConfirmCleanBody'))
+		: (pendingDirty ? t('Workspace.closeConfirmDirtyBody') : t('Workspace.closeConfirmCleanBody'));
 
 	// The panel pins to the leading edge, so its horizontal notch inset lives on that edge.
 	const insetStyle: CSSProperties =
@@ -111,7 +139,7 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, tab.type === 'note' ? t('Tabs.untitledNote') : t('Tabs.untitled'))}
 								isDirty={isTabDirty(tab)}
 								onSelect={() => handleSelect(tab.id)}
-								onRequestClose={tab.type === 'character' ? () => setPendingClose(tab) : undefined}
+								onRequestClose={tab.type === 'character' || tab.type === 'note' ? () => setPendingClose(tab) : undefined}
 							/>
 						))}
 					</div>
@@ -149,10 +177,8 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 			<MobileBottomSheet isOpen={pendingClose !== null} onClose={() => setPendingClose(null)}>
 				<div className="space-y-4 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
 					<div className="space-y-1">
-						<h2 className="text-lg font-semibold text-foreground">{t('Workspace.closeConfirmTitle')}</h2>
-						<p className="text-sm text-muted-foreground">
-							{pendingClose && isTabDirty(pendingClose) ? t('Workspace.closeConfirmDirtyBody') : t('Workspace.closeConfirmCleanBody')}
-						</p>
+						<h2 className="text-lg font-semibold text-foreground">{confirmTitle}</h2>
+						<p className="text-sm text-muted-foreground">{confirmBody}</p>
 					</div>
 					<div className="flex gap-2">
 						<Button variant="outline" className="flex-1" onClick={() => setPendingClose(null)}>{t('Common.cancel')}</Button>

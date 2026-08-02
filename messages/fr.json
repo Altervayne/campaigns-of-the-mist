@@ -2182,7 +2182,10 @@
       "desktopOnly": "PC seulement",
       "closeConfirmTitle": "Fermer l'espace ?",
       "closeConfirmDirtyBody": "Les modifications non enregistrées seront perdues.",
-      "closeConfirmCleanBody": "Vous pourrez l'ouvrir à nouveau depuis le Tiroir."
+      "closeConfirmCleanBody": "Vous pourrez l'ouvrir à nouveau depuis le Tiroir.",
+      "closeNoteConfirmTitle": "[TO COMPLETE]",
+      "closeNoteConfirmDirtyBody": "[TO COMPLETE]",
+      "closeNoteConfirmCleanBody": "[TO COMPLETE]"
    },
    "Toolbelt": {
       "title": "Ceinture à outils",
