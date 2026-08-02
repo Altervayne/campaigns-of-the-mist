@@ -11,6 +11,10 @@ const BOTTOM_NAV_HEIGHT_REM = 4;
  *  hint. That value clears the bar with the base gap (1rem) on top. Excludes the
  *  safe-area inset, which {@link getFloatingBottom} adds separately. */
 const CARDS_NAV_BAR_REM = 4.25;
+/** Height of the note editing bar (a note tab in Edit): its `py-1` padding around a
+ *  row of `h-9` (36px) buttons. A FAB in note-edit mode rides just above it rather
+ *  than into it, so the bar keeps its full width. */
+const NOTE_EDITING_BAR_REM = 2.75;
 /** Gap from the bottom chrome (or the screen edge in FAB mode) up to the first cluster. */
 const FLOATING_BASE_GAP_REM = 1;
 /** Vertical separation between two floating clusters that share one screen edge. */
@@ -26,6 +30,8 @@ interface FloatingBottomConfig {
 	hasBottomNav?: boolean;
 	/** Add the card navigation bar's height to the offset (cards tab). */
 	clearsCardsNavBar?: boolean;
+	/** Add the note editing bar's height to the offset (a note tab in Edit mode). */
+	clearsNoteBar?: boolean;
 	/** This control's index in the stack of clusters sharing the edge (0 = nearest the edge). */
 	stagger?: number;
 	/** One-off additional clearance in rem (e.g. an expanded action list floating above its own FAB). */
@@ -62,12 +68,14 @@ interface FloatingBottomConfig {
 export function getFloatingBottom({
 	hasBottomNav = false,
 	clearsCardsNavBar = false,
+	clearsNoteBar = false,
 	stagger = 0,
 	extraRem = 0,
 }: FloatingBottomConfig = {}): string {
 	const offsetRem =
 		(hasBottomNav ? BOTTOM_NAV_HEIGHT_REM : 0) +
 		(clearsCardsNavBar ? CARDS_NAV_BAR_REM : 0) +
+		(clearsNoteBar ? NOTE_EDITING_BAR_REM : 0) +
 		FLOATING_BASE_GAP_REM +
 		stagger * FLOATING_STAGGER_REM +
 		extraRem;

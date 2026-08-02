@@ -54,19 +54,12 @@ export function MobileNoteEditingBar({
    const { toggleFormat, cycleHeading, toggleList, insertHorizontalRule } = useNoteFormatActions(getEditor);
 
    // Ride the keyboard top when it is up; rest above the bottom chrome (tab bar in nav mode) when it is down.
+   // Full-width in every case: in FAB mode the nav FAB rides ABOVE this bar, so no horizontal slot is reserved.
    const keyboardInset = useKeyboardInset();
    const keyboardUp = keyboardInset > 0;
    const restingBottom = isMobileFABMode ? 'env(safe-area-inset-bottom)' : 'calc(4rem + env(safe-area-inset-bottom))';
    const bottom = keyboardUp ? `${keyboardInset}px` : restingBottom;
-
-   // In FAB mode the nav FAB rests in a bottom corner on the handedness-leading edge; reserve its 4rem slot on
-   // that side so the pinned Undo/Redo never sit under it. Only while the keyboard is down: when it is up the
-   // bar rides the keyboard top, above the FAB (which the keyboard covers).
-   const fabClearance = isMobileFABMode && !keyboardUp;
-   const style: CSSProperties = {
-      bottom,
-      ...(fabClearance ? (isLeftHanded ? { paddingLeft: '4rem' } : { paddingRight: '4rem' }) : {}),
-   };
+   const style: CSSProperties = { bottom };
 
    return (
       <div

@@ -467,7 +467,7 @@ export default function MobileCharacterSheetPage() {
 						isExpanded={isMenuFABExpanded}
 						onIsExpandedChange={setIsMenuFABExpanded}
 						hasSheet={hasSurface}
-						seatedInNoteBar={activeTabType === 'note' && isNoteEditing}
+						clearsNoteBar={activeTabType === 'note' && isNoteEditing}
 					/>
 				)
 			)}
