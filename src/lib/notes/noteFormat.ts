@@ -338,6 +338,35 @@ export function setTableColumnAlign(model: TableModel, at: number, align: Column
    return { ...model, aligns };
 }
 
+/** Returns a copy of `model` with body row `from` moved to destination index `to` (both body-row indices).
+ *  No-op if either index is out of range or they're equal; the header never moves. */
+export function moveTableRow(model: TableModel, from: number, to: number): TableModel {
+   const n = model.rows.length;
+   if (from < 0 || from >= n || to < 0 || to >= n || from === to) return model;
+   const rows = model.rows.slice();
+   const [moved] = rows.splice(from, 1);
+   rows.splice(to, 0, moved);
+   return { ...model, rows };
+}
+
+/** Returns a copy of `model` with column `from` moved to destination index `to` (header cell, every body
+ *  cell, and the column alignment move together). No-op if either index is out of range or they're equal. */
+export function moveTableColumn(model: TableModel, from: number, to: number): TableModel {
+   const cols = model.header.length;
+   if (from < 0 || from >= cols || to < 0 || to >= cols || from === to) return model;
+   const move = <T,>(arr: T[]): T[] => {
+      const a = arr.slice();
+      const [m] = a.splice(from, 1);
+      a.splice(to, 0, m);
+      return a;
+   };
+   return {
+      header: move(model.header),
+      rows: model.rows.map((r) => move(padCells(r, cols))),
+      aligns: move(padCells2(model.aligns, cols, 'none')),
+   };
+}
+
 /** Sets header cell `col` or body cell `[row][col]` (row -1 = header), returning a copy. Out-of-range is a no-op. */
 export function setTableCell(model: TableModel, row: number, col: number, value: string): TableModel {
    const cols = model.header.length;

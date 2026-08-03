@@ -12,6 +12,8 @@ import {
    addTableColumn,
    removeTableColumn,
    setTableColumnAlign,
+   moveTableRow,
+   moveTableColumn,
    setTableCell,
    separateTablesFromText,
    findTableBlocks,
@@ -228,6 +230,36 @@ describe('table model (parse / rebuild / structure / alignment)', () => {
       const centered = setTableColumnAlign(m, 0, 'center');
       expect(centered.aligns[0]).toBe('center');
       expect(rebuildTable(centered)).toContain('| :--: | :--: | ---: |');
+   });
+
+   it('moves a body row up and down (header stays put)', () => {
+      const m = parseTable(SAMPLE)!; // rows: Baron, Envoy
+      const down = moveTableRow(m, 0, 1); // Baron down past Envoy
+      expect(down.rows).toEqual([['Envoy', '1', 'spy'], ['Baron', '3', 'rules']]);
+      const up = moveTableRow(down, 1, 0); // Baron back up
+      expect(up.rows).toEqual([['Baron', '3', 'rules'], ['Envoy', '1', 'spy']]);
+   });
+
+   it('no-ops a row move at the edges or onto itself', () => {
+      const m = parseTable(SAMPLE)!;
+      expect(moveTableRow(m, 0, -1)).toBe(m); // up from the top
+      expect(moveTableRow(m, 1, 2)).toBe(m); // down from the bottom
+      expect(moveTableRow(m, 0, 0)).toBe(m); // onto itself
+   });
+
+   it('moves a column with its header cell, body cells, and alignment', () => {
+      const m = parseTable(SAMPLE)!; // cols: Name(left) Might(center) Notes(right)
+      const moved = moveTableColumn(m, 0, 2); // Name to the end
+      expect(moved.header).toEqual(['Might', 'Notes', 'Name']);
+      expect(moved.rows[0]).toEqual(['3', 'rules', 'Baron']);
+      expect(moved.aligns).toEqual(['center', 'right', 'left']);
+   });
+
+   it('no-ops a column move at the edges or onto itself', () => {
+      const m = parseTable(SAMPLE)!;
+      expect(moveTableColumn(m, 0, -1)).toBe(m);
+      expect(moveTableColumn(m, 2, 3)).toBe(m);
+      expect(moveTableColumn(m, 1, 1)).toBe(m);
    });
 
    it('sets a cell (header via row -1, body via index) and escapes pipes', () => {

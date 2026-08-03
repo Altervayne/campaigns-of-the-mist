@@ -10,6 +10,8 @@ import {
    addTableColumn,
    removeTableColumn,
    setTableColumnAlign,
+   moveTableRow,
+   moveTableColumn,
    setTableCell,
 } from '@/lib/notes/noteFormat';
 
@@ -32,12 +34,17 @@ import type { TableModel, ColumnAlign } from '@/lib/notes/noteFormat';
 
 const CSS_ALIGN: Record<ColumnAlign, string> = { none: 'left', left: 'left', center: 'center', right: 'right' };
 
-/** The bag of table actions the right-click menu invokes; each is pre-bound to the right-clicked cell. */
+/** The bag of table actions a menu invokes; each is pre-bound to a target cell (right-clicked on desktop,
+ *  the caret's cell on mobile). Move ops apply to the target's row/column; the caret follows the moved cell. */
 export interface TableActions {
    insertRowAbove: () => void;
    insertRowBelow: () => void;
    insertColumnLeft: () => void;
    insertColumnRight: () => void;
+   moveRowUp: () => void;
+   moveRowDown: () => void;
+   moveColumnLeft: () => void;
+   moveColumnRight: () => void;
    deleteRow: () => void;
    deleteColumn: () => void;
    alignColumn: (align: ColumnAlign) => void;
@@ -45,6 +52,11 @@ export interface TableActions {
    /** Whether delete-row / delete-column are allowed (false when it's the last row/column). */
    canDeleteRow: boolean;
    canDeleteColumn: boolean;
+   /** Whether each move is allowed (false at the corresponding edge, or on the header row for row moves). */
+   canMoveRowUp: boolean;
+   canMoveRowDown: boolean;
+   canMoveColumnLeft: boolean;
+   canMoveColumnRight: boolean;
 }
 
 /** A right-click request: the screen point to anchor the menu + the actions for the clicked cell. */
@@ -207,7 +219,7 @@ export class NoteTableWidget extends WidgetType {
       });
    }
 
-   /** Builds the action bag for the right-clicked cell (each re-reads the LIVE model at call time). */
+   /** Builds the action bag for the target cell (each re-reads the LIVE model at call time). */
    private buildActions(view: EditorView, model: TableModel, row: number, col: number): TableActions {
       const run = (transform: (m: TableModel) => TableModel) => () => {
          const live = this.liveModel(view);
@@ -220,6 +232,12 @@ export class NoteTableWidget extends WidgetType {
          insertRowBelow: run((m) => addTableRow(m, row < 0 ? -1 : row)),
          insertColumnLeft: run((m) => addTableColumn(m, col - 1)),
          insertColumnRight: run((m) => addTableColumn(m, col)),
+         // Move ops commit only; the caret-follow is the caller's concern (the mobile sheet advances its
+         // target and re-resolves, keeping the soft keyboard down instead of refocusing a cell).
+         moveRowUp: run((m) => moveTableRow(m, row, row - 1)),
+         moveRowDown: run((m) => moveTableRow(m, row, row + 1)),
+         moveColumnLeft: run((m) => moveTableColumn(m, col, col - 1)),
+         moveColumnRight: run((m) => moveTableColumn(m, col, col + 1)),
          deleteRow: run((m) => removeTableRow(m, bodyRow)),
          deleteColumn: run((m) => removeTableColumn(m, col)),
          alignColumn: (align) => run((m) => setTableColumnAlign(m, col, align))(),
@@ -229,6 +247,11 @@ export class NoteTableWidget extends WidgetType {
          },
          canDeleteRow: row >= 0 && model.rows.length > 1,
          canDeleteColumn: model.header.length > 1,
+         // Row moves apply to body rows only (never the header); column moves apply to any target cell.
+         canMoveRowUp: row >= 1,
+         canMoveRowDown: row >= 0 && row < model.rows.length - 1,
+         canMoveColumnLeft: col >= 1,
+         canMoveColumnRight: col < model.header.length - 1,
       };
    }
 
