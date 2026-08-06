@@ -1,30 +1,11 @@
 # Copyright Notice
 
-## Campaigns of the Mist (Formerly "Characters of the Mist") Icon
+## Campaigns of the Mist Icon and Logo
 
-The "Campaigns of the Mist" (Formerly "Characters of the Mist") icon (`icon.svg` and all related icon files in this directory) is an original work and is protected by copyright.
+The "Campaigns of the Mist" icon and logo (`icon.svg` and all related icon/logo files in this directory) are original works and the exclusive property of Florian Douay.
 
-**Copyright © 2024-2025 Florian Douay**
+**Copyright © 2024-2026 Florian Douay. All rights reserved.**
 
-This icon is distributed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+These files are NOT covered by the AGPL-3.0-or-later license that applies to the project's source code, and no license to use, copy, modify, or redistribute them is granted.
 
-You are free to:
-- **Share** — copy and redistribute the icon in any medium or format
-- **Adapt** — remix, transform, and build upon the icon
-
-Under the following terms:
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
-- **NonCommercial** — You may not use the icon for commercial purposes.
-- **ShareAlike** — If you remix, transform, or build upon the icon, you must distribute your contributions under the same license.
-
-Full license text: http://creativecommons.org/licenses/by-nc-sa/4.0/
-
----
-
-### Attribution
-
-When using or modifying this icon, please provide attribution as follows:
-
-"Campaigns of the Mist" (Formerly "Characters of the Mist") icon by Florian Douay
-Licensed under CC BY-NC-SA 4.0
-https://github.com/Altervayne/characters-of-the-mist
+If you fork or redistribute this project, you must remove these icon and logo files and replace them with your own brand identity. See the [`NOTICE`](../../NOTICE) file at the repository root for details.
