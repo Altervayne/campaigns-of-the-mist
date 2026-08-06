@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { CSSProperties, ReactNode } from 'react';
 
 // -- Icon Imports --
-import { Bold, Heading, ImagePlus, Italic, List, ListOrdered, Loader2, Minus, Quote, Redo2, Strikethrough, Undo2 } from 'lucide-react';
+import { Bold, Heading, ImagePlus, Italic, List, ListOrdered, Loader2, Minus, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
 
 // -- Hook Imports --
 import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
@@ -26,6 +26,10 @@ interface MobileNoteEditingBarProps {
    canRedo: boolean;
    onUndo: () => void;
    onRedo: () => void;
+   /** Whether the caret sits in a table cell; the Table chip is alive only then. */
+   canOpenTable: boolean;
+   /** Drops the keyboard and raises the table slide-up for the caret's cell. */
+   onOpenTable: () => void;
    /** Pins Undo/Redo on the thumb-side edge; the scrolling format group takes the rest. */
    isLeftHanded: boolean;
    /** No bottom tab bar in FAB mode, so the resting (keyboard-down) dock sits lower. */
@@ -47,11 +51,13 @@ export function MobileNoteEditingBar({
    canRedo,
    onUndo,
    onRedo,
+   canOpenTable,
+   onOpenTable,
    isLeftHanded,
    isMobileFABMode,
 }: MobileNoteEditingBarProps) {
    const { t } = useTranslation();
-   const { toggleFormat, cycleHeading, toggleList, insertHorizontalRule } = useNoteFormatActions(getEditor);
+   const { toggleFormat, cycleHeading, toggleList, insertHorizontalRule, insertTable } = useNoteFormatActions(getEditor);
 
    // Ride the keyboard top when it is up; rest above the bottom chrome (tab bar in nav mode) when it is down.
    // Full-width in every case: in FAB mode the nav FAB rides ABOVE this bar, so no horizontal slot is reserved.
@@ -98,6 +104,15 @@ export function MobileNoteEditingBar({
                </EditingBarButton>
                <EditingBarButton label={t('NoteView.insertImage')} onClick={onInsertImage} disabled={isImageProcessing}>
                   {isImageProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+               </EditingBarButton>
+               <BarDivider />
+               {/* Context-aware, never greyed: in a table it opens the slide-up; otherwise it inserts a starter
+                   table (the slide-up then grows it). Hand-typing pipe rows on a phone is a non-starter. */}
+               <EditingBarButton
+                  label={canOpenTable ? t('NoteView.mobile.tableChip') : t('NoteView.toolbar.insertTable')}
+                  onClick={canOpenTable ? onOpenTable : () => insertTable(2, 2)}
+               >
+                  <Table className="h-5 w-5" />
                </EditingBarButton>
             </div>
 

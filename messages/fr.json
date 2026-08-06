@@ -129,7 +129,31 @@
          "exitSource": "[TO COMPLETE]",
          "undo": "[TO COMPLETE]",
          "redo": "[TO COMPLETE]",
-         "emptyReading": "[TO COMPLETE]"
+         "emptyReading": "[TO COMPLETE]",
+         "tableChip": "[TO COMPLETE]"
+      },
+      "tableSheet": {
+         "cellRow": "[TO COMPLETE]",
+         "cellHeader": "[TO COMPLETE]",
+         "groupInsert": "[TO COMPLETE]",
+         "groupMove": "[TO COMPLETE]",
+         "groupAlign": "[TO COMPLETE]",
+         "groupDelete": "[TO COMPLETE]",
+         "insertRowAbove": "[TO COMPLETE]",
+         "insertRowBelow": "[TO COMPLETE]",
+         "insertColumnLeft": "[TO COMPLETE]",
+         "insertColumnRight": "[TO COMPLETE]",
+         "moveRowUp": "[TO COMPLETE]",
+         "moveRowDown": "[TO COMPLETE]",
+         "moveColumnLeft": "[TO COMPLETE]",
+         "moveColumnRight": "[TO COMPLETE]",
+         "alignLeft": "[TO COMPLETE]",
+         "alignCenter": "[TO COMPLETE]",
+         "alignRight": "[TO COMPLETE]",
+         "deleteRow": "[TO COMPLETE]",
+         "deleteColumn": "[TO COMPLETE]",
+         "deleteTable": "[TO COMPLETE]",
+         "done": "[TO COMPLETE]"
       }
    },
    "BoardView": {

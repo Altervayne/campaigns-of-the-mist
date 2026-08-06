@@ -59,17 +59,113 @@ export interface TableActions {
    canMoveColumnRight: boolean;
 }
 
-/** A right-click request: the screen point to anchor the menu + the actions for the clicked cell. */
+/** A menu/sheet request for a target cell. Desktop uses `x`/`y`/`actions` (one-shot menu at the click point).
+ *  Mobile drives a STICKY sheet: it keeps `tablePos` (the table block's stable `from` offset) and re-resolves
+ *  actions for a walking target via `resolveFor`, and reads live dims via `getDims` to clamp after a delete. */
 export interface TableContextRequest {
    x: number;
    y: number;
    actions: TableActions;
+   /** The target cell (header row = -1) the request opened on. */
+   row: number;
+   col: number;
+   /** The table block's stable `from` offset; anchors every re-resolved op (never goes stale on edits in place). */
+   tablePos: number;
+   /** Resolves a fresh action bag for an arbitrary cell of the same table (the sheet's walking target). */
+   resolveFor: (row: number, col: number) => TableActions;
+   /** The table's current dimensions, or null if the block is gone (deleted table). */
+   getDims: () => { bodyRows: number; cols: number } | null;
 }
 
-/** Injected once from the React host: opens the context menu + supplies i18n labels for the edge "+" bars. */
+/** Injected once from the React host: opens the context menu/sheet + supplies i18n labels for the edge "+" bars. */
 export interface TableController {
    openContextMenu: (request: TableContextRequest) => void;
+   /** Reports the caret's table cell (or null when it leaves any cell) so a mobile chip can arm/disarm. Desktop
+    *  omits it. */
+   onCaretCell?: (ctx: { tablePos: number; row: number; col: number } | null) => void;
    labels: { addRow: string; addColumn: string };
+}
+
+/**
+ * The contiguous table block `[from, to)` around a doc offset (walks table-ish lines both directions). Standalone
+ * so position-resolved ops can find the block from a stable anchor, not the widget's DOM.
+ */
+export function tableBlockRangeAt(view: EditorView, pos: number): { from: number; to: number } {
+   const doc = view.state.doc;
+   const startLine = doc.lineAt(pos);
+   let from = startLine.from;
+   let to = startLine.to;
+   let n = startLine.number;
+   while (n <= doc.lines) {
+      const line = doc.line(n);
+      if (line.text.trim() === '' || !line.text.includes('|')) break;
+      to = line.to;
+      n++;
+   }
+   let m = startLine.number - 1;
+   while (m >= 1) {
+      const line = doc.line(m);
+      if (line.text.trim() === '' || !line.text.includes('|')) break;
+      from = line.from;
+      m--;
+   }
+   return { from, to };
+}
+
+/** Parses the table model at the block anchored at `tablePos`. */
+export function readTableModelAt(view: EditorView, tablePos: number): TableModel | null {
+   const range = tableBlockRangeAt(view, tablePos);
+   return parseTable(view.state.doc.sliceString(range.from, range.to));
+}
+
+/** Rebuilds the table from `next` and dispatches it at the block anchored at `tablePos` (no-op if unchanged). */
+export function commitTableAt(view: EditorView, tablePos: number, next: TableModel): void {
+   const range = tableBlockRangeAt(view, tablePos);
+   const markdown = rebuildTable(next);
+   if (markdown === view.state.doc.sliceString(range.from, range.to)) return;
+   view.dispatch({ changes: { from: range.from, to: range.to, insert: markdown } });
+}
+
+/** Removes the whole table block anchored at `tablePos`. */
+export function deleteTableAt(view: EditorView, tablePos: number): void {
+   const range = tableBlockRangeAt(view, tablePos);
+   view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+}
+
+/**
+ * Builds the action bag for a target cell of the table anchored at `tablePos`. Every op re-reads the LIVE model
+ * at that anchor and commits back to it, so a sticky sheet re-resolving after each edit always targets the right
+ * table in a multi-table note. Header row = -1.
+ */
+export function buildTableActions(view: EditorView, tablePos: number, row: number, col: number): TableActions {
+   const model = readTableModelAt(view, tablePos) ?? { header: [], rows: [], aligns: [] };
+   const run = (transform: (m: TableModel) => TableModel) => () => {
+      const live = readTableModelAt(view, tablePos);
+      if (live) commitTableAt(view, tablePos, transform(live));
+   };
+   // Body-row index for row ops: the header (row -1) shares the topmost body row's neighbourhood.
+   const bodyRow = Math.max(0, row);
+   return {
+      insertRowAbove: run((m) => addTableRow(m, bodyRow - 1)),
+      insertRowBelow: run((m) => addTableRow(m, row < 0 ? -1 : row)),
+      insertColumnLeft: run((m) => addTableColumn(m, col - 1)),
+      insertColumnRight: run((m) => addTableColumn(m, col)),
+      moveRowUp: run((m) => moveTableRow(m, row, row - 1)),
+      moveRowDown: run((m) => moveTableRow(m, row, row + 1)),
+      moveColumnLeft: run((m) => moveTableColumn(m, col, col - 1)),
+      moveColumnRight: run((m) => moveTableColumn(m, col, col + 1)),
+      deleteRow: run((m) => removeTableRow(m, bodyRow)),
+      deleteColumn: run((m) => removeTableColumn(m, col)),
+      alignColumn: (align) => run((m) => setTableColumnAlign(m, col, align))(),
+      deleteTable: () => deleteTableAt(view, tablePos),
+      canDeleteRow: row >= 0 && model.rows.length > 1,
+      canDeleteColumn: model.header.length > 1,
+      // Row moves apply to body rows only (never the header); column moves apply to any target cell.
+      canMoveRowUp: row >= 1,
+      canMoveRowDown: row >= 0 && row < model.rows.length - 1,
+      canMoveColumnLeft: col >= 1,
+      canMoveColumnRight: col < model.header.length - 1,
+   };
 }
 
 export class NoteTableWidget extends WidgetType {
@@ -200,59 +296,43 @@ export class NoteTableWidget extends WidgetType {
       cell.dataset.col = String(col);
       // Stop CM6 from treating clicks/keys in the cell as editor input; the widget owns them.
       cell.onmousedown = (e) => e.stopPropagation();
-      cell.onblur = () => this.commitCell(view, cell, row, col);
+      // Report the caret's cell so a mobile chip can arm; clear on blur unless focus moved to another cell
+      // (deferred + guarded so a cell-to-cell tap doesn't flicker through null).
+      cell.onfocus = () => {
+         const range = this.liveRange(view);
+         this.controller.onCaretCell?.(range ? { tablePos: range.from, row, col } : null);
+      };
+      cell.onblur = () => {
+         this.commitCell(view, cell, row, col);
+         queueMicrotask(() => {
+            if (!document.activeElement?.classList.contains('cm-note-table-cell')) this.controller.onCaretCell?.(null);
+         });
+      };
       cell.onkeydown = (e) => this.onCellKey(view, e, cell, row, col, model);
       cell.oncontextmenu = (e) => this.onContextMenu(view, e, row, col);
       return cell;
    }
 
-   /** Right-click on a cell: commit any pending edit, then open the context menu bound to this (row, col). */
+   /** Right-click on a cell: commit any pending edit, then open the context menu bound to this table + cell. */
    private onContextMenu(view: EditorView, event: MouseEvent, row: number, col: number): void {
       event.preventDefault();
       event.stopPropagation();
-      const live = this.liveModel(view);
-      if (!live) return;
+      const range = this.liveRange(view);
+      if (!range) return;
+      const tablePos = range.from;
       this.controller.openContextMenu({
          x: event.clientX,
          y: event.clientY,
-         actions: this.buildActions(view, live, row, col),
-      });
-   }
-
-   /** Builds the action bag for the target cell (each re-reads the LIVE model at call time). */
-   private buildActions(view: EditorView, model: TableModel, row: number, col: number): TableActions {
-      const run = (transform: (m: TableModel) => TableModel) => () => {
-         const live = this.liveModel(view);
-         if (live) this.commit(view, transform(live));
-      };
-      // Body-row index for row ops: the header (row -1) shares the topmost body row's neighbourhood.
-      const bodyRow = Math.max(0, row);
-      return {
-         insertRowAbove: run((m) => addTableRow(m, bodyRow - 1)),
-         insertRowBelow: run((m) => addTableRow(m, row < 0 ? -1 : row)),
-         insertColumnLeft: run((m) => addTableColumn(m, col - 1)),
-         insertColumnRight: run((m) => addTableColumn(m, col)),
-         // Move ops commit only; the caret-follow is the caller's concern (the mobile sheet advances its
-         // target and re-resolves, keeping the soft keyboard down instead of refocusing a cell).
-         moveRowUp: run((m) => moveTableRow(m, row, row - 1)),
-         moveRowDown: run((m) => moveTableRow(m, row, row + 1)),
-         moveColumnLeft: run((m) => moveTableColumn(m, col, col - 1)),
-         moveColumnRight: run((m) => moveTableColumn(m, col, col + 1)),
-         deleteRow: run((m) => removeTableRow(m, bodyRow)),
-         deleteColumn: run((m) => removeTableColumn(m, col)),
-         alignColumn: (align) => run((m) => setTableColumnAlign(m, col, align))(),
-         deleteTable: () => {
-            const range = this.liveRange(view);
-            if (range) view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+         row,
+         col,
+         tablePos,
+         actions: buildTableActions(view, tablePos, row, col),
+         resolveFor: (r, c) => buildTableActions(view, tablePos, r, c),
+         getDims: () => {
+            const m = readTableModelAt(view, tablePos);
+            return m ? { bodyRows: m.rows.length, cols: m.header.length } : null;
          },
-         canDeleteRow: row >= 0 && model.rows.length > 1,
-         canDeleteColumn: model.header.length > 1,
-         // Row moves apply to body rows only (never the header); column moves apply to any target cell.
-         canMoveRowUp: row >= 1,
-         canMoveRowDown: row >= 0 && row < model.rows.length - 1,
-         canMoveColumnLeft: col >= 1,
-         canMoveColumnRight: col < model.header.length - 1,
-      };
+      });
    }
 
    /** Commits a cell's text back into the markdown block (no-op if unchanged). */
@@ -498,29 +578,6 @@ export class NoteTableWidget extends WidgetType {
       return parseTable(view.state.doc.sliceString(range.from, range.to));
    }
 
-   /** The contiguous table block `[from, to)` around `pos` (walks over table-ish lines both directions). */
-   private blockRangeAt(view: EditorView, pos: number): { from: number; to: number } {
-      const doc = view.state.doc;
-      const startLine = doc.lineAt(pos);
-      let from = startLine.from;
-      let to = startLine.to;
-      let n = startLine.number;
-      while (n <= doc.lines) {
-         const line = doc.line(n);
-         if (line.text.trim() === '' || !line.text.includes('|')) break;
-         to = line.to;
-         n++;
-      }
-      let m = startLine.number - 1;
-      while (m >= 1) {
-         const line = doc.line(m);
-         if (line.text.trim() === '' || !line.text.includes('|')) break;
-         from = line.from;
-         m--;
-      }
-      return { from, to };
-   }
-
    /** This block's live `[from, to)` in the current doc, found from the widget's DOM position. */
    private liveRange(view: EditorView): { from: number; to: number } | null {
       const wrap = this.findWrap(view);
@@ -528,7 +585,7 @@ export class NoteTableWidget extends WidgetType {
          // Fall back to the build-time offsets if the DOM isn't found (rare; e.g. off-screen).
          return { from: Math.min(this.from, view.state.doc.length), to: Math.min(this.to, view.state.doc.length) };
       }
-      return this.blockRangeAt(view, view.posAtDOM(wrap));
+      return tableBlockRangeAt(view, view.posAtDOM(wrap));
    }
 
    /** The live wrapper DOM whose block markdown equals this widget's (robust across multi-table notes). */
@@ -539,7 +596,7 @@ export class NoteTableWidget extends WidgetType {
          const pos = view.posAtDOM(w);
          if (pos < 0) continue;
          fallback ??= w;
-         const range = this.blockRangeAt(view, pos);
+         const range = tableBlockRangeAt(view, pos);
          if (view.state.doc.sliceString(range.from, range.to) === this.markdown) return w;
       }
       return fallback;

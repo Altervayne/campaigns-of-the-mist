@@ -129,7 +129,31 @@
          "exitSource": "Exit source",
          "undo": "Undo",
          "redo": "Redo",
-         "emptyReading": "This note is empty. Tap Edit to start writing."
+         "emptyReading": "This note is empty. Tap Edit to start writing.",
+         "tableChip": "Table"
+      },
+      "tableSheet": {
+         "cellRow": "Row {{row}} / Col {{col}}",
+         "cellHeader": "Header / Col {{col}}",
+         "groupInsert": "Insert",
+         "groupMove": "Move",
+         "groupAlign": "Align column",
+         "groupDelete": "Delete",
+         "insertRowAbove": "Row above",
+         "insertRowBelow": "Row below",
+         "insertColumnLeft": "Column left",
+         "insertColumnRight": "Column right",
+         "moveRowUp": "Row up",
+         "moveRowDown": "Row down",
+         "moveColumnLeft": "Column left",
+         "moveColumnRight": "Column right",
+         "alignLeft": "Left",
+         "alignCenter": "Center",
+         "alignRight": "Right",
+         "deleteRow": "Row",
+         "deleteColumn": "Column",
+         "deleteTable": "Table",
+         "done": "Done"
       }
    },
    "BoardView": {

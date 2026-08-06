@@ -19,6 +19,7 @@ import { NoteEditor } from '@/components/organisms/note/NoteEditor';
 import { MobileNoteTopBar } from '@/components/mobile/character-sheet/MobileNoteTopBar';
 import { MobileNoteEditingBar } from '@/components/mobile/character-sheet/MobileNoteEditingBar';
 import { MobileNoteOutlineSheet } from '@/components/mobile/character-sheet/MobileNoteOutlineSheet';
+import { MobileNoteTableSheet } from '@/components/mobile/character-sheet/MobileNoteTableSheet';
 
 // -- Store Imports --
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
@@ -35,7 +36,7 @@ import type { NoteHeading } from '@/lib/notes/noteOutline';
 import type { CoverController } from '@/components/organisms/note/live/coverGutter';
 import type { FormatController } from '@/components/organisms/note/live/formatToolbar';
 import type { LinkEditController } from '@/components/organisms/note/live/linkEditToolbar';
-import type { TableController } from '@/components/organisms/note/live/tableWidget';
+import type { TableController, TableContextRequest } from '@/components/organisms/note/live/tableWidget';
 import type { NoteCover } from '@/lib/types/board';
 
 interface MobileNoteSurfaceProps {
@@ -98,6 +99,21 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
    const scrollRef = useRef<HTMLDivElement>(null);
 
    const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+
+   // The table slide-up. `tableCaret` (the caret's table cell, or null) arms the editing bar's Table chip;
+   // tapping the chip builds a request from it and opens the sticky sheet. The sheet lives on `tableRequest`,
+   // not on `tableCaret`, so dropping the keyboard (which clears the caret) never closes it.
+   const [tableCaret, setTableCaret] = useState<{ tablePos: number; row: number; col: number } | null>(null);
+   const [tableRequest, setTableRequest] = useState<TableContextRequest | null>(null);
+
+   const openTableSheet = useCallback(() => {
+      if (!tableCaret) return;
+      const request = editorRef.current?.buildTableRequest(tableCaret.tablePos, tableCaret.row, tableCaret.col);
+      if (!request) return;
+      setTableRequest(request);
+      // Drop the soft keyboard so the sheet takes its place; the sheet then drives structural edits keyboard-less.
+      (document.activeElement as HTMLElement | null)?.blur();
+   }, [tableCaret]);
 
    // First-run autofocus: only a JUST-CREATED note opens straight into writing; an opened note stays at rest.
    useEffect(() => {
@@ -172,8 +188,10 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
       onSetAspect: () => {},
       labels: { change: t('NoteView.cover.change'), remove: t('NoteView.cover.remove'), aspect: t('NoteView.cover.aspect') },
    }), [t]);
-   const inertTableController = useMemo<TableController>(() => ({
-      openContextMenu: () => {},
+   // The table controller IS live on mobile: the caret cell arms the chip, the sheet hosts the ops.
+   const tableController = useMemo<TableController>(() => ({
+      openContextMenu: setTableRequest,
+      onCaretCell: setTableCaret,
       labels: { addRow: t('NoteView.table.addRow'), addColumn: t('NoteView.table.addColumn') },
    }), [t]);
 
@@ -229,7 +247,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                      coverController={readonlyCoverController}
                      formatController={inertFormatController}
                      linkEditController={inertLinkEditController}
-                     tableController={inertTableController}
+                     tableController={tableController}
                      placeholder={t('NoteView.bodyPlaceholder')}
                   />
                ) : hasReadingContent ? (
@@ -253,6 +271,8 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                canRedo={canRedo}
                onUndo={() => editorRef.current?.undo()}
                onRedo={() => editorRef.current?.redo()}
+               canOpenTable={tableCaret !== null}
+               onOpenTable={openTableSheet}
                isLeftHanded={isLeftHanded}
                isMobileFABMode={isMobileFABMode}
             />
@@ -264,6 +284,8 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
             body={localBody}
             onJump={jumpToHeading}
          />
+
+         <MobileNoteTableSheet request={tableRequest} onClose={() => setTableRequest(null)} />
       </div>
    );
 }

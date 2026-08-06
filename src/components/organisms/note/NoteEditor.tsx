@@ -23,11 +23,14 @@ import { linkEditToolbar } from './live/linkEditToolbar';
 import { linkNodeAt } from './live/linkNode';
 import { findImageTokens } from '@/lib/notes/noteImageHint';
 
+// -- Table Ops (position-resolved, for the mobile sheet) --
+import { buildTableActions, readTableModelAt } from './live/tableWidget';
+
 // -- Type Imports --
 import type { CoverController } from './live/coverGutter';
 import type { FormatController } from './live/formatToolbar';
 import type { LinkEditController } from './live/linkEditToolbar';
-import type { TableController } from './live/tableWidget';
+import type { TableController, TableContextRequest } from './live/tableWidget';
 import type { NoteCover } from '@/lib/types/board';
 
 /*
@@ -79,6 +82,11 @@ export interface NoteEditorHandle {
    redo: () => boolean;
    /** Whether the CM6 editor currently holds DOM focus (so a window shortcut doesn't double-handle its keymap). */
    hasFocus: () => boolean;
+   /**
+    * Builds a table request for the mobile slide-up sheet: the caret cell's actions plus a `resolveFor`/`getDims`
+    * anchored to `tablePos`, so the sheet stays live across ops and walks the target. Null if no view yet.
+    */
+   buildTableRequest: (tablePos: number, row: number, col: number) => TableContextRequest | null;
 }
 
 interface NoteEditorProps {
@@ -335,6 +343,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
    tableControllerRef.current = tableController;
    const stableTableController = useRef<TableController>({
       openContextMenu: (request) => tableControllerRef.current.openContextMenu(request),
+      onCaretCell: (ctx) => tableControllerRef.current.onCaretCell?.(ctx),
       get labels() { return tableControllerRef.current.labels; },
    }).current;
 
@@ -513,6 +522,23 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       undo: () => (viewRef.current ? undo(viewRef.current) : false),
       redo: () => (viewRef.current ? redo(viewRef.current) : false),
       hasFocus: () => viewRef.current?.hasFocus ?? false,
+      buildTableRequest: (tablePos, row, col) => {
+         const view = viewRef.current;
+         if (!view) return null;
+         return {
+            x: 0,
+            y: 0,
+            row,
+            col,
+            tablePos,
+            actions: buildTableActions(view, tablePos, row, col),
+            resolveFor: (r, c) => buildTableActions(view, tablePos, r, c),
+            getDims: () => {
+               const m = readTableModelAt(view, tablePos);
+               return m ? { bodyRows: m.rows.length, cols: m.header.length } : null;
+            },
+         };
+      },
    }), []);
 
    return <div ref={hostRef} className="note-editor text-base" />;

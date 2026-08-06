@@ -25,11 +25,17 @@ vi.mock('@/lib/stores/characterStore', () => ({
    useCharacterStore: (selector: (state: { character: { name: string } | null }) => unknown) =>
       selector({ character: mocks.activeName ? { name: mocks.activeName } : null }),
 }));
-vi.mock('@/lib/character/tabManagerStore', () => ({
-   useTabManagerStore: (selector: (state: { openTabs: unknown; activeTabId: unknown }) => unknown) =>
-      selector({ openTabs: mocks.openTabs, activeTabId: mocks.activeTabId }),
-   useTabManagerActions: () => ({ mobileSetActiveTab: mocks.mobileSetActiveTab, mobileCloseTab: mocks.mobileCloseTab }),
-}));
+vi.mock('@/lib/character/tabManagerStore', () => {
+   const readState = () => ({ openTabs: mocks.openTabs, activeTabId: mocks.activeTabId });
+   // A function store with a `getState`: the close confirm's async `.then` reads `getState().openTabs` after the
+   // tab is reaped, so the mock must answer it (else an unhandled rejection leaks into the full-suite run).
+   const useTabManagerStore = (selector: (state: { openTabs: unknown; activeTabId: unknown }) => unknown) => selector(readState());
+   useTabManagerStore.getState = readState;
+   return {
+      useTabManagerStore,
+      useTabManagerActions: () => ({ mobileSetActiveTab: mocks.mobileSetActiveTab, mobileCloseTab: mocks.mobileCloseTab }),
+   };
+});
 
 import { MobileWorkspaceSwitcher } from './MobileWorkspaceSwitcher';
 
