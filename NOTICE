@@ -1,0 +1,38 @@
+Campaigns of the Mist
+Copyright © 2024-2026 Florian Douay
+
+===============================================================================
+SOURCE CODE
+===============================================================================
+
+The source code of this project is licensed under the GNU Affero General Public
+License, version 3 or later (AGPL-3.0-or-later). The full license text is in the
+LICENSE file. You are free to use, modify, and redistribute the code, including
+commercially, subject to the terms of the AGPL.
+
+===============================================================================
+NAME, BRAND, AND LOGO (NOT licensed)
+===============================================================================
+
+The name "Campaigns of the Mist" (and its former name "Characters of the Mist"),
+together with the project's icon and logo (the files in `public/icons/`), are the
+exclusive property of Florian Douay. All rights reserved.
+
+They are NOT part of the AGPL-licensed source code, and no license or permission
+to use, reproduce, modify, or distribute the name, brand, or logo is granted by
+the AGPL or by this project.
+
+If you fork, redistribute, or network-host a modified version of this project, you
+must:
+
+  - Remove the icon and logo files in `public/icons/` and replace them with your
+    own brand identity; and
+  - Choose your own project name and branding. Do not present your version as
+    "Campaigns of the Mist" or "Characters of the Mist", and do not use the name
+    or logo in a way that suggests endorsement by, or affiliation with, the
+    original author.
+
+This reservation of the name, brand, and logo is expressly permitted under the
+AGPL (GPLv3 section 7(e)) and adds no restriction to the source code itself: the
+AGPL's grant over the code, including its source-availability requirements,
+remains fully in force.
