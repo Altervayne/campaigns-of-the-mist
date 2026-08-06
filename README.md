@@ -91,4 +91,6 @@ Campaigns of the Mist is distributed under the **[GNU Affero General Public Lice
 
 The third-party components bundled into the app, and their respective licenses, are listed in [`THIRD_PARTY_LICENSES`](./THIRD_PARTY_LICENSES).
 
-This is a fan-made project and is in no way endorsed by Amit Moshe or Son of Oak Game Studio LLC.
+The name **Campaigns of the Mist**, the icon, and the logo are **not** covered by the AGPL. They are the exclusive property of Florian Douay, all rights reserved; see [`NOTICE`](./NOTICE) for the terms. If you fork or redistribute the project, you must remove them and bring your own name and brand identity.
+
+*City of Mist*, *Metro: Otherscape*, and *Legend in the Mist*, together with their settings and trademarks, are the exclusive intellectual property of Son of Oak Game Studio LLC. This is an unofficial, fan-made project and is in no way endorsed by Amit Moshe or Son of Oak Game Studio LLC.
