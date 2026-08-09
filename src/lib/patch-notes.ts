@@ -7,6 +7,18 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.1.0',
+      content: `
+### ✨ Features
+* **Notes on mobile**: The live-preview markdown editor is now fully usable on mobile. A keyboard-docked formatting bar, tables you build and edit from a slide-up menu, tap-to-edit covers and inline images with presets, and links you can follow, insert and edit. This is a pretty big feature with a lot of UX challenges, please don't hesitate to send feedback.
+* **Workspaces and tabs on mobile**: You can now keep several characters and notes open at once and switch between them from a side panel on mobile, with no reload necessary. Each tab has its own close button.
+* **Journals on mobile**: The paged, bookmarked notebooks from 2.0 character sheets now work on your phone, right in your card list, with proper adaptations for mobile to feel natural.
+
+### 🐛 Bugfixes
+* Fixed a handful of missing labels that showed up as raw code references instead of the proper text.
+`,
+   },
+   {
       version: '2.0.1',
       content: `
 ### 🔧 Changes
