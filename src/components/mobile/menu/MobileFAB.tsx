@@ -68,6 +68,12 @@ export default function MobileFAB({
 	// its full width (see the `clearsNoteBar` bottom offset below).
 	const isDrawerFab = activeTab === 'drawer';
 
+	// The surface-specific resting spots (drawer seat, cards nav-bar clearance, note-bar clearance) apply only
+	// while COLLAPSED. On open the FAB slides to the base floating spot so it anchors the action menu the same
+	// way on every surface, and reads as a normal floating FAB while the menu is up (the IconButton's `layout`
+	// animates the move). isCardsFab already bakes in `!isExpanded`.
+	const seatedDrawer = isDrawerFab && !isExpanded;
+
 	const toggleExpanded = () => {
 		const newValue = !isExpanded;
 		setInternalIsExpanded(newValue);
@@ -191,20 +197,20 @@ export default function MobileFAB({
 				<motion.div
 					className={cn(
 						"fixed layer-panel",
-						// Drawer tab: seated at the toolbar's own 12px (px-3) edge inset so the FAB lines up with
-						// the action buttons' rhythm inside the reserved slot. Everywhere else (cards/sheet, and a
-						// note tab's editing bar) it floats at the standard 16px corner inset.
-						isDrawerFab
+						// Drawer tab (collapsed): seated at the toolbar's own 12px (px-3) edge inset so the FAB lines
+						// up with the action buttons' rhythm inside the reserved slot. Everywhere else (cards/sheet, a
+						// note tab's editing bar, and any surface with the menu open) it floats at the standard 16px inset.
+						seatedDrawer
 							? (isLeft ? "left-3" : "right-3")
 							: (isLeft ? "left-4" : "right-4")
 					)}
-					// Drawer tab: sit on the toolbar buttons' baseline (its 0.5rem bottom pad). Note edit mode:
-					// ride just above the full-width editing bar (clearsNoteBar adds the bar's height). Other
-					// tabs use the standard floating offset.
+					// Collapsed: sit at the surface's resting spot - the drawer toolbar baseline, above the cards
+					// nav bar, or above the note editing bar. Open: the base floating offset on every surface, so
+					// the FAB slides to a consistent anchor for the action menu.
 					style={{
-						bottom: isDrawerFab
+						bottom: seatedDrawer
 							? 'calc(0.5rem + env(safe-area-inset-bottom))'
-							: getFloatingBottom({ clearsCardsNavBar: isCardsFab, clearsNoteBar })
+							: getFloatingBottom({ clearsCardsNavBar: isCardsFab, clearsNoteBar: clearsNoteBar && !isExpanded })
 					}}
 					whileTap={{ scale: 0.95 }}
 					data-tutorial="mobile-fab"
@@ -213,11 +219,11 @@ export default function MobileFAB({
 						variant="default"
 						size="lg"
 						onClick={toggleExpanded}
-						// On the drawer tab the FAB is seated inside the toolbar row, so it drops the floating
-						// drop-shadow and matches the toolbar buttons' 20px icon - keeping its primary fill to stay
-						// recognizable as the nav control among the flat outline buttons. Elsewhere (including note
-						// edit mode) it is a real floating FAB: full 44px hitbox, shadow-2xl, 24px icon.
-						className={cn("h-11 w-11", isDrawerFab ? "shadow-none" : "shadow-2xl")}
+						// Seated in the drawer toolbar (collapsed): drops the floating drop-shadow and matches the
+						// toolbar buttons' 20px icon, keeping its primary fill to stay recognizable as the nav control
+						// among the flat outline buttons. Elsewhere, and whenever the menu is open, it is a real
+						// floating FAB: full 44px hitbox, shadow-2xl, 24px icon.
+						className={cn("h-11 w-11", seatedDrawer ? "shadow-none" : "shadow-2xl")}
 						aria-label={isExpanded ? t('MobileFAB.close') : t('MobileFAB.open')}
 					>
 						<motion.div
@@ -225,9 +231,9 @@ export default function MobileFAB({
 							transition={{ duration: 0.2 }}
 						>
 							{isExpanded ? (
-								<X className={cn(isDrawerFab ? "h-5 w-5" : "h-6 w-6")} />
+								<X className={cn(seatedDrawer ? "h-5 w-5" : "h-6 w-6")} />
 							) : (
-								<Menu className={cn(isDrawerFab ? "h-5 w-5" : "h-6 w-6")} />
+								<Menu className={cn(seatedDrawer ? "h-5 w-5" : "h-6 w-6")} />
 							)}
 						</motion.div>
 					</IconButton>
