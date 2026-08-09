@@ -35,9 +35,11 @@ interface NoteLinkPickerProps {
    onClose: () => void;
    /** When set, REPLACE this link's target (keep its label) instead of inserting at the caret. */
    editSeed?: LinkEditSeed;
+   /** Full-bleed width for a mobile sheet host; default is the fixed popover width for the desktop toolbar. */
+   fullWidth?: boolean;
 }
 
-export function NoteLinkPicker({ getEditor, onClose, editSeed }: NoteLinkPickerProps) {
+export function NoteLinkPicker({ getEditor, onClose, editSeed, fullWidth }: NoteLinkPickerProps) {
    const { t } = useTranslation();
    // Snapshot the editor's selection + buffer ONCE at open (the picker remounts per open, so a lazy initializer
    // captures the live state without a render-time effect). The selection is the label source; the buffer is the
@@ -76,7 +78,9 @@ export function NoteLinkPicker({ getEditor, onClose, editSeed }: NoteLinkPickerP
    };
 
    return (
-      <div className="w-[28rem] max-w-[calc(100vw-2rem)]">
+      // Mobile (fullWidth) fills the sheet as a flex column so the target list flexes to the full height; the
+      // desktop popover stays content-height at a fixed width.
+      <div className={fullWidth ? 'flex min-h-0 flex-1 flex-col' : 'w-[28rem] max-w-[calc(100vw-2rem)]'}>
          {/* Label control: an edit keeps the existing label (fixed); a live selection IS the label (fixed); a
              collapsed caret gets an optional override. */}
          {editSeed ? (
@@ -100,7 +104,7 @@ export function NoteLinkPicker({ getEditor, onClose, editSeed }: NoteLinkPickerP
             </div>
          )}
 
-         <LinkTargetList sections={sections} onPick={insert} />
+         <LinkTargetList sections={sections} onPick={insert} fill={fullWidth} />
       </div>
    );
 }

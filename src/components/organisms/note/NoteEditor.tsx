@@ -19,7 +19,7 @@ import { titleStateExtension, initialTitle, setTitleEffect, getNoteTitle } from 
 import { tableRegionAt } from './live/tableRegions';
 import { listIndentKeymap } from './live/listKeymap';
 import { formatToolbar } from './live/formatToolbar';
-import { linkEditToolbar } from './live/linkEditToolbar';
+import { linkEditToolbar, editLinkLabel, removeCaretLink } from './live/linkEditToolbar';
 import { linkNodeAt } from './live/linkNode';
 import { findImageTokens } from '@/lib/notes/noteImageHint';
 
@@ -97,6 +97,10 @@ export interface NoteEditorHandle {
     * so the sheet re-reads the hint and drives align/width/remove without moving focus. Null if no view yet.
     */
    buildImageRequest: (index: number) => ImageRequest | null;
+   /** Selects the caret link's label so typing replaces it (re-focuses the editor). No-op with no caret link. */
+   editLinkLabel: () => void;
+   /** Unwraps the caret link to its plain label text. No-op with no caret link. */
+   removeLink: () => void;
 }
 
 interface NoteEditorProps {
@@ -351,6 +355,9 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       get labels() { return linkEditControllerRef.current.labels; },
       onOpen: (href) => linkEditControllerRef.current.onOpen(href),
       onChangeTarget: (seed) => linkEditControllerRef.current.onChangeTarget(seed),
+      // Presence is fixed per surface (mobile reports, desktop floats the bar), so read it at build time - a
+      // static delegate would suppress the desktop bar and turn every desktop caret into a report.
+      onCaretLinkChange: linkEditController.onCaretLinkChange ? (info) => linkEditControllerRef.current.onCaretLinkChange?.(info) : undefined,
    }).current;
    // The table controller, captured stably so the field (built once) always calls the current opener - a
    // re-render swaps the closure without rebuilding the view.
@@ -572,6 +579,14 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
             setWidth: (widthPct: number) => setImageWidthAt(view, index, widthPct),
             remove: () => removeImageAt(view, index),
          };
+      },
+      editLinkLabel: () => {
+         const view = viewRef.current;
+         if (view) editLinkLabel(view);
+      },
+      removeLink: () => {
+         const view = viewRef.current;
+         if (view) removeCaretLink(view);
       },
    }), []);
 

@@ -139,7 +139,8 @@
          "undo": "Undo",
          "redo": "Redo",
          "emptyReading": "This note is empty. Tap Edit to start writing.",
-         "tableChip": "Table"
+         "tableChip": "Table",
+         "linkChip": "Link"
       },
       "tableSheet": {
          "cellRow": "Row {{row}} / Col {{col}}",
@@ -174,6 +175,9 @@
          "width": "Width",
          "widthValue": "Width {{pct}}%",
          "remove": "Remove image"
+      },
+      "linkSheet": {
+         "title": "Link"
       }
    },
    "BoardView": {

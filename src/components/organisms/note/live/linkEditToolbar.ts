@@ -5,7 +5,7 @@ import type { Extension } from '@codemirror/state';
 
 // -- Local Imports --
 import { collapsedLinkAt } from './linkNode';
-import type { LinkEditSeed } from './linkNode';
+import type { LinkEditSeed, LinkNodeInfo } from './linkNode';
 
 /*
  * The floating LINK-EDIT bar for the Live/Source editor: shown when the caret sits INSIDE a markdown link
@@ -28,6 +28,21 @@ export interface LinkEditController {
    onOpen: (href: string) => void;
    /** Opens the link picker to REPLACE this link's target while keeping its label. */
    onChangeTarget: (seed: LinkEditSeed) => void;
+   /**
+    * Mobile: reports the caret's link (or null) instead of floating the bar. When set, the plugin NEVER mounts
+    * the floating bar - a chip + sheet drive the actions. Presence is fixed per surface (desktop omits it).
+    */
+   onCaretLinkChange?: (info: LinkNodeInfo | null) => void;
+}
+
+/** Selects the caret link's label so typing replaces it. Exposed for the mobile handle. */
+export function editLinkLabel(view: EditorView): void {
+   editLabel(view);
+}
+
+/** Unwraps the caret link to its plain label text. Exposed for the mobile handle. */
+export function removeCaretLink(view: EditorView): void {
+   removeLink(view);
 }
 
 /** Selects the label range (between `[` and `]`) and focuses the editor, so typing replaces the link text. */
@@ -88,28 +103,33 @@ function buildButton(glyph: string, label: string, onClick: () => void): HTMLBut
 function linkEditOverlay(controller: LinkEditController) {
    return ViewPlugin.fromClass(
       class implements PluginValue {
-         private bar: HTMLElement;
+         private bar: HTMLElement | null = null;
+         // Last reported caret-link key (mobile only); a sentinel so the first sync always reports.
+         private reportedKey: string | null | undefined = undefined;
 
          constructor(view: EditorView) {
-            this.bar = document.createElement('div');
-            this.bar.className = 'cm-note-format-bar';
-            this.bar.style.display = 'none';
-            this.bar.setAttribute('contenteditable', 'false');
-            // Each handler reads the CURRENT link at click time (the bar is built once), never a stale range.
-            this.bar.appendChild(buildButton(OPEN_GLYPH, controller.labels.open, () => {
-               const info = collapsedLinkAt(view.state);
-               if (info) controller.onOpen(info.href);
-            }));
-            this.bar.appendChild(buildButton(CHANGE_GLYPH, controller.labels.changeTarget, () => {
-               const info = collapsedLinkAt(view.state);
-               if (info) controller.onChangeTarget({ from: info.from, to: info.to, label: info.label, href: info.href });
-            }));
-            this.bar.appendChild(buildButton(LABEL_GLYPH, controller.labels.editLabel, () => editLabel(view)));
-            this.bar.appendChild(buildSeparator());
-            this.bar.appendChild(buildButton(REMOVE_GLYPH, controller.labels.remove, () => removeLink(view)));
+            // Mobile reports the caret link to a sheet, so it never builds the floating bar.
+            if (!controller.onCaretLinkChange) {
+               this.bar = document.createElement('div');
+               this.bar.className = 'cm-note-format-bar';
+               this.bar.style.display = 'none';
+               this.bar.setAttribute('contenteditable', 'false');
+               // Each handler reads the CURRENT link at click time (the bar is built once), never a stale range.
+               this.bar.appendChild(buildButton(OPEN_GLYPH, controller.labels.open, () => {
+                  const info = collapsedLinkAt(view.state);
+                  if (info) controller.onOpen(info.href);
+               }));
+               this.bar.appendChild(buildButton(CHANGE_GLYPH, controller.labels.changeTarget, () => {
+                  const info = collapsedLinkAt(view.state);
+                  if (info) controller.onChangeTarget({ from: info.from, to: info.to, label: info.label, href: info.href });
+               }));
+               this.bar.appendChild(buildButton(LABEL_GLYPH, controller.labels.editLabel, () => editLabel(view)));
+               this.bar.appendChild(buildSeparator());
+               this.bar.appendChild(buildButton(REMOVE_GLYPH, controller.labels.remove, () => removeLink(view)));
 
-            // Lives in the scroller (stable DOM; CM6 owns and reconciles `.cm-content`).
-            view.scrollDOM.appendChild(this.bar);
+               // Lives in the scroller (stable DOM; CM6 owns and reconciles `.cm-content`).
+               view.scrollDOM.appendChild(this.bar);
+            }
             this.sync(view);
          }
 
@@ -126,31 +146,42 @@ function linkEditOverlay(controller: LinkEditController) {
           */
          private sync(view: EditorView) {
             const info = controller.editable ? collapsedLinkAt(view.state) : null;
-            this.bar.style.display = info ? 'flex' : 'none';
+            // Mobile: report the caret's link (deduped by identity) and never touch the bar.
+            if (controller.onCaretLinkChange) {
+               const key = info ? `${info.from}:${info.to}:${info.href}` : null;
+               if (key !== this.reportedKey) {
+                  this.reportedKey = key;
+                  controller.onCaretLinkChange(info);
+               }
+               return;
+            }
+            const bar = this.bar;
+            if (!bar) return;
+            bar.style.display = info ? 'flex' : 'none';
             if (!info) return;
             const anchor = info.from;
             view.requestMeasure({
                read: () => {
                   const coords = view.coordsAtPos(anchor);
-                  return coords ? this.barPosition(view, coords) : null;
+                  return coords ? this.barPosition(view, bar, coords) : null;
                },
                write: (pos) => {
                   if (!pos) {
                      // No coords for the link start (off-screen): keep it hidden rather than mispositioned.
-                     this.bar.style.display = 'none';
+                     bar.style.display = 'none';
                      return;
                   }
-                  this.bar.style.left = `${pos.left}px`;
-                  this.bar.style.top = `${pos.top}px`;
+                  bar.style.left = `${pos.left}px`;
+                  bar.style.top = `${pos.top}px`;
                },
             });
          }
 
          /** The bar's target: above the link start, flipping below near the scroller top; edge-clamped (mirrors the format bar). */
-         private barPosition(view: EditorView, coords: { left: number; top: number; bottom: number }): { left: number; top: number } {
+         private barPosition(view: EditorView, bar: HTMLElement, coords: { left: number; top: number; bottom: number }): { left: number; top: number } {
             const scroller = view.scrollDOM;
             const scrollerRect = scroller.getBoundingClientRect();
-            const barRect = this.bar.getBoundingClientRect();
+            const barRect = bar.getBoundingClientRect();
 
             const rawTop = coords.top - scrollerRect.top + scroller.scrollTop - barRect.height - 8;
             const flipped = rawTop < scroller.scrollTop + 2;
@@ -162,7 +193,7 @@ function linkEditOverlay(controller: LinkEditController) {
          }
 
          destroy() {
-            this.bar.remove();
+            this.bar?.remove();
          }
       },
    );

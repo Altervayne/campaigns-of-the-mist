@@ -10,6 +10,7 @@ import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
 import { useNoteImageInsertion } from '@/hooks/useNoteImageInsertion';
 import { useImageCropper } from '@/hooks/useImageCropper';
+import { useNoteLinkActivation } from '@/hooks/useNoteLinkActivation';
 
 // -- Asset Pipeline --
 import { processImage } from '@/lib/assets/processImage';
@@ -28,10 +29,15 @@ import { MobileNoteOutlineSheet } from '@/components/mobile/character-sheet/Mobi
 import { MobileNoteTableSheet } from '@/components/mobile/character-sheet/MobileNoteTableSheet';
 import { MobileNoteCoverSheet } from '@/components/mobile/character-sheet/MobileNoteCoverSheet';
 import { MobileNoteImageSheet } from '@/components/mobile/character-sheet/MobileNoteImageSheet';
+import { MobileNoteLinkSheet } from '@/components/mobile/character-sheet/MobileNoteLinkSheet';
+import { MobileNoteLinkPickerSheet } from '@/components/mobile/character-sheet/MobileNoteLinkPickerSheet';
 
 // -- Store Imports --
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
+
+// -- Data Imports --
+import { extractHeadings } from '@/lib/notes/noteOutline';
 
 // -- Autofocus Seam --
 import { consumeNoteJustCreated } from '@/lib/notes/noteAutofocus';
@@ -46,6 +52,8 @@ import type { FormatController } from '@/components/organisms/note/live/formatTo
 import type { LinkEditController } from '@/components/organisms/note/live/linkEditToolbar';
 import type { TableController, TableContextRequest } from '@/components/organisms/note/live/tableWidget';
 import type { ImageController, ImageRequest } from '@/components/organisms/note/live/assetImageWidget';
+import type { LinkNodeInfo, LinkEditSeed } from '@/components/organisms/note/live/linkNode';
+import type { NoteHostContext } from '@/lib/portals/linkTarget';
 import type { NoteCover } from '@/lib/types/board';
 
 interface MobileNoteSurfaceProps {
@@ -157,6 +165,48 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
       }
    }, []);
 
+   // Note links: this surface is the TAB host, so tapping a link follows it. A same-note `#slug` maps to the
+   // outline jump (works in both Reading and Live); a dead slug no-ops. The activation bridge is shared with the
+   // desktop tab + board tile, so entity/external/element behaviour can't drift between surfaces.
+   const bodyRef = useRef(localBody);
+   bodyRef.current = localBody;
+   const host = useMemo<NoteHostContext>(() => ({ kind: 'tab', noteId: noteId ?? '' }), [noteId]);
+   const scrollToSection = useCallback((slug: string) => {
+      const heading = extractHeadings(bodyRef.current).find((entry) => entry.slug === slug);
+      if (heading) jumpToHeading(heading);
+   }, [jumpToHeading]);
+   const onLinkActivate = useNoteLinkActivation(host, scrollToSection);
+
+   // The link slide-ups. `linkCaret` (the caret's link, or null) arms the editing bar's Link chip: in a link it
+   // opens the action sheet, otherwise the insert picker. Held here, not on the caret, so dropping the keyboard
+   // never closes a sheet. `linkEditSeed` switches the picker to REPLACE a link's target (the action sheet's
+   // Change-target); it clears whenever the picker closes, so a plain chip open is always an insert.
+   const [linkCaret, setLinkCaret] = useState<LinkNodeInfo | null>(null);
+   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState(false);
+   const [isLinkPickerOpen, setIsLinkPickerOpen] = useState(false);
+   const [linkEditSeed, setLinkEditSeed] = useState<LinkEditSeed | null>(null);
+
+   const openLinkPickerWithSeed = useCallback((seed: LinkEditSeed) => {
+      setLinkEditSeed(seed);
+      setIsLinkPickerOpen(true);
+   }, []);
+   const closeLinkPicker = useCallback(() => {
+      setIsLinkPickerOpen(false);
+      setLinkEditSeed(null);
+   }, []);
+
+   // The Link chip: in a link it opens the action sheet; otherwise it opens the picker to insert a new link.
+   // Blurs to drop the keyboard so the sheet takes its place, matching the table / cover / image chips.
+   const onLinkChip = useCallback(() => {
+      if (linkCaret) {
+         setIsLinkSheetOpen(true);
+      } else {
+         setLinkEditSeed(null);
+         setIsLinkPickerOpen(true);
+      }
+      (document.activeElement as HTMLElement | null)?.blur();
+   }, [linkCaret]);
+
    // Image insertion: the shared upload pipeline splices at the guarded caret (never the cover gutter / a table).
    const spliceAdapter = useMemo(() => ({
       spliceAtCaret: (snippet: string) => {
@@ -215,20 +265,22 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
       (document.activeElement as HTMLElement | null)?.blur();
    }, []);
 
-   // The floating selection bar + link-edit bar are suppressed on mobile (`editable: false`): B/I/S live in the
-   // keyboard-docked editing bar, and link actions are a later slice. The cover and table are live via their own
-   // tap-to-sheet flows below.
+   // The floating selection bar is suppressed on mobile (`editable: false`): B/I/S live in the keyboard-docked
+   // editing bar. The cover, table, image, and links are live via their own tap-to-sheet flows.
    const inertFormatController = useMemo<FormatController>(() => ({
       editable: false,
       labels: { bold: t('NoteView.format.bold'), italic: t('NoteView.format.italic'), strikethrough: t('NoteView.format.strikethrough'), link: t('NoteView.format.link') },
       onInsertLink: () => {},
    }), [t]);
-   const inertLinkEditController = useMemo<LinkEditController>(() => ({
-      editable: false,
+   // The link-edit controller is LIVE on mobile: `onCaretLinkChange` reports the caret's link (arming the chip)
+   // instead of floating the desktop bar. Open follows the link; Change-target opens the picker with a seed.
+   const linkEditController = useMemo<LinkEditController>(() => ({
+      editable: isEditing,
       labels: { open: t('NoteView.linkEdit.open'), changeTarget: t('NoteView.linkEdit.changeTarget'), editLabel: t('NoteView.linkEdit.editLabel'), remove: t('NoteView.linkEdit.remove') },
-      onOpen: () => {},
-      onChangeTarget: () => {},
-   }), [t]);
+      onOpen: (href) => onLinkActivate(href),
+      onChangeTarget: openLinkPickerWithSeed,
+      onCaretLinkChange: setLinkCaret,
+   }), [isEditing, onLinkActivate, openLinkPickerWithSeed, t]);
    // The cover controller is LIVE on mobile: editing routes through the editor handle (as desktop), but the hover
    // controls are replaced by a tap that opens the options sheet (`onTap`) - the gutter mounts a tap target, not
    // the hover bar, whenever `onTap` is set.
@@ -302,18 +354,19 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                      onCoverChange={handleCmCoverChange}
                      onHistoryChange={handleHistoryChange}
                      onImageEvent={handleImageEvent}
+                     onLinkActivate={onLinkActivate}
                      deadLinkTooltip={t('NoteView.linkDead')}
                      live={mode === 'live'}
                      cover={cover}
                      coverController={coverController}
                      formatController={inertFormatController}
-                     linkEditController={inertLinkEditController}
+                     linkEditController={linkEditController}
                      tableController={tableController}
                      imageController={imageController}
                      placeholder={t('NoteView.bodyPlaceholder')}
                   />
                ) : hasReadingContent ? (
-                  <NoteDocument title={note.title} body={note.body} cover={cover} />
+                  <NoteDocument title={note.title} body={note.body} cover={cover} onLinkActivate={onLinkActivate} />
                ) : (
                   <p className="text-base text-paper-foreground/50">{t('NoteView.mobile.emptyReading')}</p>
                )}
@@ -341,6 +394,8 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                onOpenTable={openTableSheet}
                hasCover={!!cover}
                onCoverButton={cover ? openCoverSheet : openCoverPicker}
+               linkCaret={linkCaret}
+               onLinkChip={onLinkChip}
                isLeftHanded={isLeftHanded}
                isMobileFABMode={isMobileFABMode}
             />
@@ -356,6 +411,22 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
          <MobileNoteTableSheet request={tableRequest} onClose={() => setTableRequest(null)} />
 
          <MobileNoteImageSheet request={imageRequest} onClose={() => setImageRequest(null)} />
+
+         <MobileNoteLinkSheet
+            isOpen={isLinkSheetOpen}
+            link={linkCaret}
+            getEditor={getEditor}
+            onClose={() => setIsLinkSheetOpen(false)}
+            onOpen={onLinkActivate}
+            onChangeTarget={openLinkPickerWithSeed}
+         />
+
+         <MobileNoteLinkPickerSheet
+            isOpen={isLinkPickerOpen}
+            getEditor={getEditor}
+            editSeed={linkEditSeed}
+            onClose={closeLinkPicker}
+         />
 
          <MobileNoteCoverSheet
             isOpen={isCoverSheetOpen}

@@ -70,9 +70,11 @@ interface LinkTargetListProps {
    onPick: (target: LinkInsertTarget, defaultName: string) => void;
    /** Optional in-document sections (a note host passes its headings); omitted by a non-note host = no group. */
    sections?: NoteHeading[];
+   /** Fill the parent's height (a mobile full-height sheet) instead of the desktop popover's fixed cap. */
+   fill?: boolean;
 }
 
-export function LinkTargetList({ onPick, sections }: LinkTargetListProps) {
+export function LinkTargetList({ onPick, sections, fill }: LinkTargetListProps) {
    const { t } = useTranslation();
    const [search, setSearch] = useState('');
    const [results, setResults] = useState<DrawerItemSummary[]>([]);
@@ -149,6 +151,7 @@ export function LinkTargetList({ onPick, sections }: LinkTargetListProps) {
          className={cn(
             '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground',
             '[&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4 [&_[cmdk-item]_svg]:shrink-0',
+            fill && 'flex min-h-0 flex-1 flex-col',
          )}
       >
          <Command.Input
@@ -156,9 +159,9 @@ export function LinkTargetList({ onPick, sections }: LinkTargetListProps) {
             value={search}
             onValueChange={setSearch}
             placeholder={t('NoteView.linkPicker.placeholder')}
-            className="h-10 w-full border-b border-border bg-transparent px-3 text-sm text-popover-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="h-10 w-full shrink-0 border-b border-border bg-transparent px-3 text-sm text-popover-foreground placeholder:text-muted-foreground focus:outline-none"
          />
-         <Command.List className="max-h-72 overflow-y-auto overflow-x-hidden p-1">
+         <Command.List className={cn('overflow-y-auto overflow-x-hidden p-1', fill ? 'min-h-0 flex-1' : 'max-h-72')}>
             {showEmpty && <div className="px-2 py-6 text-center text-sm text-muted-foreground">{t('NoteView.linkPicker.empty')}</div>}
 
             {externalUrl && (

@@ -93,6 +93,8 @@ describe('MobileNoteEditingBar cover button', () => {
       onRedo: () => {},
       canOpenTable: false,
       onOpenTable: () => {},
+      linkCaret: null,
+      onLinkChip: () => {},
       isLeftHanded: false,
       isMobileFABMode: false,
    };

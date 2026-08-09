@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { CSSProperties, ReactNode } from 'react';
 
 // -- Icon Imports --
-import { Bold, Heading, ImagePlus, Italic, List, ListOrdered, Loader2, Minus, PanelTop, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
+import { Bold, Heading, ImagePlus, Italic, Link, List, ListOrdered, Loader2, Minus, PanelTop, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
 
 // -- Hook Imports --
 import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 // -- Type Imports --
 import type { NoteEditorHandle } from '@/components/organisms/note/NoteEditor';
+import type { LinkNodeInfo } from '@/components/organisms/note/live/linkNode';
 
 interface MobileNoteEditingBarProps {
    /** Accessor for the live editor handle (the ref may be unset on first paint). */
@@ -34,6 +35,10 @@ interface MobileNoteEditingBarProps {
    hasCover: boolean;
    /** With a cover, opens the options sheet; without one, opens the picker to add it. */
    onCoverButton: () => void;
+   /** The caret's link (or null); flips the Link chip between the options sheet and the insert picker. */
+   linkCaret: LinkNodeInfo | null;
+   /** In a link opens the options sheet; otherwise opens the insert-link picker. */
+   onLinkChip: () => void;
    /** Pins Undo/Redo on the thumb-side edge; the scrolling format group takes the rest. */
    isLeftHanded: boolean;
    /** No bottom tab bar in FAB mode, so the resting (keyboard-down) dock sits lower. */
@@ -59,6 +64,8 @@ export function MobileNoteEditingBar({
    onOpenTable,
    hasCover,
    onCoverButton,
+   linkCaret,
+   onLinkChip,
    isLeftHanded,
    isMobileFABMode,
 }: MobileNoteEditingBarProps) {
@@ -114,6 +121,10 @@ export function MobileNoteEditingBar({
                {/* Context-aware, never greyed: with a cover it opens the options sheet; without one it adds a cover. */}
                <EditingBarButton label={hasCover ? t('NoteView.cover.label') : t('NoteView.cover.add')} onClick={onCoverButton}>
                   <PanelTop className="h-5 w-5" />
+               </EditingBarButton>
+               {/* Context-aware, never greyed: in a link it opens the options sheet; otherwise it inserts a link. */}
+               <EditingBarButton label={linkCaret ? t('NoteView.mobile.linkChip') : t('NoteView.toolbar.insertLink')} onClick={onLinkChip}>
+                  <Link className="h-5 w-5" />
                </EditingBarButton>
                <BarDivider />
                {/* Context-aware, never greyed: in a table it opens the slide-up; otherwise it inserts a starter
