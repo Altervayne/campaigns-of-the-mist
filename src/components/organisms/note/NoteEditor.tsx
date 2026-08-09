@@ -12,7 +12,7 @@ import { tags } from '@lezer/highlight';
 
 // -- Live-Preview Imports --
 import { liveInlineDecorations } from './live/liveDecorations';
-import { imageWidgetField } from './live/imageWidgetField';
+import { imageWidgetField, imageControllerFacet } from './live/imageWidgetField';
 import { tableWidgetField } from './live/tableWidgetField';
 import { coverStateExtension, coverGutterVisual, initialCover, setCoverEffect, getNoteCover, coverInsetLineCount } from './live/coverGutter';
 import { titleStateExtension, initialTitle, setTitleEffect, getNoteTitle } from './live/titleField';
@@ -26,11 +26,16 @@ import { findImageTokens } from '@/lib/notes/noteImageHint';
 // -- Table Ops (position-resolved, for the mobile sheet) --
 import { buildTableActions, readTableModelAt } from './live/tableWidget';
 
+// -- Image Ops (position-resolved, for the mobile sheet) --
+import { readImageHintAt, setImageAlignAt, setImageWidthAt, removeImageAt } from './live/assetImageWidget';
+
 // -- Type Imports --
 import type { CoverController } from './live/coverGutter';
 import type { FormatController } from './live/formatToolbar';
 import type { LinkEditController } from './live/linkEditToolbar';
 import type { TableController, TableContextRequest } from './live/tableWidget';
+import type { ImageController, ImageRequest } from './live/assetImageWidget';
+import type { NoteImageAlign } from '@/lib/notes/noteImageHint';
 import type { NoteCover } from '@/lib/types/board';
 
 /*
@@ -87,6 +92,11 @@ export interface NoteEditorHandle {
     * anchored to `tablePos`, so the sheet stays live across ops and walks the target. Null if no view yet.
     */
    buildTableRequest: (tablePos: number, row: number, col: number) => TableContextRequest | null;
+   /**
+    * Builds an image request for the mobile options sheet: getters/setters anchored to the token's start `index`,
+    * so the sheet re-reads the hint and drives align/width/remove without moving focus. Null if no view yet.
+    */
+   buildImageRequest: (index: number) => ImageRequest | null;
 }
 
 interface NoteEditorProps {
@@ -113,6 +123,8 @@ interface NoteEditorProps {
    linkEditController: LinkEditController;
    /** The live table controller (opens the right-click context menu at a screen point with the cell's actions). */
    tableController: TableController;
+   /** The image controller. Mobile supplies `onTap` (image -> options sheet); desktop omits it (hover chrome). */
+   imageController?: ImageController;
    /** Native paste/drop handler for images (returns true when it consumed the event). Wired into CM6 dom events. */
    onImageEvent?: (event: ClipboardEvent | DragEvent) => boolean;
    /** Resolves an internal/external link on Ctrl/Cmd-click (plain click still edits). Host-agnostic: the renderer closes over its host. */
@@ -277,7 +289,7 @@ const paperTheme = EditorView.theme({
 }, { dark: false });
 
 export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function NoteEditor(
-   { value, onChange, title, onTitleChange, onCoverChange, onHistoryChange, placeholder, live, cover, coverController, formatController, linkEditController, tableController, onImageEvent, onLinkActivate, deadLinkTooltip },
+   { value, onChange, title, onTitleChange, onCoverChange, onHistoryChange, placeholder, live, cover, coverController, formatController, linkEditController, tableController, imageController, onImageEvent, onLinkActivate, deadLinkTooltip },
    ref,
 ) {
    const hostRef = useRef<HTMLDivElement>(null);
@@ -349,6 +361,14 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       onCaretCell: (ctx) => tableControllerRef.current.onCaretCell?.(ctx),
       get labels() { return tableControllerRef.current.labels; },
    }).current;
+   // The image controller, captured stably so the field (built once) always calls the current callback. Like the
+   // cover's `onTap`, presence is fixed per surface (desktop never taps), so it's resolved at build time - a static
+   // delegate would make every desktop image a tap-target with no hover chrome.
+   const imageControllerRef = useRef(imageController);
+   imageControllerRef.current = imageController;
+   const stableImageController = useRef<ImageController>({
+      onTap: imageController?.onTap ? (ctx) => imageControllerRef.current?.onTap?.(ctx) : undefined,
+   }).current;
 
    // Rebuild the view when `live` flips (the extension set differs: Live adds the decoration engine + image
    // widgets). Seeded from the LIVE buffer so no edit is lost across the flip. Not rebuilt per keystroke.
@@ -386,7 +406,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
                // inside a link with a collapsed selection; mutually exclusive with the format bar by selection state.
                linkEditToolbar(stableLinkEditController),
                // LIVE mode: the Lezer inline decoration engine + the StateField image/table widgets + the cover VISUALS.
-               ...(live ? [liveInlineDecorations(deadLinkTooltipRef.current), imageWidgetField, tableWidgetField(stableTableController), coverGutterVisual(stableController)] : []),
+               ...(live ? [liveInlineDecorations(deadLinkTooltipRef.current), imageWidgetField, imageControllerFacet.of(stableImageController), tableWidgetField(stableTableController), coverGutterVisual(stableController)] : []),
                EditorView.updateListener.of((update) => {
                   const { state, startState } = update;
                   if (update.docChanged) onChangeRef.current(state.doc.toString());
@@ -540,6 +560,17 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
                const m = readTableModelAt(view, tablePos);
                return m ? { bodyRows: m.rows.length, cols: m.header.length } : null;
             },
+         };
+      },
+      buildImageRequest: (index) => {
+         const view = viewRef.current;
+         if (!view) return null;
+         return {
+            index,
+            getHint: () => readImageHintAt(view, index),
+            setAlign: (align: NoteImageAlign) => setImageAlignAt(view, index, align),
+            setWidth: (widthPct: number) => setImageWidthAt(view, index, widthPct),
+            remove: () => removeImageAt(view, index),
          };
       },
    }), []);

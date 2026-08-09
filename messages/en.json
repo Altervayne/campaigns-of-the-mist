@@ -163,6 +163,17 @@
          "deleteColumn": "Column",
          "deleteTable": "Table",
          "done": "Done"
+      },
+      "imageSheet": {
+         "title": "Image",
+         "align": "Align",
+         "alignLeft": "Left",
+         "alignCenter": "Center",
+         "alignRight": "Right",
+         "alignFull": "Full width",
+         "width": "Width",
+         "widthValue": "Width {{pct}}%",
+         "remove": "Remove image"
       }
    },
    "BoardView": {

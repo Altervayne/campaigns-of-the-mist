@@ -27,6 +27,7 @@ import { MobileNoteEditingBar } from '@/components/mobile/character-sheet/Mobile
 import { MobileNoteOutlineSheet } from '@/components/mobile/character-sheet/MobileNoteOutlineSheet';
 import { MobileNoteTableSheet } from '@/components/mobile/character-sheet/MobileNoteTableSheet';
 import { MobileNoteCoverSheet } from '@/components/mobile/character-sheet/MobileNoteCoverSheet';
+import { MobileNoteImageSheet } from '@/components/mobile/character-sheet/MobileNoteImageSheet';
 
 // -- Store Imports --
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
@@ -44,6 +45,7 @@ import type { CoverController } from '@/components/organisms/note/live/coverGutt
 import type { FormatController } from '@/components/organisms/note/live/formatToolbar';
 import type { LinkEditController } from '@/components/organisms/note/live/linkEditToolbar';
 import type { TableController, TableContextRequest } from '@/components/organisms/note/live/tableWidget';
+import type { ImageController, ImageRequest } from '@/components/organisms/note/live/assetImageWidget';
 import type { NoteCover } from '@/lib/types/board';
 
 interface MobileNoteSurfaceProps {
@@ -112,6 +114,10 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
    // not on `tableCaret`, so dropping the keyboard (which clears the caret) never closes it.
    const [tableCaret, setTableCaret] = useState<{ tablePos: number; row: number; col: number } | null>(null);
    const [tableRequest, setTableRequest] = useState<TableContextRequest | null>(null);
+
+   // The image options slide-up. Tapping an inline image builds a request anchored to its token and opens the
+   // sticky sheet; held here (not on the caret) so dropping the keyboard never closes it.
+   const [imageRequest, setImageRequest] = useState<ImageRequest | null>(null);
 
    const openTableSheet = useCallback(() => {
       if (!tableCaret) return;
@@ -241,6 +247,14 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
       onCaretCell: setTableCaret,
       labels: { addRow: t('NoteView.table.addRow'), addColumn: t('NoteView.table.addColumn') },
    }), [t]);
+   // The image controller is LIVE on mobile: tapping an image builds its request and opens the options sheet.
+   // Opening blurs to drop the keyboard so the sheet takes its place, matching the table + cover sheets.
+   const imageController = useMemo<ImageController>(() => ({
+      onTap: (ctx) => {
+         setImageRequest(editorRef.current?.buildImageRequest(ctx.index) ?? null);
+         (document.activeElement as HTMLElement | null)?.blur();
+      },
+   }), []);
 
    const toggleReadEdit = useCallback(() => setMode((current) => (current === 'reading' ? 'live' : 'reading')), []);
    const toggleSource = useCallback(() => setMode((current) => (current === 'source' ? 'live' : 'source')), []);
@@ -295,6 +309,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                      formatController={inertFormatController}
                      linkEditController={inertLinkEditController}
                      tableController={tableController}
+                     imageController={imageController}
                      placeholder={t('NoteView.bodyPlaceholder')}
                   />
                ) : hasReadingContent ? (
@@ -339,6 +354,8 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
          />
 
          <MobileNoteTableSheet request={tableRequest} onClose={() => setTableRequest(null)} />
+
+         <MobileNoteImageSheet request={imageRequest} onClose={() => setImageRequest(null)} />
 
          <MobileNoteCoverSheet
             isOpen={isCoverSheetOpen}

@@ -22,7 +22,7 @@ import {
 } from '@/components/molecules/note/noteImageClasses';
 
 // -- Type Imports --
-import type { NoteImageAlign } from '@/lib/notes/noteImageHint';
+import type { NoteImageAlign, NoteImageLayout } from '@/lib/notes/noteImageHint';
 
 /*
  * The CM6 live-editor IMAGE widget: replaces an `![alt](asset:hash "align width")` token with the real
@@ -46,18 +46,85 @@ const ALIGN_GLYPH: Record<NoteImageAlign, string> = {
    full: 'M3 5h18M3 10h18M3 15h18M3 20h18',
 };
 
+/**
+ * Injected once from the React host through a facet. On touch the widget is a tap target that opens the options
+ * sheet (`onTap`) instead of showing the desktop selection chrome. Absent on desktop, where the chrome stands in.
+ */
+export interface ImageController {
+   onTap?: (ctx: { index: number }) => void;
+}
+
+/**
+ * The mobile options-sheet handle for one image, anchored to the token's start `index` (stable across hint
+ * rewrites). Mirrors the table sheet's request: the sheet re-reads the hint each render and drives ops without
+ * touching selection or focus, so the keyboard stays down.
+ */
+export interface ImageRequest {
+   index: number;
+   getHint: () => NoteImageLayout | null;
+   setAlign: (align: NoteImageAlign) => void;
+   setWidth: (widthPct: number) => void;
+   remove: () => void;
+}
+
+/** The image token spanning `index` (its start, or anywhere inside it), or null when none sits there. */
+function imageTokenAt(body: string, index: number) {
+   return findImageTokens(body).find((tk) => index >= tk.index && index <= tk.index + tk.length) ?? null;
+}
+
+/**
+ * Applies a hint transform to the image token at `index` and dispatches it, keeping the caret on the token so it
+ * stays selected (its ring persists). No focus: the mobile sheet drives this with the keyboard down. Returns
+ * whether the buffer changed. Whole-doc dispatch is simple and safe; the transform only rewrites one hint.
+ */
+function rewriteImageAt(view: EditorView, index: number, next: (prev: NoteImageLayout) => NoteImageLayout): boolean {
+   const body = view.state.doc.toString();
+   const token = imageTokenAt(body, index);
+   if (!token) return false;
+   const nextBody = rewriteImageHintAt(body, token.index, next(parseImageHint(token.title)));
+   if (nextBody === body) return false;
+   view.dispatch({ changes: { from: 0, to: body.length, insert: nextBody }, selection: { anchor: token.index + 1 } });
+   return true;
+}
+
+/** Parses the hint of the image token at `index`, or null when no token sits there. */
+export function readImageHintAt(view: EditorView, index: number): NoteImageLayout | null {
+   const token = imageTokenAt(view.state.doc.toString(), index);
+   return token ? parseImageHint(token.title) : null;
+}
+
+/** Sets the align of the image at `index` (width becomes 100 for `full`, else keeps prev), preserving aspect. */
+export function setImageAlignAt(view: EditorView, index: number, align: NoteImageAlign): boolean {
+   return rewriteImageAt(view, index, (prev) => ({ align, widthPct: align === 'full' ? 100 : prev.widthPct, aspect: prev.aspect }));
+}
+
+/** Sets the width of the image at `index`, preserving align + aspect. */
+export function setImageWidthAt(view: EditorView, index: number, widthPct: number): boolean {
+   return rewriteImageAt(view, index, (prev) => ({ align: prev.align, widthPct, aspect: prev.aspect }));
+}
+
+/** Deletes the whole image token at `index` from the buffer. */
+export function removeImageAt(view: EditorView, index: number): void {
+   const body = view.state.doc.toString();
+   const token = imageTokenAt(body, index);
+   if (!token) return;
+   view.dispatch({ changes: { from: token.index, to: token.index + token.length, insert: '' } });
+}
+
 export class AssetImageWidget extends WidgetType {
    readonly hash: string;
    readonly alt: string;
    readonly title: string;
    readonly selected: boolean;
+   private readonly controller: ImageController | null;
 
-   constructor(hash: string, alt: string, title: string, selected: boolean) {
+   constructor(hash: string, alt: string, title: string, selected: boolean, controller: ImageController | null = null) {
       super();
       this.hash = hash;
       this.alt = alt;
       this.title = title;
       this.selected = selected;
+      this.controller = controller;
    }
 
    // Reuse the DOM only when nothing that affects render changed (selection flip must rebuild the chrome).
@@ -139,7 +206,24 @@ export class AssetImageWidget extends WidgetType {
          wrap.appendChild(cap);
       }
 
-      if (this.selected) {
+      // Touch: the whole figure is a tap target that opens the options sheet; no hover chrome (no hover on a
+      // phone). Swallow the mousedown so CM6 neither places the caret here nor raises the keyboard, and mark the
+      // tapped image with the selection ring only. Desktop (no onTap) keeps the full selection chrome.
+      const onTap = this.controller?.onTap;
+      if (onTap) {
+         wrap.style.cursor = 'pointer';
+         wrap.onmousedown = (e) => { e.preventDefault(); e.stopPropagation(); };
+         wrap.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const index = this.tokenIndex(view, wrap, view.state.doc.toString());
+            if (index === null) return;
+            // Ring the tapped image without focusing (keyboard stays down); the sheet reads live state by index.
+            view.dispatch({ selection: { anchor: index + 1 } });
+            onTap({ index });
+         };
+         if (this.selected) wrap.classList.add('cm-note-image-selected');
+      } else if (this.selected) {
          this.decorateSelection(view, wrap, align);
       }
       return wrap;
@@ -243,35 +327,16 @@ export class AssetImageWidget extends WidgetType {
 
    /** Rewrites this image's width% + aspect (a fixed box) in the buffer, keeping align, at the token's LIVE offset. */
    private setBox(view: EditorView, wrap: HTMLElement, widthPct: number, aspect: number): void {
-      this.rewrite(view, wrap, (body, index) => {
-         const { align } = parseImageHint(this.title);
-         return rewriteImageHintAt(body, index, { align, widthPct, aspect: clampImageAspect(aspect) });
-      });
+      const index = this.tokenIndex(view, wrap, view.state.doc.toString());
+      if (index === null) return;
+      if (rewriteImageAt(view, index, (prev) => ({ align: prev.align, widthPct, aspect: clampImageAspect(aspect) }))) view.focus();
    }
 
    /** Sets this image's align (block alignment; no wrapping), preserving width + aspect, at the token's LIVE offset. */
    private setAlign(view: EditorView, wrap: HTMLElement, align: NoteImageAlign): void {
-      this.rewrite(view, wrap, (body, index) => {
-         const prev = parseImageHint(this.title);
-         const width = align === 'full' ? 100 : prev.widthPct;
-         return rewriteImageHintAt(body, index, { align, widthPct: width, aspect: prev.aspect });
-      });
-   }
-
-   /**
-    * Applies a body transform to THIS token and dispatches it as a CM6 change. Finds the token's live offset
-    * from the widget's DOM position (`posAtDOM`), so a shifted doc still rewrites the right token. Whole-doc
-    * dispatch keeps it simple and safe; the transform only ever rewrites the one token's hint.
-    */
-   private rewrite(view: EditorView, wrap: HTMLElement, transform: (body: string, index: number) => string): void {
-      const body = view.state.doc.toString();
-      const index = this.tokenIndex(view, wrap, body);
+      const index = this.tokenIndex(view, wrap, view.state.doc.toString());
       if (index === null) return;
-      const nextBody = transform(body, index);
-      if (nextBody === body) return;
-      // Keep the caret just past the token so the widget stays selected (its span still holds the head).
-      view.dispatch({ changes: { from: 0, to: body.length, insert: nextBody }, selection: { anchor: index + 1 } });
-      view.focus();
+      if (setImageAlignAt(view, index, align)) view.focus();
    }
 
    /** The buffer offset of THIS image token, found from the widget's live DOM position + hash match. */

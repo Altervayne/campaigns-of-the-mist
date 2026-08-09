@@ -1,12 +1,22 @@
 // -- CodeMirror Imports --
 import { Decoration, EditorView } from '@codemirror/view';
-import { StateField } from '@codemirror/state';
+import { Facet, StateField } from '@codemirror/state';
 import type { DecorationSet } from '@codemirror/view';
 import type { EditorState } from '@codemirror/state';
 
 // -- Local Imports --
 import { findImageTokens } from '@/lib/notes/noteImageHint';
 import { AssetImageWidget } from './assetImageWidget';
+import type { ImageController } from './assetImageWidget';
+
+/**
+ * The image controller, injected by the React host. Default empty so desktop (which provides none) keeps the
+ * hover selection chrome; mobile supplies an `onTap` that turns each image into a tap target for the options
+ * sheet. Read from state in `buildImageDecorations` and handed to every widget.
+ */
+export const imageControllerFacet = Facet.define<ImageController, ImageController | null>({
+   combine: (values) => (values.length ? values[values.length - 1] : null),
+});
 
 /*
  * The Live-Preview IMAGE decorations, sourced from a StateField - NOT a ViewPlugin. CM6 forbids block
@@ -23,10 +33,11 @@ import { AssetImageWidget } from './assetImageWidget';
 function buildImageDecorations(state: EditorState): DecorationSet {
    const body = state.doc.toString();
    const head = state.selection.main.head;
+   const controller = state.facet(imageControllerFacet);
    const ranges = findImageTokens(body).map((token) => {
       const selected = head >= token.index && head <= token.index + token.length;
       return Decoration.replace({
-         widget: new AssetImageWidget(token.hash, token.alt, token.title, selected),
+         widget: new AssetImageWidget(token.hash, token.alt, token.title, selected, controller),
          block: true,
       }).range(token.index, token.index + token.length);
    });

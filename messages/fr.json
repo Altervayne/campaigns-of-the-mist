@@ -163,6 +163,17 @@
          "deleteColumn": "[TO COMPLETE]",
          "deleteTable": "[TO COMPLETE]",
          "done": "[TO COMPLETE]"
+      },
+      "imageSheet": {
+         "title": "[TO COMPLETE]",
+         "align": "[TO COMPLETE]",
+         "alignLeft": "[TO COMPLETE]",
+         "alignCenter": "[TO COMPLETE]",
+         "alignRight": "[TO COMPLETE]",
+         "alignFull": "[TO COMPLETE]",
+         "width": "[TO COMPLETE]",
+         "widthValue": "[TO COMPLETE]",
+         "remove": "[TO COMPLETE]"
       }
    },
    "BoardView": {
