@@ -1,5 +1,6 @@
 // -- React Imports --
 import type { CSSProperties, ReactNode } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -52,6 +53,11 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 	const { setContextualGame } = useAppSettingsActions();
 	const { mobileCreateCharacterTab, mobileImportCharacterTab, mobileCreateNoteTab } = useTabManagerActions();
 
+	// Which workspace TYPE is selected: a game (character) or the note card. Tapping a card only selects it;
+	// the pinned "Open New Workspace" button then creates the selected type - a two-step guard against the easy
+	// mis-taps of a phone (matching the character cards' existing select-then-create policy).
+	const [noteSelected, setNoteSelected] = useState(false);
+
 	const handleCreateCharacter = () => {
 		mobileCreateCharacterTab(contextualGame);
 		onCreated?.();
@@ -96,6 +102,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 
 	const handleGameSelect = (game: GameSystem) => {
 		setContextualGame(game);
+		setNoteSelected(false);
 	};
 
 	// The just-created note becomes the active tab; mark it so its surface autofocuses the body on first mount.
@@ -103,6 +110,12 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 		await mobileCreateNoteTab();
 		markNoteJustCreated(useTabManagerStore.getState().activeTabId);
 		onCreated?.();
+	};
+
+	// The pinned action creates whatever type is selected: a note, or a character on the chosen game.
+	const handleCreate = () => {
+		if (noteSelected) void handleCreateNote();
+		else handleCreateCharacter();
 	};
 
 	return (
@@ -125,7 +138,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 							>
 								<MobileMainMenuGameCard
 									{...option}
-									isSelected={contextualGame === option.game}
+									isSelected={!noteSelected && contextualGame === option.game}
 									onClick={() => handleGameSelect(option.game)}
 								/>
 							</motion.div>
@@ -145,8 +158,8 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 							subtitle={t('Tabs.newTabDialog.newNoteSubtitle')}
 							icon={<NotebookPen className={cn('h-6 w-6', NOTE_VISUAL.accentText)} />}
 							gradient={NOTE_VISUAL.gradient}
-							isSelected={false}
-							onClick={handleCreateNote}
+							isSelected={noteSelected}
+							onClick={() => setNoteSelected(true)}
 						/>
 					</motion.div>
 				</div>
@@ -161,7 +174,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 				style={footerStyle}
 			>
 				<Button
-					onClick={handleCreateCharacter}
+					onClick={handleCreate}
 					size="lg"
 					className="w-full gap-2 h-12 text-base font-semibold shadow-lg"
 				>
