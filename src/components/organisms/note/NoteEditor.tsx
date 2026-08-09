@@ -319,6 +319,9 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       onRemove: () => controllerRef.current.onRemove(),
       onResizeBox: (w, a) => controllerRef.current.onResizeBox(w, a),
       onSetAspect: (a) => controllerRef.current.onSetAspect(a),
+      // Presence is fixed per surface (desktop never taps, mobile always does), so read it at build time - the
+      // gutter checks `onTap` to pick tap-target vs hover controls, and a static delegate would force taps everywhere.
+      onTap: coverController.onTap ? () => controllerRef.current.onTap?.() : undefined,
    }).current;
    // Same stable-ref pattern for the format bar controller (the view is built once; a re-render swaps closures).
    const formatControllerRef = useRef(formatController);

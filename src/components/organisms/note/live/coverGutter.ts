@@ -57,6 +57,11 @@ export interface CoverController {
    onResizeBox: (widthPct: number, aspect: number) => void;
    /** Commit a new box aspect (height / width) - the quick-set aspect presets. */
    onSetAspect: (aspect: number) => void;
+   /**
+    * Touch seam: when set, the cover box is a tap target that opens the options sheet, and the hover controls
+    * are NOT mounted (hover doesn't exist on touch). Absent on desktop, where the hover controls stand in.
+    */
+   onTap?: () => void;
    /** Localized tooltips/aria-labels for the icon-only controls (the plugin has no i18n of its own). */
    labels: { change: string; remove: string; aspect: string };
 }
@@ -304,7 +309,9 @@ function coverOverlay(controller: CoverController) {
             imgWrap.appendChild(img);
             box.appendChild(imgWrap);
 
-            if (controller.editable) this.mountControls(box);
+            // Touch opens the options sheet on tap; desktop gets the hover controls. Never both.
+            if (controller.onTap) this.mountTapLayer(box, controller.onTap);
+            else if (controller.editable) this.mountControls(box);
 
             view.scrollDOM.appendChild(box);
             this.resizeObserver.observe(box);
@@ -333,6 +340,21 @@ function coverOverlay(controller: CoverController) {
           */
          private reserveCoverHeight(boxHeight: number) {
             this.view.contentDOM.style.minHeight = `${boxHeight}px`;
+         }
+
+         /**
+          * A transparent full-box tap target (touch): opens the options sheet and swallows the gesture so CM6
+          * leaves the caret put. Takes pointer events even though the box itself doesn't (the layer re-enables them).
+          */
+         private mountTapLayer(box: HTMLElement, onTap: () => void) {
+            const layer = document.createElement('button');
+            layer.type = 'button';
+            layer.className = 'cm-note-cover-tap';
+            layer.setAttribute('aria-label', controller.labels.change);
+            layer.style.cssText = 'position:absolute;inset:0;pointer-events:auto;background:transparent;border:none;padding:0;cursor:pointer;';
+            layer.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); };
+            layer.onclick = (e) => { e.preventDefault(); e.stopPropagation(); onTap(); };
+            box.appendChild(layer);
          }
 
          /** Adds the hover controls overlay (Change / Remove + resize handle + aspect presets) to the box. */

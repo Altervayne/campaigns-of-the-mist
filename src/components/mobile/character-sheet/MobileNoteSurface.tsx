@@ -9,9 +9,15 @@ import { useStore } from 'zustand';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
 import { useNoteImageInsertion } from '@/hooks/useNoteImageInsertion';
+import { useImageCropper } from '@/hooks/useImageCropper';
 
 // -- Asset Pipeline --
+import { processImage } from '@/lib/assets/processImage';
+import { storeAsset } from '@/lib/assets/assetRepository';
 import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
+
+// -- Cover Sizing --
+import { COVER_DEFAULT_WIDTH_PCT, clampCoverWidth, clampCoverAspect } from '@/components/molecules/note/noteCoverClasses';
 
 // -- Component Imports --
 import { NoteDocument } from '@/components/molecules/NoteDocument';
@@ -20,6 +26,7 @@ import { MobileNoteTopBar } from '@/components/mobile/character-sheet/MobileNote
 import { MobileNoteEditingBar } from '@/components/mobile/character-sheet/MobileNoteEditingBar';
 import { MobileNoteOutlineSheet } from '@/components/mobile/character-sheet/MobileNoteOutlineSheet';
 import { MobileNoteTableSheet } from '@/components/mobile/character-sheet/MobileNoteTableSheet';
+import { MobileNoteCoverSheet } from '@/components/mobile/character-sheet/MobileNoteCoverSheet';
 
 // -- Store Imports --
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
@@ -166,9 +173,45 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
    const { fileInputRef, open: openImagePicker, isProcessing: isImageProcessing, handleFileSelected, handleImageEvent, cropperDialog: imageCropperDialog } =
       useNoteImageInsertion({ adapter: spliceAdapter });
 
+   // Cover add/change, mirroring the desktop wiring: crop -> process -> store -> hash, then a NoteCover built with
+   // the image's NATURAL ratio on ADD and the current box kept on CHANGE. All edits go through the editor handle
+   // (CM6 state = the undo timeline), which then persists to the store.
+   const coverInputRef = useRef<HTMLInputElement>(null);
+   const { open: openCoverCropper, dialog: coverCropperDialog } = useImageCropper();
+   const openCoverPicker = useCallback(() => coverInputRef.current?.click(), []);
+   const handleCoverSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      const cropped = await openCoverCropper(file, { aspect: 'free' });
+      if (!cropped) return;
+      try {
+         const processed = await processImage(cropped);
+         await storeAsset(processed);
+         const current = store.getState().note?.cover;
+         const naturalAspect = processed.width > 0 ? processed.height / processed.width : 1;
+         editorRef.current?.setCover({
+            hash: processed.hash,
+            width: current?.width ?? COVER_DEFAULT_WIDTH_PCT,
+            aspect: current?.aspect ?? clampCoverAspect(naturalAspect),
+         });
+      } catch {
+         // A failed process/store leaves the existing cover untouched; the shared toast lives in the image hooks.
+      }
+   }, [store, openCoverCropper]);
+
+   // The cover options slide-up: tapping the cover (or the editing bar's Cover chip when one exists) opens it.
+   // Held here, not on the cover, so it survives the keyboard drop. Opening blurs to drop the keyboard, matching
+   // the table sheet - the sheet takes the keyboard's place for keyboard-less structural edits.
+   const [isCoverSheetOpen, setIsCoverSheetOpen] = useState(false);
+   const openCoverSheet = useCallback(() => {
+      setIsCoverSheetOpen(true);
+      (document.activeElement as HTMLElement | null)?.blur();
+   }, []);
+
    // The floating selection bar + link-edit bar are suppressed on mobile (`editable: false`): B/I/S live in the
-   // keyboard-docked editing bar, and link actions are a later slice. The cover displays but its controls are
-   // inert (cover editing is a later slice); the table renders as an editable grid, its op menu a later slice.
+   // keyboard-docked editing bar, and link actions are a later slice. The cover and table are live via their own
+   // tap-to-sheet flows below.
    const inertFormatController = useMemo<FormatController>(() => ({
       editable: false,
       labels: { bold: t('NoteView.format.bold'), italic: t('NoteView.format.italic'), strikethrough: t('NoteView.format.strikethrough'), link: t('NoteView.format.link') },
@@ -180,14 +223,18 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
       onOpen: () => {},
       onChangeTarget: () => {},
    }), [t]);
-   const readonlyCoverController = useMemo<CoverController>(() => ({
-      editable: false,
-      onChange: () => {},
-      onRemove: () => {},
-      onResizeBox: () => {},
-      onSetAspect: () => {},
+   // The cover controller is LIVE on mobile: editing routes through the editor handle (as desktop), but the hover
+   // controls are replaced by a tap that opens the options sheet (`onTap`) - the gutter mounts a tap target, not
+   // the hover bar, whenever `onTap` is set.
+   const coverController = useMemo<CoverController>(() => ({
+      editable: isEditing,
+      onChange: openCoverPicker,
+      onRemove: () => editorRef.current?.clearCover(),
+      onResizeBox: (widthPct, aspect) => editorRef.current?.updateCover({ width: clampCoverWidth(widthPct), aspect: clampCoverAspect(aspect) }),
+      onSetAspect: (aspect) => editorRef.current?.updateCover({ aspect: clampCoverAspect(aspect) }),
+      onTap: openCoverSheet,
       labels: { change: t('NoteView.cover.change'), remove: t('NoteView.cover.remove'), aspect: t('NoteView.cover.aspect') },
-   }), [t]);
+   }), [isEditing, openCoverPicker, openCoverSheet, t]);
    // The table controller IS live on mobile: the caret cell arms the chip, the sheet hosts the ops.
    const tableController = useMemo<TableController>(() => ({
       openContextMenu: setTableRequest,
@@ -244,7 +291,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                      deadLinkTooltip={t('NoteView.linkDead')}
                      live={mode === 'live'}
                      cover={cover}
-                     coverController={readonlyCoverController}
+                     coverController={coverController}
                      formatController={inertFormatController}
                      linkEditController={inertLinkEditController}
                      tableController={tableController}
@@ -262,6 +309,10 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
          <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {imageCropperDialog}
 
+         {/* Hidden picker for the cover Add/Change action; a separate input from the image-insert one. */}
+         <input ref={coverInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleCoverSelected} />
+         {coverCropperDialog}
+
          {isEditing && (
             <MobileNoteEditingBar
                getEditor={getEditor}
@@ -273,6 +324,8 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
                onRedo={() => editorRef.current?.redo()}
                canOpenTable={tableCaret !== null}
                onOpenTable={openTableSheet}
+               hasCover={!!cover}
+               onCoverButton={cover ? openCoverSheet : openCoverPicker}
                isLeftHanded={isLeftHanded}
                isMobileFABMode={isMobileFABMode}
             />
@@ -286,6 +339,16 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
          />
 
          <MobileNoteTableSheet request={tableRequest} onClose={() => setTableRequest(null)} />
+
+         <MobileNoteCoverSheet
+            isOpen={isCoverSheetOpen}
+            cover={cover}
+            onClose={() => setIsCoverSheetOpen(false)}
+            onChange={openCoverPicker}
+            onRemove={() => editorRef.current?.clearCover()}
+            onSetAspect={(aspect) => editorRef.current?.updateCover({ aspect: clampCoverAspect(aspect) })}
+            onSetWidth={(widthPct, aspect) => editorRef.current?.updateCover({ width: clampCoverWidth(widthPct), aspect: clampCoverAspect(aspect) })}
+         />
       </div>
    );
 }

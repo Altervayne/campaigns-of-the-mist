@@ -119,7 +119,16 @@
          "label": "Cover",
          "change": "Change cover",
          "remove": "Remove cover",
-         "aspect": "Aspect ratio"
+         "aspect": "Aspect ratio",
+         "width": "Width",
+         "sheetTitle": "Cover",
+         "aspectWide": "Wide",
+         "aspectPhoto": "Photo",
+         "aspectSquare": "Square",
+         "widthSmall": "Small",
+         "widthMedium": "Medium",
+         "widthLarge": "Large",
+         "widthFull": "Full"
       },
       "mobile": {
          "read": "Read",

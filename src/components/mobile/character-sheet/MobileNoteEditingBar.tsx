@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { CSSProperties, ReactNode } from 'react';
 
 // -- Icon Imports --
-import { Bold, Heading, ImagePlus, Italic, List, ListOrdered, Loader2, Minus, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
+import { Bold, Heading, ImagePlus, Italic, List, ListOrdered, Loader2, Minus, PanelTop, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
 
 // -- Hook Imports --
 import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
@@ -30,6 +30,10 @@ interface MobileNoteEditingBarProps {
    canOpenTable: boolean;
    /** Drops the keyboard and raises the table slide-up for the caret's cell. */
    onOpenTable: () => void;
+   /** Whether the note has a cover; flips the Cover chip between "Add cover" and "Cover". */
+   hasCover: boolean;
+   /** With a cover, opens the options sheet; without one, opens the picker to add it. */
+   onCoverButton: () => void;
    /** Pins Undo/Redo on the thumb-side edge; the scrolling format group takes the rest. */
    isLeftHanded: boolean;
    /** No bottom tab bar in FAB mode, so the resting (keyboard-down) dock sits lower. */
@@ -53,6 +57,8 @@ export function MobileNoteEditingBar({
    onRedo,
    canOpenTable,
    onOpenTable,
+   hasCover,
+   onCoverButton,
    isLeftHanded,
    isMobileFABMode,
 }: MobileNoteEditingBarProps) {
@@ -104,6 +110,10 @@ export function MobileNoteEditingBar({
                </EditingBarButton>
                <EditingBarButton label={t('NoteView.insertImage')} onClick={onInsertImage} disabled={isImageProcessing}>
                   {isImageProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+               </EditingBarButton>
+               {/* Context-aware, never greyed: with a cover it opens the options sheet; without one it adds a cover. */}
+               <EditingBarButton label={hasCover ? t('NoteView.cover.label') : t('NoteView.cover.add')} onClick={onCoverButton}>
+                  <PanelTop className="h-5 w-5" />
                </EditingBarButton>
                <BarDivider />
                {/* Context-aware, never greyed: in a table it opens the slide-up; otherwise it inserts a starter
