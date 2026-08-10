@@ -131,4 +131,20 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
+  // Same guard for the decomposed NoteEditor: the thin component plus its extracted theme / imperative handle /
+  // click handlers / stable-controllers hook stay small. Scoped to this refactor's output only - the other
+  // large note files (tableWidget, coverGutter, NoteView, NoteToolbar, ...) are not decomposed yet and are
+  // deliberately not covered.
+  {
+    files: [
+      'src/components/organisms/note/NoteEditor.tsx',
+      'src/components/organisms/note/live/noteEditorTheme.ts',
+      'src/components/organisms/note/live/noteEditorHandle.ts',
+      'src/components/organisms/note/live/noteEditorClicks.ts',
+      'src/components/organisms/note/live/useStableNoteControllers.ts',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
 ])
