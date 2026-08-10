@@ -147,4 +147,15 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
+  // Same guard for the decomposed ChallengeCardEditor: the thin dialog wrapper plus its extracted per-game
+  // form bodies, row editors, and shared field primitives stay small.
+  {
+    files: [
+      'src/components/organisms/dialogs/ChallengeCardEditor.tsx',
+      'src/components/organisms/dialogs/challenge-editor/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
 ])
