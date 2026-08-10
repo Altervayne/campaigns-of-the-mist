@@ -158,4 +158,16 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
+  // Same guard for the per-game card-palette files: the data model, the defaults probe, and the injection
+  // manager stay focused.
+  {
+    files: [
+      'src/lib/theme/cardPalettes.ts',
+      'src/lib/theme/cardPaletteProbe.ts',
+      'src/components/providers/CardPaletteClassManager.tsx',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
 ])

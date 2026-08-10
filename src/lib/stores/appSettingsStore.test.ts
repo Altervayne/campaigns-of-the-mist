@@ -8,6 +8,7 @@ import { useAppSettingsStore } from './appSettingsStore';
 import type { DiceTrayContent } from '@/lib/dice/diceTrayTypes';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
 import { PRESET_THEMES } from '@/lib/theme/themeTokens';
+import type { CardPalette } from '@/lib/theme/cardPalettes';
 
 /*
  * Tests for the app-wide dice-tray settings slice: the default (empty, closed), the open/toggle actions,
@@ -165,5 +166,84 @@ describe('appSettingsStore theme draft', () => {
       actions.discardThemeDraft();
       expect(useAppSettingsStore.getState().themeDraft).toBeNull();
       expect(useAppSettingsStore.getState().customThemes[0].radius).toBe('0.5rem');
+   });
+});
+
+describe('appSettingsStore card palettes', () => {
+   const paper = PRESET_THEMES['theme-neutral'].paper;
+   const makePalette = (id: string, game: CardPalette['game'] = 'LEGENDS'): CardPalette => ({
+      id, game, name: `Palette ${id}`, cardTypes: { hero: { ...paper } },
+   });
+
+   beforeEach(() => {
+      useAppSettingsStore.setState({
+         cardPalettes: [],
+         activeCardPalettes: { LEGENDS: 'default', CITY_OF_MIST: 'default', OTHERSCAPE: 'default' },
+         cardPaletteDraft: null,
+      });
+   });
+
+   it('addCardPalette appends and updateCardPalette patches by id', () => {
+      const { actions } = useAppSettingsStore.getState();
+      actions.addCardPalette(makePalette('a'));
+      actions.addCardPalette(makePalette('b'));
+      actions.updateCardPalette('a', { name: 'Renamed' });
+      const list = useAppSettingsStore.getState().cardPalettes;
+      expect(list.map((p) => p.id)).toEqual(['a', 'b']);
+      expect(list.find((p) => p.id === 'a')?.name).toBe('Renamed');
+   });
+
+   it('setActiveCardPalette sets one game without touching the others', () => {
+      const { actions } = useAppSettingsStore.getState();
+      actions.setActiveCardPalette('LEGENDS', 'a');
+      const active = useAppSettingsStore.getState().activeCardPalettes;
+      expect(active).toEqual({ LEGENDS: 'a', CITY_OF_MIST: 'default', OTHERSCAPE: 'default' });
+   });
+
+   it('deleteCardPalette resets any game pointing at it back to default', () => {
+      const { actions } = useAppSettingsStore.getState();
+      actions.addCardPalette(makePalette('a'));
+      actions.setActiveCardPalette('LEGENDS', 'a');
+      actions.deleteCardPalette('a');
+      expect(useAppSettingsStore.getState().cardPalettes).toEqual([]);
+      expect(useAppSettingsStore.getState().activeCardPalettes.LEGENDS).toBe('default');
+   });
+
+   it('deleteCardPalette leaves a game alone when a different palette was active', () => {
+      const { actions } = useAppSettingsStore.getState();
+      actions.addCardPalette(makePalette('a'));
+      actions.addCardPalette(makePalette('b'));
+      actions.setActiveCardPalette('LEGENDS', 'b');
+      actions.deleteCardPalette('a');
+      expect(useAppSettingsStore.getState().activeCardPalettes.LEGENDS).toBe('b');
+   });
+
+   it('reorderCardPalettes moves the active id to the over id\'s slot', () => {
+      const { actions } = useAppSettingsStore.getState();
+      ['a', 'b', 'c'].forEach((id) => actions.addCardPalette(makePalette(id)));
+      actions.reorderCardPalettes('a', 'c'); // [b, c, a]
+      expect(useAppSettingsStore.getState().cardPalettes.map((p) => p.id)).toEqual(['b', 'c', 'a']);
+   });
+
+   it('beginCardPaletteDraft sets a DEEP copy (editing the draft does not touch the saved palette)', () => {
+      const { actions } = useAppSettingsStore.getState();
+      const saved = makePalette('a');
+      actions.addCardPalette(saved);
+      actions.beginCardPaletteDraft(saved);
+      actions.patchCardPaletteDraft({ cardTypes: { hero: { ...paper, 'paper-primary': 'lime' } } });
+      expect(useAppSettingsStore.getState().cardPaletteDraft?.cardTypes.hero['paper-primary']).toBe('lime');
+      expect(useAppSettingsStore.getState().cardPalettes[0].cardTypes.hero['paper-primary']).toBe(paper['paper-primary']);
+   });
+
+   it('patchCardPaletteDraft is a no-op when there is no draft', () => {
+      useAppSettingsStore.getState().actions.patchCardPaletteDraft({ name: 'x' });
+      expect(useAppSettingsStore.getState().cardPaletteDraft).toBeNull();
+   });
+
+   it('discardCardPaletteDraft clears the draft', () => {
+      const { actions } = useAppSettingsStore.getState();
+      actions.beginCardPaletteDraft(makePalette('a'));
+      actions.discardCardPaletteDraft();
+      expect(useAppSettingsStore.getState().cardPaletteDraft).toBeNull();
    });
 });

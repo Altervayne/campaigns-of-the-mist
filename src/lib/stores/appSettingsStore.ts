@@ -12,6 +12,7 @@ import type { GameSystem } from '../types/drawer';
 import type { BrushKind } from '@/lib/types/board';
 import type { DiceTrayContent } from '@/lib/dice/diceTrayTypes';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
+import type { CardPalette, CardPaletteGame } from '@/lib/theme/cardPalettes';
 import type { ThemeMode } from '@/lib/theme/themeMode';
 
 
@@ -32,6 +33,15 @@ interface AppSettingsState {
    // ThemeClassManager), but it only reaches `customThemes` on Save. Excluded from persistence on purpose:
    // a reload drops unsaved edits and the saved theme stays intact.
    themeDraft: CustomTheme | null;
+   /** User-defined card palettes for every game in one list, each tagged by its `game` (applied at runtime by
+    * the CardPaletteClassManager). */
+   cardPalettes: CardPalette[];
+   /** Each game's active palette id; `'default'` means the built-in `.card-type-*` rules in global.css show through. */
+   activeCardPalettes: Record<CardPaletteGame, string>;
+   // The card palette currently being edited, as a live but UNSAVED draft. The app previews it (see
+   // CardPaletteClassManager); it only reaches `cardPalettes` on Save. Excluded from persistence on purpose,
+   // like themeDraft: a reload drops unsaved edits and the saved palette stays intact.
+   cardPaletteDraft: CardPalette | null;
    isCompactDrawer: boolean;
    isSideBySideView: boolean;
    lastVisitedVersion: string;
@@ -84,6 +94,14 @@ interface AppSettingsState {
       patchThemeDraft: (patch: Partial<CustomTheme>) => void;
       saveThemeDraft: () => void;
       discardThemeDraft: () => void;
+      setActiveCardPalette: (game: CardPaletteGame, id: string) => void;
+      addCardPalette: (palette: CardPalette) => void;
+      updateCardPalette: (id: string, patch: Partial<CardPalette>) => void;
+      deleteCardPalette: (id: string) => void;
+      reorderCardPalettes: (activeId: string, overId: string) => void;
+      beginCardPaletteDraft: (palette: CardPalette) => void;
+      patchCardPaletteDraft: (patch: Partial<CardPalette>) => void;
+      discardCardPaletteDraft: () => void;
       toggleCompactDrawer: () => void;
       setSideBySideView: (isSideBySide: boolean) => void;
       setLastVisitedVersion: (version: string) => void;
@@ -133,6 +151,9 @@ export const useAppSettingsStore = create<AppSettingsState>()(
          themeMode: 'system',
          customThemes: [],
          themeDraft: null,
+         cardPalettes: [],
+         activeCardPalettes: { LEGENDS: 'default', CITY_OF_MIST: 'default', OTHERSCAPE: 'default' },
+         cardPaletteDraft: null,
          isCompactDrawer: false,
          isSideBySideView: false,
          lastVisitedVersion: "0.0.0",
@@ -195,6 +216,43 @@ export const useAppSettingsStore = create<AppSettingsState>()(
                get().actions.updateCustomTheme(draft.id, { light: draft.light, dark: draft.dark, radius: draft.radius, paper: draft.paper, generator: draft.generator });
             },
             discardThemeDraft: () => set({ themeDraft: null }),
+            setActiveCardPalette: (game, id) => set((state) => ({
+               activeCardPalettes: { ...state.activeCardPalettes, [game]: id },
+            })),
+            addCardPalette: (palette) => set((state) => ({ cardPalettes: [...state.cardPalettes, palette] })),
+            updateCardPalette: (id, patch) => set((state) => ({
+               cardPalettes: state.cardPalettes.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)),
+            })),
+            // Drop the palette; any game pointing at it falls back to `'default'` (global.css shows through).
+            deleteCardPalette: (id) => set((state) => {
+               const activeCardPalettes = { ...state.activeCardPalettes };
+               for (const game of Object.keys(activeCardPalettes) as CardPaletteGame[]) {
+                  if (activeCardPalettes[game] === id) activeCardPalettes[game] = 'default';
+               }
+               return { cardPalettes: state.cardPalettes.filter((entry) => entry.id !== id), activeCardPalettes };
+            }),
+            // Move a palette to another's slot (drag-to-reorder); the array IS the persisted order.
+            reorderCardPalettes: (activeId, overId) => set((state) => {
+               const from = state.cardPalettes.findIndex((entry) => entry.id === activeId);
+               const to = state.cardPalettes.findIndex((entry) => entry.id === overId);
+               if (from === -1 || to === -1 || from === to) return {};
+               const next = state.cardPalettes.slice();
+               const [moved] = next.splice(from, 1);
+               next.splice(to, 0, moved);
+               return { cardPalettes: next };
+            }),
+            // Start (or restart) the live draft from a deep copy of the saved palette, so opening the editor
+            // shows no change until the user edits.
+            beginCardPaletteDraft: (palette) => set({
+               cardPaletteDraft: {
+                  ...palette,
+                  cardTypes: Object.fromEntries(
+                     Object.entries(palette.cardTypes).map(([slug, paper]) => [slug, { ...paper }]),
+                  ),
+               },
+            }),
+            patchCardPaletteDraft: (patch) => set((state) => (state.cardPaletteDraft ? { cardPaletteDraft: { ...state.cardPaletteDraft, ...patch } } : {})),
+            discardCardPaletteDraft: () => set({ cardPaletteDraft: null }),
             toggleCompactDrawer: () => set((state) => ({ isCompactDrawer: !state.isCompactDrawer })),
             setSideBySideView: (isSideBySide) => set({ isSideBySideView: isSideBySide }),
             setLastVisitedVersion: (version) => set({ lastVisitedVersion: version }),
@@ -246,6 +304,9 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             theme: state.theme,
             themeMode: state.themeMode,
             customThemes: state.customThemes,
+            // cardPaletteDraft is intentionally omitted (like themeDraft): unsaved edits never persist.
+            cardPalettes: state.cardPalettes,
+            activeCardPalettes: state.activeCardPalettes,
             isCompactDrawer: state.isCompactDrawer,
             isSideBySideView: state.isSideBySideView,
             lastVisitedVersion: state.lastVisitedVersion,

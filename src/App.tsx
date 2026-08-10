@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ThemeModeManager } from '@/components/providers/ThemeModeManager';
 import { ThemeClassManager } from '@/components/providers/ThemeClassManager';
+import { CardPaletteClassManager } from '@/components/providers/CardPaletteClassManager';
 import { AppStartManagerProvider } from '@/components/providers/AppStartManager';
 import { ActiveCharacterStoreProvider } from '@/lib/character/ActiveCharacterStoreProvider';
 import { ActiveBoardStoreProvider } from '@/lib/board/ActiveBoardStoreProvider';
@@ -57,6 +58,9 @@ export default function App() {
     // initial classes are set synchronously by the inline no-flash script in index.html.
     <ThemeModeManager>
       <ThemeClassManager>
+        {/* Injects the active per-game card palettes into their own managed <style>; independent of the
+            chrome theme class above. */}
+        <CardPaletteClassManager>
         {/* Resolution layer for the active character store. Hoisted above
             AppStartManagerProvider because that provider boots the active character
             and hosts the TutorialRunner, both of which consume the store; this
@@ -78,6 +82,7 @@ export default function App() {
             </ActiveNoteStoreProvider>
           </ActiveBoardStoreProvider>
         </ActiveCharacterStoreProvider>
+        </CardPaletteClassManager>
       </ThemeClassManager>
     </ThemeModeManager>
   );
