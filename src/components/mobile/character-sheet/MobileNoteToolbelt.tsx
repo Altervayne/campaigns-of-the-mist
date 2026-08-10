@@ -8,9 +8,10 @@ import MobileSaveToDrawerSheet from '@/components/mobile/character-sheet/MobileS
 
 // -- Hook Imports --
 import { useMobileNoteSave } from '@/hooks/mobile/useMobileNoteSave';
+import { useMobileNoteFileActions } from '@/hooks/mobile/useMobileNoteFileActions';
 
 // -- Icon Imports --
-import { BookOpen, Code, PenLine, Save, SaveAll } from 'lucide-react';
+import { BookOpen, Code, Download, FileUp, PenLine, RefreshCw, Save, SaveAll, Upload } from 'lucide-react';
 
 // -- Type Imports --
 import type { ToolbeltAction } from '@/lib/types/toolbelt';
@@ -47,6 +48,7 @@ export default function MobileNoteToolbelt({
 }: MobileNoteToolbeltProps) {
    const { t } = useTranslation();
    const { save, openSaveAs, confirmSaveAs, isNameSheetOpen, setIsNameSheetOpen, nameSheetDefault } = useMobileNoteSave();
+   const { exportNote, exportMarkdown, importNote, updateNote, dialogs } = useMobileNoteFileActions();
 
    const allActions: ToolbeltAction[] = [
       {
@@ -62,6 +64,38 @@ export default function MobileNoteToolbelt({
          label: t('CharacterSheetPage.SidebarMenu.saveNoteToDrawerAs'),
          icon: SaveAll,
          onClick: openSaveAs,
+         group: 'workspace',
+         show: true,
+      },
+      {
+         id: 'note-export',
+         label: t('CharacterSheetPage.SidebarMenu.exportNote'),
+         icon: Upload,
+         onClick: exportNote,
+         group: 'workspace',
+         show: true,
+      },
+      {
+         id: 'note-import',
+         label: t('CharacterSheetPage.SidebarMenu.importNote'),
+         icon: Download,
+         onClick: importNote,
+         group: 'workspace',
+         show: true,
+      },
+      {
+         id: 'note-export-md',
+         label: t('CharacterSheetPage.SidebarMenu.exportNoteMarkdown'),
+         icon: FileUp,
+         onClick: exportMarkdown,
+         group: 'workspace',
+         show: true,
+      },
+      {
+         id: 'note-update',
+         label: t('CharacterSheetPage.SidebarMenu.updateNote'),
+         icon: RefreshCw,
+         onClick: updateNote,
          group: 'workspace',
          show: true,
       },
@@ -111,6 +145,8 @@ export default function MobileNoteToolbelt({
             onConfirm={confirmSaveAs}
             defaultName={nameSheetDefault}
          />
+
+         {dialogs}
       </>
    );
 }

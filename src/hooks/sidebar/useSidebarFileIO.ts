@@ -14,7 +14,8 @@ import { importBoard, loadBoard } from '@/lib/board/boardRepository';
 import { collectBoardEmbeddedEntities } from '@/lib/board/collectBoardEmbeddedEntities';
 import { prepareImportedBoard } from '@/lib/board/importBoardReferencedCharacters';
 import { getActiveNoteStore } from '@/lib/notes/noteStoreRegistry';
-import { importNote, loadNote } from '@/lib/notes/noteRepository';
+import { importNote } from '@/lib/notes/noteRepository';
+import { exportActiveNote } from '@/lib/notes/noteExport';
 import { reIdNote } from '@/lib/notes/reIdNote';
 import { reIdCharacterAggregate } from '@/lib/character/reIdCharacterAggregate';
 
@@ -207,22 +208,7 @@ export function useSidebarFileIO({ onImportNoteMarkdownFile }: UseSidebarFileIOA
       boardFormRef.current?.reset();
    };
 
-   const handleExportNote = async () => {
-      const store = getActiveNoteStore();
-      if (!store) return;
-      const { noteId } = store.getState();
-      if (!noteId) return;
-      try {
-         // Serialize from the repo (the note store debounce-saves onto its row). A note is a flat
-         // document with no asset references yet, so the generic export needs no embed.
-         const aggregate = await loadNote(noteId);
-         if (!aggregate) return;
-         await exportToFile(aggregate, 'NOTE', 'NEUTRAL', generateExportFilename('NEUTRAL', 'NOTE', aggregate.title));
-         toast.success(tNotifications('Notifications.note.exported'));
-      } catch {
-         toast.error(tNotifications('Notifications.general.exportError'));
-      }
-   };
+   const handleExportNote = () => exportActiveNote(tNotifications);
 
    const handleNoteFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
