@@ -16,15 +16,15 @@ interface MobileBottomTabsProps {
 	isToolbeltOpen: boolean;
 	/** Toggles the toolbelt side-panel open/closed. */
 	onToggleToolbelt: () => void;
-	/** Whether a character is loaded; the Sheet tab greys out when false. */
+	/** Whether the sheet slot holds a surface (a character OR a note); the Sheet tab + toolbelt grey out when false. */
 	hasSheet?: boolean;
 }
 
 export default function MobileBottomTabs({ activeTab, onTabChange, isToolbeltOpen, onToggleToolbelt, hasSheet = true }: MobileBottomTabsProps) {
 	const { t } = useTranslation();
 
-	// The toolbelt only operates on the character sheet, so its trigger is
-	// disabled (and visually grayed) whenever there is no sheet to act on.
+	// The toolbelt acts on the active workspace surface (a character sheet OR a note), so its trigger is
+	// available whenever the sheet slot holds one.
 	const isToolbeltAvailable = activeTab === 'sheet' && hasSheet;
 
 	const tabs = [

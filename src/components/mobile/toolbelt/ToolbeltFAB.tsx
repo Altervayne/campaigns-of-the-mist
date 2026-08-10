@@ -47,6 +47,12 @@ interface ToolbeltFABProps {
 	globalActions: ToolbeltAction[];
 	activeTab?: SheetTab;
 	isMenuFABExpanded?: boolean;
+	/**
+	 * A note tab's editing bar is docked full-width at the bottom. When set, the collapsed wrench drops to the
+	 * bar-clearing height and shifts laterally to sit beside the nav FAB on the same handed edge, so the two
+	 * never overlap and the toolbelt does not stack up the note. The ring still opens on the handed edge.
+	 */
+	clearsNoteBar?: boolean;
 }
 
 
@@ -57,7 +63,8 @@ export default function ToolbeltFAB({
 	itemActions,
 	globalActions,
 	activeTab,
-	isMenuFABExpanded
+	isMenuFABExpanded,
+	clearsNoteBar = false
 }: ToolbeltFABProps) {
 	const { t } = useTranslation();
 	const mobileHandedness = useAppSettingsStore((state) => state.mobileHandedness);
@@ -305,9 +312,18 @@ export default function ToolbeltFAB({
 						"fixed layer-panel",
 						isLeft ? "left-4" : "right-4"
 					)}
-					// Stagger 1 keeps the toolbelt FAB clear of the navigation FAB (stagger 0)
-					// in FAB mode; both ride above the card nav bar on the cards tab.
-					style={{ bottom: getFloatingBottom({ clearsCardsNavBar: !isOpen && activeTab === 'cards', stagger: isOpen ? 0 : 1 }) }}
+					// Off a note, stagger 1 keeps the toolbelt FAB clear of the navigation FAB (stagger 0); both ride
+					// above the card nav bar on the cards tab. On a note, while collapsed, the toolbelt drops to the
+					// bar-clearing height and shifts laterally to sit beside the nav FAB on the same handed edge - past
+					// its 2.75rem width plus a gap - so it neither stacks above the note nor overlaps the nav FAB. Like
+					// the nav FAB, that resting spot applies only while COLLAPSED: on open the nav FAB hides and the
+					// wrench slides back to the base floating spot (edge, stagger 0) to anchor the ring.
+					style={{
+						bottom: clearsNoteBar && !isOpen
+							? getFloatingBottom({ clearsNoteBar: true })
+							: getFloatingBottom({ clearsCardsNavBar: !isOpen && activeTab === 'cards', stagger: isOpen ? 0 : 1 }),
+						...(clearsNoteBar && !isOpen ? { [isLeft ? 'left' : 'right']: '4.5rem' } : {})
+					}}
 					whileTap={{ scale: 0.95 }}
 				>
 					<IconButton

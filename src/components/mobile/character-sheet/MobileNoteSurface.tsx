@@ -31,6 +31,7 @@ import { MobileNoteCoverSheet } from '@/components/mobile/character-sheet/Mobile
 import { MobileNoteImageSheet } from '@/components/mobile/character-sheet/MobileNoteImageSheet';
 import { MobileNoteLinkSheet } from '@/components/mobile/character-sheet/MobileNoteLinkSheet';
 import { MobileNoteLinkPickerSheet } from '@/components/mobile/character-sheet/MobileNoteLinkPickerSheet';
+import MobileNoteToolbelt from '@/components/mobile/character-sheet/MobileNoteToolbelt';
 
 // -- Store Imports --
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
@@ -61,6 +62,12 @@ interface MobileNoteSurfaceProps {
    onOpenSwitcher: () => void;
    /** Reports whether the docked editing bar is showing, so the page can seat the nav FAB into it. */
    onEditingActiveChange?: (active: boolean) => void;
+   /** Whether the note toolbelt is open (owned by the page, shared with the docks-mode toggle). */
+   isToolbeltOpen?: boolean;
+   /** Toggles the note toolbelt open/closed. */
+   onToolbeltOpenChange?: (open: boolean) => void;
+   /** Whether the nav menu FAB is expanded, so the FAB-mode toolbelt wrench can hide and not overlap it. */
+   isMenuFABExpanded?: boolean;
 }
 
 /*
@@ -68,14 +75,14 @@ interface MobileNoteSurfaceProps {
  * instance the same way the desktop NoteView does. It is remounted per note id so its buffers never cross
  * documents.
  */
-export default function MobileNoteSurface({ onOpenSwitcher, onEditingActiveChange }: MobileNoteSurfaceProps) {
+export default function MobileNoteSurface({ onOpenSwitcher, onEditingActiveChange, isToolbeltOpen, onToolbeltOpenChange, isMenuFABExpanded }: MobileNoteSurfaceProps) {
    const store = useActiveNoteInstance();
    if (!store) return null;
-   return <MobileNoteSurfaceInner key={store.getState().noteId ?? 'note'} store={store} onOpenSwitcher={onOpenSwitcher} onEditingActiveChange={onEditingActiveChange} />;
+   return <MobileNoteSurfaceInner key={store.getState().noteId ?? 'note'} store={store} onOpenSwitcher={onOpenSwitcher} onEditingActiveChange={onEditingActiveChange} isToolbeltOpen={isToolbeltOpen} onToolbeltOpenChange={onToolbeltOpenChange} isMenuFABExpanded={isMenuFABExpanded} />;
 }
 
 /** The bound surface, split out so the store subscription runs on a guaranteed-non-null instance. */
-function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }: { store: NoteStore; onOpenSwitcher: () => void; onEditingActiveChange?: (active: boolean) => void }) {
+function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, isToolbeltOpen, onToolbeltOpenChange, isMenuFABExpanded }: { store: NoteStore; onOpenSwitcher: () => void; onEditingActiveChange?: (active: boolean) => void; isToolbeltOpen?: boolean; onToolbeltOpenChange?: (open: boolean) => void; isMenuFABExpanded?: boolean }) {
    const { t } = useTranslation();
 
    const noteId = useStore(store, (state) => state.noteId);
@@ -326,6 +333,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
             onOpenOutline={() => setIsOutlineOpen(true)}
             onOpenSwitcher={onOpenSwitcher}
             isLeftHanded={isLeftHanded}
+            isMobileFABMode={isMobileFABMode}
          />
 
          {/* The one bounded scroll region; the parchment runs full-width edge-to-edge inside it. */}
@@ -436,6 +444,17 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange }
             onRemove={() => editorRef.current?.clearCover()}
             onSetAspect={(aspect) => editorRef.current?.updateCover({ aspect: clampCoverAspect(aspect) })}
             onSetWidth={(widthPct, aspect) => editorRef.current?.updateCover({ width: clampCoverWidth(widthPct), aspect: clampCoverAspect(aspect) })}
+         />
+
+         <MobileNoteToolbelt
+            isOpen={isToolbeltOpen ?? false}
+            onOpenChange={onToolbeltOpenChange ?? (() => {})}
+            isMobileFABMode={isMobileFABMode}
+            isEditing={isEditing}
+            isSource={mode === 'source'}
+            onToggleReadEdit={toggleReadEdit}
+            onToggleSource={toggleSource}
+            isMenuFABExpanded={isMenuFABExpanded}
          />
       </div>
    );

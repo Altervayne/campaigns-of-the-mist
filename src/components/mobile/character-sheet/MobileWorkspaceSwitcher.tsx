@@ -69,6 +69,15 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 	);
 	const activeNoteDirty = useSyncExternalStore(subscribeNoteDirty, readNoteDirty);
 
+	// Whether the active note is drawer-backed (saved). A drawer-backed note keeps its drawer copy when its tab
+	// closes, so it reaps like a character rather than being deleted - the close confirm says so. Only known for
+	// the active note (the denorm carries no link), so a background note tab falls back to the delete copy.
+	const readNoteDrawerBacked = useCallback(
+		() => (activeNoteStore ? activeNoteStore.getState().drawerItemId != null : null),
+		[activeNoteStore],
+	);
+	const activeNoteDrawerBacked = useSyncExternalStore(subscribeNoteDirty, readNoteDrawerBacked);
+
 	const [isChooserOpen, setIsChooserOpen] = useState(false);
 	const [pendingClose, setPendingClose] = useState<OpenTab | null>(null);
 
@@ -105,11 +114,14 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 		onSwitched();
 	};
 
-	// Close confirm copy, by kind. A note is drawer-less on mobile, so closing it deletes the record outright
-	// (a character keeps its drawer copy) - the note body says so plainly rather than promising a reopen.
+	// Close confirm copy, by kind. A drawer-less note (never saved) is deleted outright on close, so its body
+	// says so plainly. A drawer-backed note keeps its drawer copy, so it reaps like a character and shares the
+	// character copy (unsaved edits lost, or reopen from drawer). The title stays note-specific either way.
 	const pendingDirty = pendingClose ? isTabDirty(pendingClose) : false;
+	const pendingNoteDeletes =
+		pendingClose?.type === 'note' && !(pendingClose.id === activeTabId && activeNoteDrawerBacked === true);
 	const confirmTitle = pendingClose?.type === 'note' ? t('Workspace.closeNoteConfirmTitle') : t('Workspace.closeConfirmTitle');
-	const confirmBody = pendingClose?.type === 'note'
+	const confirmBody = pendingNoteDeletes
 		? (pendingDirty ? t('Workspace.closeNoteConfirmDirtyBody') : t('Workspace.closeNoteConfirmCleanBody'))
 		: (pendingDirty ? t('Workspace.closeConfirmDirtyBody') : t('Workspace.closeConfirmCleanBody'));
 

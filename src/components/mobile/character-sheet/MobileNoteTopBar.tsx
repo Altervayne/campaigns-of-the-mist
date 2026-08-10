@@ -29,6 +29,8 @@ interface MobileNoteTopBarProps {
    onOpenSwitcher: () => void;
    /** Docks the Layers trigger on the leading (thumb) edge and clusters the actions there. */
    isLeftHanded: boolean;
+   /** FAB mode relocates the Read + Source toggles into the toolbelt, so the bar sheds them here. */
+   isMobileFABMode: boolean;
 }
 
 /*
@@ -46,6 +48,7 @@ export function MobileNoteTopBar({
    onOpenOutline,
    onOpenSwitcher,
    isLeftHanded,
+   isMobileFABMode,
 }: MobileNoteTopBarProps) {
    const { t } = useTranslation();
    const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -63,36 +66,41 @@ export function MobileNoteTopBar({
             {title}
          </span>
 
-         {/* Action cluster: outline + Reading/Edit toggle + overflow. */}
+         {/* Action cluster: outline, plus the Reading/Edit toggle + Source overflow in docks mode. FAB mode
+             moves those two toggles into the toolbelt, so they drop off the bar here. */}
          <IconButton variant="ghost" size="sm" onClick={onOpenOutline} aria-label={t('NoteView.outline.toggle')}>
             <ListTree className="h-5 w-5" />
          </IconButton>
-         <IconButton
-            variant="ghost"
-            size="sm"
-            onClick={onToggleReadEdit}
-            aria-label={isEditing ? t('NoteView.mobile.read') : t('NoteView.mobile.edit')}
-         >
-            {isEditing ? <BookOpen className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
-         </IconButton>
-         <Popover open={isMoreOpen} onOpenChange={setIsMoreOpen}>
-            <PopoverTrigger asChild>
-               <IconButton variant="ghost" size="sm" aria-label={t('NoteView.mobile.more')}>
-                  <MoreHorizontal className="h-5 w-5" />
-               </IconButton>
-            </PopoverTrigger>
-            <PopoverContent align="end" sideOffset={6} className="w-auto rounded-lg border border-border bg-popover p-1 shadow-md">
-               {/* Source is the demoted third mode: a plain toggle here rather than a primary segment. */}
-               <button
-                  type="button"
-                  onClick={() => { setIsMoreOpen(false); onToggleSource(); }}
-                  className="flex w-full items-center gap-2 rounded p-2 text-left text-sm text-popover-foreground hover:bg-muted cursor-pointer"
+         {!isMobileFABMode && (
+            <>
+               <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleReadEdit}
+                  aria-label={isEditing ? t('NoteView.mobile.read') : t('NoteView.mobile.edit')}
                >
-                  <Code className="h-4 w-4" />
-                  <span className="whitespace-nowrap">{isSource ? t('NoteView.mobile.exitSource') : t('NoteView.mobile.viewSource')}</span>
-               </button>
-            </PopoverContent>
-         </Popover>
+                  {isEditing ? <BookOpen className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
+               </IconButton>
+               <Popover open={isMoreOpen} onOpenChange={setIsMoreOpen}>
+                  <PopoverTrigger asChild>
+                     <IconButton variant="ghost" size="sm" aria-label={t('NoteView.mobile.more')}>
+                        <MoreHorizontal className="h-5 w-5" />
+                     </IconButton>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" sideOffset={6} className="w-auto rounded-lg border border-border bg-popover p-1 shadow-md">
+                     {/* Source is the demoted third mode: a plain toggle here rather than a primary segment. */}
+                     <button
+                        type="button"
+                        onClick={() => { setIsMoreOpen(false); onToggleSource(); }}
+                        className="flex w-full items-center gap-2 rounded p-2 text-left text-sm text-popover-foreground hover:bg-muted cursor-pointer"
+                     >
+                        <Code className="h-4 w-4" />
+                        <span className="whitespace-nowrap">{isSource ? t('NoteView.mobile.exitSource') : t('NoteView.mobile.viewSource')}</span>
+                     </button>
+                  </PopoverContent>
+               </Popover>
+            </>
+         )}
 
          {/* Layers trigger: the switcher opener, on the leading edge (matching the sheet). */}
          <IconButton

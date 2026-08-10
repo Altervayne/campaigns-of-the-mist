@@ -381,7 +381,13 @@ export default function MobileCharacterSheetPage() {
 					/>
 				)}
 				{activeTab === 'sheet' && !character && activeTabType === 'note' && (
-					<MobileNoteSurface onOpenSwitcher={() => setIsSwitcherOpen(true)} onEditingActiveChange={handleNoteEditingActiveChange} />
+					<MobileNoteSurface
+						onOpenSwitcher={() => setIsSwitcherOpen(true)}
+						onEditingActiveChange={handleNoteEditingActiveChange}
+						isToolbeltOpen={isToolbeltOpen}
+						onToolbeltOpenChange={setIsToolbeltOpen}
+						isMenuFABExpanded={isMenuFABExpanded}
+					/>
 				)}
 				{activeTab === 'drawer' && (
 					<MobileDrawer onAddToCharacter={handleAddDrawerItemToCharacter} onLoadCharacter={handleLoadCharacterFromDrawer} />
