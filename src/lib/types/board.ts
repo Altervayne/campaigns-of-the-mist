@@ -10,6 +10,7 @@
 
 // -- Type Imports --
 import type { DiceTrayContent } from '@/lib/dice/diceTrayTypes';
+import type { RollTableContent } from '@/lib/rolltable/types';
 
 /** Board camera: pan offset + zoom. Persisted; a return-to-origin control resets it. */
 export interface Viewport {
@@ -34,7 +35,7 @@ export interface BoardGrid {
 }
 
 /** The kinds of item a board can hold. `connection` is a non-spatial line between two items. */
-export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' | 'card' | 'tracker' | 'connection' | 'pin' | 'dice-tray' | 'zone' | 'character' | 'portal' | 'text' | 'drawing';
+export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' | 'card' | 'tracker' | 'connection' | 'pin' | 'dice-tray' | 'roll-table' | 'zone' | 'character' | 'portal' | 'text' | 'drawing';
 
 /** An image card on the board; reuses IMAGE_CARD semantics (references the shared asset store). */
 export interface ImageBoardContent {
@@ -207,6 +208,13 @@ export type { DieSides, DiceTrayDie, DiceTrayModifier } from '@/lib/dice/diceTra
  * landing on the undo stack or spamming the board with commands. The board adds nothing beyond the tray.
  */
 export type DiceTrayBoardContent = DiceTrayContent & { kind: 'dice-tray' };
+
+/**
+ * A roll table on the board: the game-agnostic {@link RollTableContent} (title / weighted entries / cached
+ * lastRoll / history) plus the board item `kind` tag. The entries + title are undoable; the settled roll
+ * rides the non-undoable cache path (like the dice tray) so it never lands on the undo stack.
+ */
+export type RollTableBoardContent = RollTableContent & { kind: 'roll-table' };
 
 /**
  * A labeled, resizable background frame that groups items (a Figma-style zone). Renders BEHIND
@@ -417,6 +425,7 @@ export type BoardItemContent =
    | ThreatBoardContent
    | PinBoardContent
    | DiceTrayBoardContent
+   | RollTableBoardContent
    | ZoneBoardContent
    | CharacterBoardContent
    | PortalBoardContent

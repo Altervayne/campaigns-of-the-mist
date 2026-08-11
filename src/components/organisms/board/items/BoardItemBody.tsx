@@ -5,6 +5,7 @@ import { BoardJournalItem } from './BoardJournalItem';
 import { ImageItem } from './ImageItem';
 import { PinItem } from './PinItem';
 import { DiceTrayItem } from './DiceTrayItem';
+import { RollTableItem } from './RollTableItem';
 import { BoardCardItem } from './BoardCardItem';
 import { BoardTrackerItem } from './BoardTrackerItem';
 import { CharacterBoardItem } from './CharacterBoardItem';
@@ -73,6 +74,8 @@ export function BoardItemBody({ item, isSelected, isEditing, toolbarSlot, sideSl
          return <ZoneItem content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} memberCount={memberCount} onContentChange={onContentChange} onRequestSelect={onRequestSelect} onPressStart={onPressStart} />;
       case 'dice-tray':
          return <DiceTrayItem item={item} content={content} isSelected={isSelected} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onRequestSelect={onRequestSelect} />;
+      case 'roll-table':
+         return <RollTableItem item={item} content={content} isEditing={isEditing} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onRequestSelect={onRequestSelect} />;
       case 'card':
          return <BoardCardItem item={item} content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onAdoptSource={onAdoptSource} onDelete={onDelete} />;
       case 'tracker':

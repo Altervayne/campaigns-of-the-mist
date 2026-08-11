@@ -10,7 +10,7 @@ import { CREATABLE_REGISTRY, CREATABLE_BY_KIND, type CreatableKind } from './cre
  * (so a surface indexing by kind can never build the wrong content).
  */
 
-const EXPECTED_KINDS: CreatableKind[] = ['post-it', 'text', 'journal', 'image', 'pin', 'dice-tray', 'zone', 'portal'];
+const EXPECTED_KINDS: CreatableKind[] = ['post-it', 'text', 'journal', 'image', 'pin', 'dice-tray', 'roll-table', 'zone', 'portal'];
 
 describe('creatableRegistry', () => {
    it('exposes every board kind exactly once, in ring order', () => {

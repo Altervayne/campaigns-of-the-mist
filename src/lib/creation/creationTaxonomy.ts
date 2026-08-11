@@ -67,7 +67,7 @@ const TRACKER_ROWS: CreationTrackerRow[] = [
  */
 export const CREATION_TAXONOMY: CreationGroup[] = [
    { key: 'basic', icon: Shapes, labelKey: 'BoardView.creationBasic', kinds: ['text', 'image', 'pin', 'portal'] },
-   { key: 'rich', icon: VectorSquare, labelKey: 'BoardView.creationRich', kinds: ['post-it', 'journal', 'zone', 'dice-tray'] },
+   { key: 'rich', icon: VectorSquare, labelKey: 'BoardView.creationRich', kinds: ['post-it', 'journal', 'zone', 'dice-tray', 'roll-table'] },
    {
       key: 'game',
       icon: Gamepad,

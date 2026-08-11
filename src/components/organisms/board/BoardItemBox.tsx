@@ -41,7 +41,7 @@ const RING_SCREEN_PX = 2;
  * content as a floor - it can be dragged taller (2D resize) but never shorter than the content,
  * and auto-grows when the content exceeds the current height. (Reusable by future form-like kinds.)
  */
-const MIN_HEIGHT_KINDS = new Set<BoardItemKind>(['dice-tray']);
+const MIN_HEIGHT_KINDS = new Set<BoardItemKind>(['dice-tray', 'roll-table']);
 const isMinHeight = (kind: BoardItemKind): boolean => MIN_HEIGHT_KINDS.has(kind);
 
 /**

@@ -8,7 +8,7 @@ import type { BoardItemKind } from '@/lib/types/board';
 
 /** The kinds with a text-edit sub-state: a body click selects, then a second click (or a click on an
  *  already-selected one) promotes it to editing (focused editor). Every other kind has no editing state. */
-const TEXT_EDITABLE_KINDS = new Set<BoardItemKind>(['post-it', 'journal', 'text']);
+const TEXT_EDITABLE_KINDS = new Set<BoardItemKind>(['post-it', 'journal', 'text', 'roll-table']);
 export const isTextEditableKind = (kind: BoardItemKind | undefined): boolean => kind !== undefined && TEXT_EDITABLE_KINDS.has(kind);
 
 /** Screen-px a pointer must travel before a drag arms a move/marquee; a sub-threshold press dispatches nothing. */

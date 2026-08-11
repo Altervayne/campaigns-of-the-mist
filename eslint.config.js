@@ -158,10 +158,13 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
-  // Same guard for the roll-table module: the data model + the pure weighted-pick roll stay focused.
+  // Same guard for the roll-table module + its board element: the data model, the pure weighted-pick roll,
+  // the item container, and its decomposed entry row / read view stay focused.
   {
     files: [
       'src/lib/rolltable/**/*.{ts,tsx}',
+      'src/components/organisms/board/items/RollTableItem.tsx',
+      'src/components/organisms/board/items/rolltable/**/*.{ts,tsx}',
     ],
     rules: {
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],

@@ -2,7 +2,7 @@
 import cuid from 'cuid';
 
 // -- Icon Imports --
-import { Dices, Frame, Image as ImageIcon, MapPin, NotebookText, SquareArrowOutUpRight, StickyNote, Type } from 'lucide-react';
+import { Dices, Frame, Image as ImageIcon, ListOrdered, MapPin, NotebookText, SquareArrowOutUpRight, StickyNote, Type } from 'lucide-react';
 
 // -- Utils Imports --
 import { defaultTextStyle } from '@/lib/board/textStyle';
@@ -23,7 +23,7 @@ import type { BoardItemContent } from '@/lib/types/board';
  */
 
 /** The board-native item kinds the creation surfaces can build. */
-export type CreatableKind = 'post-it' | 'text' | 'journal' | 'image' | 'pin' | 'dice-tray' | 'zone' | 'portal';
+export type CreatableKind = 'post-it' | 'text' | 'journal' | 'image' | 'pin' | 'dice-tray' | 'roll-table' | 'zone' | 'portal';
 
 /** A fresh pin's color (classic corkboard red). */
 const DEFAULT_PIN_COLOR = '#ef4444';
@@ -97,6 +97,13 @@ export const CREATABLE_REGISTRY: CreatableEntry[] = [
       labelKey: 'addDiceTray',
       defaultSize: { width: 220, height: 260 },
       makeContent: () => ({ kind: 'dice-tray', title: '', dice: [{ id: cuid(), sides: 6 }, { id: cuid(), sides: 6 }], modifiers: [] }),
+   },
+   {
+      kind: 'roll-table',
+      icon: ListOrdered,
+      labelKey: 'addRollTable',
+      defaultSize: { width: 240, height: 260 },
+      makeContent: () => ({ kind: 'roll-table', title: '', entries: [{ id: cuid(), weight: 1, text: '' }, { id: cuid(), weight: 1, text: '' }] }),
    },
    {
       kind: 'zone',
