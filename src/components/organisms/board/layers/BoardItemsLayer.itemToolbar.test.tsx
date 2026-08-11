@@ -67,6 +67,8 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
          interacting={false}
          groupBbox={null}
          groupDrag={null}
+         snapGuides={[]}
+         snapBadges={[]}
          connectPreview={null}
          penPreview={null}
          polygonPreview={null}

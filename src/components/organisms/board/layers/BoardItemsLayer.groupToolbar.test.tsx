@@ -83,6 +83,8 @@ function renderLayer(overrides: {
          interacting={false}
          groupBbox={overrides.groupBbox}
          groupDrag={null}
+         snapGuides={[]}
+         snapBadges={[]}
          connectPreview={null}
          penPreview={null}
          polygonPreview={null}

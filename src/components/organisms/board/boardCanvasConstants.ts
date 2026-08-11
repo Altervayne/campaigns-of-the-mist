@@ -15,3 +15,5 @@ export const isTextEditableKind = (kind: BoardItemKind | undefined): boolean => 
 export const MOVE_THRESHOLD = 5;
 /** Screen-px a right-drag must travel to pan instead of opening the radial (larger so a jittery right-click still opens it). */
 export const RIGHT_PAN_THRESHOLD = 8;
+/** Screen-px pull radius for alignment snapping while a Shift-held move is in progress (divided by zoom for world units). */
+export const SNAP_PX = 6;

@@ -15,11 +15,13 @@ import { BoardItemBox } from '../BoardItemBox';
 import { BoardConnectionsLayer } from '../BoardConnectionsLayer';
 import { BoardGroupToolbar } from '../BoardGroupToolbar';
 import { StrokeShape } from '../items/BoardDrawingItem';
+import { SnapOverlay } from './SnapOverlay';
 
 // -- Type Imports --
 import type { BoardState } from '@/lib/stores/boardStore';
 import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, Viewport } from '@/lib/types/board';
 import type { Point } from '@/lib/board/boardConnections';
+import type { DistanceBadge, GuideSegment } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
  *  the full set (width + color + dash), so any single-facet edit keeps the others. */
@@ -50,6 +52,9 @@ interface BoardItemsLayerProps {
    interacting: boolean;
    groupBbox: { x: number; y: number; width: number; height: number } | null;
    groupDrag: { ids: Set<string>; delta: { x: number; y: number } } | null;
+   /** Alignment guides and equal-spacing badges for the in-progress Shift-held move (empty otherwise). */
+   snapGuides: GuideSegment[];
+   snapBadges: DistanceBadge[];
    connectPreview: { fromId: string; cursor: Point } | null;
    penPreview: number[] | null;
    polygonPreview: number[] | null;
@@ -93,6 +98,8 @@ export function BoardItemsLayer({
    interacting,
    groupBbox,
    groupDrag,
+   snapGuides,
+   snapBadges,
    connectPreview,
    penPreview,
    polygonPreview,
@@ -226,6 +233,12 @@ export function BoardItemsLayer({
             onUpdateStyle={(id, style) => void actions.updateItemContent(id, buildConnectionContent(items[id], style))}
             onDelete={handleDelete}
          />
+
+         {/* Alignment guides and equal-spacing badges for a Shift-held move: bounded world-space lines at the
+             aligned edge/center coords plus gap measures. Inert; counter-scaled to a constant on-screen
+             weight; theme accent, tops the layer. */}
+         <SnapOverlay guides={snapGuides} badges={snapBadges} zoom={viewport.zoom} zIndex={groupToolbarZIndex(layerCount)} />
+
 
          {/* In-flight pen stroke: painted in the WORLD layer (its points are world coords), so it tracks
              the cursor under pan/zoom while the overlay captures in screen. Tops the layer so it draws

@@ -35,7 +35,7 @@ import { BoardGridLayer } from './layers/BoardGridLayer';
 import { BoardItemsLayer } from './layers/BoardItemsLayer';
 import { BoardToolbar } from './toolbar/BoardToolbar';
 import { BoardNamePill } from './toolbar/BoardNamePill';
-import { isTextEditableKind, MOVE_THRESHOLD, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
+import { isTextEditableKind, RIGHT_PAN_THRESHOLD } from './boardCanvasConstants';
 import { isEditableTarget } from '@/lib/utils/textEntry';
 
 // -- Store Imports --
@@ -92,6 +92,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    const {
       marquee,
       groupDrag,
+      snapGuides,
+      snapBadges,
       connectPreview,
       moveDeltaFor,
       handleMoveStart,
@@ -312,37 +314,16 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    }, [toggleLayersPanel]);
 
    /**
-    * An item's body press (deferred, shared with the grip). Plain: a drag past the threshold moves it
-    * group-aware from the down origin (no jump); a click with no drag selects it (a modifier toggles it
-    * in/out of the set), and a text kind's plain click also promotes it to editing (focus the editor).
-    * Shift: a drag draws an additive marquee anchored at the item, a click toggles it. A text item that is
-    * already editing keeps the pointer on its own field (the box only routes the press here when it isn't).
+    * An item's body press (deferred, shared with the grip). A drag past the threshold moves it group-aware
+    * from the down origin (no jump); a click with no drag selects it (a Shift/Ctrl/Meta modifier toggles it
+    * in/out of the set), and a text kind's plain click also promotes it to editing (focus the editor). Shift
+    * held during the drag engages alignment snapping (handled in the move); a text item that is already
+    * editing keeps the pointer on its own field (the box only routes the press here when it isn't).
     */
    const handleItemPointerDown = useCallback(
       (id: string, event: ReactPointerEvent) => {
          if (event.button !== 0) return;
-         if (event.shiftKey) {
-            const startX = event.clientX;
-            const startY = event.clientY;
-            let started = false;
-            const onMove = (moveEvent: PointerEvent) => {
-               if (started) return;
-               if (Math.abs(moveEvent.clientX - startX) < MOVE_THRESHOLD && Math.abs(moveEvent.clientY - startY) < MOVE_THRESHOLD) return;
-               started = true;
-               window.removeEventListener('pointermove', onMove);
-               window.removeEventListener('pointerup', onUp);
-               beginMarquee(startX, startY, { additive: true });
-            };
-            const onUp = () => {
-               window.removeEventListener('pointermove', onMove);
-               window.removeEventListener('pointerup', onUp);
-               if (!started) actions.selectItem(id, true); // a shift-click with no drag toggles this item
-            };
-            window.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', onUp);
-            return;
-         }
-         const additive = event.ctrlKey || event.metaKey;
+         const additive = event.shiftKey || event.ctrlKey || event.metaKey;
          const editable = isTextEditableKind(store.getState().items[id]?.kind);
          handleMoveStart(id, event, {
             onClickNoMove: () => {
@@ -353,7 +334,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             },
          });
       },
-      [actions, beginMarquee, handleMoveStart, setEditingId, store],
+      [actions, handleMoveStart, setEditingId, store],
    );
 
    const handleBackgroundPointerDown = (event: ReactPointerEvent) => {
@@ -548,6 +529,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             interacting={interacting}
             groupBbox={groupBbox}
             groupDrag={groupDrag}
+            snapGuides={snapGuides}
+            snapBadges={snapBadges}
             connectPreview={connectPreview}
             penPreview={penPreview}
             polygonPreview={polygonPreview}

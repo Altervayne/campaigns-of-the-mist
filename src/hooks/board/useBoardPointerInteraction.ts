@@ -8,13 +8,15 @@ import cuid from 'cuid';
 // -- Utils Imports --
 import { itemsInMarquee, screenDeltaToWorld, screenToWorld } from '@/lib/board/boardCoordinates';
 import { DEFAULT_CONNECTION_STYLE } from '@/lib/board/boardConnections';
-import { MOVE_THRESHOLD } from '@/components/organisms/board/boardCanvasConstants';
+import { computeGuides } from '@/lib/board/boardSnapping';
+import { MOVE_THRESHOLD, SNAP_PX } from '@/components/organisms/board/boardCanvasConstants';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';
 import type { Viewport } from '@/lib/types/board';
 import type { Point } from '@/lib/board/boardConnections';
 import type { Card } from '@/lib/types/character';
+import type { DistanceBadge, GuideSegment, Rect } from '@/lib/board/boardSnapping';
 
 interface UseBoardPointerInteractionArgs {
    store: BoardStore;
@@ -52,6 +54,11 @@ export function useBoardPointerInteraction({
    // The live group-move delta applies to every item in the active drag.
    const moveDeltaFor = (id: string) => (groupDrag && groupDrag.ids.has(id) ? groupDrag.delta : null);
 
+   // Alignment guides and equal-spacing badges for the in-progress Shift-held move (empty otherwise).
+   // Rendered in the world layer.
+   const [snapGuides, setSnapGuides] = useState<GuideSegment[]>([]);
+   const [snapBadges, setSnapBadges] = useState<DistanceBadge[]>([]);
+
    // The in-progress connect drag (preview line follows the cursor in world coords).
    const [connectPreview, setConnectPreview] = useState<{ fromId: string; cursor: Point } | null>(null);
 
@@ -61,7 +68,9 @@ export function useBoardPointerInteraction({
     * never jumps; a sub-threshold release is a click - it dispatches no move and runs `onClickNoMove`
     * instead (the body passes a select there; the grip passes nothing, so a grip click is a no-op). The
     * whole selection moves if the grabbed item is in it; otherwise it selects just that item and moves it
-    * alone. A shared world delta renders live; one compound command on release.
+    * alone. A shared world delta renders live; one compound command on release. Holding Shift during the
+    * move engages alignment + equal-spacing snapping (read live per sample) against the other items' edges,
+    * centers, and inter-element gaps.
     */
    const handleMoveStart = useCallback(
       (id: string, event: ReactPointerEvent, options?: { onClickNoMove?: () => void }) => {
@@ -75,6 +84,10 @@ export function useBoardPointerInteraction({
          let ids: Set<string> | null = null;
          let reevaluate: string[] = [];
          let delta = { x: 0, y: 0 };
+         // The snap targets (every non-moving spatial item) and the moving set's raw bbox, both fixed for
+         // the gesture; computed once when the move arms. Null bbox means the moving set has no extent.
+         let snapTargets: Rect[] = [];
+         let movingBbox: Rect | null = null;
 
          // Arms the (group-aware) move on the first past-threshold sample. Expand the set with every member
          // of any zone in it so a zone carries its contents; `reevaluate` is the directly-grabbed non-zone
@@ -90,6 +103,22 @@ export function useBoardPointerInteraction({
             }
             ids = set;
             reevaluate = [...base].filter((baseId) => liveItems[baseId] && liveItems[baseId].kind !== 'zone');
+            // Snap candidates: every spatial item outside the moving set. The moving raw bbox unions the
+            // moving members' rects, so the whole set snaps by its own outline.
+            snapTargets = [];
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const item of Object.values(liveItems)) {
+               if (item.kind === 'connection') continue;
+               if (set.has(item.id)) {
+                  minX = Math.min(minX, item.x);
+                  minY = Math.min(minY, item.y);
+                  maxX = Math.max(maxX, item.x + item.width);
+                  maxY = Math.max(maxY, item.y + item.height);
+               } else {
+                  snapTargets.push({ x: item.x, y: item.y, width: item.width, height: item.height });
+               }
+            }
+            movingBbox = Number.isFinite(minX) ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY } : null;
             delta = screenDeltaToWorld(moveEvent.clientX - startX, moveEvent.clientY - startY, zoom);
             setGroupDrag({ ids, delta });
          };
@@ -100,12 +129,28 @@ export function useBoardPointerInteraction({
                arm(moveEvent);
                return;
             }
-            delta = screenDeltaToWorld(moveEvent.clientX - startX, moveEvent.clientY - startY, zoom);
+            const raw = screenDeltaToWorld(moveEvent.clientX - startX, moveEvent.clientY - startY, zoom);
+            // Shift engages alignment + equal-spacing snapping (read live, so a press/release toggles it
+            // mid-drag); the combined adjust folds into the delta so it carries straight to the commit.
+            // Guides and distance badges render only while held.
+            if (moveEvent.shiftKey && movingBbox) {
+               const offset: Rect = { x: movingBbox.x + raw.x, y: movingBbox.y + raw.y, width: movingBbox.width, height: movingBbox.height };
+               const { adjust, guides, badges } = computeGuides(offset, snapTargets, SNAP_PX / zoom);
+               delta = { x: raw.x + adjust.x, y: raw.y + adjust.y };
+               setSnapGuides(guides);
+               setSnapBadges(badges);
+            } else {
+               delta = raw;
+               setSnapGuides([]);
+               setSnapBadges([]);
+            }
             setGroupDrag({ ids, delta });
          };
          const onUp = () => {
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', onUp);
+            setSnapGuides([]);
+            setSnapBadges([]);
             if (ids) {
                setGroupDrag(null);
                if (delta.x !== 0 || delta.y !== 0) void actions.moveItems([...ids], delta, reevaluate);
@@ -219,6 +264,8 @@ export function useBoardPointerInteraction({
    return {
       marquee,
       groupDrag,
+      snapGuides,
+      snapBadges,
       connectPreview,
       moveDeltaFor,
       handleMoveStart,
