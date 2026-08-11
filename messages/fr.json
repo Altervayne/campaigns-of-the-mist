@@ -1063,7 +1063,41 @@
          "newPaletteName": "[TO COMPLETE]",
          "deleteConfirmTitle": "[TO COMPLETE]",
          "deleteConfirmDescription": "[TO COMPLETE]",
-         "deleteConfirmButton": "[TO COMPLETE]"
+         "deleteConfirmButton": "[TO COMPLETE]",
+         "editPalettes": "[TO COMPLETE]",
+         "cardTypeLabel": "[TO COMPLETE]",
+         "cardTypeMissing": "[TO COMPLETE]",
+         "duplicateToEdit": "[TO COMPLETE]",
+         "discardBody": "[TO COMPLETE]",
+         "preview": {
+            "title": "[TO COMPLETE]",
+            "body": "[TO COMPLETE]",
+            "accent": "[TO COMPLETE]",
+            "popover": "[TO COMPLETE]",
+            "destructive": "[TO COMPLETE]",
+            "mockLabel": "[TO COMPLETE]",
+            "trackerLabel": "[TO COMPLETE]",
+            "cardLabel": "[TO COMPLETE]"
+         },
+         "types": {
+            "hero": "[TO COMPLETE]",
+            "fellowship": "[TO COMPLETE]",
+            "origin": "[TO COMPLETE]",
+            "adventure": "[TO COMPLETE]",
+            "greatness": "[TO COMPLETE]",
+            "rift": "[TO COMPLETE]",
+            "crew": "[TO COMPLETE]",
+            "mythos": "[TO COMPLETE]",
+            "logos": "[TO COMPLETE]",
+            "character": "[TO COMPLETE]",
+            "loadout": "[TO COMPLETE]",
+            "self": "[TO COMPLETE]",
+            "noise": "[TO COMPLETE]",
+            "challenge": "[TO COMPLETE]",
+            "status": "[TO COMPLETE]",
+            "storytag": "[TO COMPLETE]",
+            "storytheme": "[TO COMPLETE]"
+         }
       },
       "themes": {
          "editThemes": "Modifier les Thèmes",
@@ -1214,6 +1248,7 @@
                "paper-secondary-foreground": "Texte secondaire",
                "paper-border": "Bordure",
                "paper-accent": "Accent",
+               "paper-accent-foreground": "[TO COMPLETE]",
                "paper-destructive": "Danger",
                "paper-destructive-foreground": "Texte de danger"
             },
@@ -1226,6 +1261,7 @@
                "paper-secondary-foreground": "Le texte sur ces pastilles secondaires.",
                "paper-border": "Le contour autour d'un élément papier et ses séparateurs.",
                "paper-accent": "L'accent marquant sur le papier, comme un bord surligné.",
+               "paper-accent-foreground": "[TO COMPLETE]",
                "paper-destructive": "Les éléments dangereux sur le papier, comme brûler ou retirer.",
                "paper-destructive-foreground": "Le texte sur la couleur de danger."
             }

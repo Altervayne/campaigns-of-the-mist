@@ -62,11 +62,11 @@ export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPrev
    const contextGame = useCharacterStore((state) => state.character?.game);
    const cardTheme = isDrawerPreview ? '' : (
       contextGame === 'CITY_OF_MIST'
-         ? 'card-type-tracker-city'
+         ? 'card-type-storytheme-com'
          : contextGame === 'OTHERSCAPE'
-            ? 'card-type-tracker-otherscape'
+            ? 'card-type-storytheme-otherscape'
             : contextGame === 'LEGENDS'
-               ? 'card-type-story-theme'
+               ? 'card-type-storytheme-legends'
                : '');
 
 

@@ -150,6 +150,7 @@
    --paper-secondary:            hsl(42 38% 82%);
    --paper-secondary-foreground: hsl(30 18% 22%);
    --paper-accent:               hsl(34 48% 50%);
+   --paper-accent-foreground:    hsl(40 56% 93%);
    --paper-destructive:          hsl(10 72% 82%);
    --paper-destructive-foreground: hsl(12 35% 24%);
 }
@@ -164,6 +165,7 @@
    --card-paper-bg:        var(--paper-background);
    --card-paper-fg:        var(--paper-foreground);
    --card-accent:          var(--paper-accent);
+   --card-accent-fg:       var(--paper-accent-foreground);
    --card-border:          var(--paper-border);
    --card-popover-bg:      var(--paper-secondary);
    --card-popover-fg:      var(--paper-secondary-foreground);
@@ -357,7 +359,7 @@
    --card-destructive-bg:  hsl(10 79% 83%);
    --card-destructive-fg:  hsl(214 14% 22%);
 }
-.card-type-tracker-legends {
+.card-type-status-legends, .card-type-storytag-legends {
    --card-header-bg:       hsl(120 26% 43%);
    --card-header-fg:       hsl(40 68% 92%);
    --card-paper-bg:        hsl(39 62% 92%);
@@ -369,7 +371,7 @@
    --card-destructive-bg:  hsl(10 79% 83%);
    --card-destructive-fg:  hsl(214 14% 22%);
 }
-.card-type-tracker-city {
+.card-type-status-com, .card-type-storytag-com, .card-type-storytheme-com {
    --card-header-bg:       hsl(286 35% 46%);
    --card-header-fg:       hsl(290 27% 96%);
    --card-paper-bg:        hsl(290 27% 96%);
@@ -381,7 +383,7 @@
    --card-destructive-bg:  hsl(340 79% 83%);
    --card-destructive-fg:  hsl(325 26% 18%);
 }
-.card-type-story-theme {
+.card-type-storytheme-legends {
    --card-header-bg:       hsl(43 50% 40%);
    --card-header-fg:       hsl(40 68% 92%);
    --card-paper-bg:        hsl(39 62% 92%);
@@ -430,7 +432,7 @@
    --card-destructive-fg:  hsl(214 14% 22%);
 }
 /* GM Challenge Card: an ominous dark-crimson header on aged parchment. */
-.card-type-challenge {
+.card-type-challenge-legends, .card-type-challenge-com {
    --card-header-bg:       hsl(0 52% 30%);
    --card-header-fg:       hsl(40 68% 92%);
    --card-paper-bg:        hsl(34 44% 88%);
@@ -496,16 +498,6 @@
    --card-border:       hsl(270 12% 18%);
    --card-popover-bg:   hsl(270 6% 57%);
    --card-popover-fg:   hsl(270 10% 12%);
-}
-.card-type-character-com {
-   --card-header-bg:    hsl(280 50% 35%);
-   --card-header-fg:    hsl(280 20% 96%);
-   --card-paper-bg:     hsl(280 20% 96%);
-   --card-paper-fg:     hsl(280 30% 18%);
-   --card-accent:       hsl(280 45% 30%);
-   --card-border:       hsl(280 30% 18%);
-   --card-popover-bg:   hsl(280 15% 72%);
-   --card-popover-fg:   hsl(280 25% 15%);
 }
 
 /* --- Otherscape Card Themes --- */
@@ -589,7 +581,7 @@
    --card-popover-bg:   hsl(200 8% 75%);
    --card-popover-fg:   hsl(210 18% 15%);
 }
-.card-type-tracker-otherscape {
+.card-type-status-otherscape, .card-type-storytag-otherscape, .card-type-storytheme-otherscape {
    --card-header-bg:       hsl(190 70% 30%);
    --card-header-fg:       hsl(0 0% 92%);
    --card-paper-bg:        hsl(0 0% 92%);

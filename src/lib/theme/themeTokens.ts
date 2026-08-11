@@ -27,7 +27,7 @@ export type ChromeTokenKey = (typeof CHROME_TOKEN_KEYS)[number];
 export type TokenSet = Record<ChromeTokenKey, string>;
 
 /**
- * The 10 "paper" tokens: a game-agnostic palette for elements that use the card-* paper look without a game
+ * The 11 "paper" tokens: a game-agnostic palette for elements that use the card-* paper look without a game
  * card-type (drawer trackers, NEUTRAL items). MODE-AGNOSTIC - one value each, no light/dark split, so paper
  * reads the same in both modes like a real game card. Drives the `:root` card-* fallback in global.css.
  */
@@ -35,7 +35,7 @@ export const PAPER_TOKEN_KEYS = [
    'paper-background', 'paper-foreground', 'paper-border',
    'paper-primary', 'paper-primary-foreground',
    'paper-secondary', 'paper-secondary-foreground',
-   'paper-accent',
+   'paper-accent', 'paper-accent-foreground',
    'paper-destructive', 'paper-destructive-foreground',
 ] as const;
 
@@ -54,6 +54,7 @@ export const CLASSIC_PAPER: PaperSet = {
    'paper-secondary': 'hsl(42 38% 82%)',
    'paper-secondary-foreground': 'hsl(30 18% 22%)',
    'paper-accent': 'hsl(34 48% 50%)',
+   'paper-accent-foreground': 'hsl(40 56% 93%)',
    'paper-destructive': 'hsl(10 72% 82%)',
    'paper-destructive-foreground': 'hsl(12 35% 24%)',
 };
@@ -149,7 +150,7 @@ export function paperSetToCssVars(paper: PaperSet): string {
 }
 
 /**
- * The editor's grouping of the 10 paper tokens, like TOKEN_GROUPS but single-column (paper is mode-agnostic).
+ * The editor's grouping of the 11 paper tokens, like TOKEN_GROUPS but single-column (paper is mode-agnostic).
  * Surface paired with its foreground where there is one. Labels are i18n (`SettingsDialog.themes.paper.*`).
  */
 export const PAPER_GROUPS: { id: string; tokens: PaperTokenKey[] }[] = [
@@ -157,7 +158,7 @@ export const PAPER_GROUPS: { id: string; tokens: PaperTokenKey[] }[] = [
    { id: 'paper-header', tokens: ['paper-primary', 'paper-primary-foreground'] },
    { id: 'paper-secondary', tokens: ['paper-secondary', 'paper-secondary-foreground'] },
    { id: 'paper-lines', tokens: ['paper-border'] },
-   { id: 'paper-accent', tokens: ['paper-accent'] },
+   { id: 'paper-accent', tokens: ['paper-accent', 'paper-accent-foreground'] },
    { id: 'paper-danger', tokens: ['paper-destructive', 'paper-destructive-foreground'] },
 ];
 

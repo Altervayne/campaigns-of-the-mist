@@ -7,6 +7,7 @@ import {
    CARD_TYPES_BY_GAME,
    cardTypeCss,
    cardPaletteCss,
+   cardPaletteFieldsEqual,
 } from './cardPalettes';
 import type { CardPalette, CardPaletteGame } from './cardPalettes';
 
@@ -40,8 +41,15 @@ describe('CARD_TYPES_BY_GAME', () => {
    });
 
    it('paints the Otherscape character on both its board and sheet classes', () => {
-      const def = CARD_TYPES_BY_GAME.OTHERSCAPE.find((entry) => entry.slug === 'character-otherscape');
+      const def = CARD_TYPES_BY_GAME.OTHERSCAPE.find((entry) => entry.slug === 'character');
       expect(def?.classes).toEqual(['card-type-character-otherscape', 'card-type-character-os']);
+   });
+
+   it('reuses the shared challenge slug across games with a per-game class', () => {
+      const legends = CARD_TYPES_BY_GAME.LEGENDS.find((entry) => entry.slug === 'challenge');
+      const city = CARD_TYPES_BY_GAME.CITY_OF_MIST.find((entry) => entry.slug === 'challenge');
+      expect(legends?.classes).toEqual(['card-type-challenge-legends']);
+      expect(city?.classes).toEqual(['card-type-challenge-com']);
    });
 
    it('excludes the game-agnostic image card', () => {
@@ -87,5 +95,50 @@ describe('cardPaletteCss', () => {
       const reversed: CardPalette = { ...palette, cardTypes: { fellowship: makePaper('f'), hero: makePaper('h') } };
       const css = cardPaletteCss(reversed);
       expect(css.indexOf('.card-type-hero {')).toBeLessThan(css.indexOf('.card-type-fellowship {'));
+   });
+});
+
+describe('cardPaletteFieldsEqual', () => {
+   const base: CardPalette = {
+      id: 'p1',
+      game: 'LEGENDS',
+      name: 'Test',
+      cardTypes: { hero: makePaper('hero'), fellowship: makePaper('fellowship') },
+   };
+
+   it('is true for a deep copy', () => {
+      const copy: CardPalette = {
+         ...base,
+         cardTypes: { hero: makePaper('hero'), fellowship: makePaper('fellowship') },
+      };
+      expect(cardPaletteFieldsEqual(base, copy)).toBe(true);
+   });
+
+   it('ignores slug insertion order', () => {
+      const reordered: CardPalette = {
+         ...base,
+         cardTypes: { fellowship: makePaper('fellowship'), hero: makePaper('hero') },
+      };
+      expect(cardPaletteFieldsEqual(base, reordered)).toBe(true);
+   });
+
+   it('is false when a single token differs', () => {
+      const edited: CardPalette = {
+         ...base,
+         cardTypes: { ...base.cardTypes, hero: { ...base.cardTypes.hero, 'paper-primary': '#000' } },
+      };
+      expect(cardPaletteFieldsEqual(base, edited)).toBe(false);
+   });
+
+   it('is false when the name differs', () => {
+      expect(cardPaletteFieldsEqual(base, { ...base, name: 'Other' })).toBe(false);
+   });
+
+   it('is false when the card-type set differs in size', () => {
+      const extra: CardPalette = {
+         ...base,
+         cardTypes: { ...base.cardTypes, origin: makePaper('origin') },
+      };
+      expect(cardPaletteFieldsEqual(base, extra)).toBe(false);
    });
 });

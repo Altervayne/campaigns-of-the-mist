@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 // -- Icon Imports --
-import { Check, Copy, GripVertical, MoreHorizontal, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Check, Copy, GripVertical, MoreHorizontal, Palette, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 // -- DnD Component Imports --
 import { Sortable, DragStaticWrapper } from '@/components/dnd';
@@ -87,8 +87,13 @@ function PaletteSwatch({ set, className }: { set: PaperSet | null; className?: s
    );
 }
 
-/** Lists, selects, and CRUDs one game's card palettes. Editing palette contents lands with the editor. */
-export function CardPaletteManager({ game }: { game: CardPaletteGame }) {
+/**
+ * Lists, selects, and CRUDs one game's card palettes; editing a palette's contents opens the editor takeover.
+ * `onEnterEditor` drops into that editor after selecting a palette (the per-custom pencil + the New button);
+ * `guardedSwitch` routes every draft-abandoning action (select, New, Duplicate) through the pane's dirty guard.
+ * Both default to inert so the manager still renders standalone.
+ */
+export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proceed) => proceed() }: { game: CardPaletteGame; onEnterEditor?: () => void; guardedSwitch?: (proceed: () => void) => void }) {
    const { t } = useTranslation();
    const cardPalettes = useAppSettingsStore((state) => state.cardPalettes);
    const activeCardPalettes = useAppSettingsStore((state) => state.activeCardPalettes);
@@ -117,9 +122,11 @@ export function CardPaletteManager({ game }: { game: CardPaletteGame }) {
 
    const createFrom = useCreateCardPalette();
    // Duplicate any entry into a new, independent custom (deep-copied card-type colors), then select it.
-   const duplicate = (row: PaletteRow) => createFrom(game, row.cardTypes, t('SettingsDialog.cardPalettes.copyName', { name: row.label }));
-   // Start a fresh palette from the Default (also the empty-state action), then select it.
-   const createNew = () => createFrom(game, defaultCardTypes, t('SettingsDialog.cardPalettes.newPaletteName'));
+   const duplicate = (row: PaletteRow) => guardedSwitch(() => createFrom(game, row.cardTypes, t('SettingsDialog.cardPalettes.copyName', { name: row.label })));
+   // Start a fresh palette from the Default (also the empty-state action), select it, then edit it.
+   const createNew = () => guardedSwitch(() => { createFrom(game, defaultCardTypes, t('SettingsDialog.cardPalettes.newPaletteName')); onEnterEditor?.(); });
+   // Per-custom one-click edit: select the row's palette, then drop into the editor takeover on it.
+   const editCustom = (row: PaletteRow) => guardedSwitch(() => { if (row.id !== activeId) setActiveCardPalette(game, row.id); onEnterEditor?.(); });
 
    const startRename = (id: string, current: string) => { setRenamingId(id); setRenameDraft(current); };
    const commitRename = (id: string) => {
@@ -159,7 +166,7 @@ export function CardPaletteManager({ game }: { game: CardPaletteGame }) {
       return (
          <div
             key={row.id}
-            onClick={() => { if (row.id !== activeId) setActiveCardPalette(game, row.id); }}
+            onClick={() => { if (row.id !== activeId) guardedSwitch(() => setActiveCardPalette(game, row.id)); }}
             className={cn(
                'group/row relative flex cursor-pointer items-center rounded-md',
                isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
@@ -184,6 +191,21 @@ export function CardPaletteManager({ game }: { game: CardPaletteGame }) {
             <PaletteSwatch set={representativeSet(game, row.cardTypes)} className={cn('h-6 w-6', dragHandle ? 'ml-1' : 'ml-3')} />
             <span className="min-w-0 flex-1 truncate py-2 pl-2 pr-1 text-sm">{row.label}</span>
 
+            {/* Custom rows get a hover-revealed pencil (left of the `...`) for one-click edit; the Default is
+                immutable, so it never shows it. */}
+            {row.isCustom && (
+               <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(event) => { event.stopPropagation(); editCustom(row); }}
+                  title={t('SettingsDialog.themes.edit')}
+                  aria-label={t('SettingsDialog.themes.edit')}
+                  className={`absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
+               >
+                  <Pencil className="h-4 w-4" />
+               </Button>
+            )}
+
             <DropdownMenu>
                <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
                   <Button
@@ -201,6 +223,9 @@ export function CardPaletteManager({ game }: { game: CardPaletteGame }) {
                   </DropdownMenuItem>
                   {row.isCustom && (
                      <>
+                        <DropdownMenuItem onClick={() => editCustom(row)} className="cursor-pointer">
+                           <Palette className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.themes.edit')}</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => startRename(row.id, row.label)} className="cursor-pointer">
                            <Pencil className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.cardPalettes.rename')}</span>
                         </DropdownMenuItem>

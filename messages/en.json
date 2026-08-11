@@ -1107,7 +1107,41 @@
          "newPaletteName": "My Palette",
          "deleteConfirmTitle": "Delete palette?",
          "deleteConfirmDescription": "\"{{name}}\" will be permanently removed. If it's the active palette for its game, cards fall back to the default.",
-         "deleteConfirmButton": "Delete"
+         "deleteConfirmButton": "Delete",
+         "editPalettes": "Edit palette",
+         "cardTypeLabel": "Card type",
+         "cardTypeMissing": "This card type has no colors in this palette.",
+         "duplicateToEdit": "The default palette can't be edited. Click here to duplicate it into an editable custom palette.",
+         "discardBody": "You have unsaved palette changes. Continuing will discard them and keep the saved palette.",
+         "preview": {
+            "title": "Sample Card",
+            "body": "A line of card text.",
+            "accent": "Accent",
+            "popover": "Popover",
+            "destructive": "Weakness",
+            "mockLabel": "Card mock",
+            "trackerLabel": "Status tracker",
+            "cardLabel": "Story theme card"
+         },
+         "types": {
+            "hero": "Hero",
+            "fellowship": "Fellowship",
+            "origin": "Origin",
+            "adventure": "Adventure",
+            "greatness": "Greatness",
+            "rift": "Rift",
+            "crew": "Crew",
+            "mythos": "Mythos",
+            "logos": "Logos",
+            "character": "Character",
+            "loadout": "Loadout",
+            "self": "Self",
+            "noise": "Noise",
+            "challenge": "Challenge",
+            "status": "Status",
+            "storytag": "Story Tag",
+            "storytheme": "Story Theme"
+         }
       },
 
       "themes": {
@@ -1259,6 +1293,7 @@
                "paper-secondary-foreground": "Secondary text",
                "paper-border": "Border",
                "paper-accent": "Accent",
+               "paper-accent-foreground": "Accent text",
                "paper-destructive": "Danger",
                "paper-destructive-foreground": "Danger text"
             },
@@ -1271,6 +1306,7 @@
                "paper-secondary-foreground": "Text on those secondary chips.",
                "paper-border": "The outline around a paper element and its dividers.",
                "paper-accent": "The standout accent on paper, like a highlighted edge.",
+               "paper-accent-foreground": "Text and icons that sit on the accent color.",
                "paper-destructive": "Dangerous bits on paper, like a burn or remove.",
                "paper-destructive-foreground": "Text on the danger color."
             }

@@ -101,6 +101,7 @@ interface AppSettingsState {
       reorderCardPalettes: (activeId: string, overId: string) => void;
       beginCardPaletteDraft: (palette: CardPalette) => void;
       patchCardPaletteDraft: (patch: Partial<CardPalette>) => void;
+      saveCardPaletteDraft: () => void;
       discardCardPaletteDraft: () => void;
       toggleCompactDrawer: () => void;
       setSideBySideView: (isSideBySide: boolean) => void;
@@ -252,6 +253,13 @@ export const useAppSettingsStore = create<AppSettingsState>()(
                },
             }),
             patchCardPaletteDraft: (patch) => set((state) => (state.cardPaletteDraft ? { cardPaletteDraft: { ...state.cardPaletteDraft, ...patch } } : {})),
+            // The only write of editor-owned fields back to a saved palette. The draft stays put (now matching
+            // the saved palette, so clean), so editing can continue after a save.
+            saveCardPaletteDraft: () => {
+               const draft = get().cardPaletteDraft;
+               if (!draft) return;
+               get().actions.updateCardPalette(draft.id, { name: draft.name, cardTypes: draft.cardTypes });
+            },
             discardCardPaletteDraft: () => set({ cardPaletteDraft: null }),
             toggleCompactDrawer: () => set((state) => ({ isCompactDrawer: !state.isCompactDrawer })),
             setSideBySideView: (isSideBySide) => set({ isSideBySideView: isSideBySide }),

@@ -59,11 +59,11 @@ export function StoryTagTrackerCard({ tracker, isEditing=false, isDrawerPreview,
    const contextGame = useCharacterStore((state) => state.character?.game);
    const cardTheme = isDrawerPreview ? '' : (
       contextGame === 'CITY_OF_MIST'
-         ? 'card-type-tracker-city'
+         ? 'card-type-storytag-com'
          : contextGame === 'OTHERSCAPE'
-            ? 'card-type-tracker-otherscape'
+            ? 'card-type-storytag-otherscape'
             : contextGame === 'LEGENDS'
-               ? 'card-type-tracker-legends'
+               ? 'card-type-storytag-legends'
                : '');
 
 

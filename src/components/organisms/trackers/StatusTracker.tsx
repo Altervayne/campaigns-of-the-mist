@@ -57,11 +57,11 @@ export function StatusTrackerCard({ tracker, isEditing=false, isDrawerPreview, i
    const contextGame = useCharacterStore((state) => state.character?.game);
    const cardTheme = isDrawerPreview ? '' : (
       contextGame === 'CITY_OF_MIST'
-         ? 'card-type-tracker-city'
+         ? 'card-type-status-com'
          : contextGame === 'OTHERSCAPE'
-            ? 'card-type-tracker-otherscape'
+            ? 'card-type-status-otherscape'
             : contextGame === 'LEGENDS'
-               ? 'card-type-tracker-legends'
+               ? 'card-type-status-legends'
                : '');
 
    const handleTierClick = (tierIndex: number) => {

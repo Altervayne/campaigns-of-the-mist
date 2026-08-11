@@ -168,6 +168,9 @@ export default defineConfig([
       'src/components/providers/CardPaletteClassManager.tsx',
       'src/components/organisms/dialogs/settings/CardPaletteManager.tsx',
       'src/components/organisms/dialogs/settings/CardPalettesSettingsPane.tsx',
+      'src/components/organisms/dialogs/settings/CardPaletteEditor.tsx',
+      'src/components/organisms/dialogs/settings/CardPalettePreview.tsx',
+      'src/components/organisms/dialogs/settings/CardPalettePreviews.tsx',
     ],
     rules: {
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],

@@ -4,9 +4,11 @@ import cuid from 'cuid';
 // -- Type Imports --
 import type { BlandTag, ChallengeAbility, ChallengeDetails, ChallengeSpecial, ChallengeStatus, CityChallengeDetails, CityCustomMove, CityMove, MightyTag } from '@/lib/types/character';
 
-/** The palette class for a challenge, by game: crimson parchment (LitM) vs gunmetal + lime (Otherscape). */
+/** The palette class for a challenge, by game: crimson parchment (LitM/City) vs gunmetal + lime (Otherscape). */
 export function challengePaletteClass(game: ChallengeDetails['game']): string {
-   return game === 'OTHERSCAPE' ? 'card-type-challenge-otherscape' : 'card-type-challenge';
+   if (game === 'OTHERSCAPE') return 'card-type-challenge-otherscape';
+   if (game === 'CITY_OF_MIST') return 'card-type-challenge-com';
+   return 'card-type-challenge-legends';
 }
 
 /** The palette class for a City challenge, by its primary type: orange (Logos) vs purple (Mythos), reusing the City theme palettes. */

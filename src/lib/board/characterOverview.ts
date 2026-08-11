@@ -97,7 +97,7 @@ export function characterPortraitAssetId(character: Character | null): string | 
  */
 export function overviewPanelCardClass(game: Character['game']): string {
    switch (game) {
-      case 'CITY_OF_MIST': return 'card-type-character-com';
+      case 'CITY_OF_MIST': return 'card-type-rift-com';
       case 'OTHERSCAPE': return 'card-type-character-otherscape';
       default: return 'card-type-hero';
    }
