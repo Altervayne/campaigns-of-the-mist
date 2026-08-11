@@ -1117,6 +1117,7 @@
          "editPalettes": "Edit palette",
          "cardTypeLabel": "Card type",
          "cardTypeMissing": "This card type has no colors in this palette.",
+         "noActivePalette": "No palette to edit. Go back and pick one.",
          "duplicateToEdit": "The default palette can't be edited. Click here to duplicate it into an editable custom palette.",
          "discardBody": "You have unsaved palette changes. Continuing will discard them and keep the saved palette.",
          "preview": {
@@ -1645,6 +1646,7 @@
          "setThemeModeDark": "Set: Theme Mode: Dark",
          "setThemePalette": "Set: Theme Palette: [...]",
          "manageThemes": "Open: Themes Manager",
+         "openCardPalettes": "Open: Card Palettes",
          "viewFlipping": "Set: Card View: Flipping",
          "viewSideBySide": "Set: Card View: Side-by-Side",
 

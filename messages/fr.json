@@ -1073,6 +1073,7 @@
          "editPalettes": "[TO COMPLETE]",
          "cardTypeLabel": "[TO COMPLETE]",
          "cardTypeMissing": "[TO COMPLETE]",
+         "noActivePalette": "[TO COMPLETE]",
          "duplicateToEdit": "[TO COMPLETE]",
          "discardBody": "[TO COMPLETE]",
          "preview": {
@@ -1559,6 +1560,7 @@
          "setThemeModeDark": "Définir : Mode de Couleur : Sombre",
          "setThemePalette": "Définir : Palette : [...]",
          "manageThemes": "Ouvrir : Gestionnaire de Thèmes",
+         "openCardPalettes": "[TO COMPLETE]",
          "viewFlipping": "Définir : Vue des Cartes : Recto/Verso",
          "viewSideBySide": "Définir : Vue des Cartes : Côte à Côte",
          "exportCharacter": "Exporter : Fiche de Personnage",

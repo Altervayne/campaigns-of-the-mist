@@ -14,9 +14,11 @@ import MobileFAB from '@/components/mobile/menu/MobileFAB';
 import MobileSettings from '@/components/mobile/menu/MobileSettings';
 import MobileSettingsGeneral from '@/components/mobile/menu/MobileSettingsGeneral';
 import MobileSettingsAppearance from '@/components/mobile/menu/MobileSettingsAppearance';
+import MobileSettingsCardPalettes from '@/components/mobile/menu/MobileSettingsCardPalettes';
 import MobileSettingsData from '@/components/mobile/menu/MobileSettingsData';
 import MobileSettingsLearn from '@/components/mobile/menu/MobileSettingsLearn';
 import MobileThemeEditor from '@/components/mobile/menu/MobileThemeEditor';
+import MobileCardPaletteEditor from '@/components/mobile/menu/MobileCardPaletteEditor';
 import MobileAbout from '@/components/mobile/menu/MobileAbout';
 import MobilePatchNotes from '@/components/mobile/menu/MobilePatchNotes';
 import MobileAnnouncements from '@/components/mobile/menu/MobileAnnouncements';
@@ -52,7 +54,7 @@ type NavigationTabId = 'sheet' | 'drawer' | 'menu';
 
 // The full-screen chrome tabs (settings drill-down, themes, about, add-card): the bottom navigation hides while
 // any of these is open so it never sits over a pushed sub-screen.
-const CHROME_TABS = new Set<TabId>(['settings', 'settingsGeneral', 'settingsAppearance', 'settingsData', 'settingsLearn', 'themeEditor', 'about', 'patchNotes', 'announcements', 'addCard', 'editPortrait']);
+const CHROME_TABS = new Set<TabId>(['settings', 'settingsGeneral', 'settingsAppearance', 'settingsCardPalettes', 'settingsData', 'settingsLearn', 'themeEditor', 'cardPaletteEditor', 'about', 'patchNotes', 'announcements', 'addCard', 'editPortrait']);
 
 // The landing tab when the app opens, or history resets with nothing pushed: the
 // sheet slot when a surface is live - a character (or still loading at boot) or an active
@@ -399,6 +401,7 @@ export default function MobileCharacterSheetPage() {
 					<MobileSettings
 						onOpenGeneral={() => navigateToTab('settingsGeneral')}
 						onOpenAppearance={() => navigateToTab('settingsAppearance')}
+						onOpenCardPalettes={() => navigateToTab('settingsCardPalettes')}
 						onOpenData={() => navigateToTab('settingsData')}
 						onOpenLearn={() => navigateToTab('settingsLearn')}
 						onOpenWhatsNew={() => navigateToTab('patchNotes')}
@@ -413,6 +416,9 @@ export default function MobileCharacterSheetPage() {
 				{activeTab === 'settingsAppearance' && (
 					<MobileSettingsAppearance onBack={() => navigateToTab('settings')} onOpenEditor={() => navigateToTab('themeEditor')} />
 				)}
+				{activeTab === 'settingsCardPalettes' && (
+					<MobileSettingsCardPalettes onBack={() => navigateToTab('settings')} onOpenEditor={() => navigateToTab('cardPaletteEditor')} />
+				)}
 				{activeTab === 'settingsData' && (
 					<MobileSettingsData onBack={() => navigateToTab('settings')} />
 				)}
@@ -425,6 +431,9 @@ export default function MobileCharacterSheetPage() {
 				)}
 				{activeTab === 'themeEditor' && (
 					<MobileThemeEditor onBack={() => navigateToTab('settingsAppearance')} />
+				)}
+				{activeTab === 'cardPaletteEditor' && (
+					<MobileCardPaletteEditor onBack={() => navigateToTab('settingsCardPalettes')} />
 				)}
 				{activeTab === 'about' && (
 					<MobileAbout onBack={() => navigateToTab('settings')} />

@@ -7,6 +7,7 @@ import {
 	ChevronRight,
 	SlidersHorizontal,
 	Palette,
+	SwatchBook,
 	Database,
 	GraduationCap,
 	Sparkles,
@@ -28,6 +29,7 @@ import { APP_VERSION } from '@/lib/config';
 interface MobileSettingsProps {
 	onOpenGeneral: () => void;
 	onOpenAppearance: () => void;
+	onOpenCardPalettes: () => void;
 	onOpenData: () => void;
 	onOpenLearn: () => void;
 	onOpenWhatsNew: () => void;
@@ -48,7 +50,7 @@ interface SettingsCategory {
  * The mobile settings hub: a category list that mirrors the desktop taxonomy, grouped into Configure and
  * Help & info. Each row pushes a sub-screen; the What's-new row carries the New! dot until it's opened.
  */
-export default function MobileSettings({ onOpenGeneral, onOpenAppearance, onOpenData, onOpenLearn, onOpenWhatsNew, onOpenAnnouncements, onOpenAbout, onBack }: MobileSettingsProps) {
+export default function MobileSettings({ onOpenGeneral, onOpenAppearance, onOpenCardPalettes, onOpenData, onOpenLearn, onOpenWhatsNew, onOpenAnnouncements, onOpenAbout, onBack }: MobileSettingsProps) {
 	const { t } = useTranslation();
 	const hasUnreadPatchNotes = useHasUnreadPatchNotes();
 	const hasUnseenAnnouncements = useHasUnseenAnnouncements();
@@ -59,6 +61,7 @@ export default function MobileSettings({ onOpenGeneral, onOpenAppearance, onOpen
 			categories: [
 				{ id: 'general', labelKey: 'SettingsShell.sections.general', icon: SlidersHorizontal, onOpen: onOpenGeneral },
 				{ id: 'appearance', labelKey: 'SettingsShell.sections.appearance', icon: Palette, onOpen: onOpenAppearance },
+				{ id: 'cardPalettes', labelKey: 'SettingsShell.sections.cardPalettes', icon: SwatchBook, onOpen: onOpenCardPalettes },
 				{ id: 'data', labelKey: 'SettingsShell.sections.data', icon: Database, onOpen: onOpenData },
 			],
 		},
