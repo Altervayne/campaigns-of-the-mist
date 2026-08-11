@@ -158,6 +158,15 @@ export default defineConfig([
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
     },
   },
+  // Same guard for the roll-table module: the data model + the pure weighted-pick roll stay focused.
+  {
+    files: [
+      'src/lib/rolltable/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+    },
+  },
   // Same guard for the per-game card-palette files: the data model, the defaults probe, the injection
   // manager, the create hook, and the settings list + pane stay focused.
   {
