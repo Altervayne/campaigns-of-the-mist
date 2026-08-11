@@ -499,6 +499,10 @@
          "exported": "Thème exporté vers vos téléchargements.",
          "imported": "Thème importé."
       },
+      "cardPalette": {
+         "exported": "[TO COMPLETE]",
+         "imported": "[TO COMPLETE]"
+      },
       "card": {
          "created": "Carte créée avec succès.",
          "updated": "Carte mise à jour avec succès."
@@ -1058,6 +1062,8 @@
          "duplicate": "[TO COMPLETE]",
          "rename": "[TO COMPLETE]",
          "delete": "[TO COMPLETE]",
+         "export": "[TO COMPLETE]",
+         "importPalette": "[TO COMPLETE]",
          "copyName": "[TO COMPLETE]",
          "newPalette": "[TO COMPLETE]",
          "newPaletteName": "[TO COMPLETE]",

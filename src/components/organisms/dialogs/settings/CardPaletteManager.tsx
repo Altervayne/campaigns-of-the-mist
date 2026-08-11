@@ -1,8 +1,9 @@
 // -- React Imports --
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Library Imports --
+import toast from 'react-hot-toast';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -11,9 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // -- Icon Imports --
-import { Check, Copy, GripVertical, MoreHorizontal, Palette, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Check, Copy, Download, GripVertical, MoreHorizontal, Palette, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
 
 // -- DnD Component Imports --
 import { Sortable, DragStaticWrapper } from '@/components/dnd';
@@ -23,11 +25,14 @@ import { cn } from '@/lib/utils';
 import { DRAWER_MENU_TRIGGER_CLASS } from '@/components/molecules/drawer/drawerMenuTrigger';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 import { restrictToParentElement, restrictToVerticalAxis } from '@/lib/utils/dndModifiers';
+import { exportCardPalette, importFromFile } from '@/lib/utils/export-import';
+import { ACCEPT_CARD_PALETTE_IMPORT } from '@/lib/utils/fileAccept';
 
 // -- Theme Imports --
 import { CARD_TYPES_BY_GAME } from '@/lib/theme/cardPalettes';
 import { defaultCardTypesForGame } from '@/lib/theme/cardPaletteProbe';
 import { useCreateCardPalette } from '@/lib/theme/useCreateCardPalette';
+import { useCardPaletteImport } from '@/lib/theme/useCardPaletteImport';
 
 // -- Store Imports --
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
@@ -135,6 +140,38 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
       setRenamingId(null);
    };
 
+   const importInputRef = useRef<HTMLInputElement>(null);
+   const importFormRef = useRef<HTMLFormElement>(null);
+
+   // Export one custom palette to a .cotm file (its game + name + every card-type's colors).
+   const exportPalette = async (id: string) => {
+      const palette = customs.find((entry) => entry.id === id);
+      if (!palette) return;
+      try {
+         await exportCardPalette(palette);
+         toast.success(t('Notifications.cardPalette.exported'));
+      } catch (error) {
+         console.error('Card palette export failed:', error);
+         toast.error(t('Notifications.general.exportError'));
+      }
+   };
+
+   // Import a .cotm palette from the file dialog. It routes to its OWN game's list (game is intrinsic), which
+   // may differ from this pane's game - that is correct, so no filter by the current game here.
+   const importPalette = useCardPaletteImport();
+   const handleImportFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+         const imported = await importFromFile(file);
+         guardedSwitch(() => importPalette(imported));
+      } catch (error) {
+         console.error('Card palette import failed:', error);
+         toast.error(t('Notifications.general.importFailed'));
+      }
+      importFormRef.current?.reset();
+   };
+
    const defaultRow: PaletteRow = { id: 'default', label: t('SettingsDialog.cardPalettes.default'), isCustom: false, cardTypes: defaultCardTypes };
    const customRows: PaletteRow[] = customs.map((palette) => ({ id: palette.id, label: palette.name, isCustom: true, cardTypes: palette.cardTypes }));
 
@@ -229,6 +266,9 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                         <DropdownMenuItem onClick={() => startRename(row.id, row.label)} className="cursor-pointer">
                            <Pencil className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.cardPalettes.rename')}</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportPalette(row.id)} className="cursor-pointer">
+                           <Upload className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.cardPalettes.export')}</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                            onClick={() => setPendingDelete(customs.find((palette) => palette.id === row.id) ?? null)}
                            className="cursor-pointer text-destructive"
@@ -254,7 +294,25 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
          {/* Customs sit below a divider; only this section is sortable - a local DndContext + SortableContext
              over the game's custom ids. The Default stays outside it. */}
          <div className="flex flex-col gap-1 border-t border-border pt-3">
-            <SectionHeading>{t('SettingsDialog.cardPalettes.customsHeading')}</SectionHeading>
+            <div className="flex items-center justify-between gap-2">
+               <SectionHeading>{t('SettingsDialog.cardPalettes.customsHeading')}</SectionHeading>
+               {/* Icon-only to leave the heading room; the label lives in the tooltip + aria-label/title. */}
+               <Tooltip>
+                  <TooltipTrigger asChild>
+                     <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => importInputRef.current?.click()}
+                        aria-label={t('SettingsDialog.cardPalettes.importPalette')}
+                        title={t('SettingsDialog.cardPalettes.importPalette')}
+                        className="h-6 w-6 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                     >
+                        <Download className="h-3.5 w-3.5" />
+                     </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('SettingsDialog.cardPalettes.importPalette')}</TooltipContent>
+               </Tooltip>
+            </div>
             {customRows.length > 0 ? (
                <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragEnd={handleDragEnd}>
                   <SortableContext items={customs.map((palette) => palette.id)} strategy={verticalListSortingStrategy}>
@@ -300,6 +358,10 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>
+
+         <form ref={importFormRef} className="hidden">
+            <input type="file" ref={importInputRef} onChange={handleImportFileSelected} accept={ACCEPT_CARD_PALETTE_IMPORT} />
+         </form>
       </div>
    );
 }

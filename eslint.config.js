@@ -165,6 +165,7 @@ export default defineConfig([
       'src/lib/theme/cardPalettes.ts',
       'src/lib/theme/cardPaletteProbe.ts',
       'src/lib/theme/useCreateCardPalette.ts',
+      'src/lib/theme/useCardPaletteImport.ts',
       'src/components/providers/CardPaletteClassManager.tsx',
       'src/components/organisms/dialogs/settings/CardPaletteManager.tsx',
       'src/components/organisms/dialogs/settings/CardPalettesSettingsPane.tsx',

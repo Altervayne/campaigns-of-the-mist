@@ -2,6 +2,7 @@ import type { Card, Tracker, Character, LegendsThemeDetails, LegendsHeroDetails 
 import type { Drawer, DrawerItem, Folder, GameSystem, GeneralItemType } from '../types/drawer';
 import type { Board, BoardItemContent, PostItNote, Journal, Note } from '@/lib/types/board';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
+import type { CardPalette } from '@/lib/theme/cardPalettes';
 import { APP_VERSION } from '../config';
 import { getAsset, storeAsset } from '@/lib/assets/assetRepository';
 import { hashBytes } from '@/lib/assets/processImage';
@@ -10,8 +11,8 @@ import { collectFromNote } from '@/lib/notes/noteAssets';
 
 // `CUSTOM_THEME` is a 2.0-native type (themes live in app settings, not the drawer); it rides the same
 // envelope as everything else. A board (`FULL_BOARD`) rides it too.
-export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME';
-export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | PostItNote | Journal | Note;
+export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE';
+export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note;
 
 /** One asset's bytes carried inside an exported file so the file is self-contained. */
 export interface EmbeddedAsset {
@@ -137,6 +138,10 @@ export function generateExportFilename(game: GameSystem, type: ExportableItemTyp
 
       case "CUSTOM_THEME":
          textType = "Theme"
+         break;
+
+      case "CARD_PALETTE":
+         textType = "Card-Palette"
          break;
    }
 
@@ -475,6 +480,29 @@ export function isExportedCustomTheme(file: ExportFile): boolean {
    return file.fileType === 'CUSTOM_THEME'
       && !!content.light && !!content.dark && typeof content.radius === 'string'
       && !!content.paper && typeof content.paper === 'object';
+}
+
+/**
+ * Exports a single card palette to a .cotm file. A palette is game-specific and asset-free, so the file is
+ * just the envelope around the palette (its game, name, and per-card-type token sets); the palette's own game
+ * fills the envelope's game slot so it routes back to that game's list on import.
+ */
+export async function exportCardPalette(palette: CardPalette) {
+   const fileName = generateExportFilename(palette.game, 'CARD_PALETTE', palette.name);
+   await exportToFile(palette, 'CARD_PALETTE', palette.game, fileName);
+};
+
+/**
+ * Whether a parsed file is a card-palette export carrying the fields a palette needs - so a
+ * character/theme/malformed `.cotm` is rejected before it's added. The importer re-IDs the validated content
+ * and normalizes each card-type set, so only the shape is checked here.
+ */
+export function isExportedCardPalette(file: ExportFile): boolean {
+   const content = file.content as Partial<CardPalette>;
+   return file.fileType === 'CARD_PALETTE'
+      && (content.game === 'LEGENDS' || content.game === 'CITY_OF_MIST' || content.game === 'OTHERSCAPE')
+      && typeof content.name === 'string'
+      && !!content.cardTypes && typeof content.cardTypes === 'object';
 }
 
 /**

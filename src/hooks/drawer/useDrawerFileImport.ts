@@ -83,7 +83,9 @@ export function useDrawerFileImport(currentFolderId: string | null) {
                break;
 
             case 'CUSTOM_THEME':
-               // Themes live in app settings (imported from the Themes window), not the drawer - reject here.
+            case 'CARD_PALETTE':
+               // Themes and card palettes live in app settings (imported from their own manager), not the
+               // drawer - reject here.
                toast.error(tNotifications('Notifications.general.importFailed'));
                break;
 

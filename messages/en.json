@@ -499,6 +499,10 @@
          "exported": "Theme exported to downloads.",
          "imported": "Theme imported."
       },
+      "cardPalette": {
+         "exported": "Card palette exported to downloads.",
+         "imported": "Card palette imported."
+      },
       "card": {
          "created": "Card created successfully.",
          "updated": "Card updated successfully."
@@ -1102,6 +1106,8 @@
          "duplicate": "Duplicate",
          "rename": "Rename",
          "delete": "Delete",
+         "export": "Export",
+         "importPalette": "Import palette",
          "copyName": "{{name}} copy",
          "newPalette": "New Card Palette",
          "newPaletteName": "My Palette",
