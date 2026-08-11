@@ -41,6 +41,7 @@ const OFFERS_ADD_TO_CHARACTER: Record<GeneralItemType, boolean> = {
    POST_IT: false,
    JOURNAL: false,
    NOTE: false,
+   ROLL_TABLE: false,
    FULL_CHARACTER_SHEET: false,
    FULL_BOARD: false,
 };

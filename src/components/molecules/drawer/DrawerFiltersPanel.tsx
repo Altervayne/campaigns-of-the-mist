@@ -36,6 +36,7 @@ const FILTERABLE_ITEM_TYPES: GeneralItemType[] = [
    'STORY_THEME_TRACKER',
    'IMAGE_CARD',
    'FULL_BOARD',
+   'ROLL_TABLE',
 ];
 
 /** The games offered as filters: the three systems plus NEUTRAL (game-agnostic items). */

@@ -6,8 +6,9 @@ import cuid from 'cuid';
 
 // -- Type Imports --
 import type { DrawerItem, GeneralItemType } from '@/lib/types/drawer';
-import type { CardBoardContent, TrackerBoardContent, ImageBoardContent, CharacterBoardContent, PostItBoardContent, PostItNote, JournalBoardContent, Journal, NoteBoardContent, Note } from '@/lib/types/board';
+import type { CardBoardContent, TrackerBoardContent, ImageBoardContent, CharacterBoardContent, PostItBoardContent, PostItNote, JournalBoardContent, Journal, NoteBoardContent, Note, RollTableBoardContent } from '@/lib/types/board';
 import type { Card, Character, ImageCardDetails, Tracker } from '@/lib/types/character';
+import type { RollTableContent } from '@/lib/rolltable/types';
 
 /*
  * Turns a card/tracker into the spec for a board item, whether it came from the drawer or straight
@@ -52,6 +53,9 @@ export const EMBEDDED_JOURNAL_SIZE = { width: 260, height: 320 } as const;
 /** Default footprint of a note reference tile: a flat handout wants a touch more height than a post-it. */
 export const NOTE_ELEMENT_SIZE = { width: 260, height: 320 } as const;
 
+/** Native footprint of a re-embedded roll table, matching a fresh board roll table (its creatable default size). */
+export const EMBEDDED_ROLLTABLE_SIZE = { width: 240, height: 260 } as const;
+
 // An IMAGE_CARD is NOT here: it drops as a native image item, not an embedded card.
 const CARD_TYPES = new Set<GeneralItemType>(['CHARACTER_CARD', 'CHARACTER_THEME', 'GROUP_THEME', 'LOADOUT_THEME', 'CHALLENGE_CARD']);
 
@@ -62,10 +66,10 @@ function trackerEmbedSize(trackerType: string | undefined): { width: number; hei
 
 /** The spec for a board item built from a drawer item: its kind, default size, and content. */
 export interface EmbeddedBoardSpec {
-   kind: 'card' | 'tracker' | 'image' | 'character' | 'post-it' | 'journal' | 'note';
+   kind: 'card' | 'tracker' | 'image' | 'character' | 'post-it' | 'journal' | 'note' | 'roll-table';
    width: number;
    height: number;
-   content: CardBoardContent | TrackerBoardContent | ImageBoardContent | CharacterBoardContent | PostItBoardContent | JournalBoardContent | NoteBoardContent;
+   content: CardBoardContent | TrackerBoardContent | ImageBoardContent | CharacterBoardContent | PostItBoardContent | JournalBoardContent | NoteBoardContent | RollTableBoardContent;
 }
 
 /**
@@ -190,6 +194,18 @@ export function embeddedSpecForDrawerItem(item: DrawerItem): EmbeddedBoardSpec |
          width: NOTE_ELEMENT_SIZE.width,
          height: NOTE_ELEMENT_SIZE.height,
          content: { kind: 'note', mode: 'reference', noteId, sourceDrawerItemId: item.id },
+      };
+   }
+   if (item.type === 'ROLL_TABLE') {
+      // A saved roll table drops as a self-contained board COPY of its inline aggregate: deep-clone the
+      // stored `RollTableContent` and re-add the board `kind`. There is no source link (the aggregate lives
+      // in the content, so there is no drawer twin to write back to) - unlike a card/tracker copy.
+      const table = structuredClone(item.content as RollTableContent);
+      return {
+         kind: 'roll-table',
+         width: EMBEDDED_ROLLTABLE_SIZE.width,
+         height: EMBEDDED_ROLLTABLE_SIZE.height,
+         content: { kind: 'roll-table', ...table },
       };
    }
    // A drawer card/tracker wraps the same aggregate a sheet component is, so the shared mapping does

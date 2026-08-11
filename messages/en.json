@@ -746,7 +746,8 @@
             "FULL_BOARD": "Board",
             "NOTE": "Note",
             "POST_IT": "Post-it",
-            "JOURNAL": "Journal"
+            "JOURNAL": "Journal",
+            "ROLL_TABLE": "Roll table"
          }
       },
       "toggleView": "Toggle view mode between rich preview and list entry for Drawer Items",
@@ -866,6 +867,7 @@
          "POST_IT": "Post-it",
          "JOURNAL": "Journal",
          "NOTE": "Note",
+         "ROLL_TABLE": "Roll table",
          "boardItemCount": "{{count}} item(s)",
          "journalPageCount": "{{count}} page(s)",
 

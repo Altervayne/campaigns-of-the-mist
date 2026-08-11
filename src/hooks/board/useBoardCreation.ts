@@ -17,7 +17,7 @@ import { buildCard } from '@/lib/cards/buildCard';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { makePortalContent, portalTargetFromInsert } from '@/lib/creation/portalContent';
 import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
-import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
+import { runSaveImageToDrawerAs, runSaveItemToDrawer, runSaveItemToDrawerAs, runSaveRollTableToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
 import { BOARD_WINDOW_MARGIN } from '@/components/organisms/board/windows/BoardFloatingWindow';
 import { isTextEditableKind } from '@/components/organisms/board/boardCanvasConstants';
 
@@ -267,6 +267,13 @@ export function useBoardCreation({
       // A board image is mint-only (no source, no adopt); Save and Save As both mint an IMAGE_CARD.
       if (content.kind === 'image') {
          runSaveImageToDrawerAs(content, baseDeps);
+         return;
+      }
+
+      // A roll table stores its aggregate inline (no source link possible); Save and Save As both mint a
+      // NEUTRAL drawer item from the bare aggregate.
+      if (content.kind === 'roll-table') {
+         runSaveRollTableToDrawerAs(content, baseDeps);
          return;
       }
 

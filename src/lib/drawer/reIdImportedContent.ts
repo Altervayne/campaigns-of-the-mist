@@ -20,13 +20,14 @@ import type { Character } from '@/lib/types/character';
 
 /**
  * Re-IDs one imported item's content according to its type:
- *   - FULL_BOARD / JOURNAL / NOTE keep their content verbatim (self-contained in the file; the id keys a
- *     focus-or-open round-trip, and reminting internals would orphan connections / bookmarks).
+ *   - FULL_BOARD / JOURNAL / NOTE / ROLL_TABLE keep their content verbatim (self-contained in the file; the
+ *     id keys a focus-or-open round-trip, and reminting internals would orphan connections / bookmarks or a
+ *     roll table's `lastRoll` / `history` entry cross-refs).
  *   - FULL_CHARACTER_SHEET routes through the aggregate re-id that keeps its manifest + bookmarks consistent.
  *   - everything else is a cross-ref-free card / tracker / post-it, deep-re-ID'd so the copy is independent.
  */
 export function reIdImportedItemContent(type: GeneralItemType, content: DrawerItemContent): DrawerItemContent {
-   if (type === 'FULL_BOARD' || type === 'JOURNAL' || type === 'NOTE') return content;
+   if (type === 'FULL_BOARD' || type === 'JOURNAL' || type === 'NOTE' || type === 'ROLL_TABLE') return content;
    if (type === 'FULL_CHARACTER_SHEET') return reIdCharacterAggregate(content as Character);
    return deepReId(content);
 }

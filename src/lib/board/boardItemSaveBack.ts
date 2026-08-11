@@ -15,6 +15,7 @@ import { mapItemToStorableInfo } from '@/lib/utils/dnd';
 import type { Card, ImageCardDetails, Tracker } from '@/lib/types/character';
 import type { ImageBoardContent, Journal, PostItNote } from '@/lib/types/board';
 import type { GameSystem, GeneralItemType } from '@/lib/types/drawer';
+import type { RollTableContent } from '@/lib/rolltable/types';
 
 /*
  * Save-back for a board card/tracker COPY: a board embed edits its inner aggregate in place, so it
@@ -27,10 +28,10 @@ import type { GameSystem, GeneralItemType } from '@/lib/types/drawer';
 /** The inner aggregate of a board copy (card/tracker/post-it/journal), normalized and ready to store, plus its drawer routing. */
 export interface NormalizedBoardItemInner {
    /** The clean inner aggregate (deep-cloned, `isFlipped` zeroed for a card) to write as the drawer item content. */
-   content: Card | Tracker | PostItNote | Journal;
-   /** The drawer game segment - `details.game` for a card, `NEUTRAL` for a (game-agnostic) tracker/note. */
+   content: Card | Tracker | PostItNote | Journal | RollTableContent;
+   /** The drawer game segment - `details.game` for a card, `NEUTRAL` for a (game-agnostic) tracker/note/table. */
    game: GameSystem;
-   /** The drawer item type - the card's `cardType`, the tracker's `*_TRACKER` type, `POST_IT`, or `JOURNAL`. */
+   /** The drawer item type - the card's `cardType`, the tracker's `*_TRACKER` type, `POST_IT`, `JOURNAL`, or `ROLL_TABLE`. */
    type: GeneralItemType;
 }
 
@@ -48,7 +49,7 @@ export interface NormalizedBoardItemInner {
  * card/tracker copy always maps).
  */
 export function normalizeBoardItemInner(data: unknown): NormalizedBoardItemInner | null {
-   const inner = structuredClone(data) as Card | Tracker | PostItNote | Journal;
+   const inner = structuredClone(data) as Card | Tracker | PostItNote | Journal | RollTableContent;
 
    const storable = mapItemToStorableInfo(inner);
    if (!storable) return null;

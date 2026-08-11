@@ -16,6 +16,7 @@ import { StoryTagTrackerCard } from '@/components/organisms/trackers/StoryTagTra
 import { CharacterSheetPreview } from '@/components/molecules/CharacterSheetPreview';
 import { StoryThemeTrackerCard } from '@/components/organisms/trackers/StoryThemeTracker';
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
+import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { FitToBox } from '@/components/molecules/drawer/FitToBox';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
@@ -29,6 +30,7 @@ import { boardContentBounds, itemCenter } from '@/lib/board/boardMiniMap';
 import type { ReactElement } from 'react';
 import type { DrawerItem, Folder as FolderType, GameSystem } from '@/lib/types/drawer';
 import type { Board, ConnectionBoardContent, Journal, Note, PinBoardContent, PostItBoardContent, PostItNote, ZoneBoardContent } from '@/lib/types/board';
+import type { RollTableContent } from '@/lib/rolltable/types';
 
 /** The game glyph element (resolved in this module helper, not in render); neutral items have none. */
 function gameGlyph(game: GameSystem): ReactElement | null {
@@ -144,6 +146,30 @@ function NotePreview({ note }: { note: Note }) {
                <span className="text-xs text-paper-foreground/50">{t('NoteView.emptyPreview')}</span>
             )}
          </div>
+      </div>
+   );
+}
+
+/**
+ * Static preview of a saved roll table: its title and weighted entries on the themed `bg-card` panel,
+ * clipped to a fixed footprint. Reuses the board's inert, pointer-transparent read view, so there is no
+ * roll control. A roll table is CHROME end to end - every surface is an app token; it is NEUTRAL, so no
+ * game glyph. Guarded: title/entries are read defensively so an odd table shows placeholders rather than
+ * throwing - a preview must never crash.
+ */
+function RollTablePreview({ table }: { table: RollTableContent }) {
+   const { t } = useTranslation();
+   const title = typeof table?.title === 'string' ? table.title : '';
+   const entries = Array.isArray(table?.entries) ? table.entries : [];
+
+   return (
+      <div className="h-45 w-45 overflow-hidden rounded-md border border-border bg-card text-card-foreground">
+         <RollTableReadView
+            title={title}
+            entries={entries}
+            titlePlaceholder={t('BoardView.rollTableTitlePlaceholder')}
+            entryPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
+         />
       </div>
    );
 }
@@ -327,6 +353,10 @@ export function DrawerItemPreview({
 
          if (type === 'NOTE') {
             return <NotePreview note={content as Note} />;
+         }
+
+         if (type === 'ROLL_TABLE') {
+            return <RollTablePreview table={content as RollTableContent} />;
          }
       }
 

@@ -3,6 +3,7 @@ import type { Collision, CollisionDetection } from "@dnd-kit/core";
 import type { DrawerItem, Folder, GameSystem, GeneralItemType } from "../types/drawer";
 import type { Card, Tracker } from "../types/character";
 import type { Journal, PostItNote } from "../types/board";
+import type { RollTableContent } from "@/lib/rolltable/types";
 import type { SortingStrategy } from "@dnd-kit/sortable";
 import { resolveSortableOverId, resolveSortableOverId2D } from "./dragFeedback";
 import { useAppGeneralStateStore } from "../stores/appGeneralStateStore";
@@ -29,7 +30,7 @@ export type ActiveDragItem = Card | Tracker | Journal | DrawerItem | Folder | nu
  * Converts a character sheet card or tracker into drawer-compatible storage info.
  * Returns a tuple of [item type, game system] - useful when saving items to the drawer.
  */
-export function mapItemToStorableInfo(item: Card | Tracker | PostItNote | Journal): [GeneralItemType, GameSystem] | null {
+export function mapItemToStorableInfo(item: Card | Tracker | PostItNote | Journal | RollTableContent): [GeneralItemType, GameSystem] | null {
    if ('cardType' in item) {
       const game: GameSystem = item.details.game;
       switch (item.cardType) {
@@ -52,6 +53,9 @@ export function mapItemToStorableInfo(item: Card | Tracker | PostItNote | Journa
          default: return null;
       }
    }
+   // A roll table is a game-agnostic list of weighted entries: it saves to the drawer as NEUTRAL. Its
+   // `entries` array is disjoint from every card/tracker/note shape, so its presence keys it cleanly.
+   if ('entries' in item) return ['ROLL_TABLE', 'NEUTRAL'];
    // Post-its and journals are game-agnostic notes: they save to the drawer as NEUTRAL. A journal owns
    // `pages`; a post-it owns `text` - disjoint shapes, so the presence of `pages` splits them cleanly.
    if ('pages' in item) return ['JOURNAL', 'NEUTRAL'];

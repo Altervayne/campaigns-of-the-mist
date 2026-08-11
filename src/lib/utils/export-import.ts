@@ -3,6 +3,7 @@ import type { Drawer, DrawerItem, Folder, GameSystem, GeneralItemType } from '..
 import type { Board, BoardItemContent, PostItNote, Journal, Note } from '@/lib/types/board';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
 import type { CardPalette } from '@/lib/theme/cardPalettes';
+import type { RollTableContent } from '@/lib/rolltable/types';
 import { APP_VERSION } from '../config';
 import { getAsset, storeAsset } from '@/lib/assets/assetRepository';
 import { hashBytes } from '@/lib/assets/processImage';
@@ -12,7 +13,7 @@ import { collectFromNote } from '@/lib/notes/noteAssets';
 // `CUSTOM_THEME` is a 2.0-native type (themes live in app settings, not the drawer); it rides the same
 // envelope as everything else. A board (`FULL_BOARD`) rides it too.
 export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE';
-export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note;
+export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note | RollTableContent;
 
 /** One asset's bytes carried inside an exported file so the file is self-contained. */
 export interface EmbeddedAsset {
@@ -134,6 +135,10 @@ export function generateExportFilename(game: GameSystem, type: ExportableItemTyp
 
       case "NOTE":
          textType = "Note"
+         break;
+
+      case "ROLL_TABLE":
+         textType = "Roll-Table"
          break;
 
       case "CUSTOM_THEME":

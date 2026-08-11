@@ -15,7 +15,7 @@ import { useDrawerStore } from '@/lib/stores/drawerStore';
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
 // -- Type Imports --
-import type { ImageBoardContent } from '@/lib/types/board';
+import type { ImageBoardContent, RollTableBoardContent } from '@/lib/types/board';
 
 /*
  * Save-back for a board card/tracker copy, shared by the item's overflow menu AND the command palette so the
@@ -98,6 +98,25 @@ export function runSaveImageToDrawerAs(
    if (!newId) {
       // A board image with no asset has nothing to save.
       toast.error(deps.t('Notifications.board.imageNotSaveable'));
+      return;
+   }
+   if (!deps.isDrawerOpen) deps.setDrawerOpen(true);
+}
+
+/**
+ * "Save As" of a board roll table: mint the bare aggregate (its `kind` stripped, so the drawer stores the
+ * game-agnostic `RollTableContent`) as a NEUTRAL drawer item and open the naming window. Mint only - a roll
+ * table keeps its aggregate inline with no source link, so there is no write-back and no adopt (like a board
+ * image); Save and Save As both mint.
+ */
+export function runSaveRollTableToDrawerAs(
+   content: RollTableBoardContent,
+   deps: Pick<BoardItemSaveDeps, 't' | 'drawerCurrentFolderId' | 'isDrawerOpen' | 'setDrawerOpen'>,
+): void {
+   const { kind: _kind, ...table } = content;
+   const newId = saveBoardItemAsToDrawer(table, deps.drawerCurrentFolderId ?? undefined);
+   if (!newId) {
+      toast.error(deps.t('Notifications.board.itemNotSaveable'));
       return;
    }
    if (!deps.isDrawerOpen) deps.setDrawerOpen(true);

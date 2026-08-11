@@ -730,7 +730,8 @@
             "FULL_BOARD": "Tableau",
             "NOTE": "Note",
             "POST_IT": "Pense-bête",
-            "JOURNAL": "Journal"
+            "JOURNAL": "Journal",
+            "ROLL_TABLE": "[TO COMPLETE]"
          }
       },
       "toggleView": "Change la vue des Objets du tiroir entre prévisualisation riche et liste simple",
@@ -831,6 +832,7 @@
          "POST_IT": "Pense-bête",
          "JOURNAL": "Journal",
          "NOTE": "Note",
+         "ROLL_TABLE": "[TO COMPLETE]",
          "boardItemCount": "{{count}} élément(s)",
          "journalPageCount": "{{count}} page(s)",
          "cards": "Carte(s)",

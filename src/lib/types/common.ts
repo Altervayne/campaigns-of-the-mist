@@ -18,6 +18,7 @@ export type GeneralItemType =
    | 'POST_IT'
    | 'JOURNAL'
    | 'NOTE'
+   | 'ROLL_TABLE'
    | 'FULL_CHARACTER_SHEET'
    | 'FULL_BOARD';
 
