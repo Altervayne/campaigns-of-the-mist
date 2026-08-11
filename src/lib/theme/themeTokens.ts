@@ -60,6 +60,18 @@ export const CLASSIC_PAPER: PaperSet = {
 };
 
 /**
+ * Fills a stored paper palette out to the full token set, defaulting any missing token from CLASSIC_PAPER and
+ * dropping unknowns. A palette saved before a token was added (e.g. `paper-accent-foreground`) would otherwise
+ * feed `undefined` to the editor's color picker and crash; this backfills it on load.
+ */
+export function normalizePaper(paper: Partial<PaperSet> | undefined | null): PaperSet {
+   const source = paper ?? {};
+   return Object.fromEntries(
+      PAPER_TOKEN_KEYS.map((key) => [key, source[key] ?? CLASSIC_PAPER[key]]),
+   ) as PaperSet;
+}
+
+/**
  * The editor's grouping of the 19 tokens: each surface paired with the foreground that sits on it, so the
  * two are edited side by side. Structure only - the section + token display labels are i18n
  * (`SettingsDialog.themes.groups.*` / `.tokens.*`), so the editor resolves them. (`ring` rides the primary

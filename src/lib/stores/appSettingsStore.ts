@@ -12,6 +12,7 @@ import type { GameSystem } from '../types/drawer';
 import type { BrushKind } from '@/lib/types/board';
 import type { DiceTrayContent } from '@/lib/dice/diceTrayTypes';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
+import { normalizePaper } from '@/lib/theme/themeTokens';
 import type { CardPalette, CardPaletteGame } from '@/lib/theme/cardPalettes';
 import type { ThemeMode } from '@/lib/theme/themeMode';
 
@@ -337,6 +338,18 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             diceTray: state.diceTray,
             penSettings: state.penSettings
          }),
+         // Backfill on load: a theme or palette saved before a paper token existed lacks it, which would feed
+         // the editor's color picker an undefined and crash. normalizePaper fills any missing token from the
+         // classic default so older stored data opens cleanly.
+         merge: (persisted, current) => {
+            const merged = { ...current, ...(persisted as Partial<AppSettingsState>) };
+            merged.customThemes = (merged.customThemes ?? []).map((theme) => ({ ...theme, paper: normalizePaper(theme.paper) }));
+            merged.cardPalettes = (merged.cardPalettes ?? []).map((palette) => ({
+               ...palette,
+               cardTypes: Object.fromEntries(Object.entries(palette.cardTypes).map(([slug, set]) => [slug, normalizePaper(set)])),
+            }));
+            return merged;
+         },
       }
    )
 );
