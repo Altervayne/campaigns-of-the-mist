@@ -1015,6 +1015,7 @@
       "sections": {
          "general": "Général",
          "appearance": "Apparence",
+         "cardPalettes": "[TO COMPLETE]",
          "data": "Données",
          "learn": "Apprendre",
          "whatsNew": "Nouveautés",
@@ -1042,6 +1043,28 @@
       "modeSystem": "Système",
       "modeDark": "Sombre",
       "theme": "Thème",
+      "cardPalettes": {
+         "game": "[TO COMPLETE]",
+         "games": {
+            "LEGENDS": "[TO COMPLETE]",
+            "CITY_OF_MIST": "[TO COMPLETE]",
+            "OTHERSCAPE": "[TO COMPLETE]"
+         },
+         "default": "[TO COMPLETE]",
+         "customsHeading": "[TO COMPLETE]",
+         "noCustoms": "[TO COMPLETE]",
+         "actionsMenu": "[TO COMPLETE]",
+         "renamePlaceholder": "[TO COMPLETE]",
+         "duplicate": "[TO COMPLETE]",
+         "rename": "[TO COMPLETE]",
+         "delete": "[TO COMPLETE]",
+         "copyName": "[TO COMPLETE]",
+         "newPalette": "[TO COMPLETE]",
+         "newPaletteName": "[TO COMPLETE]",
+         "deleteConfirmTitle": "[TO COMPLETE]",
+         "deleteConfirmDescription": "[TO COMPLETE]",
+         "deleteConfirmButton": "[TO COMPLETE]"
+      },
       "themes": {
          "editThemes": "Modifier les Thèmes",
          "presetsHeading": "Prédéfinis",

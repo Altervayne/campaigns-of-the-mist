@@ -1056,6 +1056,7 @@
       "sections": {
          "general": "General",
          "appearance": "Appearance",
+         "cardPalettes": "Card palettes",
          "data": "Data and storage",
          "learn": "Learn",
          "whatsNew": "What's new",
@@ -1085,6 +1086,29 @@
       "modeSystem": "System",
       "modeDark": "Dark",
       "theme": "Theme",
+
+      "cardPalettes": {
+         "game": "Game",
+         "games": {
+            "LEGENDS": "Legend in the Mist",
+            "CITY_OF_MIST": "City of Mist",
+            "OTHERSCAPE": "Metro: Otherscape"
+         },
+         "default": "Default",
+         "customsHeading": "Your palettes",
+         "noCustoms": "No custom palettes yet. Duplicate the default to start one.",
+         "actionsMenu": "Palette actions",
+         "renamePlaceholder": "Palette name",
+         "duplicate": "Duplicate",
+         "rename": "Rename",
+         "delete": "Delete",
+         "copyName": "{{name}} copy",
+         "newPalette": "New Card Palette",
+         "newPaletteName": "My Palette",
+         "deleteConfirmTitle": "Delete palette?",
+         "deleteConfirmDescription": "\"{{name}}\" will be permanently removed. If it's the active palette for its game, cards fall back to the default.",
+         "deleteConfirmButton": "Delete"
+      },
 
       "themes": {
          "editThemes": "Edit themes",

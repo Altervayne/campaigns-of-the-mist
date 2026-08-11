@@ -20,6 +20,7 @@ export const DRAG_TYPES = {
    DRAWER_BACK_BUTTON: 'drawer-back-button',
    TAB: 'tab',
    THEME: 'theme',
+   CARD_PALETTE: 'card-palette',
    JOURNAL_PAGE: 'journal-page',
 } as const;
 
