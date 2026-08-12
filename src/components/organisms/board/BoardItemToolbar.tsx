@@ -58,7 +58,7 @@ export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToF
    return (
       <div
          ref={measureRef}
-         className="absolute left-1/2"
+         className="pointer-events-auto absolute left-1/2"
          style={{ bottom, transformOrigin: '50% 100%', transform: `translateX(${shiftX}) scale(${1 / zoom})` }}
       >
          {/* The padding is the screen-constant gap above the item (it scales with the bar). */}

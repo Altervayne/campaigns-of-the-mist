@@ -1,5 +1,6 @@
 // -- React Imports --
 import { memo, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -85,6 +86,8 @@ interface BoardItemBoxProps {
    toolbarClampX?: number;
    /** Measures the toolbar for those clamps; the canvas owns the arithmetic. */
    toolbarMeasureRef: (node: HTMLDivElement | null) => void;
+   /** The canvas's selection-toolbar overlay node: the sole-selection bar portals here so it stacks above the board name pill. */
+   toolbarOverlay: HTMLElement | null;
    /** A zone's member count, for its collapsed-bar badge (undefined for non-zones). */
    memberCount?: number;
    /** Current zoom, so screen deltas convert to world deltas and chrome stays screen-constant. */
@@ -151,6 +154,7 @@ export const BoardItemBox = memo(function BoardItemBox({
    toolbarClamp,
    toolbarClampX,
    toolbarMeasureRef,
+   toolbarOverlay,
    memberCount,
    zoom,
    moveDelta,
@@ -476,38 +480,55 @@ export const BoardItemBox = memo(function BoardItemBox({
          </div>
 
          {/* Per-item chrome only for the sole selection; a multi-selection uses the group
-             toolbar (rendered by the canvas) to avoid clutter, keeping only the rings. The
-             wrapper re-enables pointer events for a zone (whose box is click-through). */}
+             toolbar (rendered by the canvas) to avoid clutter, keeping only the rings. */}
          {soleSelected && (
-            <div className={cn(isZone && 'pointer-events-auto')}>
-               <BoardItemToolbar
-                  zoom={zoom}
-                  clampDown={toolbarClamp}
-                  clampX={toolbarClampX}
-                  measureRef={toolbarMeasureRef}
-                  // An expanded zone's title bar sits above the frame too; lift the toolbar above it.
-                  extraBottom={isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0}
-                  onMoveStart={(event) => onMoveStart(item.id, event)}
-                  onConnectStart={(event) => onConnectStart(item.id, event)}
-                  onBringToFront={() => onBringToFront(item.id)}
-                  onSendToBack={() => onSendToBack(item.id)}
-                  onDelete={() => onDelete(item.id)}
-                  slotRef={setToolbarSlot}
-               />
+            <>
+               {/* The action bar renders in the canvas's selection-toolbar overlay (a sibling of the world
+                   layer stacked above the board name pill), so it clears that chrome while the item body
+                   stays below it. A world-rect wrapper at the box's live rect reproduces the box's own
+                   positioning frame: the bar's `bottom:100%` still anchors to the item's top edge, and the
+                   off-edge clamps measure against the width the box actually renders at. The wrapper is inert
+                   (the bar re-arms pointer events) so it never shadows the item beneath. */}
+               {toolbarOverlay &&
+                  createPortal(
+                     <div
+                        className="pointer-events-none absolute"
+                        style={{ left: rect.x, top: rect.y, width: boxWidth, height: boxHeight, transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined }}
+                     >
+                        <BoardItemToolbar
+                           zoom={zoom}
+                           clampDown={toolbarClamp}
+                           clampX={toolbarClampX}
+                           measureRef={toolbarMeasureRef}
+                           // An expanded zone's title bar sits above the frame too; lift the toolbar above it.
+                           extraBottom={isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0}
+                           onMoveStart={(event) => onMoveStart(item.id, event)}
+                           onConnectStart={(event) => onConnectStart(item.id, event)}
+                           onBringToFront={() => onBringToFront(item.id)}
+                           onSendToBack={() => onSendToBack(item.id)}
+                           onDelete={() => onDelete(item.id)}
+                           slotRef={setToolbarSlot}
+                        />
+                     </div>,
+                     toolbarOverlay,
+                  )}
 
-               {/* Single bottom-right resize grip, counter-scaled to a constant on-screen size.
-                   A pin is a fixed-size dot, a collapsed zone is bar-sized (expand to resize), and a
-                   fixed card/tracker/character embed has no grip; a windowed note tile keeps it. */}
+               {/* Single bottom-right resize grip, counter-scaled to a constant on-screen size. It stays on
+                   the box (not the overlay); a zone's box is click-through, so re-arm pointer events here.
+                   A pin is a fixed-size dot, a collapsed zone is bar-sized (expand to resize), and a fixed
+                   card/tracker/character embed has no grip; a windowed note tile keeps it. */}
                {!isPin && !isCollapsedZone && (!isEmbed || isResizableEmbed) && (
-                  <div
-                     onPointerDown={handleResizePointerDown}
-                     onPointerMove={handleResizePointerMove}
-                     onPointerUp={handleResizePointerUp}
-                     className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 rounded-sm border border-background bg-primary"
-                     style={{ width: gripSize, height: gripSize, cursor: 'nwse-resize' }}
-                  />
+                  <div className={cn(isZone && 'pointer-events-auto')}>
+                     <div
+                        onPointerDown={handleResizePointerDown}
+                        onPointerMove={handleResizePointerMove}
+                        onPointerUp={handleResizePointerUp}
+                        className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 rounded-sm border border-background bg-primary"
+                        style={{ width: gripSize, height: gripSize, cursor: 'nwse-resize' }}
+                     />
+                  </div>
                )}
-            </div>
+            </>
          )}
       </div>
    );

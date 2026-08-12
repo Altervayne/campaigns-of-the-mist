@@ -1,5 +1,5 @@
 // -- React Imports --
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 // -- Utils Imports --
 import { zoneContentMinSize } from '@/lib/board/zoneMembership';
@@ -77,9 +77,13 @@ interface BoardItemsLayerProps {
 /*
  * The board's world-transform layer: one translate+scale div mapping world coords to screen. Holds every
  * non-connection item in ONE stable pass (selection raises an item via its z-index band, never a DOM
- * re-order, so its React instance is preserved - no remount), the multi-select group toolbar, the
- * connection overlay, and the pen / polygon / focus / hover previews. The pending-erase and drawing-focus
- * contexts wrap this layer from the parent.
+ * re-order, so its React instance is preserved - no remount), the connection overlay, and the pen /
+ * polygon / focus / hover previews. The pending-erase and drawing-focus contexts wrap this layer from the
+ * parent.
+ *
+ * A second sibling div with the IDENTICAL transform sits at a higher stacking layer as the selection-toolbar
+ * overlay: the sole-item and multi-select group bars render there so they clear the board name pill (which
+ * tops the world layer), while the item boxes stay below it. Same transform means no screen-space math shifts.
  */
 export function BoardItemsLayer({
    viewport,
@@ -125,6 +129,10 @@ export function BoardItemsLayer({
    const itemToolbar = useToolbarMetrics();
    const groupToolbar = useToolbarMetrics();
 
+   // The selection-toolbar overlay node, state-backed so a box re-renders to portal its bar in once it
+   // mounts. It stays stable after mount (the div never unmounts), so a pan never churns the boxes.
+   const [toolbarOverlay, setToolbarOverlay] = useState<HTMLDivElement | null>(null);
+
    /**
     * The off-top clamp for the sole-selected item's toolbar; undefined for every other item, since only the
     * toolbar-bearing sole selection needs measuring. `item.y` is the stored top, so the live move delta is
@@ -161,6 +169,7 @@ export function BoardItemsLayer({
             toolbarClamp={toolbarClampFor(item)}
             toolbarClampX={toolbarClampXFor(item)}
             toolbarMeasureRef={itemToolbar.measureRef}
+            toolbarOverlay={toolbarOverlay}
             zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount)}
             memberCount={members?.length}
             resizeMin={members ? zoneContentMinSize(item, members) : item.kind === 'portal' ? PORTAL_MIN_SIZE : undefined}
@@ -187,35 +196,20 @@ export function BoardItemsLayer({
       );
    };
 
+   // Both layers share this transform: the world div (items + previews) and the selection-toolbar overlay
+   // use the IDENTICAL translate+scale, so a world coord maps to the same screen point in each - the bars
+   // land exactly where they would in the world layer, just in a higher stacking layer.
+   const worldTransform = { transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`, transformOrigin: '0 0' } as const;
+
    // World layer: a single transform maps world coords to screen.
    return (
-      <div className="absolute left-0 top-0" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`, transformOrigin: '0 0' }}>
+      <>
+      <div className="absolute left-0 top-0" style={worldTransform}>
          {/* All non-connection items in ONE pass (never split by selection - no remount). Each box
              carries its z-index band: unselected below the connection layer, selected above it. A
              zone's tinted frame paints inline at the zone's band, behind its own members. */}
          {nonZoneItems.map(renderBox)}
          {zoneItems.map(renderBox)}
-
-         {/* Group toolbar over the multi-selection's bounding box (per-item bars suppressed). It
-             tops every band so it floats above its members and the connection layer. The anchor spans
-             the whole bbox and stays inert, so a press inside it still reaches the item under it (the
-             bar itself re-arms pointer events); the bbox already carries the live move delta. */}
-         {groupBbox && (
-            <div className="pointer-events-none absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
-               <BoardGroupToolbar
-                  zoom={viewport.zoom}
-                  clampDown={toolbarClampDown(groupBbox.y, viewport)}
-                  clampX={toolbarClampX(groupBbox.x + groupToolbar.metrics.anchorOffset, groupToolbar.metrics.screenWidth, 'left', clipWidth, viewport)}
-                  measureRef={groupToolbar.measureRef}
-                  onMoveStart={(event) => {
-                     const anchor = [...selectedIds][0];
-                     if (anchor) handleMoveStart(anchor, event);
-                  }}
-                  onDuplicate={() => void handleDuplicateSelection()}
-                  onDelete={handleDeleteSelection}
-               />
-            </div>
-         )}
 
          {/* Connections (+ the connect-drag preview) sit at the connection band (z N+1): above every
              unselected item, below every selected one - so a string to a selected item runs behind
@@ -293,5 +287,34 @@ export function BoardItemsLayer({
             />
          )}
       </div>
+
+      {/* Selection-toolbar overlay: a sibling of the world layer with the SAME transform but a higher
+          stacking layer (z 45, above the z-40 board name pill, below the z-50 popovers), so a selected
+          item's bar floats above the pill while every item box stays below it. Inert, so an empty region
+          never steals a pointer from the item beneath; each bar re-arms pointer events on itself. Both bar
+          sets live here: the group bar's wrapper below, and each sole-selected item's bar portaled in from
+          its box. */}
+      <div ref={setToolbarOverlay} className="pointer-events-none absolute left-0 top-0" style={{ ...worldTransform, zIndex: 45 }}>
+         {/* Group toolbar over the multi-selection's bounding box (per-item bars suppressed). The anchor
+             spans the whole bbox and stays inert, so a press inside it still reaches the item under it (the
+             bar itself re-arms pointer events); the bbox already carries the live move delta. */}
+         {groupBbox && (
+            <div className="pointer-events-none absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
+               <BoardGroupToolbar
+                  zoom={viewport.zoom}
+                  clampDown={toolbarClampDown(groupBbox.y, viewport)}
+                  clampX={toolbarClampX(groupBbox.x + groupToolbar.metrics.anchorOffset, groupToolbar.metrics.screenWidth, 'left', clipWidth, viewport)}
+                  measureRef={groupToolbar.measureRef}
+                  onMoveStart={(event) => {
+                     const anchor = [...selectedIds][0];
+                     if (anchor) handleMoveStart(anchor, event);
+                  }}
+                  onDuplicate={() => void handleDuplicateSelection()}
+                  onDelete={handleDeleteSelection}
+               />
+            </div>
+         )}
+      </div>
+      </>
    );
 }
