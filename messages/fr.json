@@ -1911,6 +1911,8 @@
          "canvas_body": "Voici la toile. Elle s'étend aussi loin que nécessaire dans toutes les directions, et tout ce que vous y placez occupe son propre emplacement dans cet espace, vous pouvez donc étaler votre travail et y revenir plus tard.",
          "handleItems_title": "Sélectionner et Déplacer",
          "handleItems_body": "Faites glisser n'importe quel élément pour le déplacer, et cliquez dessus pour le sélectionner. Pour en sélectionner plusieurs à la fois, tracez un cadre sur le fond vide. Double-cliquez sur un élément pour l'ouvrir ou le modifier. Essayez, puis continuez.",
+         "alignSnap_title": "[TO COMPLETE]",
+         "alignSnap_body": "[TO COMPLETE]",
          "panZoom_title": "Se Déplacer",
          "panZoom_body": "Pour vous déplacer sur la toile, faites glisser avec le bouton droit de la souris, ou maintenez Alt et faites glisser. Utilisez la molette pour zoomer et dézoomer. Essayez maintenant pour vous familiariser, puis continuez quand vous êtes prêt.",
          "toolbar_title": "La Barre d'Outils",

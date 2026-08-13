@@ -2010,6 +2010,8 @@
          "canvas_body": "This is the canvas. It stretches as far as you need in every direction, and everything you place lives at its own spot in that space, so you can spread your work out and come back to it later.",
          "handleItems_title": "Selecting and Moving",
          "handleItems_body": "Drag any element to move it, and click one to select it. To select several at once, drag a box across the empty background. Double-click an element to open or edit it. Give it a try, then continue.",
+         "alignSnap_title": "Lining Things Up",
+         "alignSnap_body": "Hold Shift while you drag an element and it snaps to the edges and centers of the ones around it, with guides showing what it lines up with. It even helps you match the spacing between them. Release Shift to move freely. Give it a try, then continue.",
          "panZoom_title": "Moving Around",
          "panZoom_body": "To move around the canvas, drag with the right mouse button, or hold Alt and drag. Scroll to zoom in and out. Try it now to get a feel for it, then continue when you are ready.",
          "toolbar_title": "The Toolbar",

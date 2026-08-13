@@ -94,6 +94,20 @@ export const DESKTOP_BOARD_TUTORIAL: TutorialDefinition = {
          advance: { on: 'next-click' },
       },
       {
+         // Shift-drag snapping, on the lit canvas. Drive select so a move actually snaps and back-nav
+         // restores it. The guides are transient mid-drag with no store signal, so it narrates then clicks
+         // Next; no gesture cue, since that is a touch affordance and this is a mouse + Shift interaction.
+         id: 'align-snap',
+         onArrive: { type: 'board', action: 'setTool:select' },
+         anchorKey: 'board-canvas',
+         titleKey: 'Tutorial.board.alignSnap_title',
+         bodyKey: 'Tutorial.board.alignSnap_body',
+         placement: 'center',
+         interaction: 'anchor-only',
+         scrim: 'none',
+         advance: { on: 'next-click' },
+      },
+      {
          // Pan/zoom invitation: the canvas is the anchor and the whole surface, so it runs lit
          // (`scrim:'none'`) + `anchor-only` and the user can drag/scroll it freely, then click Next.
          id: 'pan-zoom',
