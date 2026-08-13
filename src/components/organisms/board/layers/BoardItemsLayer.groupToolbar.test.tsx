@@ -102,6 +102,9 @@ function renderLayer(overrides: {
          handleRequestRelinkPortal={() => {}}
          handleDuplicateSelection={overrides.handleDuplicateSelection ?? (async () => {})}
          handleDeleteSelection={overrides.handleDeleteSelection ?? (() => {})}
+         alignableCount={2}
+         onAlign={() => {}}
+         onDistribute={() => {}}
       />,
    );
 }

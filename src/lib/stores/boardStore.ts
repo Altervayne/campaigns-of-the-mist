@@ -97,6 +97,12 @@ export interface BoardState {
        * compound; members dragged along by a moved zone are excluded so they keep their membership.
        */
       moveItems: (ids: string[], delta: { x: number; y: number }, reevaluateIds?: string[]) => Promise<void>;
+      /**
+       * Moves several items to ABSOLUTE positions (align / distribute) as ONE undo step. Each moved non-zone
+       * item's membership is recomputed against the zones at their POST-move positions and folded into the
+       * same compound; a member carried by a moved zone (its own zone in the move set) keeps its membership.
+       */
+      moveItemsTo: (positions: Record<string, { x: number; y: number }>) => Promise<void>;
       /** Deletes several items plus the connections referencing any of them (deduped) as ONE undo step. */
       deleteItems: (ids: string[]) => Promise<void>;
       /**
@@ -481,6 +487,68 @@ export function createBoardStore(options: { viewportSaveDebounceMs?: number } = 
                });
                await runItemMutation(createCompoundCommand([
                   ...moves.map((move) => createMoveItemCommand(move.id, move.position)),
+                  ...zoneChanges.map((change) => createSetItemZoneCommand(change.id, change.zoneId)),
+                  ...zoneChangeZ.map((change) => createSetItemZCommand(change.id, change.z)),
+               ]));
+            },
+
+            moveItemsTo: async (positions) => {
+               const entries = Object.entries(positions);
+               if (entries.length === 0) return;
+               markDirty();
+               const items = get().items;
+               const moveSet = new Set(entries.map(([id]) => id));
+
+               // Recompute membership for the moved non-zone items against the zones at their POST-move
+               // positions (a zone that moved shifts to its new absolute pos). Members carried along by a
+               // moved zone (their own zone in the set) keep their membership - same guard as moveItems.
+               const zonesAfter = Object.values(items)
+                  .filter((item) => item.kind === 'zone')
+                  .map((zone) => (positions[zone.id] ? { ...zone, x: positions[zone.id].x, y: positions[zone.id].y } : zone));
+               const zoneChanges: { id: string; zoneId: string | null }[] = [];
+               for (const [id, pos] of entries) {
+                  const item = items[id];
+                  if (!item || item.kind === 'zone') continue;
+                  if (item.zoneId && moveSet.has(item.zoneId)) continue;
+                  const moved = { id: item.id, x: pos.x, y: pos.y, width: item.width, height: item.height };
+                  const newZone = zoneContaining(moved, zonesAfter);
+                  if (newZone !== (item.zoneId ?? null)) zoneChanges.push({ id, zoneId: newZone });
+               }
+
+               // A membership change reinterprets z within the NEW scope; land the item at that scope's front.
+               const scopeFront = new Map<string, number>();
+               const zoneChangeZ: { id: string; z: number }[] = [];
+               for (const change of zoneChanges) {
+                  const key = change.zoneId ?? '';
+                  let front = scopeFront.get(key);
+                  if (front === undefined) {
+                     let max = -Infinity;
+                     for (const other of Object.values(items)) {
+                        if (other.kind !== 'connection' && (other.zoneId ?? null) === change.zoneId) max = Math.max(max, other.z);
+                     }
+                     front = (max === -Infinity ? -1 : max) + 1;
+                  } else {
+                     front += 1;
+                  }
+                  scopeFront.set(key, front);
+                  zoneChangeZ.push({ id: change.id, z: front });
+               }
+               const frontZById = new Map(zoneChangeZ.map((change) => [change.id, change.z]));
+
+               set((state) => {
+                  const next = { ...state.items };
+                  for (const [id, pos] of entries) {
+                     const existing = next[id];
+                     if (existing) next[id] = { ...existing, x: pos.x, y: pos.y };
+                  }
+                  for (const change of zoneChanges) {
+                     const existing = next[change.id];
+                     if (existing) next[change.id] = { ...existing, zoneId: change.zoneId ?? undefined, z: frontZById.get(change.id) ?? existing.z };
+                  }
+                  return { items: next };
+               });
+               await runItemMutation(createCompoundCommand([
+                  ...entries.map(([id, pos]) => createMoveItemCommand(id, pos)),
                   ...zoneChanges.map((change) => createSetItemZoneCommand(change.id, change.zoneId)),
                   ...zoneChangeZ.map((change) => createSetItemZCommand(change.id, change.z)),
                ]));

@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useCallback, useEffect, useId, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -10,6 +10,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import { fitViewport } from '@/lib/board/boardCoordinates';
 import { flattenBoardOrder } from '@/lib/board/boardTree';
+import { alignPositions, distributePositions, type AlignEdge, type DistributeAxis, type Rect } from '@/lib/board/boardAlign';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { PendingEraseContext } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
@@ -58,6 +59,26 @@ import type { ChallengeGame } from '@/lib/types/common';
 
 /** The layers panel's fixed width (matches its `w-64`), used to inset the bottom bar when it's open. */
 const LAYERS_PANEL_WIDTH = 256;
+
+/**
+ * Carries a moved zone's members along by the same delta, mirroring the drag-move expansion. Each selected
+ * zone's target shift is applied to every member NOT already targeted itself (a selected member keeps its
+ * own aligned position). Non-zone entries pass through unchanged.
+ */
+function withZoneMembers(items: Record<string, BoardItem>, selectedIds: Set<string>, positions: Record<string, { x: number; y: number }>): Record<string, { x: number; y: number }> {
+   const result = { ...positions };
+   for (const [id, pos] of Object.entries(positions)) {
+      const zone = items[id];
+      if (!zone || zone.kind !== 'zone') continue;
+      const dx = pos.x - zone.x;
+      const dy = pos.y - zone.y;
+      for (const member of Object.values(items)) {
+         if (member.zoneId !== id || selectedIds.has(member.id)) continue;
+         result[member.id] = { x: member.x + dx, y: member.y + dy };
+      }
+   }
+   return result;
+}
 
 export function BoardCanvas({ store }: { store: BoardStore }) {
    const { t } = useTranslation();
@@ -390,6 +411,40 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       window.addEventListener('pointerup', onUp);
    };
 
+   // The selection's non-connection items feed align/distribute (connections are zero-size, so they follow
+   // their endpoints). Distribute needs 3 of them; the group toolbar disables its two distribute buttons below.
+   const alignableCount = useMemo(() => {
+      let count = 0;
+      for (const id of selectedIds) if (items[id] && items[id].kind !== 'connection') count++;
+      return count;
+   }, [selectedIds, items]);
+
+   /** Non-connection selected items as an id->rect map for the alignment math. */
+   const selectionRects = useCallback((): Record<string, Rect> => {
+      const state = store.getState();
+      const rects: Record<string, Rect> = {};
+      for (const id of state.selectedIds) {
+         const item = state.items[id];
+         if (item && item.kind !== 'connection') rects[id] = { x: item.x, y: item.y, width: item.width, height: item.height };
+      }
+      return rects;
+   }, [store]);
+
+   // Align / distribute the selection to its own bounding box, carrying any selected zone's members along.
+   const applyAlign = useCallback((edge: AlignEdge) => {
+      const rects = selectionRects();
+      if (Object.keys(rects).length < 2) return;
+      const state = store.getState();
+      void actions.moveItemsTo(withZoneMembers(state.items, state.selectedIds, alignPositions(rects, edge)));
+   }, [selectionRects, store, actions]);
+
+   const applyDistribute = useCallback((axis: DistributeAxis) => {
+      const rects = selectionRects();
+      if (Object.keys(rects).length < 3) return;
+      const state = store.getState();
+      void actions.moveItemsTo(withZoneMembers(state.items, state.selectedIds, distributePositions(rects, axis)));
+   }, [selectionRects, store, actions]);
+
    const { clearBoardAction } = useAppGeneralStateActions();
 
    // The command palette has no cursor point to drop at and doesn't know the selection, so it requests
@@ -471,6 +526,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             actions.setViewport(fitViewport(portals, clip, PORTAL_FRAME_PADDING));
          }
       }
+      else if (pendingBoardAction.startsWith('align:')) applyAlign(pendingBoardAction.slice('align:'.length) as AlignEdge);
+      else if (pendingBoardAction.startsWith('distribute:')) applyDistribute(pendingBoardAction.slice('distribute:'.length) as DistributeAxis);
       else if (pendingBoardAction.startsWith('embedNote:')) embedNoteAt(pendingBoardAction.slice('embedNote:'.length), viewCenter);
       clearBoardAction();
       // eslint-disable-next-line react-hooks/exhaustive-deps -- the handlers close over live selection/viewCenter that change every render; only the action id should re-trigger this.
@@ -548,6 +605,9 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             handleRequestRelinkPortal={handleRequestRelinkPortal}
             handleDuplicateSelection={handleDuplicateSelection}
             handleDeleteSelection={handleDeleteSelection}
+            alignableCount={alignableCount}
+            onAlign={applyAlign}
+            onDistribute={applyDistribute}
          />
 
          {/* Draw capture overlay: a screen-space gesture surface above the world layer. Interactive ONLY in a

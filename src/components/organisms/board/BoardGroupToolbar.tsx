@@ -3,10 +3,28 @@ import { useTranslation } from 'react-i18next';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 
 // -- Icon Imports --
-import { Copy, GripVertical, Trash2 } from 'lucide-react';
+import {
+   AlignCenterHorizontal,
+   AlignCenterVertical,
+   AlignEndHorizontal,
+   AlignEndVertical,
+   AlignHorizontalDistributeCenter,
+   AlignStartHorizontal,
+   AlignStartVertical,
+   AlignVerticalDistributeCenter,
+   Copy,
+   GripVertical,
+   Trash2,
+} from 'lucide-react';
+
+// -- Component Imports --
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+
+// -- Type Imports --
+import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 
 /*
  * The floating action bar for a MULTI-selection: move the whole group, duplicate it, or
@@ -30,6 +48,10 @@ interface BoardGroupToolbarProps {
    onMoveStart: (event: ReactPointerEvent) => void;
    onDuplicate: () => void;
    onDelete: () => void;
+   /** Non-connection selected count: under 3 the two distribute buttons disable (align needs only 2). */
+   alignableCount: number;
+   onAlign: (edge: AlignEdge) => void;
+   onDistribute: (axis: DistributeAxis) => void;
    /** World-px to lower the bar so it clears the clip's top edge (a selection off the top); 0 = no clamp. */
    clampDown?: number;
    /** World-px to slide the bar sideways so it clears the clip's left/right edge; 0 = no clamp. */
@@ -38,7 +60,7 @@ interface BoardGroupToolbarProps {
    measureRef: (node: HTMLDivElement | null) => void;
 }
 
-export function BoardGroupToolbar({ zoom, onMoveStart, onDuplicate, onDelete, measureRef, clampDown = 0, clampX = 0 }: BoardGroupToolbarProps) {
+export function BoardGroupToolbar({ zoom, onMoveStart, onDuplicate, onDelete, alignableCount, onAlign, onDistribute, measureRef, clampDown = 0, clampX = 0 }: BoardGroupToolbarProps) {
    const { t } = useTranslation();
 
    // The bar anchors at the bbox's top edge (bottom:100%), lowered by the off-top clamp (world px), which
@@ -65,6 +87,41 @@ export function BoardGroupToolbar({ zoom, onMoveStart, onDuplicate, onDelete, me
                >
                   <GripVertical className="h-4 w-4" />
                </div>
+               <Popover>
+                  <PopoverTrigger asChild>
+                     <button
+                        type="button"
+                        title={t('BoardView.alignSelection')}
+                        aria-label={t('BoardView.alignSelection')}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        className="flex cursor-pointer items-center justify-center rounded p-1 text-popover-foreground hover:bg-muted"
+                     >
+                        <AlignCenterHorizontal className="h-4 w-4" />
+                     </button>
+                  </PopoverTrigger>
+                  {/* Portals to the body at z-50, above the z-45 transformed overlay, so it renders at natural
+                      screen size with no counter-scale. A React portal still bubbles events up the React tree,
+                      so stop the pointer here or the canvas's background handler reads it as a click-away and
+                      clears the selection before the align runs. */}
+                  <PopoverContent align="center" className="w-auto p-1" onPointerDown={(event) => event.stopPropagation()}>
+                     <div className="flex flex-col gap-1">
+                        <div className="flex gap-0.5">
+                           <AlignButton title={t('BoardView.alignLeft')} onClick={() => onAlign('left')}><AlignStartVertical className="h-4 w-4" /></AlignButton>
+                           <AlignButton title={t('BoardView.alignCenterX')} onClick={() => onAlign('centerX')}><AlignCenterVertical className="h-4 w-4" /></AlignButton>
+                           <AlignButton title={t('BoardView.alignRight')} onClick={() => onAlign('right')}><AlignEndVertical className="h-4 w-4" /></AlignButton>
+                        </div>
+                        <div className="flex gap-0.5">
+                           <AlignButton title={t('BoardView.alignTop')} onClick={() => onAlign('top')}><AlignStartHorizontal className="h-4 w-4" /></AlignButton>
+                           <AlignButton title={t('BoardView.alignMiddleY')} onClick={() => onAlign('middleY')}><AlignCenterHorizontal className="h-4 w-4" /></AlignButton>
+                           <AlignButton title={t('BoardView.alignBottom')} onClick={() => onAlign('bottom')}><AlignEndHorizontal className="h-4 w-4" /></AlignButton>
+                        </div>
+                        <div className="flex gap-0.5">
+                           <AlignButton title={t('BoardView.distributeHorizontal')} disabled={alignableCount < 3} onClick={() => onDistribute('horizontal')}><AlignHorizontalDistributeCenter className="h-4 w-4" /></AlignButton>
+                           <AlignButton title={t('BoardView.distributeVertical')} disabled={alignableCount < 3} onClick={() => onDistribute('vertical')}><AlignVerticalDistributeCenter className="h-4 w-4" /></AlignButton>
+                        </div>
+                     </div>
+                  </PopoverContent>
+               </Popover>
                <GroupButton title={t('BoardView.duplicateSelection')} onClick={onDuplicate}>
                   <Copy className="h-4 w-4" />
                </GroupButton>
@@ -90,6 +147,22 @@ function GroupButton({ title, destructive = false, onClick, children }: { title:
             'flex cursor-pointer items-center justify-center rounded p-1',
             destructive ? 'text-destructive hover:bg-destructive/15' : 'text-popover-foreground hover:bg-muted',
          )}
+      >
+         {children}
+      </button>
+   );
+}
+
+/** A square icon button in the align popover grid; disables (dimmed, inert) when its op isn't available. */
+function AlignButton({ title, disabled = false, onClick, children }: { title: string; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+   return (
+      <button
+         type="button"
+         title={title}
+         aria-label={title}
+         disabled={disabled}
+         onClick={onClick}
+         className="flex cursor-pointer items-center justify-center rounded p-1.5 text-popover-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
       >
          {children}
       </button>

@@ -20,6 +20,7 @@ import { SnapOverlay } from './SnapOverlay';
 // -- Type Imports --
 import type { BoardState } from '@/lib/stores/boardStore';
 import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, Viewport } from '@/lib/types/board';
+import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
 import type { DistanceBadge, GuideSegment } from '@/lib/board/boardSnapping';
 
@@ -72,6 +73,10 @@ interface BoardItemsLayerProps {
    handleRequestRelinkPortal: (itemId: string, screen: { x: number; y: number }) => void;
    handleDuplicateSelection: () => Promise<void>;
    handleDeleteSelection: () => void;
+   /** Non-connection selected count: the group toolbar disables its distribute buttons under 3. */
+   alignableCount: number;
+   onAlign: (edge: AlignEdge) => void;
+   onDistribute: (axis: DistributeAxis) => void;
 }
 
 /*
@@ -121,6 +126,9 @@ export function BoardItemsLayer({
    handleRequestRelinkPortal,
    handleDuplicateSelection,
    handleDeleteSelection,
+   alignableCount,
+   onAlign,
+   onDistribute,
 }: BoardItemsLayerProps) {
    // Each floating bar measures itself for the sideways clamp: its width varies with its own contents (the
    // per-kind action slot), so no constant can stand in for it. Both reads come off a ResizeObserver, so a
@@ -311,6 +319,9 @@ export function BoardItemsLayer({
                   }}
                   onDuplicate={() => void handleDuplicateSelection()}
                   onDelete={handleDeleteSelection}
+                  alignableCount={alignableCount}
+                  onAlign={onAlign}
+                  onDistribute={onDistribute}
                />
             </div>
          )}

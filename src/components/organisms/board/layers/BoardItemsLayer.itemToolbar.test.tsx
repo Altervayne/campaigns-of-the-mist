@@ -86,6 +86,9 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
          handleRequestRelinkPortal={() => {}}
          handleDuplicateSelection={async () => {}}
          handleDeleteSelection={() => {}}
+         alignableCount={0}
+         onAlign={() => {}}
+         onDistribute={() => {}}
       />,
    );
    // The grip, then the bar's own positioned root two wrappers up.

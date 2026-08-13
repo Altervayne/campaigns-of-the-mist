@@ -12,7 +12,7 @@ import { useDeviceType } from '@/hooks/useDeviceType';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { FileUp, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, Eraser, Brush, Highlighter, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import { FileUp, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, Eraser, Brush, Highlighter, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Image as ImageIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { exportCharacterSheet, exportDrawer, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
@@ -305,6 +305,16 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // Merge needs the live selection, so it rides the request bridge and reuses the footer's mergeable
       // reasoning (no-op + toast if the current selection isn't a contiguous drawing run).
       { id: 'mergeSelectedLayers', scope: 'board', label: t('CommandPalette.commands.mergeSelectedLayers'), keywords: ['merge', 'combine', 'flatten', 'layers', 'drawings', 'board'], icon: Combine, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('mergeSelectedLayers') },
+      // Align / distribute the current multi-selection to its bounding box. The canvas owns the selection,
+      // so each routes through the request bridge; align no-ops under 2 items, distribute under 3.
+      { id: 'alignLeft', scope: 'board', label: t('CommandPalette.commands.alignLeft'), keywords: ['align', 'left', 'edge', 'selection', 'board'], icon: AlignStartVertical, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:left') },
+      { id: 'alignCenterX', scope: 'board', label: t('CommandPalette.commands.alignCenterX'), keywords: ['align', 'center', 'horizontal', 'middle', 'selection', 'board'], icon: AlignCenterVertical, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:centerX') },
+      { id: 'alignRight', scope: 'board', label: t('CommandPalette.commands.alignRight'), keywords: ['align', 'right', 'edge', 'selection', 'board'], icon: AlignEndVertical, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:right') },
+      { id: 'alignTop', scope: 'board', label: t('CommandPalette.commands.alignTop'), keywords: ['align', 'top', 'edge', 'selection', 'board'], icon: AlignStartHorizontal, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:top') },
+      { id: 'alignMiddleY', scope: 'board', label: t('CommandPalette.commands.alignMiddleY'), keywords: ['align', 'middle', 'vertical', 'center', 'selection', 'board'], icon: AlignCenterHorizontal, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:middleY') },
+      { id: 'alignBottom', scope: 'board', label: t('CommandPalette.commands.alignBottom'), keywords: ['align', 'bottom', 'edge', 'selection', 'board'], icon: AlignEndHorizontal, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:bottom') },
+      { id: 'distributeHorizontal', scope: 'board', label: t('CommandPalette.commands.distributeHorizontal'), keywords: ['distribute', 'spread', 'horizontal', 'space', 'gaps', 'even', 'selection', 'board'], icon: AlignHorizontalDistributeCenter, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('distribute:horizontal') },
+      { id: 'distributeVertical', scope: 'board', label: t('CommandPalette.commands.distributeVertical'), keywords: ['distribute', 'spread', 'vertical', 'space', 'gaps', 'even', 'selection', 'board'], icon: AlignVerticalDistributeCenter, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('distribute:vertical') },
       // One board challenge command per game (mirroring the toolbar/radial submenu). The board mints its own
       // copy (no drawer source) and auto-opens the Expanded overlay; the active canvas consumes the request
       // since it owns the drop point + selection/expand state.

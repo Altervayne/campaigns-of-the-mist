@@ -21,7 +21,8 @@ export type MobileDrawerSnapPoint = 'closed' | 'half' | 'full';
  * reference tile. The canvas consumes it against its own state and clears it. The `create:<kind>` members
  * mirror the toolbar/radial's `CreatableKind` set (explicit per-kind, not a free-form parameter), so a
  * palette create can't drift from the registry; `setGrid:<type>` swaps the background grid;
- * `embedNote:<drawerItemId>` carries the picked note's id.
+ * `align:<edge>` / `distribute:<axis>` align or spread the current selection; `embedNote:<drawerItemId>`
+ * carries the picked note's id.
  */
 export type BoardAction =
    | `createChallenge:${ChallengeGame}`
@@ -41,6 +42,14 @@ export type BoardAction =
    | 'mergeSelectedLayers'
    | 'frameConnections'
    | 'framePortals'
+   | 'align:left'
+   | 'align:centerX'
+   | 'align:right'
+   | 'align:top'
+   | 'align:middleY'
+   | 'align:bottom'
+   | 'distribute:horizontal'
+   | 'distribute:vertical'
    | `embedNote:${string}`;
 
 interface AppGeneralState {
