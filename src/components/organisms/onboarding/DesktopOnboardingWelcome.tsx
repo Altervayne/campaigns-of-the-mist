@@ -43,7 +43,7 @@ export default function DesktopOnboardingWelcome({ onNext, onSkip }: DesktopOnbo
 					onClick={onSkip}
 					className="w-full cursor-pointer text-muted-foreground"
 				>
-					{t('MobileOnboarding.navigation.skip')}
+					{t('Common.skip')}
 				</Button>
 			</div>
 		</div>

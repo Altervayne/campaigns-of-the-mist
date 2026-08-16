@@ -47,11 +47,11 @@ export function LegacyDrawerBackupDialog({ isOpen, onOpenChange, onRemoved }: Le
          removeBlob={removeLegacyDrawerBlob}
          title={t('SettingsDialog.legacyBackup.confirmTitle')}
          description={t('SettingsDialog.legacyBackup.confirmDescription')}
-         downloadButtonLabel={t('SettingsDialog.legacyBackup.downloadBackupButton')}
-         backupDownloadedLabel={t('SettingsDialog.legacyBackup.backupDownloadedLabel')}
-         confirmCheckboxLabel={t('SettingsDialog.legacyBackup.confirmCheckbox')}
-         removeButtonLabel={t('SettingsDialog.legacyBackup.removeButton')}
-         cancelLabel={t('SettingsDialog.legacyBackup.cancel')}
+         downloadButtonLabel={t('Common.downloadBackup')}
+         backupDownloadedLabel={t('Common.backupDownloaded')}
+         confirmCheckboxLabel={t('Common.iUnderstandTheOld')}
+         removeButtonLabel={t('Common.removeOldCopy')}
+         cancelLabel={t('Common.cancel')}
          exportFailedMessage={t('Notifications.drawer.legacyBackupExportFailed')}
          downloadedMessage={t('Notifications.drawer.legacyBackupDownloaded')}
          removedMessage={t('Notifications.drawer.legacyBackupRemoved')}

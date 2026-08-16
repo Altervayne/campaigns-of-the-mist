@@ -127,7 +127,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 				{/* Game Selection - `pt-2` gives the selected card's ring (`ring-4`) room so its halo is not clipped.
 				    Headed by its type category; the game-agnostic workspace category follows below. */}
 				<div className="px-6 pt-2 pb-6">
-					<h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.characterSheetType')}</h3>
+					<h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('Common.characterSheet')}</h3>
 					<div className="space-y-3">
 						{gameOptions.map((option, index) => (
 							<motion.div

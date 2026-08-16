@@ -212,7 +212,7 @@ export default function TutorialTooltip({
          <button
             onClick={onSkip}
             className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-muted transition-colors cursor-pointer"
-            aria-label={t('Tutorial.controls.skip')}
+            aria-label={t('Common.skip')}
          >
             <X className="w-4 h-4 text-muted-foreground" />
          </button>
@@ -224,7 +224,7 @@ export default function TutorialTooltip({
          )}
 
          <div className="pr-6">
-            <h3 className="text-lg font-semibold mb-2">{variant === 'bail' ? t('Tutorial.controls.skip') : t(titleKey)}</h3>
+            <h3 className="text-lg font-semibold mb-2">{variant === 'bail' ? t('Common.skip') : t(titleKey)}</h3>
             <p className="text-sm text-muted-foreground mb-4">
                {variant === 'bail' ? t('Tutorial.anchorMissing') : t(bodyKey)}
             </p>
@@ -272,7 +272,7 @@ export default function TutorialTooltip({
 
                   {!gated && (
                      <Button size="sm" onClick={onNext} className="cursor-pointer">
-                        {isLast ? t('Tutorial.controls.done') : t('Tutorial.controls.next')}
+                        {isLast ? t('Tutorial.controls.done') : t('Common.next')}
                         {!isLast && <ChevronRight className="w-4 h-4 ml-1" />}
                      </Button>
                   )}

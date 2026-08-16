@@ -118,7 +118,7 @@ export default function OnboardingInterface({ onNext, onBack, onSkip }: Onboardi
 							)}
 						>
 							<SquareMenu className="w-8 h-8" />
-							<span className="font-medium text-sm text-center">{t('MobileOnboarding.interface.floatingButton')}</span>
+							<span className="font-medium text-sm text-center">{t('Common.floatingButtons')}</span>
 							{isMobileFABMode && (
 								<Check className="w-4 h-4 text-primary" />
 							)}
@@ -143,14 +143,14 @@ export default function OnboardingInterface({ onNext, onBack, onSkip }: Onboardi
 					onClick={onSkip}
 					className="cursor-pointer text-muted-foreground"
 				>
-					{t('MobileOnboarding.navigation.skip')}
+					{t('Common.skip')}
 				</Button>
 
 				<Button
 					onClick={onNext}
 					className="cursor-pointer"
 				>
-					{t('MobileOnboarding.navigation.next')}
+					{t('Common.next')}
 					<ChevronRight className="w-4 h-4 ml-1" />
 				</Button>
 			</div>

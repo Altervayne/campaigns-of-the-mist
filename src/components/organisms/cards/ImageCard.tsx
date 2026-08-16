@@ -225,13 +225,13 @@ const ImageCardContent = React.memo(
                                  {t('ImageCard.fitToImage')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => actions.setCardSize(card.id, IMAGE_CARD_PRESETS.portrait.width, IMAGE_CARD_PRESETS.portrait.height)} className="cursor-pointer">
-                                 {t('ImageCard.presetPortrait')}
+                                 {t('Common.portrait')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => actions.setCardSize(card.id, IMAGE_CARD_PRESETS.square.width, IMAGE_CARD_PRESETS.square.height)} className="cursor-pointer">
-                                 {t('ImageCard.presetSquare')}
+                                 {t('Common.square')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => actions.setCardSize(card.id, IMAGE_CARD_PRESETS.landscape.width, IMAGE_CARD_PRESETS.landscape.height)} className="cursor-pointer">
-                                 {t('ImageCard.presetLandscape')}
+                                 {t('Common.landscape')}
                               </DropdownMenuItem>
                            </DropdownMenuContent>
                         </DropdownMenu>

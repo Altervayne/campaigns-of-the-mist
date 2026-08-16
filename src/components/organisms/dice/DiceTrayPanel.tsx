@@ -40,12 +40,12 @@ export function DiceTrayPanel() {
             >
                <div data-tutorial="dice-tray-panel" className="overflow-hidden rounded-t-lg border-2 border-b-0 border-border bg-card shadow-2xl">
                   <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
-                     <span className="text-sm font-semibold">{t('DiceTray.title')}</span>
+                     <span className="text-sm font-semibold">{t('Common.diceTray')}</span>
                      <button
                         type="button"
                         onClick={() => setDiceTrayOpen(false)}
-                        aria-label={t('DiceTray.close')}
-                        title={t('DiceTray.close')}
+                        aria-label={t('Common.close')}
+                        title={t('Common.close')}
                         className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                      >
                         <X className="h-4 w-4" />

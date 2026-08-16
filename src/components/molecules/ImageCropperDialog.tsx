@@ -110,7 +110,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
                {/* Footer: full-width touch targets. The safe-area inset adds to the base padding so the
                    bottom gutter survives on devices without a home indicator. */}
                <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 flex-1 cursor-pointer">{t('ImageCropper.cancel')}</Button>
+                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 flex-1 cursor-pointer">{t('Common.cancel')}</Button>
                   <Button type="button" onClick={accept} disabled={!region || isCutting} className="h-11 flex-1 cursor-pointer">
                      {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                      {t('ImageCropper.apply')}
@@ -159,7 +159,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
             {lowResolution && <p className="px-4 pb-2 text-sm text-muted-foreground">{t('ImageCropper.lowResolution')}</p>}
 
             <DialogFooter className="border-t border-border px-4 py-3">
-               <Button type="button" variant="outline" onClick={onCancel} className="cursor-pointer">{t('ImageCropper.cancel')}</Button>
+               <Button type="button" variant="outline" onClick={onCancel} className="cursor-pointer">{t('Common.cancel')}</Button>
                <Button type="button" onClick={accept} disabled={!region || isCutting} className="cursor-pointer">
                   {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                   {t('ImageCropper.apply')}

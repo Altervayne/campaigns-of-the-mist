@@ -55,7 +55,7 @@ export function TabTypeChooser({ onChoose }: TabTypeChooserProps) {
       <div className="flex w-full flex-col gap-4">
          {/* Character sheet: one card per game, one click creates that game's sheet. */}
          <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.characterSheetType')}</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">{t('Common.characterSheet')}</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                {GAME_CARD_OPTIONS.map(({ game, titleKey, subtitleKey }) => {
                   const { Icon, accentText, gradient } = GAME_VISUALS[game];

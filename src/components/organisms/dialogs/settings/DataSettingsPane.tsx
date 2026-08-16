@@ -149,9 +149,9 @@ export function DataSettingsPane() {
                      <Download className="mr-2 h-4 w-4 shrink-0" />
                      <span className="truncate">{t('SettingsDialog.backup.exportButton')}</span>
                   </Button>
-                  <Button variant="outline" onClick={() => restoreInputRef.current?.click()} title={t('SettingsDialog.backup.restoreButton')} className="cursor-pointer min-w-0 justify-start">
+                  <Button variant="outline" onClick={() => restoreInputRef.current?.click()} title={t('Common.restoreFromBackup')} className="cursor-pointer min-w-0 justify-start">
                      <Upload className="mr-2 h-4 w-4 shrink-0" />
-                     <span className="truncate">{t('SettingsDialog.backup.restoreButton')}</span>
+                     <span className="truncate">{t('Common.restoreFromBackup')}</span>
                   </Button>
                   <p className="text-xs text-muted-foreground">{t('SettingsDialog.backup.description')}</p>
                   <input ref={restoreInputRef} type="file" accept={ACCEPT_BACKUP_RESTORE} onChange={onRestoreFileChange} className="hidden" />
@@ -256,7 +256,7 @@ export function DataSettingsPane() {
             open={isRestoreBackupDialogOpen}
             onOpenChange={setIsRestoreBackupDialogOpen}
             onConfirm={handleConfirmRestore}
-            title={t('SettingsDialog.backup.restoreDialog.title')}
+            title={t('Common.restoreFromBackup')}
             description={t('SettingsDialog.backup.restoreDialog.description')}
             confirmationText="REPLACE ALL MY DATA"
             confirmButtonText={t('SettingsDialog.backup.restoreDialog.confirm')}

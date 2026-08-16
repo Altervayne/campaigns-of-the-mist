@@ -39,14 +39,14 @@ export const DESKTOP_PORTALS_TUTORIAL: TutorialDefinition = {
    id: 'desktop.portals',
    platform: 'desktop',
    system: 'portals',
-   titleKey: 'TutorialsDialog.tutorials.portals.title',
+   titleKey: 'Common.portalsAndTheNavigator',
    teachKey: 'TutorialsDialog.tutorials.portals.teach',
    icon: Waypoints,
    needsDemo: 'portal-graph',
    steps: [
       {
          id: 'welcome',
-         titleKey: 'Tutorial.portals.welcome_title',
+         titleKey: 'Common.portalsAndTheNavigator',
          bodyKey: 'Tutorial.portals.welcome_body',
          placement: 'center',
          advance: { on: 'next-click' },

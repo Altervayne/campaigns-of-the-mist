@@ -97,7 +97,7 @@ export function useMobileNoteFileActions() {
                   <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.updateConfirmCancelButton')}</AlertDialogCancel>
+                  <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>

@@ -62,7 +62,7 @@ export function MobileNoteLinkSheet({ isOpen, link, getEditor, onClose, onOpen, 
          {link && (
             <div className="pb-[env(safe-area-inset-bottom)]">
                <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                  <span className="text-base font-semibold text-foreground">{t('NoteView.linkSheet.title')}</span>
+                  <span className="text-base font-semibold text-foreground">{t('Common.link')}</span>
                   <button
                      type="button"
                      onClick={onClose}

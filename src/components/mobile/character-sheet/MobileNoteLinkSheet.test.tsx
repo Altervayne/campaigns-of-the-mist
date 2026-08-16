@@ -112,7 +112,7 @@ describe('MobileNoteEditingBar link chip', () => {
          <MobileNoteEditingBar {...base} linkCaret={null} onLinkChip={onLinkChip} />,
       );
 
-      expect(queryByLabelText('NoteView.mobile.linkChip')).toBeNull();
+      expect(queryByLabelText('Common.link')).toBeNull();
       fireEvent.click(getByLabelText('NoteView.toolbar.insertLink'));
       expect(onLinkChip).toHaveBeenCalledTimes(1);
    });
@@ -124,7 +124,7 @@ describe('MobileNoteEditingBar link chip', () => {
       );
 
       expect(queryByLabelText('NoteView.toolbar.insertLink')).toBeNull();
-      fireEvent.click(getByLabelText('NoteView.mobile.linkChip'));
+      fireEvent.click(getByLabelText('Common.link'));
       expect(onLinkChip).toHaveBeenCalledTimes(1);
    });
 });

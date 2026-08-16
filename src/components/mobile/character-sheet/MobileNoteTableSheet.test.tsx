@@ -90,7 +90,7 @@ describe('MobileNoteTableSheet', () => {
       fireEvent.click(getByText('NoteView.tableSheet.done'));
       expect(onClose).toHaveBeenCalledTimes(1);
 
-      fireEvent.click(document.querySelector('[aria-label="NoteView.tableSheet.deleteTable"]')!);
+      fireEvent.click(document.querySelector('[aria-label="Common.table"]')!);
       expect(spies.deleteTable).toHaveBeenCalledTimes(1);
       expect(onClose).toHaveBeenCalledTimes(2);
    });

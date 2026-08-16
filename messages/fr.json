@@ -13,7 +13,6 @@
    "Tabs": {
       "untitled": "Personnage sans nom",
       "untitledBoard": "Tableau sans titre",
-      "untitledNote": "Note sans titre",
       "closeTab": "Fermer l'onglet",
       "newTab": "Nouvel onlget",
       "scrollLeft": "Défiler les onglets vers la gauche",
@@ -24,7 +23,6 @@
       "newTabDialog": {
          "title": "Nouvel onglet",
          "description": "Veuillez sélectionner le type d'onglet souhaité.",
-         "characterSheetType": "Fiche de Personnage",
          "workspaceType": "Espace de travail",
          "newBoardTitle": "Nouveau tableau",
          "newBoardSubtitle": "Une toile infinie",
@@ -34,12 +32,10 @@
       "closeTabDialog": {
          "title": "Fermer cet onglet ?",
          "description": "\"{{name}}\" contient des modifications non enregistrées. Fermer cet onglet les effacera pour de bon. Annulez la fermeture et enregistrez (Enregistrer ou Enregistrer sous) si vous souhaitez les préserver.",
-         "closeWithoutSaving": "Fermer sans enregistrer",
-         "cancel": "Annuler"
+         "closeWithoutSaving": "Fermer sans enregistrer"
       }
    },
    "NoteView": {
-      "titlePlaceholder": "Note sans titre",
       "bodyPlaceholder": "Commencez à écrire un document en markdown...",
       "emptyPreview": "Cette note est vide. Passez en mode Vue-Réelle pour commencer à écrire.",
       "mode": {
@@ -59,8 +55,7 @@
       "format": {
          "bold": "Gras",
          "italic": "Italique",
-         "strikethrough": "Barré",
-         "link": "Lien"
+         "strikethrough": "Barré"
       },
       "linkEdit": {
          "open": "Ouvrir le lien",
@@ -132,21 +127,16 @@
       },
       "mobile": {
          "read": "Lire",
-         "edit": "Modifier",
-         "more": "Plus d'options",
          "viewSource": "Voir le code source",
          "exitSource": "Quitter le code source",
          "undo": "Undo",
          "redo": "Redo",
-         "emptyReading": "Cette note est vide. Appuyez sur Modifier pour écrire.",
-         "tableChip": "Tableau",
-         "linkChip": "Lien"
+         "emptyReading": "Cette note est vide. Appuyez sur Modifier pour écrire."
       },
       "tableSheet": {
          "cellRow": "Ligne {{row}} / Col {{col}}",
          "cellHeader": "Entête / Col {{col}}",
          "groupInsert": "Insérer",
-         "groupMove": "Déplacer",
          "groupAlign": "Aligner la colonne",
          "groupDelete": "Supprimer",
          "insertRowAbove": "Ligne au dessus",
@@ -157,12 +147,9 @@
          "moveRowDown": "Ligne en bas",
          "moveColumnLeft": "Colonne à gauche",
          "moveColumnRight": "Colonne à droite",
-         "alignLeft": "Gauche",
          "alignCenter": "Centre",
-         "alignRight": "Droite",
          "deleteRow": "Ligne",
          "deleteColumn": "Colonne",
-         "deleteTable": "Tableau",
          "done": "Terminé"
       },
       "imageSheet": {
@@ -175,9 +162,6 @@
          "width": "Largeur",
          "widthValue": "Largeur {{pct}}%",
          "remove": "Supprimer l'image"
-      },
-      "linkSheet": {
-         "title": "Lien"
       }
    },
    "BoardView": {
@@ -402,7 +386,6 @@
       "renameLabel": "Renommer le calque",
       "reorder": "Glissez pour réordonner",
       "layerName": "Calque {{n}}",
-      "untitledNote": "Note sans titre",
       "untitledText": "Texte sans titre",
       "memberCount_one": "{{count}} élément",
       "memberCount_other": "{{count}} éléments",
@@ -420,7 +403,6 @@
       }
    },
    "Navigator": {
-      "title": "Navigateur",
       "close": "Fermer le navigateur",
       "refresh": "Actualiser",
       "expand": "Développer",
@@ -433,7 +415,6 @@
       "seenAbove": "Vu plus haut",
       "seenAboveHint": "Déjà vu plus haut. Sautez-y",
       "scopeToggle": "Cet espace uniquement",
-      "untitled": "Sans titre",
       "kinds": {
          "board": "Tableau",
          "note": "Note",
@@ -453,7 +434,6 @@
       "title": "Vos données ont été mises à jour",
       "description": "L'Application a déplacé vos personnages et votre Tiroir vers un nouveau système de données, plus performant et plus fiable, dans votre navigateur. Rien n'a été perdu.",
       "exportButton": "Télécharger une sauvegarde de mes anciennes données",
-      "exportedLabel": "Sauvegarde téléchargée",
       "exported": "Sauvegarde téléchargée.",
       "exportFailed": "Téléchargement échoué.",
       "dismissButton": "J'ai compris"
@@ -585,17 +565,13 @@
       "uploadFailed": "Cette image n'a pas pu être traitée. Veuillez essayer un autre fichier.",
       "resize": "Redimensionner la carte",
       "resizeHandle": "Glissez pour redimensionner (maintenez Shift pour préserver le rapport de taille de l'image)",
-      "fitToImage": "Ajuster à l'image",
-      "presetPortrait": "Portrait",
-      "presetSquare": "Carré",
-      "presetLandscape": "Paysage"
+      "fitToImage": "Ajuster à l'image"
    },
    "ImageCropper": {
       "title": "Recadrer l'image",
       "rotateCw": "Pivoter de 90° à droite",
       "rotateCcw": "Pivoter de 90° à gauche",
       "reset": "Réinitialiser",
-      "cancel": "Annuler",
       "apply": "Appliquer",
       "lowResolution": "Faible résolution : Le résultat pourrait avoir l'air pixellisé, ou de mauvaise qualité."
    },
@@ -604,15 +580,11 @@
       "missing": "Ce portrait n'est plus disponible.",
       "back": "Retour",
       "aspect": "Rapport de taille",
-      "aspectPortrait": "Portrait",
-      "aspectSquare": "Carré",
-      "aspectLandscape": "Paysage",
       "replaceImage": "Remplacer l'image",
       "delete": "Supprimer le portrait",
       "deleteConfirmTitle": "Supprimer le portrait ?",
       "deleteConfirmBody": "Cette action supprime le portrait de votre fiche.",
-      "deleteConfirm": "Supprimer",
-      "cancel": "Annuler"
+      "deleteConfirm": "Supprimer"
    },
    "SheetZoom": {
       "zoomIn": "Zoomer",
@@ -634,7 +606,6 @@
       "SidebarMenu": {
          "sidebarTitle": "Menu Latéral",
          "editMode": "Mode Édition",
-         "drawer": "Tiroir",
          "saveToDrawer": "Enregistrer le Perso.",
          "saveToDrawerAs": "Enregistrer sous... ",
          "saveBoardToDrawer": "Enregistrer le Tableau",
@@ -648,7 +619,6 @@
          "exportNoteMarkdown": "Exporter en Markdown",
          "exportMarkdownWarningTitle": "Exporter sans les images ?",
          "exportMarkdownWarningDescription": "Les images sont stockées localement et ne pourront pas apparaître lorsque ce fichier sera ouvert ailleurs. Exporter quand même ?",
-         "exportMarkdownWarningCancel": "Annuler",
          "exportMarkdownWarningConfirm": "Exporter",
          "exportCharacter": "Exporter le Perso.",
          "importCharacter": "Importer le Perso.",
@@ -663,36 +633,24 @@
          "updateBoardConfirmDescription": "Le contenu de votre Tableau va être intégralement remplacé par celui du fichier.",
          "updateNoteConfirmTitle": "Remplacer le contenu de cette Note ?",
          "updateNoteConfirmDescription": "Le contenu de votre Note va être intégralement remplacé par celui du fichier.",
-         "updateConfirmCancelButton": "Annuler",
          "updateConfirmButton": "Remplacer le contenu",
          "resetCharacter": "Réinitialiser le Perso.",
          "resetConfirmTitle": "Êtes vous certain de vouloir réinitialiser votre Personnage?",
          "resetConfirmDescription": "Cette action est destructive. Votre personnage actif sera supprimé et remplacé par une fiche de personnage vierge. Tant que vous n'actualisez pas l'application, vous pouvez revenir en arrière avec la fonction Undo.",
-         "resetConfirmCancelButton": "Annuler",
          "resetConfirmButton": "Réinitialiser le Perso.",
          "clearBoard": "Vider le Tableau",
          "clearBoardConfirmTitle": "Êtes-vous sûr de vouloir vider le tableau ?",
          "clearBoardConfirmDescription": "Cette action supprime l'intégralité du contenu de votre tableau. Le nom, la position, et la grille du tableau sont préservés, et vous pouvez toujours annuler en effectuant un retour arrière (tant que vous ne rechargez pas l'application).",
-         "clearBoardConfirmCancelButton": "Annuler",
          "clearBoardConfirmButton": "Vider le Tableau",
          "openMenu": "Ouvrir le menu principal",
-         "settings": "Paramètres",
-         "whatsNew": "Nouveautés",
-         "help": "Aide",
-         "diceTray": "Plateau de Dés",
-         "navigator": "Navigateur"
+         "settings": "Paramètres"
       }
-   },
-   "DiceTray": {
-      "title": "Plateau de Dés",
-      "close": "Fermer"
    },
    "Actions": {
       "undo": "Undo",
       "redo": "Redo"
    },
    "Drawer": {
-      "title": "Tiroir",
       "search": {
          "placeholder": "Chercher...",
          "clear": "Annuler la recherche",
@@ -751,7 +709,6 @@
       "seeWorkspace": "Voir l'espace de travail",
       "reexpand": "Retour au tiroir",
       "backToRoot": "Retour à la racine",
-      "namePlaceholder": "Nom",
       "noSubfolders": "Aucun sous-dossier",
       "selectThisFolder": "Sélectionner ce dossier",
       "movingUnknown": "(inconnu)",
@@ -786,7 +743,6 @@
          "deleteFolderMessage": "Le Dossier ainsi que tout ce qu'il contient sera supprimé.",
          "deleteItemMessage": "L'Objet sera supprimé de votre Tiroir.",
          "confirmDelete": "Supprimer",
-         "move": "Déplacer",
          "moveVerb": "Déplacement en cours",
          "moveHere": "Déplacer ici",
          "moveFolderTitle": "Déplacement d'un Dossier dans le Tiroir",
@@ -795,10 +751,8 @@
          "export": "Exporter",
          "exportFull": "Exporter votre Tiroir entier",
          "import": "Importer un fichier dans le Dossier actif",
-         "cancel": "Annuler",
          "confirm": "Confirmer",
          "defaultNames": {
-            "characterCard": "Carte de Perso.",
             "fullSheet": "Fiche de Perso.",
             "characterTheme": "Carte de Thème",
             "groupTheme": "Thème de Groupe",
@@ -849,22 +803,15 @@
       }
    },
    "Cards": {
-      "heroCard": "Carte de Héros",
       "riftCard": "Carte de Faille",
-      "mercCard": "Carte de Mercenaire",
-      "characterCard": "Carte de Perso.",
       "fellowshipCard": "Compagnie",
       "crewCard": "Bande",
       "otherscapeCrewCard": "Équipe",
       "otherscapeLoadoutCard": "Équipement",
-      "themeCard": "Thème",
-      "portraitCard": "Portrait",
       "journalUntitled": "Journal sans titre",
       "journalPageCount": "pg {{current}} / {{total}}",
       "challenge": {
-         "limits": "Limites",
          "tagsAndStatuses": "Traits & Statuts",
-         "threatsAndConsequences": "Dangers & Conséquences",
          "untitled": "Défi sans titre",
          "namePlaceholder": {
             "LEGENDS": "ex. Troupeau de Hyènes",
@@ -876,50 +823,18 @@
          "noStatuses": "Aucun statuts",
          "noTags": "Aucun traits",
          "noThreats": "Aucun danger",
-         "addLimit": "Ajouter une Limite",
-         "addStatus": "Ajouter un Statut",
-         "addTag": "Ajouter un Trait",
-         "addThreat": "Ajouter un Danger",
-         "addConsequence": "Ajouter une Conséquence",
-         "addSpecial": "Ajouter un Spécial",
-         "specials": "Spéciaux",
-         "specialNamePlaceholder": "Nom du spécial...",
          "specialBodyPlaceholder": "Effet...",
-         "addMightyTag": "Ajouter un trait de Puissance",
-         "mightyTagLabelPlaceholder": "ex. Peau Ignifuge",
          "mightyLevel": "Niveau de Puissance",
-         "limitNamePlaceholder": "ex. Brûlé",
-         "statusNamePlaceholder": "ex. ensanglanté",
-         "tagNamePlaceholder": "ex. rapide",
-         "threatNamePlaceholder": "Nom du danger...",
          "threatFlavorPlaceholder": "Description...",
-         "consequencePlaceholder": "Une conséquence...",
-         "untitledThreat": "Sans titre",
          "removeThreat": "Supprimer le danger",
-         "remove": "Supprimer",
-         "flavorPlaceholder": "Ce que les joueurs voient...",
          "editOnBackHint": "Les limites, défis et traits sont modifiables au dos",
          "editCityOnBackHint": "Les spectres et actions sont modifiables au dos",
          "primaryType": "Type principal",
-         "logosSubtitlePlaceholder": "Sous-titre Logos...",
-         "mythosSubtitlePlaceholder": "Sous-titre Mythos...",
-         "spectrums": "Spectres",
          "noSpectrums": "Aucun spectre",
-         "addSpectrum": "Ajouter un spectre",
-         "spectrumNamePlaceholder": "ex. Influencé",
-         "customMoves": "Actions customisées",
          "noCustomMoves": "Aucune action customisée",
-         "addCustomMove": "Ajouter une Action",
-         "customMoveNamePlaceholder": "Nom de l'action...",
          "customMoveDescriptionPlaceholder": "Effet...",
-         "hardMoves": "Actions concrètes",
          "noHardMoves": "Aucune action concrète",
-         "addHardMove": "Ajouter une action concrète",
-         "hardMovePlaceholder": "Une action concrète...",
-         "softMoves": "Actions légères",
          "noSoftMoves": "Aucune action légère",
-         "addSoftMove": "Ajouter une action légère",
-         "softMovePlaceholder": "Une action légère...",
          "expanded": {
             "consequenceCount": "{{count}} conséquence",
             "consequenceCount_other": "{{count}} conséquences"
@@ -938,7 +853,6 @@
       "editor": {
          "title": "Modifier la Carte de Défi",
          "description": "Entrez les informations du Défi telles que son nom, ses types, son niveau, son image, ses limites, ses statuts, ses traits et ses dangers.",
-         "name": "Nom",
          "types": "Types",
          "addType": "Ajouter",
          "removeType": "Supprimer le type",
@@ -947,57 +861,21 @@
          "image": "Image",
          "setImage": "Charger une image",
          "changeImage": "Modifier",
-         "removeImage": "Supprimer",
          "flavor": "Texte d'ambiance",
-         "flavorPlaceholder": "Ce que les joueurs voient...",
-         "limits": "Limites",
-         "addLimit": "Ajouter une Limite",
-         "limitNamePlaceholder": "ex. Brûlé",
-         "statuses": "Statuts",
-         "addStatus": "Ajouter un Statut",
-         "statusNamePlaceholder": "ex. ensanglanté",
          "tags": "Traits",
-         "addTag": "Ajouter un Trait",
-         "tagNamePlaceholder": "ex. rapide",
-         "specials": "Spéciaux",
-         "addSpecial": "Ajouter un Spécial",
-         "specialNamePlaceholder": "Nom du spécial...",
          "specialBodyPlaceholder": "Effet...",
          "removeSpecial": "Supprimer le Spécial",
          "mightyTags": "Traits de Puissance",
-         "addMightyTag": "Ajouter un trait de Puissance",
-         "mightyTagLabelPlaceholder": "ex. Peau Ignifuge",
          "removeMightyTag": "Supprimer le trait de puissance",
-         "abilities": "Dangers & Conséquences",
-         "addAbility": "Ajouter un Danger",
-         "abilityTagPlaceholder": "Nom du danger...",
          "abilityFlavorPlaceholder": "Description...",
          "removeAbility": "Suppimer le Danger",
          "consequences": "Conséquences",
-         "addConsequence": "Ajouter une Conséquence",
-         "consequencePlaceholder": "Une conséquence...",
          "primaryType": "Type principal",
          "logosSubtitle": "Sous-titre Logos",
-         "logosSubtitlePlaceholder": "Sous-titre Logos...",
          "mythosSubtitle": "Sous-titre Mythos",
-         "mythosSubtitlePlaceholder": "Sous-titre Mythos...",
-         "spectrums": "Spectres",
-         "addSpectrum": "Ajouter un spectre",
-         "spectrumNamePlaceholder": "ex. Influencé",
-         "customMoves": "Actions customisées",
-         "addCustomMove": "Ajouter une Action",
-         "customMoveNamePlaceholder": "Nom de l'action...",
          "customMoveDescriptionPlaceholder": "Effet...",
          "removeCustomMove": "Supprimer l'action customisée",
-         "hardMoves": "Actions concrètes",
-         "addHardMove": "Ajouter une action concrète",
-         "hardMovePlaceholder": "Une action concrète...",
-         "softMoves": "Actions légères",
-         "addSoftMove": "Ajouter une action légère",
-         "softMovePlaceholder": "Une action légère...",
          "removeMove": "Supprimer l'action",
-         "remove": "Supprimer",
-         "cancel": "Annuler",
          "save": "Enregistrer"
       }
    },
@@ -1016,9 +894,6 @@
       "crewCard": "Thème de Bande",
       "otherscapeThemeCard": "Carte de Thème",
       "otherscapeCrewCard": "Thème d'Équipe",
-      "otherscapeLoadoutCard": "Équipement",
-      "heroCard": "Carte de Héros",
-      "mercCard": "Carte de Mercenaire",
       "riftCard": "Carte de Faille",
       "selectThemeTypePlaceholder": "Sélectionnez un type...",
       "themeTypeLabel": "Type de Thème",
@@ -1029,9 +904,7 @@
       "startingTagsLabel": "Traits de Départ",
       "powerTagCountLabel": "Traits d'Atout",
       "weaknessTagCountLabel": "Traits de Contrainte",
-      "gearTagCountLabel": "Objets d'Équipement",
-      "flawTagCountLabel": "Défauts",
-      "wildcardSlotsLabel": "Emplacements Joker"
+      "gearTagCountLabel": "Objets d'Équipement"
    },
    "SettingsShell": {
       "title": "Paramètres de l'Application",
@@ -1040,12 +913,8 @@
          "help": "Aide et Info"
       },
       "sections": {
-         "general": "Général",
-         "appearance": "Apparence",
          "cardPalettes": "[TO COMPLETE]",
          "data": "Données",
-         "learn": "Apprendre",
-         "whatsNew": "Nouveautés",
          "announcements": "Annonces",
          "about": "À Propos"
       }
@@ -1066,10 +935,7 @@
       "selectLanguagePlaceholder": "Sélectionner une langue",
       "appearance": "Mode du Thème",
       "mode": "Mode",
-      "modeLight": "Clair",
       "modeSystem": "Système",
-      "modeDark": "Sombre",
-      "theme": "Thème",
       "cardPalettes": {
          "game": "[TO COMPLETE]",
          "games": {
@@ -1146,7 +1012,6 @@
          "discardBody": "Vous avez des modifications non enregistrées sur ce thème. En continuant, vous allez abandonner ces modifications.",
          "discardConfirm": "Abandonner",
          "duplicate": "Dupliquer",
-         "edit": "Modifier",
          "advanced": "Avancé",
          "noActiveCustom": "Aucun thème sélectionné.",
          "rename": "Renommer",
@@ -1160,8 +1025,6 @@
          "createFromPreset": "Les thèmes prédéfinis ne peuvent pas être modifiés. Cliquez ici pour dupliquer {{name}} vers votre propre copie modifiable.",
          "newTheme": "Nouveau Thème Customisé",
          "newThemeName": "Mon Thème",
-         "lightColumn": "Clair",
-         "darkColumn": "Sombre",
          "radius": "Arrondi",
          "previewLight": "Prévisualisation Clair",
          "previewDark": "Prévisualisation Sombre",
@@ -1311,16 +1174,13 @@
       },
       "mobileFABMode": {
          "title": "Mode Interface Mobile",
-         "bottomTabs": "Onglets en Bas",
-         "fab": "Boutons Flottants"
+         "bottomTabs": "Onglets en Bas"
       },
       "mobileNavigation": {
          "title": "Navigation Mobile"
       },
       "mobileHandedness": {
-         "title": "Côté de l'interface Mobile",
-         "left": "Gauche",
-         "right": "Droite"
+         "title": "Côté de l'interface Mobile"
       },
       "gestureHints": {
          "title": "Astuces gestuelles",
@@ -1345,9 +1205,7 @@
          "label": "Sauvegarde",
          "description": "Une sauvegarde capture toute votre application dans un seul fichier. La restauration remplace tout sur cet appareil.",
          "exportButton": "Exporter une Sauvegarde",
-         "restoreButton": "Restaurer depuis une Sauvegarde",
          "restoreDialog": {
-            "title": "Restaurer depuis une Sauvegarde",
             "description": "Ceci remplace TOUTES les données actuelles de cet appareil par le contenu du fichier de sauvegarde. Exportez d'abord une sauvegarde si vous avez un doute.",
             "confirm": "Oui, tout remplacer"
          }
@@ -1361,22 +1219,12 @@
       "legacyBackup": {
          "actionLabel": "Nettoyer les anciennes données de sauvegarde",
          "confirmTitle": "Supprimer l'ancienne sauvegarde du tiroir ?",
-         "confirmDescription": "Lors de la mise à jour de l'application, votre tiroir a été déplacé vers un stockage local plus rapide. L'ancienne copie a été conservée comme sauvegarde de sécurité, et nous avons vérifié que vos données ont été transférées intactes. Téléchargez d'abord une sauvegarde, puis supprimez l'ancienne copie.",
-         "downloadBackupButton": "Télécharger la sauvegarde",
-         "backupDownloadedLabel": "Sauvegarde téléchargée",
-         "confirmCheckbox": "Je comprends que l'ancienne sauvegarde sera définitivement supprimée",
-         "removeButton": "Supprimer l'ancienne copie",
-         "cancel": "Annuler"
+         "confirmDescription": "Lors de la mise à jour de l'application, votre tiroir a été déplacé vers un stockage local plus rapide. L'ancienne copie a été conservée comme sauvegarde de sécurité, et nous avons vérifié que vos données ont été transférées intactes. Téléchargez d'abord une sauvegarde, puis supprimez l'ancienne copie."
       },
       "legacyCharacterBackup": {
          "actionLabel": "Nettoyer l'ancienne sauvegarde de personnage",
          "confirmTitle": "Supprimer l'ancienne sauvegarde de personnage ?",
-         "confirmDescription": "Lors de la mise à jour de l'application, votre personnage actif a été déplacé vers un stockage local plus rapide. L'ancienne copie a été conservée comme sauvegarde de sécurité, et nous avons vérifié que vos données ont été transférées intactes. Téléchargez d'abord une sauvegarde, puis supprimez l'ancienne copie.",
-         "downloadBackupButton": "Télécharger la sauvegarde",
-         "backupDownloadedLabel": "Sauvegarde téléchargée",
-         "confirmCheckbox": "Je comprends que l'ancienne sauvegarde sera définitivement supprimée",
-         "removeButton": "Supprimer l'ancienne copie",
-         "cancel": "Annuler"
+         "confirmDescription": "Lors de la mise à jour de l'application, votre personnage actif a été déplacé vers un stockage local plus rapide. L'ancienne copie a été conservée comme sauvegarde de sécurité, et nous avons vérifié que vos données ont été transférées intactes. Téléchargez d'abord une sauvegarde, puis supprimez l'ancienne copie."
       },
       "dangerZone": {
          "title": "Zone dangereuse",
@@ -1457,7 +1305,6 @@
          "titleFirm": "Abandonner votre personnage actuel ?",
          "descriptionSoft": "Votre personnage actuel est enregistré dans votre Tiroir — vous pouvez le rouvrir à tout moment. En créer un nouveau remplace ce qui est à l'écran.",
          "descriptionFirm": "Ce personnage n'est pas enregistré dans votre Tiroir, alors en créer un nouveau sur mobile l'abandonnera.",
-         "cancel": "Annuler",
          "saveToDrawer": "Enregistrer dans le Tiroir",
          "createNew": "Créer nouveau",
          "createAnyway": "Créer quand même",
@@ -1541,12 +1388,10 @@
          "title": "Démarrer un tutoriel"
       },
       "groups": {
-         "general": "Général",
          "tabs": "Onglets",
          "dice": "Dés",
          "settings": "Paramètres",
          "export": "Exports",
-         "character": "Fiche de Personnage",
          "creation": "Création",
          "note": "Note",
          "tools": "Outils",
@@ -1641,8 +1486,6 @@
       }
    },
    "TutorialsDialog": {
-      "title": "Tutoriels",
-      "listLabel": "Tutoriels",
       "status": {
          "done": "Terminé"
       },
@@ -1653,51 +1496,39 @@
       "resetProgress": "Réinitialiser toute la progression des tutoriels",
       "tutorials": {
          "navigation": {
-            "title": "Navigation dans l'App",
             "teach": "Une visite du Menu Latéral, des onglets, de la zone de jeu, et de la palette de commandes."
          },
          "sheet": {
-            "title": "Fiche de Personnage",
             "teach": "Le nom, les suivis, les cartes, et le passage entre le Mode Édition et le Mode Jeu."
          },
          "board": {
-            "title": "Le Tableau",
             "teach": "La toile, les éléments, les outils de dessin, les calques, et les connexions."
          },
          "portals": {
-            "title": "Les Portails et le Navigateur",
             "teach": "Relier un espace de travail à un autre, et le Navigateur qui les cartographie."
          },
          "notes": {
-            "title": "Les Notes",
             "teach": "Écrire une note en mode Vue-Réelle, avec le markdown, les mentions, les liens, et les images."
          },
          "drawer": {
-            "title": "Le Tiroir",
             "teach": "Ouvrir votre bibliothèque, organiser les dossiers, la recherche, et le Tiroir agrandi."
          },
          "themes": {
-            "title": "Les Thèmes",
             "teach": "Choisir un thème, les modes clair et sombre, et construire vos propres couleurs."
          },
          "commandPalette": {
-            "title": "La Palette de Commandes",
             "teach": "La barre de commandes au clavier : l'ouvrir, la rechercher, exécuter des commandes, et les commandes à plusieurs étapes."
          },
          "mobileSheet": {
-            "title": "Fiche de Personnage",
             "teach": "Votre nom, vos suivis et vos cartes, la ceinture à outils, et les gestes tactiles qui les pilotent."
          },
          "mobileNav": {
-            "title": "Navigation dans l'App",
             "teach": "Où tout se trouve : la Fiche, le Tiroir, le Menu, vos outils, et vos paramètres."
          },
          "mobileDrawer": {
-            "title": "Le Tiroir",
             "teach": "Votre bibliothèque : la recherche et le filtrage, les dossiers, ce que chaque élément peut faire, et la réorganisation."
          },
          "mobileThemes": {
-            "title": "Les Thèmes",
             "teach": "Les modes clair et sombre, essayer un thème tout prêt, et construire vos propres couleurs."
          }
       }
@@ -1705,9 +1536,7 @@
    "Tutorial": {
       "controls": {
          "back": "Précédent",
-         "next": "Suivant",
          "done": "Terminé",
-         "skip": "Passer",
          "skipStep": "Passer cette étape"
       },
       "progress": "{{current}} / {{total}}",
@@ -1720,7 +1549,6 @@
          "sidebar_body": "Voici le Menu Latéral, il reste toujours sur la gauche. Depuis ici, vous pouvez ouvrir votre Tiroir, annuler et rétablir vos actions, enregistrer, exporter ou importer un personnage, et accéder à vos Paramètres.",
          "collapse_title": "Réduire le Menu Latéral",
          "collapse_body": "Ce bouton réduit le Menu Latéral à une fine bande d'icônes. Cela vous donne plus de place pour votre espace de travail, et vous pouvez le déployer à nouveau de la même façon.",
-         "undoRedo_title": "Undo et Redo",
          "undoRedo_body": "Presque tout ce que vous faites peut être annulé. Ces boutons font reculer et avancer vos actions, et vous pouvez aussi utiliser Ctrl+Z et Ctrl+Y sur votre clavier.",
          "tabs_title": "Vos Onglets",
          "tabs_body": "Voici vos Onglets. Chacun est un espace de travail distinct, et il peut contenir un personnage, un tableau, ou un ensemble de notes. Vous pouvez en garder plusieurs ouverts à la fois et passer de l'un à l'autre ici, ainsi une fiche de personnage, un tableau et vos notes ne sont jamais qu'à un clic.",
@@ -1728,7 +1556,6 @@
          "newTab_body": "Le bouton plus ouvre un nouvel espace de travail, et vous pouvez choisir le type que vous voulez : un personnage, un tableau, ou un ensemble de notes. Chacun s'ouvre dans son propre onglet, aux côtés des autres.",
          "playArea_title": "La Zone de Jeu",
          "playArea_body": "L'espace de travail actif occupe le centre de l'écran. Pour l'instant, il contient un personnage d'exemple à explorer, et c'est ici que vos personnages, tableaux et notes apparaîtront au fil de votre travail.",
-         "openDrawer_title": "Ouvrir le Tiroir",
          "openDrawer_body": "Jetons un œil au Tiroir. Appuyez sur le bouton Tiroir ici pour l'ouvrir.",
          "drawerTour_title": "Votre Tiroir",
          "drawerTour_body": "Voici votre Tiroir, où tout ce que vous enregistrez est rangé. Vous pouvez y conserver des personnages, des cartes et des suivis, les organiser en dossiers, et faire glisser n'importe lequel d'entre eux sur une fiche ou un tableau. Le Tiroir a sa propre leçon si vous souhaitez approfondir.",
@@ -1738,23 +1565,18 @@
          "navigatorTour_body": "Le Navigateur cartographie les liens entre vos tableaux et vos notes. À mesure que votre campagne s'étoffe, vous pouvez l'utiliser pour sauter d'un tableau ou d'une note à l'autre à travers tout votre projet, depuis un seul arbre.",
          "openDice_title": "Ouvrir le Plateau de Dés",
          "openDice_body": "Au tour du Plateau de Dés. Appuyez sur le bouton Plateau de Dés ici pour le faire glisser.",
-         "diceTour_title": "Le Plateau de Dés",
          "diceTour_body": "Voici le Plateau de Dés. Vous pouvez y constituer une réserve de dés et la lancer, et il vous suit lorsque vous passez d'un onglet à l'autre, ainsi vos dés sont toujours à portée de main.",
          "openSettings_title": "Ouvrir les Paramètres",
          "openSettings_body": "Ouvrons vos Paramètres. Appuyez sur le bouton Paramètres ici pour ouvrir le panneau.",
-         "settingsGeneral_title": "Général",
          "settingsGeneral_body": "Voici la section Général. Vous pouvez y définir votre langue et ajuster le comportement quotidien de l'application, comme la façon dont vos cartes sont affichées et si vos suivis restent verrouillés pendant que vous jouez.",
-         "settingsAppearance_title": "Apparence",
          "settingsAppearance_body": "La section Apparence est l'endroit où vous définissez l'allure de l'application. Vous pouvez choisir une palette de couleurs, passer du mode clair au mode sombre, et gérer vos propres thèmes personnalisés.",
          "settingsData_title": "Données",
          "settingsData_body": "La section Données garde un œil sur votre travail enregistré. Vous pouvez voir l'espace que vous utilisez, le récupérer, et réinitialiser l'application si vous avez besoin de repartir de zéro.",
-         "settingsLearn_title": "Apprendre",
          "settingsLearn_body": "Voici la section Apprendre de vos Paramètres. Chaque leçon, y compris celle-ci, se trouve ici, et vous pouvez rejouer n'importe laquelle quand vous le souhaitez.",
          "settingsWhatsNew_title": "Nouveautés",
          "settingsWhatsNew_body": "La section Nouveautés rassemble les notes de version de l'application. Chaque fois qu'une mise à jour arrive, vous pouvez venir ici pour lire ce qui a changé et ce qui a été ajouté.",
          "settingsAbout_title": "À Propos",
          "settingsAbout_body": "La section À Propos contient les détails sur l'application, y compris sa licence et ses crédits. Si vous avez besoin d'aide ou souhaitez signaler un problème, vous trouverez ici comment me contacter.",
-         "commandPalette_title": "La Palette de Commandes",
          "commandPalette_body": "La palette de commandes vous permet de lancer n'importe quelle action par son nom, depuis n'importe où dans l'application. Elle est ouverte ici pour que vous puissiez la voir, et vous pouvez l'appeler vous-même à tout moment en appuyant sur Ctrl et K en même temps. Tapez le nom d'un espace de travail pour y accéder, ou le nom d'une action pour la lancer.",
          "homeBase_title": "Le Point de Départ",
          "homeBase_body": "Cet écran est votre point de départ, celui sur lequel vous arrivez quand aucun espace de travail n'est ouvert. Depuis ici, vous pouvez choisir un jeu pour créer un nouveau personnage, ou ouvrir un tableau pour commencer à bâtir votre univers.",
@@ -1764,21 +1586,17 @@
       "sheet": {
          "overview_title": "La Fiche de Personnage",
          "overview_body": "Voici votre Fiche de Personnage. Vos suivis se trouvent en haut et vos cartes remplissent l'espace en dessous, et ensemble ils contiennent tout ce qui concerne votre personnage.",
-         "name_title": "Le Nom",
          "name_body": "Le titre en haut est le nom de votre personnage. Vous pouvez cliquer dessus pour le modifier à tout moment, et vos changements sont enregistrés automatiquement.",
          "modes_title": "Jeu et Édition",
          "modes_body": "Votre Fiche de Personnage a deux modes, Jeu et Édition. Le Mode Jeu sert à utiliser votre personnage pendant une partie, tandis que le Mode Édition est là où vous le construisez et le modifiez, comme ajouter des cartes et des suivis. Vous pouvez passer de l'un à l'autre avec cet interrupteur.",
-         "enterEdit_title": "Passer en Mode Édition",
          "enterEdit_body": "Commençons à construire. Basculez cet interrupteur en Mode Édition pour faire apparaître les outils d'ajout et de modification.",
          "trackers_title": "Les Suivis",
          "trackers_body": "Cette section est là où vivent vos suivis. Ils contiennent l'état changeant de votre personnage pendant le jeu, comme ses statuts et ses traits narratifs, et vous pouvez les retrouver tous listés ici.",
-         "addStatus_title": "Ajouter un Statut",
          "addStatus_body": "Les statuts sont des conditions temporaires sur votre personnage, comme Blessé ou Renforcé, chacun avec un niveau. Ajoutez-en un maintenant avec ce bouton pour voir comment ça marche.",
          "addStoryTag_title": "Ajouter un Trait Narratif",
          "addStoryTag_body": "Les traits narratifs sont des détails de l'histoire que vous pouvez invoquer pendant le jeu, comme un allié secourable ou une porte verrouillée. Ajoutez-en un maintenant avec ce bouton.",
          "cards_title": "Les Cartes",
          "cards_body": "Les cartes sont le cœur de votre fiche. Elles contiennent vos cartes de thème, votre carte de héros, vos journaux et vos portraits, et vous pouvez faire glisser n'importe laquelle pour réorganiser votre fiche.",
-         "addMenu_title": "Le Menu d'Ajout",
          "addMenu_body": "Tout ce que vous pouvez ajouter à votre fiche se trouve derrière ce bouton plus. Depuis ici, vous pouvez créer une Carte, un Portrait, un Défi, ou un Journal.",
          "openCardDialog_title": "Ajouter une Carte",
          "openCardDialog_body": "C'est ici que vous ajoutez de nouvelles cartes à votre fiche. Cliquez dessus, puis choisissez Carte dans le menu qui s'ouvre pour en commencer une nouvelle.",
@@ -1796,13 +1614,11 @@
          "exportImport_body": "Vous pouvez exporter votre personnage vers un fichier pour le sauvegarder ou le partager avec quelqu'un, et le fichier se terminera par .cotm. Importer fait l'inverse, en chargeant un fichier de personnage dans l'application.",
          "createCharacter_title": "Créer un Personnage",
          "createCharacter_body": "Quand vous voulez un nouveau personnage, vous partez de ce menu d'accueil, ou du bouton plus dans la barre d'onglets. Choisissez un jeu et vous êtes prêt à en construire un tout neuf, de zéro.",
-         "wrap_title": "Bien Joué",
          "wrap_body": "Vous avez construit une fiche du début à la fin. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "mobileSheet": {
          "overview_title": "Votre Fiche de Personnage",
          "overview_body": "Voici votre fiche de personnage. Elle contient vos suivis et vos cartes, et tout ce qui concerne votre personnage vit ici.",
-         "name_title": "Le Nom",
          "name_body": "Le titre en haut est le nom de votre personnage. Touchez-le pour le renommer, et vos changements sont enregistrés au fil de votre saisie.",
          "tabs_title": "Suivis et Cartes",
          "tabs_body": "Votre fiche a deux moitiés. Touchez l'onglet Suivis ou l'onglet Cartes pour passer de l'une à l'autre.",
@@ -1810,9 +1626,7 @@
          "trackers_body": "C'est ici que vivent vos suivis : statuts, traits narratifs, et thèmes narratifs. Ils contiennent l'état de votre personnage pendant le jeu.",
          "toolbelt_title": "La Ceinture à Outils",
          "toolbelt_body": "Vos outils se trouvent ici. C'est là que vous trouvez le Mode Édition, les dés, et les boutons pour ajouter à votre fiche.",
-         "enterEdit_title": "Passer en Mode Édition",
          "enterEdit_body": "Commençons à construire. Touchez Édition pour débloquer les outils d'ajout et de modification.",
-         "addStatus_title": "Ajouter un Statut",
          "addStatus_body": "Les statuts sont des conditions temporaires comme Blessé ou Renforcé, chacun avec un niveau. Touchez ici pour en ajouter un.",
          "addMore_title": "Traits et Thèmes Narratifs",
          "addMore_body": "Les traits narratifs et les thèmes narratifs s'ajoutent de la même façon, avec leurs propres boutons juste ici.",
@@ -1830,7 +1644,6 @@
          "overviewAddCard_body": "La rangée en pointillets à la fin de la liste permet d'ouvrir le créateur de carte, pour que vous puissiez en créer depuis l'endroit où vous les organisez.",
          "reorderDrag_title": "Glissez-les à Leur Place",
          "reorderDrag_body": "Appuyez d'abord longuement sur la poignée d'une carte, puis faites-la glisser vers le haut ou le bas de la liste. Un simple glissement ne soulèvera pas la carte. Toucher une carte y saute directement, et le bouton de validation enregistre votre ordre quand il vous convient.",
-         "wrap_title": "Bien Joué",
          "wrap_body": "Voilà votre fiche de personnage, de haut en bas. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "mobileNav": {
@@ -1844,7 +1657,6 @@
          "openRing_body": "Touchez-le. Vos destinations se déploient tout autour.",
          "sheetDest_title": "La Fiche",
          "sheetDest_body": "La Fiche, c'est votre personnage : les suivis d'un côté, les cartes de l'autre. Sans personnage chargé il n'y a rien à ouvrir, elle se grise donc jusqu'à ce que vous en créiez ou en chargiez un.",
-         "drawerDest_title": "Le Tiroir",
          "drawerDest_body": "Le Tiroir est votre bibliothèque. Chaque personnage, carte et suivi que vous enregistrez y va, dans des dossiers que vous arrangez vous-même. Touchez-le pour y jeter un œil.",
          "drawerLanding_title": "Voici le Tiroir",
          "drawerLanding_body": "Votre bibliothèque, au complet. Fouillez-la, rangez-la en dossiers, et tirez des éléments vers votre fiche depuis ici. La leçon sur le Tiroir parcourt tout cela en détail.",
@@ -1863,7 +1675,6 @@
          "settingsEntry_title": "Paramètres",
          "settingsEntry_body": "Les Paramètres se trouvent tout en haut du Menu. Touchez-les pour ouvrir le panneau.",
          "settingsEntry_body_fab": "Les Paramètres ont leur propre place dans l'anneau, ils sont donc à un toucher de n'importe où. Touchez-les pour ouvrir le panneau.",
-         "settingsContent_title": "Ce Qu'il y a Ici",
          "settingsContent_body": "Et voici le panneau, qui réunit tout ce qui n'est pas les trois lieux où vous travaillez. Général, Apparence et Données pour tout configurer, puis Nouveautés et À Propos. Apprendre est là où vivent ces leçons, vous pouvez ainsi rejouer n'importe laquelle quand vous le souhaitez.",
          "wrap_title": "Voilà l'Agencement",
          "wrap_body": "La Fiche, le Tiroir et le Menu sont les trois lieux où vous travaillez, vos outils les accompagnent, et les Paramètres contiennent le reste. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
@@ -1871,13 +1682,11 @@
       "mobileDrawer": {
          "welcome_title": "Votre Bibliothèque",
          "welcome_body": "Le Tiroir est là où vit tout ce que vous enregistrez : personnages, cartes, suivis, tableaux et notes, classés dans des dossiers que vous arrangez vous-même. Cette leçon s'appuie sur une petite bibliothèque d'exemple, ainsi rien de ce que vous avez enregistré n'est touché en chemin.",
-         "content_title": "Ce Qu'il y a Ici",
          "content_body": "Les dossiers sont en haut, et tout ce qui est enregistré dans le dossier où vous vous trouvez vient en dessous. Chaque élément enregistré vous montre ce qu'il est, à quel jeu il appartient, et quand vous y avez travaillé pour la dernière fois.",
          "search_title": "Retrouver des Choses",
          "search_body": "Recherchez par nom depuis ici, et cela parcourt toute votre bibliothèque plutôt que seulement le dossier où vous êtes. Le bouton curseurs à côté du champ ouvre les Filtres, qui affinent une recherche par type, par jeu, ou par date de création ou de dernière modification.",
          "viewToggle_title": "Deux Façons de Regarder",
          "viewToggle_body": "Ce bouton bascule vos éléments enregistrés entre des lignes compactes et des aperçus détaillés. Le mode compact en affiche bien plus à l'écran d'un coup ; le mode détaillé vous montre un vrai aperçu de chacun, ainsi vous pouvez distinguer deux choses similaires avant d'en ouvrir l'une ou l'autre.",
-         "folders_title": "Les Dossiers",
          "folders_body": "Touchez un dossier pour y entrer, et tout ce qui y est classé prend possession de la liste. Le fil en bas montre toujours où vous êtes, et toucher n'importe laquelle de ses étapes vous ramène en arrière.",
          "itemMenu_title": "Ce Qu'un Élément Peut Faire",
          "itemMenu_body": "Chaque élément enregistré porte ce bouton, et tout ce que vous pouvez faire avec cet élément se cache derrière : l'ajouter à votre fiche, le charger, le renommer, le déplacer vers un autre dossier, l'exporter vers un fichier, ou le supprimer définitivement.",
@@ -1891,21 +1700,14 @@
       "mobileThemes": {
          "welcome_title": "Vos Couleurs",
          "welcome_body": "Toute l'apparence de l'application est un thème, un jeu de couleurs que vous pouvez changer ou construire vous-même. Cette leçon ouvre vos paramètres d'Apparence, essaie un thème tout prêt, et vous indique où vous pouvez créer le vôtre. Ce que vous choisissez ici est remis tel que vous l'aviez trouvé quand vous partez.",
-         "mode_title": "Clair et Sombre",
          "mode_body": "Ceci définit le mode général. Clair et Sombre le fixent d'une façon, et Système suit le réglage de votre téléphone. C'est le choix grossier que vous faites avant les couleurs elles-mêmes.",
-         "themeList_title": "La Liste des Thèmes",
          "themeList_body": "Sous le mode se trouvent vos thèmes : les thèmes prédéfinis fournis avec l'application, et ceux que vous avez créés vous-même, plus bas. En toucher un l'applique aussitôt, et toute l'application prend ses couleurs.",
-         "applyPreset_title": "En Essayer Un",
          "applyPreset_body": "Touchez un thème prédéfini pour l'enfiler, et regardez les couleurs changer autour de vous tandis que l'application se re-thématise. Choisissez celui qui vous plaît, et la leçon continue.",
-         "makeYourOwn_title": "Créer le Vôtre",
          "makeYourOwn_body": "Ce bouton ouvre l'éditeur de thème sur un thème vierge. À l'intérieur, vous définissez chaque couleur à la main pour le clair comme le sombre, avec un aperçu en direct pendant que vous travaillez, et un générateur de graines peut faire pousser toute une palette à partir d'une seule couleur pour démarrer vite. Les thèmes prédéfinis ne peuvent pas être modifiés directement, alors le menu d'un thème enregistré vous remet une copie modifiable à partir de laquelle construire.",
-         "importExport_title": "Partager des Thèmes",
-         "importExport_body": "Un thème que vous créez peut voyager. Ce bouton en importe un depuis un fichier, et chacun de vos propres thèmes peut être exporté de la même façon depuis son menu. C'est ainsi que vous remettez une palette à un autre joueur ou que vous en transportez une d'un appareil à l'autre.",
          "wrap_title": "Voilà les Thèmes",
          "wrap_body": "Vous avez réglé le mode, essayé un thème, et vu où construire le vôtre. Le thème est remis tel que vous l'aviez trouvé, ainsi rien ici n'a modifié votre configuration. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "board": {
-         "welcome_title": "Le Tableau",
          "welcome_body": "Le Tableau est une toile libre pour votre table de jeu. Vous pouvez y disposer une scène, une carte d'indices, ou une galerie de personnages, arrangés comme vous les concevez, pour que tout votre jeu ait un endroit où vivre.",
          "canvas_title": "La Toile",
          "canvas_body": "Voici la toile. Elle s'étend aussi loin que nécessaire dans toutes les directions, et tout ce que vous y placez occupe son propre emplacement dans cet espace, vous pouvez donc étaler votre travail et y revenir plus tard.",
@@ -1915,11 +1717,9 @@
          "alignSnap_body": "[TO COMPLETE]",
          "panZoom_title": "Se Déplacer",
          "panZoom_body": "Pour vous déplacer sur la toile, faites glisser avec le bouton droit de la souris, ou maintenez Alt et faites glisser. Utilisez la molette pour zoomer et dézoomer. Essayez maintenant pour vous familiariser, puis continuez quand vous êtes prêt.",
-         "toolbar_title": "La Barre d'Outils",
          "toolbar_body": "La barre en bas contient tout ce dont vous avez besoin. Depuis ici, vous pouvez passer d'un mode de travail à l'autre, ajouter ou dessiner ce que vous voulez, ouvrir le panneau Calques, et utiliser les contrôles de vue qui recentrent et zooment la toile.",
          "modes_title": "Éléments et Dessin",
          "modes_body": "Le Tableau a deux modes. Le mode Éléments est là où vous placez des choses comme des cartes et des notes, tandis que le mode Dessin vous permet de crayonner et d'annoter la toile directement. Vous pouvez passer de l'un à l'autre avec cet interrupteur.",
-         "addMenu_title": "Le Menu d'Ajout",
          "addMenu_body": "En mode Éléments, tout ce que vous pouvez placer se trouve derrière ce bouton Ajouter. Depuis ici, vous pouvez déposer des notes, des portails, des cartes de jeu, des suivis, et plus encore sur le tableau.",
          "dropElement_title": "Placer un Élément",
          "dropElement_body": "Ouvrez le menu d'ajout et déposez quelque chose sur le tableau. Un Pense-bête ou une Punaise est la façon la plus rapide de commencer, et il apparaîtra au milieu de votre vue.",
@@ -1939,13 +1739,11 @@
          "layersPanel_body": "Ceci liste chaque élément du tableau, empilés du haut de la liste jusqu'au premier plan de la toile. Vous pouvez survoler une ligne pour repérer un élément, cliquer pour le sélectionner, et faire glisser pour le réempiler, et vous pouvez regrouper des choses liées en zones. Les calques de dessin peuvent aussi être fusionnés d'ici.",
          "connections_title": "Les Connexions",
          "connections_body": "Les éléments peuvent être reliés les uns aux autres. Ces deux cartes sont jointes par une ligne de connexion, un bon moyen de montrer comment les choses sont liées. Pour créer la vôtre, vous sélectionnez un élément et faites glisser sa poignée de connexion sur un autre, et vous pouvez sélectionner une ligne pour la recolorer, changer sa flèche, ou la supprimer.",
-         "dice_title": "Le Plateau de Dés",
          "dice_body": "Le Plateau de Dés est aussi présent ici, vous pouvez donc constituer une réserve de dés et la lancer sans jamais quitter le tableau.",
          "wrap_title": "Voilà le Tableau",
          "wrap_body": "Voilà le Tableau. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "portals": {
-         "welcome_title": "Les Portails et le Navigateur",
          "welcome_body": "Un portail est un lien d'un espace de travail vers un autre, ainsi un tableau peut pointer vers une note et une note peut pointer vers un autre tableau. Cette leçon montre comment en créer un et comment le suivre, puis ouvre le Navigateur, la carte qui lit toute votre toile de liens.",
          "whatIsPortal_title": "Ce Qu'est un Portail",
          "whatIsPortal_body": "Cette tuile est un portail. Elle représente un autre espace de travail et vous y transporte quand vous plongez à travers. Pour plonger, vous double-cliquez sur la tuile, et vous atterrissez dans ce vers quoi elle pointe.",
@@ -1967,7 +1765,6 @@
          "wrap_body": "Vous avez créé un lien, lu la carte, et suivi une plongée à l'aller et au retour. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "notes": {
-         "welcome_title": "Les Notes",
          "welcome_body": "Une note est une page pour vos mots. Vous pouvez y garder la préparation d'une partie, une aide de jeu à lire à voix haute, ou l'histoire d'un lieu, et la placer à côté d'une fiche de personnage ou d'un tableau pour que vos écrits vivent avec le reste de votre jeu.",
          "surface_title": "Ceci est une Note",
          "surface_body": "Ceci est une note, ouverte sur sa propre page. Elle démarre en mode Vue-Réelle, celui où vous lisez et écrivez le même document à la fois, ainsi ce que vous voyez ici est exactement l'aspect de la note.",
@@ -1979,7 +1776,6 @@
          "mentions_body": "Les pastilles colorées sont des mentions, un statut ou un trait écrit entre accolades. Dans une note, elles sont une référence visuelle, une façon soignée de noter les statuts et les traits en jeu. Les mêmes accolades sont actives ailleurs : écrivez-en une dans un journal ou un défi sur une fiche de personnage, ou sur un tableau, et cliquer sur la pastille y crée ce trait ou ce statut pour de vrai.",
          "linksOut_title": "Les Liens",
          "linksOut_body": "Une note peut créer un lien vers un titre en son sein, vers une autre note, un tableau, ou un personnage, ou vers le web. Ce bouton en insère un. Les liens et le Navigateur qui les cartographie ont leur propre tutoriel, alors commencez par là quand vous voudrez la visite complète.",
-         "toolbar_title": "La Barre d'Outils",
          "toolbar_body": "Chaque élément de mise en forme a un bouton ici : titres, listes, citations, tableaux, images, et liens. Vous pouvez taper le markdown vous-même ou cliquer sur ceux-ci à la place, selon ce qui vous semble le plus rapide sur le moment.",
          "images_title": "Les Images",
          "images_body": "Les notes contiennent aussi des images. Ajoutez-en une avec ce bouton, collez-la depuis votre presse-papiers, ou faites glisser un fichier sur la page. Une fois placée, vous pouvez définir sa taille, choisir son format, et sélectionner de quel côté de la page elle s'aligne.",
@@ -1991,11 +1787,8 @@
          "wrap_body": "Vous avez tapé dans une note, découvert les mentions et les liens, et vu les trois modes. Pour créer la vôtre, ajoutez une note depuis le menu des onglets ou la palette de commandes, et retrouvez-la plus tard dans le Tiroir avec le reste de vos fichiers. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "drawer": {
-         "welcome_title": "Le Tiroir",
          "welcome_body": "Le Tiroir est votre bibliothèque. Chaque personnage, tableau, note, et carte que vous enregistrez y est conservé, prêt à être rouvert ou déposé dans ce sur quoi vous travaillez. Cette leçon l'ouvre, le range en dossiers, le fouille, et l'agrandit sur toute la largeur quand vous voulez de la place.",
-         "open_title": "Ouvrir le Tiroir",
          "open_body": "Le Tiroir reste fermé au bord de l'écran jusqu'à ce que vous l'appeliez. Ce bouton sur le côté l'ouvre. Cliquez dessus maintenant pour faire glisser le Tiroir.",
-         "folders_title": "Les Dossiers",
          "folders_body": "Les dossiers rangent votre bibliothèque comme des étagères rangent une bibliothèque murale. Ouvrez-en un pour voir ce qu'il contient, et imbriquez des dossiers dans des dossiers pour garder une longue collection en ordre.",
          "items_title": "Vos Éléments",
          "items_body": "Chaque carte ici est quelque chose que vous avez enregistré, et son icône vous dit quoi : un personnage, un tableau, une note, ou une carte. La carte porte un petit aperçu et la date de votre dernière modification, ainsi un élément familier est facile à retrouver. Le bouton en haut bascule entre ces cartes détaillées et une liste plus compacte, selon votre préférence.",
@@ -2005,7 +1798,6 @@
          "search_body": "Tapez ici pour fouiller toute votre bibliothèque par nom d'un coup, à travers tous les dossiers. Le bouton Filtres à côté affine encore les résultats, par type d'élément, par jeu, ou par date de dernière modification.",
          "importExport_title": "Importer et Exporter",
          "importExport_body": "Exporter envoie un élément vers un fichier que vous pouvez sauvegarder ou remettre à un autre joueur, et Importer réintègre l'un de ces fichiers. C'est ainsi que vous déplacez un personnage ou un tableau d'un appareil à l'autre, ou que vous en partagez un avec votre table.",
-         "undoRedo_title": "Undo et Redo",
          "undoRedo_body": "Si un changement dans le Tiroir tourne mal, un déplacement, un renommage, ou une suppression, ces flèches le font reculer et avancer. Elles couvrent le Tiroir lui-même, ainsi un rangement qui dérape n'est jamais définitif.",
          "expand_title": "Agrandir le Tiroir",
          "expand_body": "Le panneau latéral est pratique pour un accès rapide, mais une grande bibliothèque se parcourt plus facilement avec de la place pour s'étaler. Ce bouton agrandit le Tiroir pour remplir la largeur de l'écran. Cliquez dessus pour le déployer.",
@@ -2015,23 +1807,15 @@
          "wrap_body": "Vous avez ouvert le Tiroir, parcouru ses dossiers et ses éléments, fouillé dedans, et l'avez agrandi sur toute la largeur. Il attend derrière le bouton sur le côté où que vous soyez, contenant tout ce que vous enregistrez. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "themes": {
-         "welcome_title": "Les Thèmes",
          "welcome_body": "Toute l'apparence de l'application est un thème, un jeu de couleurs que vous pouvez changer ou construire vous-même. Cette leçon ouvre vos paramètres d'apparence, essaie un thème tout prêt, et vous indique où vous pouvez façonner le vôtre.",
-         "mode_title": "Clair et Sombre",
          "mode_body": "Cet interrupteur définit le mode général. Clair et Sombre le fixent d'une façon, et Système suit le réglage de votre appareil. C'est le choix grossier que vous faites avant de choisir les couleurs elles-mêmes.",
-         "themeList_title": "La Liste des Thèmes",
          "themeList_body": "Sous le mode se trouvent vos thèmes : les thèmes prédéfinis fournis avec l'application, et ceux que vous avez créés vous-même. En sélectionner un l'applique aussitôt, et toute l'application prend ses couleurs, cette fenêtre comprise.",
-         "applyPreset_title": "En Essayer Un",
          "applyPreset_body": "Cliquez sur un thème dans la liste pour l'enfiler, et regardez les couleurs changer autour de vous tandis que l'application se re-thématise en direct. Choisissez celui qui vous plaît, et la visite continue.",
-         "makeYourOwn_title": "Créer le Vôtre",
          "makeYourOwn_body": "Ce bouton ouvre l'éditeur de thème. À l'intérieur, vous définissez chaque couleur à la main pour le clair comme le sombre, avec un aperçu en direct à vos côtés pendant que vous travaillez. Un générateur de graines peut faire pousser toute une palette à partir d'une seule couleur quand vous voulez démarrer vite. Les thèmes prédéfinis ne peuvent pas être modifiés directement, alors l'éditeur vous remet une copie modifiable à partir de laquelle construire.",
-         "importExport_title": "Partager des Thèmes",
-         "importExport_body": "Un thème que vous créez peut voyager. Ce bouton en importe un depuis un fichier, et chacun de vos propres thèmes peut être exporté de la même façon depuis son menu. C'est ainsi que vous remettez une palette à un autre joueur ou que vous en transportez une d'un appareil à l'autre.",
          "wrap_title": "Voilà les Thèmes",
          "wrap_body": "Vous avez réglé le mode, essayé un thème, et vu où construire le vôtre. Nous avons remis votre thème tel que vous l'aviez trouvé, ainsi rien ici n'a modifié votre configuration. Vous pouvez rejouer cette leçon à tout moment depuis la section Apprendre de vos Paramètres."
       },
       "commandPalette": {
-         "welcome_title": "La Palette de Commandes",
          "welcome_body": "La palette de commandes est une barre de recherche pour les actions. Elle atteint presque tout dans l'application depuis le clavier, vous pouvez ainsi créer, naviguer, et exécuter sans fouiller dans les menus. Cette leçon l'ouvre, la fouille, exécute une commande, et parcourt l'une des commandes qui pose une question de suivi.",
          "open_title": "Ouvrir la Palette",
          "open_body": "La palette répond à un unique raccourci depuis n'importe où dans l'application. Appuyez sur Ctrl ou Cmd + K pour l'invoquer maintenant, et elle apparaît prête à recevoir une commande.",
@@ -2049,53 +1833,32 @@
    },
    "ThemeCard": {
       "crewThemeTitle": "Thème de Bande",
-      "placeholderName": "Trait principal...",
-      "noName": "SANS NOM",
-      "power": "ATOUT",
-      "weakness": "CONTRAINTE",
       "questTitle": "Quête",
       "noQuest": "TEXTE DE QUÊTE VIDE",
       "questPlaceholder": "Entrez votre texte de Quête...",
       "mysteryTitle": "Mystère",
       "noMystery": "TEXTE DE MYSTÈRE VIDE",
       "mysteryPlaceholder": "Entrez votre texte de Mystère...",
-      "identityTitle": "Identité",
-      "noIdentity": "TEXTE D'IDENTITÉ VIDE",
-      "identityPlaceholder": "Entrez votre texte d'Identité...",
       "addPowerTag": "Créer Trait d'Atout",
-      "addWeaknessTag": "Créer Trait de Contrainte",
-      "improvements": "Améliorations Spéciales",
-      "addImprovement": "Ajouter une Amélioration"
+      "addWeaknessTag": "Créer Trait de Contrainte"
    },
    "OtherscapeThemeCard": {
       "crewThemeTitle": "Thème d'Équipe",
-      "loadoutTitle": "Équipement",
-      "placeholderName": "Trait principal...",
-      "noName": "SANS NOM",
-      "power": "ATOUT",
-      "weakness": "CONTRAINTE",
       "flaw": "DÉFAUT",
       "ritualTitle": "Rituel",
       "noRitual": "TEXTE DE RITUEL VIDE",
       "ritualPlaceholder": "Entrez votre texte de Rituel...",
-      "identityTitle": "Identité",
-      "noIdentity": "TEXTE D'IDENTITÉ VIDE",
-      "identityPlaceholder": "Entrez votre texte d'Identité...",
       "itchTitle": "Pulsion",
       "noItch": "TEXTE DE PULSION VIDE",
       "itchPlaceholder": "Entrez votre texte de Pulsion...",
       "descriptionTitle": "Description",
       "noDescription": "DESCRIPTION VIDE",
       "descriptionPlaceholder": "Entrez la description de votre équipement...",
-      "improvements": "Améliorations Spéciales",
-      "addImprovement": "Ajouter une Amélioration",
       "gearTitle": "ÉQUIPEMENT",
       "addGearTag": "Ajouter de l'Équipement",
-      "flawsTitle": "Défauts",
       "addFlawTag": "Ajouter un Défaut",
       "loadedGear": "Équipement Chargé",
       "unloadedGear": "Équipement Déchargé",
-      "wildcardSlots": "Emplacements Joker",
       "noGear": "Aucun Équipement"
    },
    "TagItem": {
@@ -2123,11 +1886,7 @@
       "noName": "SANS NOM",
       "Crew": {
          "title": "Bande",
-         "name": "Nom",
-         "help": "Aide",
-         "hurt": "Blesse",
-         "noName": "SANS NOM",
-         "addCrewMember": "Ajouter un Membre"
+         "hurt": "Blesse"
       },
       "buildup": "ACCUMULATION",
       "Nemesis": {
@@ -2136,7 +1895,6 @@
       }
    },
    "OtherscapeCharacterCard": {
-      "title": "Carte de Mercenaire",
       "characterNamePlaceholder": "Nom du Mercenaire...",
       "noName": "SANS NOM",
       "essence": "Essence",
@@ -2157,27 +1915,15 @@
          }
       },
       "relationships": "Relations d'Équipe",
-      "addRelationship": "Ajouter un Membre",
       "companionPlaceholder": "Membre",
-      "relationshipPlaceholder": "Relation",
-      "relationshipCompanionNoName": "SANS NOM",
-      "relationshipRelationNoName": "SANS RELATION",
-      "Specials": {
-         "title": "Spéciaux",
-         "addSpecial": "Ajouter un Spécial"
-      }
+      "relationshipRelationNoName": "SANS RELATION"
    },
    "HeroCard": {
-      "title": "Carte de Héros",
       "noName": "SANS NOM",
       "characterNamePlaceholder": "Nom du Personnage...",
       "relationships": "Relations de Compagnie",
       "addRelationship": "Créer une relation",
-      "companion": "Compagnon",
       "companionPlaceholder": "Camarade",
-      "relationship": "Relation",
-      "relationshipPlaceholder": "Relation",
-      "relationshipCompanionNoName": "SANS NOM",
       "relationshipRelationNoName": "SANS RELATION",
       "quintessences": "Quintessences",
       "addQuintessence": "Créer une Quintessence"
@@ -2205,7 +1951,6 @@
       "noName": "SANS NOM"
    },
    "Trackers": {
-      "addStatus": "Ajouter un Statut",
       "addStoryTag": "Ajouter un Trait Narratif",
       "addStoryTheme": "Ajouter un Thèeme Narratif",
       "statusPlaceholder": "Votre statut...",
@@ -2219,22 +1964,18 @@
          "devotion": "Dévouement",
          "past": "Passé",
          "people": "Relations",
-         "personality": "Personnalité",
          "skillOrTrade": "Compétence ou Métier",
          "trait": "Trait",
          "duty": "Devoir",
          "influence": "Influence",
          "knowledge": "Savoir",
          "prodigiousAbility": "Compétence Prodigieuse",
-         "relic": "Relique",
          "uncannyBeing": "Créature Étrange",
          "destiny": "Destin",
          "dominion": "Domination",
          "mastery": "Maîtrise",
          "monstrosity": "Monstruosité",
-         "companion": "Compagnon",
-         "magic": "Magie",
-         "possessions": "Possessions"
+         "magic": "Magie"
       }
    },
    "CityData": {
@@ -2244,19 +1985,15 @@
          "divination": "Divination",
          "expression": "Expression",
          "mobility": "Mobilité",
-         "relic": "Relique",
          "subversion": "Subversion",
          "training": "Entraînement",
          "conjuration": "Conjuration",
          "destiny": "Destinée",
          "enclave": "Enclave",
          "familiar": "Familier",
-         "esoterica": "Ésotérique",
          "definingEvent": "Événement Déterminant",
          "definingRelationship": "Relation Déterminante",
          "mission": "Mission",
-         "personality": "Personnalité",
-         "possessions": "Possessions",
          "routine": "Routine",
          "struggle": "Lutte",
          "turf": "Territoire",
@@ -2269,14 +2006,11 @@
    "OtherscapeData": {
       "themebook": {
          "artifact": "Artefact",
-         "esoterica": "Ésotérique",
          "exposure": "Exposition",
-         "companion": "Compagnon",
          "affiliation": "Affiliation",
          "assets": "Ressources",
          "expertise": "Expertise",
          "horizon": "Horizon",
-         "personality": "Personnalité",
          "troubledPast": "Passé Tourmenté",
          "augmentation": "Augmentation",
          "cuttingEdge": "Pointe du Progrès",
@@ -2299,7 +2033,6 @@
       "drawerHint": "Appuyez sur l'onglet Tiroir ci-dessous pour parcourir vos personnages sauvegardés.",
       "trackersTab": "Trackers",
       "cardsTab": "Cartes",
-      "statuses": "Statuts",
       "storyTags": "Traits Narratifs",
       "storyThemes": "Thèmes Narratifs",
       "cardOverview": "Sommaire des Cartes",
@@ -2309,19 +2042,12 @@
       "noCards": "Aucune carte pour le moment"
    },
    "MobileBottomTabs": {
-      "sheet": "Fiche",
       "sheetDisabled": "Aucune fiche chargée",
-      "drawer": "Tiroir",
-      "menu": "Menu",
       "toolbelt": "Ceinture à outils"
    },
    "MobileFAB": {
-      "drawer": "Tiroir",
-      "sheet": "Fiche",
-      "menu": "Menu",
       "settings": "Paramètres",
-      "open": "Ouvrir le menu",
-      "close": "Fermer"
+      "open": "Ouvrir le menu"
    },
    "Workspace": {
       "switcherTitle": "Espace de travail",
@@ -2385,7 +2111,6 @@
       "confirm": "Sauver"
    },
    "MobileMenu": {
-      "title": "Menu",
       "description": "Accédez aux paramètres et actions de l'application"
    },
    "MobileOnboarding": {
@@ -2413,8 +2138,7 @@
          "rightHanded": "Main Droite",
          "navigation": "Style d'Interface",
          "navigationHint": "Choisissez comment interagir avec l'application",
-         "bottomTabs": "Onglets & Panneaux",
-         "floatingButton": "Boutons Flottants"
+         "bottomTabs": "Onglets & Panneaux"
       },
       "tips": {
          "title": "Astuces de Commandes Tactiles",
@@ -2431,9 +2155,7 @@
          "tutorialReminder": "Vous pouvez relancer le tutoriel à tout moment depuis les Paramètres"
       },
       "navigation": {
-         "back": "Retour",
-         "next": "Suivant",
-         "skip": "Passer"
+         "back": "Retour"
       }
    },
    "DesktopOnboarding": {
@@ -2479,6 +2201,120 @@
       "back": "Retour",
       "name": "Nom",
       "close": "Fermer",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "untitledNote": "Note sans titre",
+      "characterSheet": "Fiche de Personnage",
+      "link": "Lien",
+      "notes": "Les Notes",
+      "square": "Carré",
+      "edit": "Modifier",
+      "table": "Tableau",
+      "move": "Déplacer",
+      "left": "Gauche",
+      "right": "Droite",
+      "diceTray": "Plateau de Dés",
+      "remove": "Supprimer",
+      "navigator": "Navigateur",
+      "untitled": "Sans titre",
+      "backupDownloaded": "Sauvegarde téléchargée",
+      "portrait": "Portrait",
+      "landscape": "Paysage",
+      "drawer": "Tiroir",
+      "whatSNew": "Nouveautés",
+      "help": "Aide",
+      "theme": "Thème",
+      "characterCard": "Carte de Perso.",
+      "heroCard": "Carte de Héros",
+      "mercCard": "Carte de Mercenaire",
+      "loadoutTheme": "Équipement",
+      "limits": "Limites",
+      "threatsConsequences": "Dangers & Conséquences",
+      "addLimit": "Ajouter une Limite",
+      "addStatus": "Ajouter un Statut",
+      "addTag": "Ajouter un Trait",
+      "addThreat": "Ajouter un Danger",
+      "addConsequence": "Ajouter une Conséquence",
+      "addSpecial": "Ajouter un Spécial",
+      "specials": "Spéciaux",
+      "specialName": "Nom du spécial...",
+      "addMightyTag": "Ajouter un trait de Puissance",
+      "eGFireproofHide": "ex. Peau Ignifuge",
+      "eGBurn": "ex. Brûlé",
+      "eGBloodied": "ex. ensanglanté",
+      "eGFast": "ex. rapide",
+      "threatName": "Nom du danger...",
+      "aConsequence": "Une conséquence...",
+      "whatThePlayersSee": "Ce que les joueurs voient...",
+      "logosSubtitle": "Sous-titre Logos...",
+      "mythosSubtitle": "Sous-titre Mythos...",
+      "spectrums": "Spectres",
+      "addSpectrum": "Ajouter un spectre",
+      "eGInfluence": "ex. Influencé",
+      "customMoves": "Actions customisées",
+      "addMove": "Ajouter une Action",
+      "moveName": "Nom de l'action...",
+      "hardMoves": "Actions concrètes",
+      "addHardMove": "Ajouter une action concrète",
+      "aHardMove": "Une action concrète...",
+      "softMoves": "Actions légères",
+      "addSoftMove": "Ajouter une action légère",
+      "aSoftMove": "Une action légère...",
+      "statuses": "Statuts",
+      "flaws": "Défauts",
+      "wildcardSlots": "Emplacements Joker",
+      "general": "Général",
+      "appearance": "Apparence",
+      "learn": "Apprendre",
+      "light": "Clair",
+      "dark": "Sombre",
+      "floatingButtons": "Boutons Flottants",
+      "restoreFromBackup": "Restaurer depuis une Sauvegarde",
+      "downloadBackup": "Télécharger la sauvegarde",
+      "iUnderstandTheOld": "Je comprends que l'ancienne sauvegarde sera définitivement supprimée",
+      "removeOldCopy": "Supprimer l'ancienne copie",
+      "tutorials": "Tutoriels",
+      "appNavigation": "Navigation dans l'App",
+      "theBoard": "Le Tableau",
+      "portalsAndTheNavigator": "Les Portails et le Navigateur",
+      "theDrawer": "Le Tiroir",
+      "themes": "Les Thèmes",
+      "theCommandPalette": "La Palette de Commandes",
+      "next": "Suivant",
+      "skip": "Passer",
+      "undoAndRedo": "Undo et Redo",
+      "openTheDrawer": "Ouvrir le Tiroir",
+      "theDiceTray": "Le Plateau de Dés",
+      "theName": "Le Nom",
+      "enterEditMode": "Passer en Mode Édition",
+      "addAStatus": "Ajouter un Statut",
+      "theAddMenu": "Le Menu d'Ajout",
+      "nicelyDone": "Bien Joué",
+      "whatIsInHere": "Ce Qu'il y a Ici",
+      "folders": "Les Dossiers",
+      "lightAndDark": "Clair et Sombre",
+      "theThemeList": "La Liste des Thèmes",
+      "tryOneOn": "En Essayer Un",
+      "makeYourOwn": "Créer le Vôtre",
+      "shareThemes": "Partager des Thèmes",
+      "aThemeYouMake": "Un thème que vous créez peut voyager. Ce bouton en importe un depuis un fichier, et chacun de vos propres thèmes peut être exporté de la même façon depuis son menu. C'est ainsi que vous remettez une palette à un autre joueur ou que vous en transportez une d'un appareil à l'autre.",
+      "theToolbar": "La Barre d'Outils",
+      "writeYourMainTag": "Trait principal...",
+      "noName": "SANS NOM",
+      "power": "ATOUT",
+      "weakness": "CONTRAINTE",
+      "identity": "Identité",
+      "emptyIdentityText": "TEXTE D'IDENTITÉ VIDE",
+      "writeYourIdentityText": "Entrez votre texte d'Identité...",
+      "specialImprovements": "Améliorations Spéciales",
+      "addImprovement": "Ajouter une Amélioration",
+      "addCrewMember": "Ajouter un Membre",
+      "relation": "Relation",
+      "companion": "Compagnon",
+      "personality": "Personnalité",
+      "relic": "Relique",
+      "possessions": "Possessions",
+      "esoterica": "Ésotérique",
+      "workspace": "Fiche",
+      "menu": "Menu"
    }
 }

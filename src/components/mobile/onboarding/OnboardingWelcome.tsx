@@ -48,7 +48,7 @@ export default function OnboardingWelcome({ onNext, onSkip }: OnboardingWelcomeP
 					onClick={onSkip}
 					className="w-full cursor-pointer text-muted-foreground"
 				>
-					{t('MobileOnboarding.navigation.skip')}
+					{t('Common.skip')}
 				</Button>
 			</div>
 		</div>

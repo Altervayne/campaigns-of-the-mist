@@ -65,12 +65,12 @@ const GROUP_LABEL_KEYS: Record<SettingsGroupId, string> = {
 };
 
 const SECTIONS: SettingsSection[] = [
-   { id: 'general', group: 'configure', labelKey: 'SettingsShell.sections.general', icon: SlidersHorizontal, Pane: GeneralSettingsPane },
-   { id: 'appearance', group: 'configure', labelKey: 'SettingsShell.sections.appearance', icon: Palette, Pane: AppearanceSettingsPane },
+   { id: 'general', group: 'configure', labelKey: 'Common.general', icon: SlidersHorizontal, Pane: GeneralSettingsPane },
+   { id: 'appearance', group: 'configure', labelKey: 'Common.appearance', icon: Palette, Pane: AppearanceSettingsPane },
    { id: 'cardPalettes', group: 'configure', labelKey: 'SettingsShell.sections.cardPalettes', icon: SwatchBook, Pane: CardPalettesSettingsPane },
    { id: 'data', group: 'configure', labelKey: 'SettingsShell.sections.data', icon: Database, Pane: DataSettingsPane },
-   { id: 'learn', group: 'help', labelKey: 'SettingsShell.sections.learn', icon: GraduationCap, Pane: LearnSettingsPane },
-   { id: 'whatsNew', group: 'help', labelKey: 'SettingsShell.sections.whatsNew', icon: Sparkles, Pane: WhatsNewSettingsPane },
+   { id: 'learn', group: 'help', labelKey: 'Common.learn', icon: GraduationCap, Pane: LearnSettingsPane },
+   { id: 'whatsNew', group: 'help', labelKey: 'Common.whatSNew', icon: Sparkles, Pane: WhatsNewSettingsPane },
    { id: 'announcements', group: 'help', labelKey: 'SettingsShell.sections.announcements', icon: Megaphone, Pane: AnnouncementsSettingsPane },
    { id: 'about', group: 'help', labelKey: 'SettingsShell.sections.about', icon: Info, Pane: AboutSettingsPane },
 ];

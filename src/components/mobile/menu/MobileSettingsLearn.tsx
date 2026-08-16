@@ -44,11 +44,11 @@ export default function MobileSettingsLearn({ onRestartOnboarding, onStartTutori
 	const tutorials = onStartTutorial ? getTutorialsForPlatform('mobile') : [];
 
 	return (
-		<MobileSettingsSubScreen title={t('SettingsShell.sections.learn')} onBack={onBack}>
+		<MobileSettingsSubScreen title={t('Common.learn')} onBack={onBack}>
 			{/* Tutorials (re-explorable lessons; distinct from replaying onboarding or the tour) */}
 			{tutorials.length > 0 && (
 				<div className="space-y-2">
-					<Label className="text-sm font-semibold">{t('TutorialsDialog.listLabel')}</Label>
+					<Label className="text-sm font-semibold">{t('Common.tutorials')}</Label>
 					{tutorials.map((definition) => {
 						const Glyph = definition.icon ?? GraduationCap;
 						const done = completedTutorials.includes(definition.id);

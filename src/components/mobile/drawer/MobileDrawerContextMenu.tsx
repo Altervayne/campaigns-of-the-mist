@@ -318,7 +318,7 @@ export default function MobileDrawerContextMenu({
                   onClick={handleMove}
                >
                   <FolderInput className="w-4 h-4 mr-3" />
-                  {t('Drawer.Actions.move')}
+                  {t('Common.move')}
                </Button>
 
                {/* Export */}
@@ -363,7 +363,7 @@ export default function MobileDrawerContextMenu({
                      <Input
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
-                        placeholder={t('Drawer.namePlaceholder')}
+                        placeholder={t('Common.name')}
                         onKeyDown={(e) => {
                            if (e.key === 'Enter') {
                               confirmRename();
@@ -382,7 +382,7 @@ export default function MobileDrawerContextMenu({
                            }}
                            className="flex-1 cursor-pointer h-11"
                         >
-                           {t('Drawer.Actions.cancel')}
+                           {t('Common.cancel')}
                         </Button>
                         <Button
                            onClick={confirmRename}
@@ -437,7 +437,7 @@ export default function MobileDrawerContextMenu({
                               }}
                               className="flex-1 cursor-pointer h-11"
                            >
-                              {t('Drawer.Actions.cancel')}
+                              {t('Common.cancel')}
                            </Button>
                            <Button
                               onClick={confirmDelete}

@@ -26,12 +26,12 @@ export function MobileDiceTraySheet() {
    return (
       <MobileBottomSheet isOpen={isOpen} onClose={() => setDiceTrayOpen(false)} contentClassName="bg-card">
          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <span className="text-base font-semibold">{t('DiceTray.title')}</span>
+            <span className="text-base font-semibold">{t('Common.diceTray')}</span>
             <button
                type="button"
                onClick={() => setDiceTrayOpen(false)}
-               aria-label={t('DiceTray.close')}
-               title={t('DiceTray.close')}
+               aria-label={t('Common.close')}
+               title={t('Common.close')}
                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
             >
                <X className="h-5 w-5" />

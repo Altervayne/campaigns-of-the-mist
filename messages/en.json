@@ -13,7 +13,6 @@
    "Tabs": {
       "untitled": "Untitled character",
       "untitledBoard": "Untitled board",
-      "untitledNote": "Untitled note",
       "closeTab": "Close tab",
       "newTab": "New tab",
       "scrollLeft": "Scroll tabs left",
@@ -24,7 +23,6 @@
       "newTabDialog": {
          "title": "New tab",
          "description": "Choose what kind of tab to open.",
-         "characterSheetType": "Character Sheet",
          "workspaceType": "More",
          "newBoardTitle": "New board",
          "newBoardSubtitle": "A freeform canvas",
@@ -34,12 +32,10 @@
       "closeTabDialog": {
          "title": "Close this tab?",
          "description": "\"{{name}}\" has unsaved changes. Closing this tab discards them for good. Cancel and save it first (Save or Save As) if you want to keep your changes.",
-         "closeWithoutSaving": "Close without saving",
-         "cancel": "Cancel"
+         "closeWithoutSaving": "Close without saving"
       }
    },
    "NoteView": {
-      "titlePlaceholder": "Untitled note",
       "bodyPlaceholder": "Write your document in Markdown...",
       "emptyPreview": "This note is empty. Switch to Live to start writing.",
       "mode": {
@@ -59,8 +55,7 @@
       "format": {
          "bold": "Bold",
          "italic": "Italic",
-         "strikethrough": "Strikethrough",
-         "link": "Link"
+         "strikethrough": "Strikethrough"
       },
       "linkEdit": {
          "open": "Open link",
@@ -132,21 +127,16 @@
       },
       "mobile": {
          "read": "Read",
-         "edit": "Edit",
-         "more": "More options",
          "viewSource": "View source",
          "exitSource": "Exit source",
          "undo": "Undo",
          "redo": "Redo",
-         "emptyReading": "This note is empty. Tap Edit to start writing.",
-         "tableChip": "Table",
-         "linkChip": "Link"
+         "emptyReading": "This note is empty. Tap Edit to start writing."
       },
       "tableSheet": {
          "cellRow": "Row {{row}} / Col {{col}}",
          "cellHeader": "Header / Col {{col}}",
          "groupInsert": "Insert",
-         "groupMove": "Move",
          "groupAlign": "Align column",
          "groupDelete": "Delete",
          "insertRowAbove": "Row above",
@@ -157,12 +147,9 @@
          "moveRowDown": "Row down",
          "moveColumnLeft": "Column left",
          "moveColumnRight": "Column right",
-         "alignLeft": "Left",
          "alignCenter": "Center",
-         "alignRight": "Right",
          "deleteRow": "Row",
          "deleteColumn": "Column",
-         "deleteTable": "Table",
          "done": "Done"
       },
       "imageSheet": {
@@ -175,9 +162,6 @@
          "width": "Width",
          "widthValue": "Width {{pct}}%",
          "remove": "Remove image"
-      },
-      "linkSheet": {
-         "title": "Link"
       }
    },
    "BoardView": {
@@ -402,7 +386,6 @@
       "renameLabel": "Rename layer",
       "reorder": "Drag to reorder",
       "layerName": "Layer {{n}}",
-      "untitledNote": "Untitled note",
       "untitledText": "Untitled text",
       "memberCount_one": "{{count}} item",
       "memberCount_other": "{{count}} items",
@@ -420,7 +403,6 @@
       }
    },
    "Navigator": {
-      "title": "Navigator",
       "close": "Close navigator",
       "refresh": "Refresh",
       "expand": "Expand",
@@ -433,7 +415,6 @@
       "seenAbove": "Seen above",
       "seenAboveHint": "Already shown above. Jump to it",
       "scopeToggle": "This workspace only",
-      "untitled": "Untitled",
       "kinds": {
          "board": "Board",
          "note": "Note",
@@ -453,7 +434,6 @@
       "title": "Your data was upgraded",
       "description": "The App moved your characters and Drawer into a new, faster and more reliable in-browser storage system. Nothing was lost. Your previous data is kept as a safety backup. You can download that backup now, or export and remove it any time from the Settings, under the Danger Zone.",
       "exportButton": "Download a backup of my old data",
-      "exportedLabel": "Backup downloaded",
       "exported": "Backup downloaded.",
       "exportFailed": "Backup download failed.",
       "dismissButton": "Got it"
@@ -575,7 +555,6 @@
          "Global": "View mode follows global settings"
       }
    },
-
    "ImageCard": {
       "alt": "Character portrait",
       "empty": "No image",
@@ -586,48 +565,34 @@
       "uploadFailed": "Could not process that image. Please try another file.",
       "resize": "Resize card",
       "resizeHandle": "Drag to resize (hold Shift to keep the image's aspect ratio)",
-      "fitToImage": "Fit to image",
-      "presetPortrait": "Portrait",
-      "presetSquare": "Square",
-      "presetLandscape": "Landscape"
+      "fitToImage": "Fit to image"
    },
-
    "ImageCropper": {
       "title": "Crop image",
       "rotateCw": "Rotate 90° clockwise",
       "rotateCcw": "Rotate 90° counter-clockwise",
       "reset": "Reset",
-      "cancel": "Cancel",
       "apply": "Apply",
       "lowResolution": "Low resolution: the result may look soft or pixelated at this size."
    },
-
    "MobileEditPortrait": {
       "title": "Edit Portrait",
       "missing": "This portrait is no longer available.",
       "back": "Back",
       "aspect": "Aspect",
-      "aspectPortrait": "Portrait",
-      "aspectSquare": "Square",
-      "aspectLandscape": "Landscape",
       "replaceImage": "Replace image",
       "delete": "Delete portrait",
       "deleteConfirmTitle": "Delete portrait?",
       "deleteConfirmBody": "This removes the portrait card from the sheet.",
-      "deleteConfirm": "Delete",
-      "cancel": "Cancel"
+      "deleteConfirm": "Delete"
    },
-
    "SheetZoom": {
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "reset": "Reset zoom to 100%"
    },
-
    "CharacterSheetPage": {
-
       "characterNamePlaceholder": "Character Name...",
-
       "addElement": "Add...",
       "addCard": "Add Card",
       "addPortrait": "Add Portrait",
@@ -638,14 +603,9 @@
       "dropToOpenNote": "Drop to open note",
       "dropToImport": "Drop a file here to import it. A board opens as a new board, a full character replaces your active one, and a card or tracker imports into the loaded character.",
       "cannotDropWrongGame": "Can't drop here, this component is for a different game system.",
-
       "SidebarMenu": {
          "sidebarTitle": "Sidebar",
-
          "editMode": "Edit Mode",
-
-         "drawer": "Drawer",
-
          "saveToDrawer": "Save Character",
          "saveToDrawerAs": "Save Character As...",
          "saveBoardToDrawer": "Save Board",
@@ -659,7 +619,6 @@
          "exportNoteMarkdown": "Export as Markdown",
          "exportMarkdownWarningTitle": "Export without images?",
          "exportMarkdownWarningDescription": "Images are stored locally and won't appear when this file is opened somewhere else. Export anyway?",
-         "exportMarkdownWarningCancel": "Cancel",
          "exportMarkdownWarningConfirm": "Export",
          "exportCharacter": "Export Character",
          "importCharacter": "Import Character",
@@ -668,47 +627,30 @@
          "updateCharacter": "Update Character from File",
          "updateBoard": "Update Board from File",
          "updateNote": "Update Note from File",
-
          "updateCharacterConfirmTitle": "Replace this character's contents?",
          "updateCharacterConfirmDescription": "This character's contents will be replaced by the file's, keeping its place in your drawer and any board links pointing at it. The drawer copy updates only when you Save. This can't be undone.",
          "updateBoardConfirmTitle": "Replace this board's contents?",
          "updateBoardConfirmDescription": "This board's contents will be replaced by the file's, keeping its place in your drawer. The drawer copy updates only when you Save. This can't be undone.",
          "updateNoteConfirmTitle": "Replace this note's contents?",
          "updateNoteConfirmDescription": "This note's contents will be replaced by the file's, keeping its place in your drawer and any links pointing at it. The drawer copy updates only when you Save. This can't be undone.",
-         "updateConfirmCancelButton": "Cancel",
          "updateConfirmButton": "Replace contents",
-
          "resetCharacter": "Reset Character",
          "resetConfirmTitle": "Are you sure you want to reset your character?",
          "resetConfirmDescription": "This action is destructive. Your active character will be deleted and replaced with a blank character. If you don't reload the app, you can still recover your old character with the undo functionality.",
-         "resetConfirmCancelButton": "Cancel",
          "resetConfirmButton": "Reset the Character",
-
          "clearBoard": "Clear Board",
          "clearBoardConfirmTitle": "Are you sure you want to clear the board?",
          "clearBoardConfirmDescription": "This removes every item from the board. The board's name, position, and grid are kept, and you can bring the items back with the undo functionality (as long as you don't reload the app).",
-         "clearBoardConfirmCancelButton": "Cancel",
          "clearBoardConfirmButton": "Clear the Board",
-
          "openMenu": "Open main menu",
-
-         "settings": "Settings",
-         "whatsNew": "What's new",
-         "help": "Help",
-         "diceTray": "Dice Tray",
-         "navigator": "Navigator"
+         "settings": "Settings"
       }
-   },
-   "DiceTray": {
-      "title": "Dice Tray",
-      "close": "Close"
    },
    "Actions": {
       "undo": "Undo",
       "redo": "Redo"
    },
    "Drawer": {
-      "title": "Drawer",
       "search": {
          "placeholder": "Search items...",
          "clear": "Clear search",
@@ -767,67 +709,50 @@
       "seeWorkspace": "See workspace",
       "reexpand": "Back to library",
       "backToRoot": "Back to root",
-      "namePlaceholder": "Name",
       "noSubfolders": "No subfolders",
       "selectThisFolder": "Select this folder",
       "movingUnknown": "(unknown)",
-
       "root": "Root",
       "empty": "Empty",
       "emptyDrawer": "Your Drawer is completely empty!",
-
       "folderCount_one": "{{count}} folder",
       "folderCount_other": "{{count}} folders",
       "itemCount_one": "{{count}} item",
       "itemCount_other": "{{count}} items",
-
       "emptyFolder": "This Folder is empty. Time to fill it!",
       "addFolder": "Add Folder",
       "folderNamePlaceholder": "Folder name...",
       "importedDrawerDefaultName": "Imported Drawer",
       "importedFromBoardFolder": "Imported from {{board}}",
-
       "dropToImport": "Drop file here to import it to your Drawer",
-
       "Actions": {
          "addFolderTitle": "Create a new Folder",
          "createFolder": "Create Folder",
-
          "addToCharacter": "Add to current Character",
          "loadCharacter": "Load character in sheet",
-
          "selectFolder": "Select a destination",
          "selectRoot": "Move to Root",
-
          "nameItemTitle": "What would you like to name this Item?",
-
          "rename": "Rename",
          "renameFolderTitle": "You are renaming this Folder.",
          "renameItemTitle": "You are renaming this Item.",
          "saveChanges": "Save",
-
          "delete": "Delete",
          "deleteFolderTitle": "Are you sure you want to delete this Folder?",
          "deleteItemTitle": "Are you sure you want to delete this Item?",
          "deleteFolderMessage": "The Folder and everything contained within will be deleted forever.",
          "deleteItemMessage": "The Item will be deleted forever.",
          "confirmDelete": "Delete",
-
-         "move": "Move",
          "moveVerb": "Currently moving",
          "moveHere": "Move here",
          "moveFolderTitle": "Moving a Folder through the Drawer",
          "moveItemTitle": "Moving an Item through the Drawer",
          "moveUp": "Back",
-
          "export": "Export",
          "exportFull": "Export your entire Drawer",
          "import": "Import a file into the current Folder",
-         "cancel": "Cancel",
          "confirm": "Confirm",
-
          "defaultNames": {
-            "characterCard": "Character Card",
             "fullSheet": "Full Character Sheet",
             "characterTheme": "Theme Card",
             "groupTheme": "Group Theme Card",
@@ -836,15 +761,12 @@
             "defaultItem": "New Item"
          }
       },
-
       "Types": {
          "unavailablePreview": "Preview is unavailable for this item.",
-
          "LEGENDS": "Legend in the Mist",
          "OTHERSCAPE": ":Otherscape",
          "CITY_OF_MIST": "City of Mist",
          "NEUTRAL": "Game-agnostic",
-
          "LEGENDS_FULL_CHARACTER_SHEET": "Character Sheet",
          "LEGENDS_CHARACTER_CARD": "Hero Card",
          "LEGENDS_CHARACTER_THEME": "Hero Theme",
@@ -853,7 +775,6 @@
          "LEGENDS_STATUS_TRACKER": "Status Tracker",
          "LEGENDS_STORY_TAG_TRACKER": "Story Tag Tracker",
          "LEGENDS_STORY_THEME_TRACKER": "Story Theme Tracker",
-
          "CITY_OF_MIST_FULL_CHARACTER_SHEET": "Character Sheet",
          "CITY_OF_MIST_CHARACTER_CARD": "Rift Card",
          "CITY_OF_MIST_CHARACTER_THEME": "Rift Theme",
@@ -861,7 +782,6 @@
          "CITY_OF_MIST_STATUS_TRACKER": "Status Tracker",
          "CITY_OF_MIST_STORY_TAG_TRACKER": "Story Tag Tracker",
          "CITY_OF_MIST_STORY_THEME_TRACKER": "Story Theme Tracker",
-
          "OTHERSCAPE_FULL_CHARACTER_SHEET": "Character Sheet",
          "OTHERSCAPE_CHARACTER_CARD": "Merc Card",
          "OTHERSCAPE_CHARACTER_THEME": "Merc Theme",
@@ -870,7 +790,6 @@
          "OTHERSCAPE_STATUS_TRACKER": "Status Tracker",
          "OTHERSCAPE_STORY_TAG_TRACKER": "Story Tag Tracker",
          "OTHERSCAPE_STORY_THEME_TRACKER": "Story Theme Tracker",
-
          "IMAGE_CARD": "Portrait",
          "FULL_BOARD": "Board",
          "POST_IT": "Post-it",
@@ -879,28 +798,20 @@
          "ROLL_TABLE": "Roll table",
          "boardItemCount": "{{count}} item(s)",
          "journalPageCount": "{{count}} page(s)",
-
          "cards": "Card(s)",
          "trackers": "Tracker(s)"
       }
    },
    "Cards": {
-      "heroCard": "Hero Card",
       "riftCard": "Rift Card",
-      "mercCard": "Merc Card",
-      "characterCard": "Character Card",
       "fellowshipCard": "Fellowship",
       "crewCard": "Crew",
       "otherscapeCrewCard": "Crew",
       "otherscapeLoadoutCard": "Loadout",
-      "themeCard": "Theme",
-      "portraitCard": "Portrait",
       "journalUntitled": "Untitled journal",
       "journalPageCount": "pg {{current}} / {{total}}",
       "challenge": {
-         "limits": "Limits",
          "tagsAndStatuses": "Tags & Statuses",
-         "threatsAndConsequences": "Threats & Consequences",
          "untitled": "Untitled Challenge",
          "namePlaceholder": {
             "LEGENDS": "e.g. Pack of Hyenas",
@@ -912,50 +823,18 @@
          "noStatuses": "No statuses",
          "noTags": "No tags",
          "noThreats": "No threats",
-         "addLimit": "Add Limit",
-         "addStatus": "Add Status",
-         "addTag": "Add Tag",
-         "addThreat": "Add Threat",
-         "addConsequence": "Add Consequence",
-         "addSpecial": "Add Special",
-         "specials": "Specials",
-         "specialNamePlaceholder": "Special name...",
          "specialBodyPlaceholder": "What it does...",
-         "addMightyTag": "Add Mighty Tag",
-         "mightyTagLabelPlaceholder": "e.g. Fireproof hide",
          "mightyLevel": "Might level",
-         "limitNamePlaceholder": "e.g. Burn",
-         "statusNamePlaceholder": "e.g. bloodied",
-         "tagNamePlaceholder": "e.g. fast",
-         "threatNamePlaceholder": "Threat name...",
          "threatFlavorPlaceholder": "What it does...",
-         "consequencePlaceholder": "A consequence...",
-         "untitledThreat": "Untitled",
          "removeThreat": "Remove threat",
-         "remove": "Remove",
-         "flavorPlaceholder": "What the players see...",
          "editOnBackHint": "Limits, statuses, and tags are editable on the back",
          "editCityOnBackHint": "Spectrums and moves are editable on the back",
          "primaryType": "Primary type",
-         "logosSubtitlePlaceholder": "Logos subtitle...",
-         "mythosSubtitlePlaceholder": "Mythos subtitle...",
-         "spectrums": "Spectrums",
          "noSpectrums": "No spectrums",
-         "addSpectrum": "Add Spectrum",
-         "spectrumNamePlaceholder": "e.g. Influence",
-         "customMoves": "Custom Moves",
          "noCustomMoves": "No custom moves",
-         "addCustomMove": "Add Move",
-         "customMoveNamePlaceholder": "Move name...",
          "customMoveDescriptionPlaceholder": "What it does...",
-         "hardMoves": "Hard Moves",
          "noHardMoves": "No hard moves",
-         "addHardMove": "Add Hard Move",
-         "hardMovePlaceholder": "A hard move...",
-         "softMoves": "Soft Moves",
          "noSoftMoves": "No soft moves",
-         "addSoftMove": "Add Soft Move",
-         "softMovePlaceholder": "A soft move...",
          "expanded": {
             "consequenceCount": "{{count}} consequence",
             "consequenceCount_other": "{{count}} consequences"
@@ -970,12 +849,10 @@
          "untitled": "Untitled Journal"
       }
    },
-
    "ChallengeCard": {
       "editor": {
          "title": "Edit Challenge Card",
          "description": "Set the challenge's name, types, level, image, flavor, limits, statuses, tags, and threats.",
-         "name": "Name",
          "types": "Types",
          "addType": "Add",
          "removeType": "Remove type",
@@ -984,57 +861,21 @@
          "image": "Image",
          "setImage": "Set image",
          "changeImage": "Change",
-         "removeImage": "Remove",
          "flavor": "Flavor",
-         "flavorPlaceholder": "What the players see...",
-         "limits": "Limits",
-         "addLimit": "Add Limit",
-         "limitNamePlaceholder": "e.g. Burn",
-         "statuses": "Statuses",
-         "addStatus": "Add Status",
-         "statusNamePlaceholder": "e.g. bloodied",
          "tags": "Tags",
-         "addTag": "Add Tag",
-         "tagNamePlaceholder": "e.g. fast",
-         "specials": "Specials",
-         "addSpecial": "Add Special",
-         "specialNamePlaceholder": "Special name...",
          "specialBodyPlaceholder": "What it does...",
          "removeSpecial": "Remove special",
          "mightyTags": "Mighty Tags",
-         "addMightyTag": "Add Mighty Tag",
-         "mightyTagLabelPlaceholder": "e.g. Fireproof hide",
          "removeMightyTag": "Remove mighty tag",
-         "abilities": "Threats & Consequences",
-         "addAbility": "Add Threat",
-         "abilityTagPlaceholder": "Threat name...",
          "abilityFlavorPlaceholder": "What it does...",
          "removeAbility": "Remove threat",
          "consequences": "Consequences",
-         "addConsequence": "Add Consequence",
-         "consequencePlaceholder": "A consequence...",
          "primaryType": "Primary Type",
          "logosSubtitle": "Logos Subtitle",
-         "logosSubtitlePlaceholder": "Logos subtitle...",
          "mythosSubtitle": "Mythos Subtitle",
-         "mythosSubtitlePlaceholder": "Mythos subtitle...",
-         "spectrums": "Spectrums",
-         "addSpectrum": "Add Spectrum",
-         "spectrumNamePlaceholder": "e.g. Influence",
-         "customMoves": "Custom Moves",
-         "addCustomMove": "Add Move",
-         "customMoveNamePlaceholder": "Move name...",
          "customMoveDescriptionPlaceholder": "What it does...",
          "removeCustomMove": "Remove move",
-         "hardMoves": "Hard Moves",
-         "addHardMove": "Add Hard Move",
-         "hardMovePlaceholder": "A hard move...",
-         "softMoves": "Soft Moves",
-         "addSoftMove": "Add Soft Move",
-         "softMovePlaceholder": "A soft move...",
          "removeMove": "Remove move",
-         "remove": "Remove",
-         "cancel": "Cancel",
          "save": "Save"
       }
    },
@@ -1045,7 +886,6 @@
       "editDescription": "Use the following options to modify the themebook or theme type of your Theme Card. You can create a custom themebook if you wish.",
       "createButton": "Confirm Card",
       "updateButton": "Confirm Modifications",
-
       "selectPlaceholder": "Card type...",
       "cardTypeLabel": "Card type",
       "themeCard": "Hero Theme",
@@ -1054,25 +894,17 @@
       "crewCard": "Crew Theme",
       "otherscapeThemeCard": "Merc Theme",
       "otherscapeCrewCard": "Crew Theme",
-      "otherscapeLoadoutCard": "Loadout Theme",
-      "heroCard": "Hero Card",
-      "mercCard": "Merc Card",
       "riftCard": "Rift Card",
-
       "selectThemeTypePlaceholder": "Select theme type...",
       "themeTypeLabel": "Theme Type",
-
       "selectThemebookPlaceholder": "Select or write a themebook...",
       "searchThemebookPlaceholder": "Search or create a themebook...",
       "noThemebookFound": "Themebook not found in defaults. You can still use it as a custom themebook!",
       "themebookLabel": "Themebook",
-
       "startingTagsLabel": "Starting Tags",
       "powerTagCountLabel": "Power Tags",
       "weaknessTagCountLabel": "Weakness Tags",
-      "gearTagCountLabel": "Gear Items",
-      "flawTagCountLabel": "Flaws",
-      "wildcardSlotsLabel": "Wildcard Slots"
+      "gearTagCountLabel": "Gear Items"
    },
    "SettingsShell": {
       "title": "Settings",
@@ -1081,12 +913,8 @@
          "help": "Help and info"
       },
       "sections": {
-         "general": "General",
-         "appearance": "Appearance",
          "cardPalettes": "Card palettes",
          "data": "Data and storage",
-         "learn": "Learn",
-         "whatsNew": "What's new",
          "announcements": "Announcements",
          "about": "About"
       }
@@ -1103,17 +931,11 @@
    "SettingsDialog": {
       "title": "App Settings",
       "description": "You will find adjustable settings for the app in general here, like the color theme, or light and dark mode.",
-
       "language": "Language",
       "selectLanguagePlaceholder": "Select a language",
-
       "appearance": "Theme Mode",
       "mode": "Mode",
-      "modeLight": "Light",
       "modeSystem": "System",
-      "modeDark": "Dark",
-      "theme": "Theme",
-
       "cardPalettes": {
          "game": "Game",
          "games": {
@@ -1173,7 +995,6 @@
             "storytheme": "Story Theme"
          }
       },
-
       "themes": {
          "editThemes": "Edit themes",
          "presetsHeading": "Presets",
@@ -1191,7 +1012,6 @@
          "discardBody": "You have unsaved theme changes. Continuing will discard them and keep the saved theme.",
          "discardConfirm": "Discard",
          "duplicate": "Duplicate",
-         "edit": "Edit",
          "advanced": "Advanced",
          "noActiveCustom": "No theme selected to edit.",
          "rename": "Rename",
@@ -1205,8 +1025,6 @@
          "createFromPreset": "Presets can't be edited. Click here to make your own editable copy of {{name}}.",
          "newTheme": "New Custom Theme",
          "newThemeName": "My Theme",
-         "lightColumn": "Light",
-         "darkColumn": "Dark",
          "radius": "Roundness",
          "previewLight": "Light preview",
          "previewDark": "Dark preview",
@@ -1342,38 +1160,28 @@
             }
          }
       },
-
       "light": "Light Mode",
       "dark": "Dark Mode",
-
       "cardView": {
          "title": "Card flipping",
          "sideBySide": "Side by side",
          "flipping": "Flip enabled"
       },
-
       "trackerEdit": {
          "title": "Force Trackers in Edit Mode",
          "unlocked": "Freed",
          "locked": "Forced"
       },
-
       "mobileFABMode": {
          "title": "Mobile UI Mode",
-         "bottomTabs": "Bottom Tabs",
-         "fab": "Floating Buttons"
+         "bottomTabs": "Bottom Tabs"
       },
-
       "mobileNavigation": {
          "title": "Mobile Navigation"
       },
-
       "mobileHandedness": {
-         "title": "Mobile UI Side",
-         "left": "Left",
-         "right": "Right"
+         "title": "Mobile UI Side"
       },
-
       "gestureHints": {
          "title": "Gesture tips",
          "shown": "Shown",
@@ -1381,11 +1189,9 @@
          "replayLabel": "Refresh gesture tips",
          "replayButton": "Show gesture tips again"
       },
-
       "toolbeltMode": {
          "title": "Toolbelt Mode"
       },
-
       "storage": {
          "label": "Storage",
          "usageUsed": "{{mb}} MB used",
@@ -1395,67 +1201,45 @@
          "nothing": "Nothing to reclaim.",
          "failed": "Could not reclaim image space. Please try again."
       },
-
       "backup": {
          "label": "Backup",
          "description": "A backup captures your entire app in one file. Restoring replaces everything on this device.",
          "exportButton": "Export a Backup",
-         "restoreButton": "Restore from Backup",
          "restoreDialog": {
-            "title": "Restore from Backup",
             "description": "This replaces ALL current data on this device with the contents of the backup file. Export a backup first if you're unsure.",
             "confirm": "Yes, replace everything"
          }
       },
-
       "onboarding": "Initial Setup",
       "onboardingButton": "Restart Onboarding",
-
       "migration": {
          "label": "Migrate data",
          "button": "Migrate legacy character files"
       },
-
       "legacyBackup": {
          "actionLabel": "Clean up legacy backup data",
          "confirmTitle": "Remove the old drawer backup?",
-         "confirmDescription": "When the app updated, your drawer was moved to faster local storage. The old copy was kept as a safety backup, and we verified your data transferred intact. Download a backup first, then remove the old copy.",
-         "downloadBackupButton": "Download backup",
-         "backupDownloadedLabel": "Backup downloaded",
-         "confirmCheckbox": "I understand the old backup will be permanently removed",
-         "removeButton": "Remove old copy",
-         "cancel": "Cancel"
+         "confirmDescription": "When the app updated, your drawer was moved to faster local storage. The old copy was kept as a safety backup, and we verified your data transferred intact. Download a backup first, then remove the old copy."
       },
-
       "legacyCharacterBackup": {
          "actionLabel": "Clean up legacy character backup",
          "confirmTitle": "Remove the old character backup?",
-         "confirmDescription": "When the app updated, your active character was moved to faster local storage. The old copy was kept as a safety backup, and we verified your data transferred intact. Download a backup first, then remove the old copy.",
-         "downloadBackupButton": "Download backup",
-         "backupDownloadedLabel": "Backup downloaded",
-         "confirmCheckbox": "I understand the old backup will be permanently removed",
-         "removeButton": "Remove old copy",
-         "cancel": "Cancel"
+         "confirmDescription": "When the app updated, your active character was moved to faster local storage. The old copy was kept as a safety backup, and we verified your data transferred intact. Download a backup first, then remove the old copy."
       },
-
       "dangerZone": {
          "title": "Danger zone",
          "description": "These options are extremely destructive, using them is at your own risk. You will be asked for confirmation.",
-
          "deleteDrawerButton": "Delete Drawer",
          "deleteDrawerDialog": {
             "title": "Delete Full Drawer",
             "description": "You are about to completely delete your drawer, including every item and folder stored within. Are you absolutely certain that is what you want to do?",
-
             "confirm": "Yes, delete my Drawer"
          },
-
          "resetButton": "Full App Reset",
          "resetDialog": {
             "title": "Full App Reset",
             "description": "You are about to completely reset the app, deleting all of your data in the process. Are you absolutely certain that is what you want to do?",
             "confirmationPrompt": "To be able to proceed, please write the following in the box below:",
-
             "cancel": "No, I want to keep my data",
             "confirm": "Yes, delete everything"
          }
@@ -1480,28 +1264,22 @@
    "PatchNotesDialog": {
       "title": "Patch Notes",
       "description": "You will see the patch notes for the latest versions in this window.",
-
       "versionLabel": "Version",
       "selectVersion": "Select a version...",
-
       "pageCounterLabel": "Page",
-
       "previousNote": "Previous patch note",
       "nextNote": "Next patch note"
-
    },
    "MigrationDialog": {
       "title": "Migrate legacy character data",
       "removeFile": "Remove file",
       "description": "Here, you can migrate legacy character files from the alpha version of Campaigns of the Mist to the new, polished version. The Migrator will place the updated files at the root of your Drawer.",
       "thankYou": "If you are here, you most likely used the alpha version of Campaigns of the Mist. I would like to personally thank you for using my app, despite its many flaws. Much love,",
-
       "dropzone": {
          "inactive": "Waiting for a file...",
          "active": "File detected!",
          "fileTypes": "legacy .json files"
       },
-
       "cancel": "Close Migrator",
       "migrateButton": "Start Migration"
    },
@@ -1510,9 +1288,7 @@
       "info": "Legacy data from the old, Alpha version of Campaigns of the Mist was found in your browser storage.",
       "description": "The App is going to delete this data as a cleanup measure. Before that, you can download your old data to use with the migration tools if you want.",
       "warning": "If you press Dismiss, the data will be deleted and lost forever. You cannot undo this. Pressing Download will trigger a browser download of the legacy data.",
-
       "confirmationLabel": "If you wish to dismiss your data, write the following confirmation text in the field below:",
-
       "dismissButton": "Dismiss",
       "downloadButton": "Download legacy data"
    },
@@ -1529,7 +1305,6 @@
          "titleFirm": "Discard your current character?",
          "descriptionSoft": "Your current character is saved in your Drawer — you can reopen it anytime. Creating a new one replaces what's on screen.",
          "descriptionFirm": "This character isn't saved to your Drawer, so creating a new one on mobile will discard it.",
-         "cancel": "Cancel",
          "saveToDrawer": "Save to Drawer",
          "createNew": "Create new",
          "createAnyway": "Create anyway",
@@ -1555,7 +1330,6 @@
       "title": "Welcome to Campaigns of the Mist!",
       "description": "This is an unofficial, fan-made character manager for TTRPGs by Son of Oak Game Studios. All your data is saved in your browser, ensuring complete privacy."
    },
-
    "CommandPalette": {
       "placeholder_1": "Your wish is my command...",
       "placeholder_2": "Prepare your incantation...",
@@ -1582,21 +1356,17 @@
       "placeholder_23": "Sir, this is a Wendy's...",
       "placeholder_24": "May Zeus himself strike me down if I'm ly-...",
       "placeholder_25": "This has got to be the worst copper I've ever seen...",
-
       "placeholders": {
          "renameCharacter": "New character name...",
          "rollDice": "Enter a dice formula, e.g. 2d6+3...",
-
          "themeType": "Select your theme's type...",
          "themebook": "Select a themebook or type a custom one...",
          "mainTagName": "Write the name of your Main Tag...",
          "powerTags": "Number of power tags...",
          "weaknessTags": "Number of weakness tags...",
-
          "trackerType": "Select a Tracker type...",
          "trackerName": "Enter tracker name..."
       },
-
       "actions": {
          "renameTo": "Rename to: \"{{name}}\"",
          "rollFormula": "Roll: \"{{formula}}\"",
@@ -1604,14 +1374,12 @@
          "setPowerTags": "Set Power Tags: {{count}}",
          "setWeaknessTags": "Set Weakness Tags: {{count}}"
       },
-
       "themes": {
          "theme-neutral": "Neutral",
          "theme-legends": "Legend in the Mist",
          "theme-otherscape": "Metro: Otherscape",
          "theme-city-of-mist": "City of Mist"
       },
-
       "empty": "No commands were found.",
       "jumpToSection": {
          "empty": "This note has no headings."
@@ -1619,23 +1387,17 @@
       "startTutorial": {
          "title": "Start a tutorial"
       },
-
       "groups": {
-         "general": "General",
          "tabs": "Tabs",
          "dice": "Dice",
          "settings": "Settings",
          "export": "Exports",
-         "character": "Character Sheet",
          "creation": "Creation",
          "note": "Note",
          "tools": "Tools",
-
-
          "chooseThemeType": "Choose a Theme Type",
          "chooseThemebook": "Choose a Themebook"
       },
-
       "commands": {
          "toggleEdit": "Toggle: Edit Mode",
          "toggleDrawer": "Toggle: Drawer",
@@ -1660,7 +1422,6 @@
          "importFile": "Import: File",
          "undo": "Undo",
          "redo": "Redo",
-
          "newCharacter": "New: Character",
          "newBoard": "New: Board",
          "newNote": "New: Note",
@@ -1670,9 +1431,7 @@
          "closeTab": "Close: Current Tab",
          "nextTab": "Switch: Next Tab",
          "prevTab": "Switch: Previous Tab",
-
          "rollDice": "Roll: Dice",
-
          "setThemeModeLight": "Set: Theme Mode: Light",
          "setThemeModeDark": "Set: Theme Mode: Dark",
          "setThemePalette": "Set: Theme Palette: [...]",
@@ -1680,7 +1439,6 @@
          "openCardPalettes": "Open: Card Palettes",
          "viewFlipping": "Set: Card View: Flipping",
          "viewSideBySide": "Set: Card View: Side-by-Side",
-
          "exportCharacter": "Export: Full Character Sheet",
          "saveCharacterToDrawer": "Save: Character to Drawer",
          "exportBoard": "Export: Board",
@@ -1690,13 +1448,11 @@
          "exportDrawer": "Export: Full Drawer",
          "exportBackup": "Export: Full App Backup",
          "exportNoteMarkdown": "Export: Note as Markdown",
-
          "renameCharacter": "Rename: Character",
          "resetCharacter": "Reset: Character",
          "resetSheetZoom": "Zoom: Reset Sheet",
          "zoomInSheet": "Zoom: In",
          "zoomOutSheet": "Zoom: Out",
-
          "createCard": "Create: Theme Card",
          "createTracker": "Create: Tracker",
          "createChallengeCard": "Create: Challenge Card",
@@ -1714,7 +1470,6 @@
          "setBrushPen": "Brush: Pen",
          "setBrushBrush": "Brush: Brush",
          "setBrushHighlighter": "Brush: Highlighter",
-
          "setGridNone": "Grid: Off",
          "setGridDots": "Grid: Dots",
          "setGridCrosshatch": "Grid: Crosshatch",
@@ -1722,19 +1477,15 @@
          "setGridVerticalLines": "Grid: Vertical Lines",
          "setGridHex": "Grid: Hexagons",
          "jumpToCoordinate": "Jump to coordinate",
-
          "cardTypeCharacter": "Type: Character Theme",
          "cardTypeFellowship": "Type: Fellowship Theme",
          "cardTypeCrew": "Type: Crew Theme",
          "cardTypeLoadout": "Type: Loadout Theme",
-
          "trackerTypeStatus": "Type: Status Tracker",
          "trackerTypeStoryTag": "Type: Story Tag Tracker"
       }
    },
    "TutorialsDialog": {
-      "title": "Tutorials",
-      "listLabel": "Tutorials",
       "status": {
          "done": "Completed"
       },
@@ -1745,51 +1496,39 @@
       "resetProgress": "Reset all tutorial progress",
       "tutorials": {
          "navigation": {
-            "title": "App Navigation",
             "teach": "A tour of the sidebar, tabs, play area, and command palette."
          },
          "sheet": {
-            "title": "Character Sheet",
             "teach": "Name, trackers, cards, and switching between Edit and Play mode."
          },
          "board": {
-            "title": "The Board",
             "teach": "The canvas, elements, drawing tools, layers, and connections."
          },
          "portals": {
-            "title": "Portals and the Navigator",
             "teach": "Linking one workspace to another, and the Navigator that maps them."
          },
          "notes": {
-            "title": "Notes",
             "teach": "Writing a note in Live mode, with markdown, mentions, links, and images."
          },
          "drawer": {
-            "title": "The Drawer",
             "teach": "Opening your library, sorting folders, searching, and the expanded Drawer."
          },
          "themes": {
-            "title": "Themes",
             "teach": "Choosing a theme, the light and dark modes, and building your own colors."
          },
          "commandPalette": {
-            "title": "The Command Palette",
             "teach": "The keyboard command bar: opening it, searching, running commands, and multi-step commands."
          },
          "mobileSheet": {
-            "title": "Character Sheet",
             "teach": "Your name, trackers and cards, the toolbelt, and the touch gestures that drive them."
          },
          "mobileNav": {
-            "title": "App Navigation",
             "teach": "Where everything lives: the Sheet, the Drawer, the Menu, your tools, and your settings."
          },
          "mobileDrawer": {
-            "title": "The Drawer",
             "teach": "Your library: searching and filtering it, folders, what each item can do, and rearranging."
          },
          "mobileThemes": {
-            "title": "Themes",
             "teach": "The light and dark modes, trying a ready-made theme, and building colors of your own."
          }
       }
@@ -1797,21 +1536,12 @@
    "Tutorial": {
       "controls": {
          "back": "Back",
-         "next": "Next",
          "done": "Done",
-         "skip": "Skip",
          "skipStep": "Skip this step"
       },
       "progress": "{{current}} / {{total}}",
       "header": "{{name}} · {{current}} of {{total}}",
       "anchorMissing": "This part of the app has changed, so the tutorial is ending here.",
-
-
-
-
-
-      
-
       "navigation": {
          "welcome_title": "Welcome",
          "welcome_body": "Here is a short tour of the app, and it should take about two minutes. You can leave at any time by pressing the X or the Esc key, and you can start it again whenever you like from your Settings.",
@@ -1821,7 +1551,6 @@
          "homeBase_body": "This screen is your home base, the one you land on when no workspace is open. From here you can pick a game to start a new character, or open a board to begin building your world.",
          "collapse_title": "Collapsing the Sidebar",
          "collapse_body": "This button collapses the Sidebar down to a narrow strip of icons. It gives you more room for your workspace, and you can expand it again the same way.",
-         "undoRedo_title": "Undo and Redo",
          "undoRedo_body": "Nearly everything you do can be undone. These buttons step your actions backward and forward, and you can also use Ctrl+Z and Ctrl+Y on your keyboard.",
          "tabs_title": "Your Tabs",
          "tabs_body": "These are your Tabs. Each one is a separate workspace, and it can hold a character, a board, or a set of notes. You can keep several open at once and switch between them here, so a character sheet, a board and your notes are always a click apart.",
@@ -1829,7 +1558,6 @@
          "newTab_body": "The plus button opens a new workspace, and you can choose any type you like: a character, a board, or a set of notes. Each one opens in its own tab alongside the others.",
          "playArea_title": "The Play Area",
          "playArea_body": "The active workspace fills the center of the screen. Right now it holds a sample character for you to explore, and this is where your characters, boards and notes will appear as you work.",
-         "openDrawer_title": "Open the Drawer",
          "openDrawer_body": "Let's take a look at the Drawer. Press the Drawer button here to open it.",
          "drawerTour_title": "Your Drawer",
          "drawerTour_body": "This is your Drawer, where everything you save is stored. You can keep characters, cards and trackers here, organize them into folders, and drag any of them onto a sheet or a board. The Drawer has its own lesson if you want to go deeper.",
@@ -1839,23 +1567,18 @@
          "navigatorTour_body": "The Navigator maps the links between your boards and notes. As your campaign grows, you can use it to hop from one board or note to another across your whole project, all from a single tree.",
          "openDice_title": "Open the Dice Tray",
          "openDice_body": "Now for the Dice Tray. Press the Dice Tray button here to slide it open.",
-         "diceTour_title": "The Dice Tray",
          "diceTour_body": "This is the Dice Tray. You can build a pool of dice and roll it here, and it stays with you as you move between tabs, so your dice are always within reach.",
          "openSettings_title": "Open Settings",
          "openSettings_body": "Let's open your Settings. Press the Settings button here to open the hub.",
-         "settingsGeneral_title": "General",
          "settingsGeneral_body": "This is the General section. Here you can set your language and adjust how the app behaves from day to day, like the way your cards are shown and whether your trackers stay locked while you play.",
-         "settingsAppearance_title": "Appearance",
          "settingsAppearance_body": "The Appearance section is where you set the look of the app. You can choose a color palette, switch between light and dark mode, and manage your own custom themes.",
          "settingsData_title": "Data and Storage",
          "settingsData_body": "The Data and storage section keeps your saved work in view. You can see how much space you are using, reclaim it, and reset the app if you ever need a clean start.",
-         "settingsLearn_title": "Learn",
          "settingsLearn_body": "This is the Learn section of your Settings. Every lesson, including this one, lives here, and you can replay any of them whenever you like.",
          "settingsWhatsNew_title": "What's New",
          "settingsWhatsNew_body": "The What's new section gathers the release notes for the app. Whenever an update lands, you can come here to read what has changed and what has been added.",
          "settingsAbout_title": "About",
          "settingsAbout_body": "The About section holds the details about the app, including its license and its credits. If you ever need help or want to report a problem, you will find where to reach me here.",
-         "commandPalette_title": "The Command Palette",
          "commandPalette_body": "The command palette lets you run any action by name, from anywhere in the app. It is open here so you can see it, and you can bring it up yourself at any time by pressing Ctrl and K together. Type the name of a workspace to jump to it, or the name of an action to run it.",
          "wrap_title": "You're All Set",
          "wrap_body": "That is the shape of the app. Take your time to explore, and remember that you can replay any lesson from the Learn section in your Settings."
@@ -1863,21 +1586,17 @@
       "sheet": {
          "overview_title": "The Character Sheet",
          "overview_body": "This is your Character Sheet. Your trackers sit across the top and your cards fill the space below, and together they hold everything about your character.",
-         "name_title": "The Name",
          "name_body": "The title at the top is your character's name. You can click it to edit at any time, and your changes are saved automatically.",
          "modes_title": "Play and Edit",
          "modes_body": "Your Character Sheet has two modes, Play and Edit. Play mode is for using your character during a session, while Edit mode is where you build it and make changes, like adding cards and trackers. You can switch between them with this toggle.",
-         "enterEdit_title": "Enter Edit Mode",
          "enterEdit_body": "Let's start building. Flip this toggle into Edit mode so the tools for adding and changing things appear.",
          "trackers_title": "Trackers",
          "trackers_body": "This section is where your trackers live. They hold your character's fluid state during play, like their statuses and their story tags, and you can find them all listed here.",
-         "addStatus_title": "Add a Status",
          "addStatus_body": "Statuses are temporary conditions on your character, like Wounded or Empowered, each with a tier. Add one now using this button to see how it works.",
          "addStoryTag_title": "Add a Story Tag",
          "addStoryTag_body": "Story tags are narrative details you can invoke during play, like a helpful ally or a locked door. Add one now using this button.",
          "cards_title": "Cards",
          "cards_body": "Cards are the heart of your sheet. They hold your theme cards, your hero card, your journals and your portraits, and you can drag any of them to reorder your sheet.",
-         "addMenu_title": "The Add Menu",
          "addMenu_body": "Everything you can add to your sheet lives behind this plus button. From here you can create a Card, a Portrait, a Challenge, or a Journal.",
          "openCardDialog_title": "Add a Card",
          "openCardDialog_body": "This is where you add new cards to your sheet. Click it, then choose Card from the menu that opens to start a new one.",
@@ -1895,13 +1614,11 @@
          "exportImport_body": "You can export your character to a file to back it up or share it with someone, and the file will end in .cotm. Import does the reverse, loading a character file back into the app.",
          "createCharacter_title": "Making a Character",
          "createCharacter_body": "When you want a fresh character, you start from this home menu, or from the plus button in the tab bar. Pick a game and you are ready to build a new one from scratch.",
-         "wrap_title": "Nicely Done",
          "wrap_body": "You have built a sheet from start to finish. You can replay this lesson any time from the Learn section in your Settings."
       },
       "mobileSheet": {
          "overview_title": "Your Character Sheet",
          "overview_body": "This is your character sheet. It holds your trackers and your cards, and everything about your character lives here.",
-         "name_title": "The Name",
          "name_body": "The title up top is your character's name. Tap it to rename, and your changes are saved as you type.",
          "tabs_title": "Trackers and Cards",
          "tabs_body": "Your sheet has two halves. Tap between the Trackers tab and the Cards tab to move from one to the other.",
@@ -1909,9 +1626,7 @@
          "trackers_body": "This is where your trackers live: statuses, story tags, and story themes. They hold your character's state during play.",
          "toolbelt_title": "The Toolbelt",
          "toolbelt_body": "Your tools live here. This is where you find Edit mode, the dice, and the buttons to add to your sheet.",
-         "enterEdit_title": "Enter Edit Mode",
          "enterEdit_body": "Let's start building. Tap Edit to unlock the tools for adding and changing things.",
-         "addStatus_title": "Add a Status",
          "addStatus_body": "Statuses are temporary conditions like Wounded or Empowered, each with a tier. Tap here to add one.",
          "addMore_title": "Story Tags and Themes",
          "addMore_body": "Story tags and story themes add the same way, with their own buttons right here.",
@@ -1929,7 +1644,6 @@
          "overviewAddCard_body": "The dashed row at the end of the list opens the card creator, so new cards start from the same place you browse them.",
          "reorderDrag_title": "Drag Them Into Place",
          "reorderDrag_body": "Press and hold a card's grip handle first, then drag it up or down the list. A drag on its own will not pick the card up. Tapping a card jumps straight to it, and the check button saves your order when it looks right.",
-         "wrap_title": "Nicely Done",
          "wrap_body": "That is your character sheet, top to bottom. You can replay this lesson any time from the Learn section in your Settings."
       },
       "mobileNav": {
@@ -1943,7 +1657,6 @@
          "openRing_body": "Give it a tap. Your destinations fan out around it.",
          "sheetDest_title": "The Sheet",
          "sheetDest_body": "The Sheet is your character: trackers on one half, cards on the other. With no character loaded there is nothing to open, so it greys out until you make or load one.",
-         "drawerDest_title": "The Drawer",
          "drawerDest_body": "The Drawer is your library. Every character, card and tracker you save goes in here, in folders you arrange yourself. Tap it to have a look.",
          "drawerLanding_title": "Here Is the Drawer",
          "drawerLanding_body": "Your library, in full. Search it, sort it into folders, and pull pieces onto your sheet from here. The Drawer lesson walks through all of that properly.",
@@ -1962,7 +1675,6 @@
          "settingsEntry_title": "Settings",
          "settingsEntry_body": "Settings sits right at the top of the Menu. Tap it to open the hub.",
          "settingsEntry_body_fab": "Settings has its own place in the ring, so it is one tap away from anywhere. Tap it to open the hub.",
-         "settingsContent_title": "What Is In Here",
          "settingsContent_body": "And this is the hub, holding everything that is not the three places you work. General, Appearance and Data for setting things up, then What's new and About. Learn is where these lessons live, so you can replay any of them whenever you like.",
          "wrap_title": "That Is the Layout",
          "wrap_body": "Sheet, Drawer and Menu are the three places you work, your tools ride along with them, and Settings holds the rest. You can replay this lesson any time from the Learn section in your Settings."
@@ -1970,13 +1682,11 @@
       "mobileDrawer": {
          "welcome_title": "Your Library",
          "welcome_body": "The Drawer is where everything you save lives: characters, cards, trackers, boards and notes, filed into folders you arrange yourself. This lesson runs on a small sample library, so nothing you have saved is touched along the way.",
-         "content_title": "What Is In Here",
          "content_body": "Folders sit at the top, and everything saved in the folder you are standing in comes below them. Each saved item shows you what it is, which game it belongs to, and when you last worked on it.",
          "search_title": "Finding Things",
          "search_body": "Search by name from here, and it looks through your whole library rather than just the folder you are in. The sliders button beside the field opens Filters, which narrows a search down by kind, by game, or by when something was made or last changed.",
          "viewToggle_title": "Two Ways to Look",
          "viewToggle_body": "This button switches your saved items between compact rows and rich previews. Compact fits far more on screen at once; rich shows you a proper look at each one, so you can tell two similar things apart before you open either.",
-         "folders_title": "Folders",
          "folders_body": "Tap a folder to go inside it, and everything filed in there takes over the list. The trail along the bottom always shows where you are, and tapping any step of it walks you back out.",
          "itemMenu_title": "What an Item Can Do",
          "itemMenu_body": "Every saved item carries this button, and everything you can do with that item is behind it: add it to your sheet, load it, rename it, move it to another folder, export it to a file, or delete it for good.",
@@ -1990,21 +1700,14 @@
       "mobileThemes": {
          "welcome_title": "Your Colors",
          "welcome_body": "The whole look of the app is a theme, a set of colors you can change or build yourself. This lesson opens your Appearance settings, tries a ready-made theme, and points you to where you can make your own. Whatever you pick here is put back the way you found it when you leave.",
-         "mode_title": "Light and Dark",
          "mode_body": "This sets the overall mode. Light and Dark pin it one way, and System follows whatever your phone is set to. It is the coarse choice you make before the colors themselves.",
-         "themeList_title": "The Theme List",
          "themeList_body": "Below the mode sit your themes: the presets that ship with the app, and any you have made yourself, further down. Tapping one applies it at once, and the whole app takes on its colors.",
-         "applyPreset_title": "Try One On",
          "applyPreset_body": "Tap a preset to put it on, and watch the colors change around you as the app re-skins. Pick whichever one you like, and the lesson moves on.",
-         "makeYourOwn_title": "Make Your Own",
          "makeYourOwn_body": "This button opens the theme editor on a fresh theme. Inside, you set each color by hand for both light and dark, with a live preview as you work, and a seed generator can grow a whole palette from a single color for a fast start. Presets cannot be edited in place, so a saved theme's menu hands you an editable copy to build from.",
-         "importExport_title": "Share Themes",
-         "importExport_body": "A theme you make can travel. This button imports one from a file, and each of your own themes can be exported the same way from its menu. It is how you hand a palette to another player or carry one between your devices.",
          "wrap_title": "That Is Themes",
          "wrap_body": "You have set the mode, tried a theme, and seen where to build your own. The theme is put back the way you found it, so nothing here changed your setup. You can replay this lesson any time from the Learn section in your Settings."
       },
       "board": {
-         "welcome_title": "The Board",
          "welcome_body": "The Board is a freeform canvas for your table. You can lay out a scene, a map of clues, or a cast of characters, arranged however you think about them, so your whole game has a place to live.",
          "canvas_title": "The Canvas",
          "canvas_body": "This is the canvas. It stretches as far as you need in every direction, and everything you place lives at its own spot in that space, so you can spread your work out and come back to it later.",
@@ -2014,11 +1717,9 @@
          "alignSnap_body": "Hold Shift while you drag an element and it snaps to the edges and centers of the ones around it, with guides showing what it lines up with. It even helps you match the spacing between them. Release Shift to move freely. Give it a try, then continue.",
          "panZoom_title": "Moving Around",
          "panZoom_body": "To move around the canvas, drag with the right mouse button, or hold Alt and drag. Scroll to zoom in and out. Try it now to get a feel for it, then continue when you are ready.",
-         "toolbar_title": "The Toolbar",
          "toolbar_body": "The bar along the bottom holds everything you need. From here you can switch between the two work modes, add or draw whatever you like, open the Layers panel, and use the view controls that recenter and zoom the canvas.",
          "modes_title": "Elements and Drawing",
          "modes_body": "The Board has two modes. Elements mode is where you place things like cards and notes, while Drawing mode lets you sketch and mark up the canvas directly. You can switch between them with this toggle.",
-         "addMenu_title": "The Add Menu",
          "addMenu_body": "In Elements mode, everything you can place lives behind this Add button. From here you can drop notes, portals, game cards, trackers, and more onto the board.",
          "dropElement_title": "Place an Element",
          "dropElement_body": "Open the Add menu and drop something onto the board. A Post-it or a Pin is the quickest way to start, and it will land in the middle of your view.",
@@ -2038,13 +1739,11 @@
          "layersPanel_body": "This lists every element on the board, stacked from the top of the list to the front of the canvas. You can hover a row to find an element, click to select it, and drag to restack it, and you can group related things together into zones. Drawing layers can be merged from here too.",
          "connections_title": "Connections",
          "connections_body": "Elements can be linked to one another. These two cards are joined by a connection line, which is a good way to show how things relate. To make your own, you select an element and drag its connect handle onto another, and you can select a line to recolor it, change its arrow, or remove it.",
-         "dice_title": "The Dice Tray",
          "dice_body": "The Dice Tray rides along here too, so you can build a pool and roll it without ever leaving the board.",
          "wrap_title": "That's the Board",
          "wrap_body": "That is the Board. You can replay this lesson any time from the Learn section in your Settings."
       },
       "portals": {
-         "welcome_title": "Portals and the Navigator",
          "welcome_body": "A portal is a link from one workspace to another, so a board can point to a note and a note can point to another board. This lesson shows how to make one and how to follow it, then opens the Navigator, the map that reads your whole web of links.",
          "whatIsPortal_title": "What a Portal Is",
          "whatIsPortal_body": "This tile is a portal. It stands in for another workspace and carries you there when you dive through it. To dive, you double-click the tile, and you land in whatever it points to.",
@@ -2066,7 +1765,6 @@
          "wrap_body": "You have made a link, read the map, and followed a dive out and back. You can replay this lesson any time from the Learn section in your Settings."
       },
       "notes": {
-         "welcome_title": "Notes",
          "welcome_body": "A note is a page for your words. You can keep session prep, a handout to read aloud, or the lore behind a place, and set it beside a character sheet or a board so the writing lives with the rest of your game.",
          "surface_title": "This Is a Note",
          "surface_body": "This is a note, opened on its own page. It starts in Live mode, the one where you both read and write the same document, so what you see here is exactly how the note reads.",
@@ -2078,7 +1776,6 @@
          "mentions_body": "The colored pills are mentions, a status or a tag written inside braces. In a note they are a visual reference, a tidy way to note the statuses and tags in play. The same braces are live elsewhere: write one in a journal or a challenge on a character sheet, or on a board, and clicking the pill there creates that tag or status for real.",
          "linksOut_title": "Links",
          "linksOut_body": "A note can link to a heading inside itself, to another note, board, or character, or out to the web. This button inserts one. Links and the Navigator that maps them have a tutorial of their own, so start there when you want the full tour.",
-         "toolbar_title": "The Toolbar",
          "toolbar_body": "Every bit of formatting has a button here: headings, lists, quotes, tables, images, and links. You can type the markdown yourself or click these instead, whichever feels faster in the moment.",
          "images_title": "Images",
          "images_body": "Notes hold images too. Add one with this button, paste it from your clipboard, or drag a file onto the page. Once it lands you can set its size, choose its aspect ratio, and pick which side of the page it aligns to.",
@@ -2090,11 +1787,8 @@
          "wrap_body": "You have typed in a note, met mentions and links, and seen the three modes. To make your own, add a note from the tab menu or the command palette, and find it later in the Drawer with the rest of your files. You can replay this lesson any time from the Learn section in your Settings."
       },
       "drawer": {
-         "welcome_title": "The Drawer",
          "welcome_body": "The Drawer is your library. Every character, board, note, and card you save is kept here, ready to open again or drop into whatever you are working on. This lesson opens it, sorts it into folders, searches it, and expands it to the full width when you want the space.",
-         "open_title": "Open the Drawer",
          "open_body": "The Drawer rests closed at the edge of the screen until you call for it. This button on the side opens it. Click it now to slide the Drawer out.",
-         "folders_title": "Folders",
          "folders_body": "Folders sort your library the way shelves sort a bookcase. Open one to see what it holds, and nest folders inside folders to keep a long collection in order.",
          "items_title": "Your Items",
          "items_body": "Each card here is something you saved, and its icon tells you what: a character, a board, a note, or a card. The card carries a small preview and the date you last touched it, so a familiar item is easy to find. The button up top switches between these rich cards and a tighter list, whichever you prefer.",
@@ -2104,7 +1798,6 @@
          "search_body": "Type here to search your whole library by name at once, across every folder. The Filters button beside it narrows the results further, by kind of item, by game, or by when you last changed it.",
          "importExport_title": "Import and Export",
          "importExport_body": "Export sends an item to a file you can back up or hand to another player, and Import brings one of those files back in. It is how you move a character or a board between devices, or share one with your table.",
-         "undoRedo_title": "Undo and Redo",
          "undoRedo_body": "If a change in the Drawer goes wrong, a move, a rename, or a delete, these arrows step it back and forward. They cover the Drawer itself, so a tidy-up gone sideways is never final.",
          "expand_title": "Expand the Drawer",
          "expand_body": "The side panel is handy for a quick reach, but a large library is easier to browse with room to spread out. This button expands the Drawer to fill the width of the screen. Click it to open it up.",
@@ -2114,23 +1807,15 @@
          "wrap_body": "You have opened the Drawer, browsed its folders and items, searched them, and expanded it to full width. It waits behind the button on the side wherever you are, holding everything you save. You can replay this lesson any time from the Learn section in your Settings."
       },
       "themes": {
-         "welcome_title": "Themes",
          "welcome_body": "The whole look of the app is a theme, a set of colors you can change or build yourself. This lesson opens your appearance settings, tries a ready-made theme, and points you to where you can craft your own.",
-         "mode_title": "Light and Dark",
          "mode_body": "This switch sets the overall mode. Light and Dark pin it one way, and System follows whatever your device is set to. It is the coarse choice you make before you pick the colors themselves.",
-         "themeList_title": "The Theme List",
          "themeList_body": "Below the mode sit your themes: the presets that ship with the app, and any you have made yourself. Selecting one applies it at once, and the whole app takes on its colors, this window included.",
-         "applyPreset_title": "Try One On",
          "applyPreset_body": "Click a theme in the list to put it on, and watch the colors change around you as the app re-skins live. Pick whichever one you like, and the tour moves on.",
-         "makeYourOwn_title": "Make Your Own",
          "makeYourOwn_body": "This button opens the theme editor. Inside, you set each color by hand for both light and dark, with a live preview beside you as you work. A seed generator can grow a whole palette from a single color when you want a fast start. Presets cannot be edited in place, so the editor hands you an editable copy to build from.",
-         "importExport_title": "Share Themes",
-         "importExport_body": "A theme you make can travel. This button imports one from a file, and each of your own themes can be exported the same way from its menu. It is how you hand a palette to another player or carry one between your devices.",
          "wrap_title": "That's Themes",
          "wrap_body": "You have set the mode, tried a theme, and seen where to build your own. We put your theme back the way you found it, so nothing here changed your setup. You can replay this lesson any time from the Learn section in your Settings."
       },
       "commandPalette": {
-         "welcome_title": "The Command Palette",
          "welcome_body": "The command palette is a search bar for actions. It reaches almost everything in the app from the keyboard, so you can create, jump, and run without hunting through menus. This lesson opens it, searches it, runs a command, and walks one of the commands that asks a follow-up.",
          "open_title": "Open the Palette",
          "open_body": "The palette answers to a single shortcut from anywhere in the app. Press Ctrl or Cmd + K to summon it now, and it drops in ready for a command.",
@@ -2146,71 +1831,34 @@
          "wrap_body": "You have opened the palette, searched it, run a command, and walked one that asked for more. It is always a Ctrl or Cmd + K away, wherever you are. That is the whole desktop app, and you have now seen every part of it. You can replay any lesson from the Learn section in your Settings."
       }
    },
-
    "ThemeCard": {
       "crewThemeTitle": "Crew Theme",
-
-      "placeholderName": "Write your main tag...",
-      "noName": "NO NAME",
-      "power": "POWER",
-      "weakness": "WEAKNESS",
-
       "questTitle": "Quest",
       "noQuest": "EMPTY QUEST TEXT",
       "questPlaceholder": "Write your quest text here...",
-
       "mysteryTitle": "Mystery",
       "noMystery": "EMPTY MYSTERY TEXT",
       "mysteryPlaceholder": "Write your mystery text here...",
-
-      "identityTitle": "Identity",
-      "noIdentity": "EMPTY IDENTITY TEXT",
-      "identityPlaceholder": "Write your identity text here...",
-
-
       "addPowerTag": "Add Power Tag",
-      "addWeaknessTag": "Add Weakness Tag",
-
-      "improvements": "Special Improvements",
-      "addImprovement": "Add Improvement"
+      "addWeaknessTag": "Add Weakness Tag"
    },
    "OtherscapeThemeCard": {
       "crewThemeTitle": "Crew Theme",
-      "loadoutTitle": "Loadout Theme",
-
-      "placeholderName": "Write your main tag...",
-      "noName": "NO NAME",
-      "power": "POWER",
-      "weakness": "WEAKNESS",
       "flaw": "FLAW",
-
       "ritualTitle": "Ritual",
       "noRitual": "EMPTY RITUAL TEXT",
       "ritualPlaceholder": "Write your ritual text here...",
-
-      "identityTitle": "Identity",
-      "noIdentity": "EMPTY IDENTITY TEXT",
-      "identityPlaceholder": "Write your identity text here...",
-
       "itchTitle": "Itch",
       "noItch": "EMPTY ITCH TEXT",
       "itchPlaceholder": "Write your itch text here...",
-
       "descriptionTitle": "Description",
       "noDescription": "EMPTY DESCRIPTION",
       "descriptionPlaceholder": "Write your loadout description here...",
-
-
-      "improvements": "Special Improvements",
-      "addImprovement": "Add Improvement",
-
       "gearTitle": "GEAR",
       "addGearTag": "Add Gear",
-      "flawsTitle": "Flaws",
       "addFlawTag": "Add Flaw",
       "loadedGear": "Loaded Gear",
       "unloadedGear": "Unloaded Gear",
-      "wildcardSlots": "Wildcard Slots",
       "noGear": "No Gear"
    },
    "TagItem": {
@@ -2238,11 +1886,7 @@
       "noName": "NO RIFT NAME",
       "Crew": {
          "title": "Crew",
-         "name": "Name",
-         "help": "Help",
-         "hurt": "Hurt",
-         "noName": "NO NAME",
-         "addCrewMember": "Add Crew Member"
+         "hurt": "Hurt"
       },
       "buildup": "BUILD-UP",
       "Nemesis": {
@@ -2251,7 +1895,6 @@
       }
    },
    "OtherscapeCharacterCard": {
-      "title": "Merc Card",
       "characterNamePlaceholder": "Merc Name...",
       "noName": "NO CHARACTER NAME",
       "essence": "Essence",
@@ -2272,30 +1915,16 @@
          }
       },
       "relationships": "Crew Relationships",
-      "addRelationship": "Add Crew Member",
       "companionPlaceholder": "Member",
-      "relationshipPlaceholder": "Relation",
-      "relationshipCompanionNoName": "NO NAME",
-      "relationshipRelationNoName": "NO RELATION",
-      "Specials": {
-         "title": "Specials",
-         "addSpecial": "Add Special"
-      }
+      "relationshipRelationNoName": "NO RELATION"
    },
    "HeroCard": {
-      "title": "Hero Card",
       "noName": "NO HERO NAME",
       "characterNamePlaceholder": "Character Name...",
-
       "relationships": "Fellowship relationships",
       "addRelationship": "Add relationship",
-      "companion": "Companion",
       "companionPlaceholder": "Fellow",
-      "relationship": "Relation",
-      "relationshipPlaceholder": "Relation",
-      "relationshipCompanionNoName": "NO NAME",
       "relationshipRelationNoName": "NO RELATION",
-
       "quintessences": "Quintessences",
       "addQuintessence": "Add Quintessence"
    },
@@ -2322,7 +1951,6 @@
       "noName": "NO NEMESIS"
    },
    "Trackers": {
-      "addStatus": "Add Status",
       "addStoryTag": "Add Story Tag",
       "addStoryTheme": "Add Story Theme",
       "statusPlaceholder": "Fill your status...",
@@ -2330,32 +1958,24 @@
       "storyTagPlaceholder": "Fill your story tag...",
       "storyTagNoName": "NO STORY TAG"
    },
-
    "LegendsData": {
       "themebook": {
          "circumstance": "Circumstance",
          "devotion": "Devotion",
          "past": "Past",
          "people": "People",
-         "personality": "Personality",
          "skillOrTrade": "Skill or Trade",
          "trait": "Trait",
-
          "duty": "Duty",
          "influence": "Influence",
          "knowledge": "Knowledge",
          "prodigiousAbility": "Prodigious Ability",
-         "relic": "Relic",
          "uncannyBeing": "Uncanny Being",
-
          "destiny": "Destiny",
          "dominion": "Dominion",
          "mastery": "Mastery",
          "monstrosity": "Monstrosity",
-
-         "companion": "Companion",
-         "magic": "Magic",
-         "possessions": "Possessions"
+         "magic": "Magic"
       }
    },
    "CityData": {
@@ -2365,20 +1985,15 @@
          "divination": "Divination",
          "expression": "Expression",
          "mobility": "Mobility",
-         "relic": "Relic",
          "subversion": "Subversion",
          "training": "Training",
          "conjuration": "Conjuration",
          "destiny": "Destiny",
          "enclave": "Enclave",
          "familiar": "Familiar",
-         "esoterica": "Esoterica",
-
          "definingEvent": "Defining Event",
          "definingRelationship": "Defining Relationship",
          "mission": "Mission",
-         "personality": "Personality",
-         "possessions": "Possessions",
          "routine": "Routine",
          "struggle": "Struggle",
          "turf": "Turf",
@@ -2391,17 +2006,12 @@
    "OtherscapeData": {
       "themebook": {
          "artifact": "Artifact",
-         "esoterica": "Esoterica",
          "exposure": "Exposure",
-         "companion": "Companion",
-
          "affiliation": "Affiliation",
          "assets": "Assets",
          "expertise": "Expertise",
          "horizon": "Horizon",
-         "personality": "Personality",
          "troubledPast": "Troubled Past",
-
          "augmentation": "Augmentation",
          "cuttingEdge": "Cutting Edge",
          "cyberspace": "Cyberspace",
@@ -2412,21 +2022,17 @@
       "Origin": "Origin",
       "Adventure": "Adventure",
       "Greatness": "Greatness",
-
       "Logos": "Logos",
       "Mythos": "Mythos",
-
       "Self": "Self",
       "Noise": "Noise"
    },
-
    "MobileCharacterSheet": {
       "noCharacter": "No Character Loaded",
       "loadCharacterPrompt": "Load a character from the drawer or create a new one to get started.",
       "drawerHint": "Tap the Drawer tab below to browse your saved characters.",
       "trackersTab": "Trackers",
       "cardsTab": "Cards",
-      "statuses": "Statuses",
       "storyTags": "Story Tags",
       "storyThemes": "Story Themes",
       "cardOverview": "Card Overview",
@@ -2436,19 +2042,12 @@
       "noCards": "No cards yet"
    },
    "MobileBottomTabs": {
-      "sheet": "Workspace",
       "sheetDisabled": "No sheet loaded",
-      "drawer": "Drawer",
-      "menu": "Menu",
       "toolbelt": "Toolbelt"
    },
    "MobileFAB": {
-      "drawer": "Drawer",
-      "sheet": "Workspace",
-      "menu": "Menu",
       "settings": "Settings",
-      "open": "Open menu",
-      "close": "Close"
+      "open": "Open menu"
    },
    "Workspace": {
       "switcherTitle": "Workspaces",
@@ -2512,7 +2111,6 @@
       "confirm": "Save"
    },
    "MobileMenu": {
-      "title": "Menu",
       "description": "Access app settings and actions"
    },
    "MobileOnboarding": {
@@ -2540,8 +2138,7 @@
          "rightHanded": "Right Hand",
          "navigation": "Interface Style",
          "navigationHint": "Choose how you interact with the app",
-         "bottomTabs": "Tabs & Panels",
-         "floatingButton": "Floating Buttons"
+         "bottomTabs": "Tabs & Panels"
       },
       "tips": {
          "title": "Gesture tips",
@@ -2558,9 +2155,7 @@
          "tutorialReminder": "You can restart the tutorial anytime from Settings"
       },
       "navigation": {
-         "back": "Back",
-         "next": "Next",
-         "skip": "Skip"
+         "back": "Back"
       }
    },
    "DesktopOnboarding": {
@@ -2606,6 +2201,120 @@
       "back": "Back",
       "name": "Name",
       "close": "Close",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "untitledNote": "Untitled note",
+      "characterSheet": "Character Sheet",
+      "link": "Link",
+      "notes": "Notes",
+      "square": "Square",
+      "edit": "Edit",
+      "table": "Table",
+      "move": "Move",
+      "left": "Left",
+      "right": "Right",
+      "diceTray": "Dice Tray",
+      "remove": "Remove",
+      "navigator": "Navigator",
+      "untitled": "Untitled",
+      "backupDownloaded": "Backup downloaded",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "drawer": "Drawer",
+      "whatSNew": "What's new",
+      "help": "Help",
+      "theme": "Theme",
+      "characterCard": "Character Card",
+      "heroCard": "Hero Card",
+      "mercCard": "Merc Card",
+      "loadoutTheme": "Loadout Theme",
+      "limits": "Limits",
+      "threatsConsequences": "Threats & Consequences",
+      "addLimit": "Add Limit",
+      "addStatus": "Add Status",
+      "addTag": "Add Tag",
+      "addThreat": "Add Threat",
+      "addConsequence": "Add Consequence",
+      "addSpecial": "Add Special",
+      "specials": "Specials",
+      "specialName": "Special name...",
+      "addMightyTag": "Add Mighty Tag",
+      "eGFireproofHide": "e.g. Fireproof hide",
+      "eGBurn": "e.g. Burn",
+      "eGBloodied": "e.g. bloodied",
+      "eGFast": "e.g. fast",
+      "threatName": "Threat name...",
+      "aConsequence": "A consequence...",
+      "whatThePlayersSee": "What the players see...",
+      "logosSubtitle": "Logos subtitle...",
+      "mythosSubtitle": "Mythos subtitle...",
+      "spectrums": "Spectrums",
+      "addSpectrum": "Add Spectrum",
+      "eGInfluence": "e.g. Influence",
+      "customMoves": "Custom Moves",
+      "addMove": "Add Move",
+      "moveName": "Move name...",
+      "hardMoves": "Hard Moves",
+      "addHardMove": "Add Hard Move",
+      "aHardMove": "A hard move...",
+      "softMoves": "Soft Moves",
+      "addSoftMove": "Add Soft Move",
+      "aSoftMove": "A soft move...",
+      "statuses": "Statuses",
+      "flaws": "Flaws",
+      "wildcardSlots": "Wildcard Slots",
+      "general": "General",
+      "appearance": "Appearance",
+      "learn": "Learn",
+      "light": "Light",
+      "dark": "Dark",
+      "floatingButtons": "Floating Buttons",
+      "restoreFromBackup": "Restore from Backup",
+      "downloadBackup": "Download backup",
+      "iUnderstandTheOld": "I understand the old backup will be permanently removed",
+      "removeOldCopy": "Remove old copy",
+      "tutorials": "Tutorials",
+      "appNavigation": "App Navigation",
+      "theBoard": "The Board",
+      "portalsAndTheNavigator": "Portals and the Navigator",
+      "theDrawer": "The Drawer",
+      "themes": "Themes",
+      "theCommandPalette": "The Command Palette",
+      "next": "Next",
+      "skip": "Skip",
+      "undoAndRedo": "Undo and Redo",
+      "openTheDrawer": "Open the Drawer",
+      "theDiceTray": "The Dice Tray",
+      "theName": "The Name",
+      "enterEditMode": "Enter Edit Mode",
+      "addAStatus": "Add a Status",
+      "theAddMenu": "The Add Menu",
+      "nicelyDone": "Nicely Done",
+      "whatIsInHere": "What Is In Here",
+      "folders": "Folders",
+      "lightAndDark": "Light and Dark",
+      "theThemeList": "The Theme List",
+      "tryOneOn": "Try One On",
+      "makeYourOwn": "Make Your Own",
+      "shareThemes": "Share Themes",
+      "aThemeYouMake": "A theme you make can travel. This button imports one from a file, and each of your own themes can be exported the same way from its menu. It is how you hand a palette to another player or carry one between your devices.",
+      "theToolbar": "The Toolbar",
+      "writeYourMainTag": "Write your main tag...",
+      "noName": "NO NAME",
+      "power": "POWER",
+      "weakness": "WEAKNESS",
+      "identity": "Identity",
+      "emptyIdentityText": "EMPTY IDENTITY TEXT",
+      "writeYourIdentityText": "Write your identity text here...",
+      "specialImprovements": "Special Improvements",
+      "addImprovement": "Add Improvement",
+      "addCrewMember": "Add Crew Member",
+      "relation": "Relation",
+      "companion": "Companion",
+      "personality": "Personality",
+      "relic": "Relic",
+      "possessions": "Possessions",
+      "esoterica": "Esoterica",
+      "workspace": "Workspace",
+      "menu": "Menu"
    }
 }

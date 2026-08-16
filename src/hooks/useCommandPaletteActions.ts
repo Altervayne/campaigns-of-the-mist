@@ -172,21 +172,21 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // #########################
       // ###   GENERAL GROUP   ###
       // #########################
-      { id: 'toggleEdit', scope: 'character', label: t('CommandPalette.commands.toggleEdit'), keywords: ['edit', 'toggle'], icon: Pencil, group: t('CommandPalette.groups.general'), action: onToggleEditMode },
-      { id: 'toggleDrawer', scope: 'global', label: t('CommandPalette.commands.toggleDrawer'), keywords: ['drawer', 'toggle'], icon: PanelLeftOpen, group: t('CommandPalette.groups.general'), action: onToggleDrawer },
-      { id: 'toggleNavigator', scope: 'global', label: t('CommandPalette.commands.toggleNavigator'), keywords: ['navigator', 'portals', 'graph', 'links', 'crawl', 'jump', 'toggle', 'panel'], icon: Waypoints, group: t('CommandPalette.groups.general'), action: toggleNavigator },
-      { id: 'openSettings', scope: 'global', label: t('CommandPalette.commands.openSettings'), keywords: ['settings', 'preferences', 'config'], icon: Settings, group: t('CommandPalette.groups.general'), action: onOpenSettings },
-      { id: 'openWhatsNew', scope: 'global', label: t('CommandPalette.commands.openWhatsNew'), keywords: ['what', 'new', 'patch', 'notes', 'release', 'changelog', 'update'], icon: Sparkles, group: t('CommandPalette.groups.general'), action: () => openSettingsSection('whatsNew') },
-      { id: 'viewAnnouncements', scope: 'global', label: t('CommandPalette.commands.viewAnnouncements'), keywords: ['announcements', 'notices', 'news', 'messages', 'banner', 'alerts'], icon: Megaphone, group: t('CommandPalette.groups.general'), action: () => openSettingsSection('announcements') },
-      { id: 'openAbout', scope: 'global', label: t('CommandPalette.commands.openAbout'), keywords: ['about', 'info', 'license', 'credits', 'version'], icon: Info, group: t('CommandPalette.groups.general'), action: () => openSettingsSection('about') },
-      { id: 'openTutorials', scope: 'global', label: t('CommandPalette.commands.openTutorials'), keywords: ['tutorials', 'learn', 'help', 'onboarding', 'guide', 'teach'], icon: GraduationCap, group: t('CommandPalette.groups.general'), action: () => openSettingsSection('learn') },
+      { id: 'toggleEdit', scope: 'character', label: t('CommandPalette.commands.toggleEdit'), keywords: ['edit', 'toggle'], icon: Pencil, group: t('Common.general'), action: onToggleEditMode },
+      { id: 'toggleDrawer', scope: 'global', label: t('CommandPalette.commands.toggleDrawer'), keywords: ['drawer', 'toggle'], icon: PanelLeftOpen, group: t('Common.general'), action: onToggleDrawer },
+      { id: 'toggleNavigator', scope: 'global', label: t('CommandPalette.commands.toggleNavigator'), keywords: ['navigator', 'portals', 'graph', 'links', 'crawl', 'jump', 'toggle', 'panel'], icon: Waypoints, group: t('Common.general'), action: toggleNavigator },
+      { id: 'openSettings', scope: 'global', label: t('CommandPalette.commands.openSettings'), keywords: ['settings', 'preferences', 'config'], icon: Settings, group: t('Common.general'), action: onOpenSettings },
+      { id: 'openWhatsNew', scope: 'global', label: t('CommandPalette.commands.openWhatsNew'), keywords: ['what', 'new', 'patch', 'notes', 'release', 'changelog', 'update'], icon: Sparkles, group: t('Common.general'), action: () => openSettingsSection('whatsNew') },
+      { id: 'viewAnnouncements', scope: 'global', label: t('CommandPalette.commands.viewAnnouncements'), keywords: ['announcements', 'notices', 'news', 'messages', 'banner', 'alerts'], icon: Megaphone, group: t('Common.general'), action: () => openSettingsSection('announcements') },
+      { id: 'openAbout', scope: 'global', label: t('CommandPalette.commands.openAbout'), keywords: ['about', 'info', 'license', 'credits', 'version'], icon: Info, group: t('Common.general'), action: () => openSettingsSection('about') },
+      { id: 'openTutorials', scope: 'global', label: t('CommandPalette.commands.openTutorials'), keywords: ['tutorials', 'learn', 'help', 'onboarding', 'guide', 'teach'], icon: GraduationCap, group: t('Common.general'), action: () => openSettingsSection('learn') },
       ...(hasTutorials ? [
-         { id: 'startTutorial', scope: 'global' as const, label: t('CommandPalette.commands.startTutorial'), keywords: ['tutorial', 'start', 'learn', 'lesson', 'teach', 'guide', 'run'], icon: GraduationCap, group: t('CommandPalette.groups.general'), pageId: 'startTutorial' },
+         { id: 'startTutorial', scope: 'global' as const, label: t('CommandPalette.commands.startTutorial'), keywords: ['tutorial', 'start', 'learn', 'lesson', 'teach', 'guide', 'run'], icon: GraduationCap, group: t('Common.general'), pageId: 'startTutorial' },
       ] : []),
-      { id: 'importFile', scope: 'global', label: t('CommandPalette.commands.importFile'), keywords: ['import', 'file', 'load', 'open', '.cotm'], icon: Import, group: t('CommandPalette.groups.general'), action: onImportFile },
+      { id: 'importFile', scope: 'global', label: t('CommandPalette.commands.importFile'), keywords: ['import', 'file', 'load', 'open', '.cotm'], icon: Import, group: t('Common.general'), action: onImportFile },
       // Undo/Redo route themselves (drawer / board / character), so they show in any workspace.
-      { id: 'undo', scope: 'global', label: t('CommandPalette.commands.undo'), keywords: ['undo', 'revert', 'back'], icon: Undo2, group: t('CommandPalette.groups.general'), action: undoActiveContext },
-      { id: 'redo', scope: 'global', label: t('CommandPalette.commands.redo'), keywords: ['redo', 'forward'], icon: Redo2, group: t('CommandPalette.groups.general'), action: redoActiveContext },
+      { id: 'undo', scope: 'global', label: t('CommandPalette.commands.undo'), keywords: ['undo', 'revert', 'back'], icon: Undo2, group: t('Common.general'), action: undoActiveContext },
+      { id: 'redo', scope: 'global', label: t('CommandPalette.commands.redo'), keywords: ['redo', 'forward'], icon: Redo2, group: t('Common.general'), action: redoActiveContext },
 
       // ######################
       // ###   TABS GROUP   ###
@@ -253,12 +253,12 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // #################################
       // ###   CHARACTER SHEET GROUP   ###
       // #################################
-      { id: 'renameCharacter', scope: 'character', label: t('CommandPalette.commands.renameCharacter'), keywords: ['rename', 'character', 'name'], icon: Type, group: t('CommandPalette.groups.character'), pageId: 'renameCharacter' },
-      { id: 'resetCharacter', scope: 'character', label: t('CommandPalette.commands.resetCharacter'), keywords: ['reset', 'character', 'clear'], icon: Undo2, group: t('CommandPalette.groups.character'), action: resetCharacter },
+      { id: 'renameCharacter', scope: 'character', label: t('CommandPalette.commands.renameCharacter'), keywords: ['rename', 'character', 'name'], icon: Type, group: t('Common.characterSheet'), pageId: 'renameCharacter' },
+      { id: 'resetCharacter', scope: 'character', label: t('CommandPalette.commands.resetCharacter'), keywords: ['reset', 'character', 'clear'], icon: Undo2, group: t('Common.characterSheet'), action: resetCharacter },
       // Sheet zoom (desktop content scale, per tab). Reset is the anchor; in/out step the nice levels.
-      { id: 'resetSheetZoom', scope: 'character', label: t('CommandPalette.commands.resetSheetZoom'), keywords: ['zoom', 'reset', 'scale', 'size', '100', 'sheet'], icon: RotateCcw, group: t('CommandPalette.groups.character'), action: () => activeTabId && setTabZoom(activeTabId, DEFAULT_SHEET_ZOOM) },
-      { id: 'zoomInSheet', scope: 'character', label: t('CommandPalette.commands.zoomInSheet'), keywords: ['zoom', 'in', 'scale', 'bigger', 'larger', 'sheet'], icon: ZoomIn, group: t('CommandPalette.groups.character'), action: () => activeTabId && setTabZoom(activeTabId, stepSheetZoom(getActiveSheetZoom(), 1)) },
-      { id: 'zoomOutSheet', scope: 'character', label: t('CommandPalette.commands.zoomOutSheet'), keywords: ['zoom', 'out', 'scale', 'smaller', 'sheet'], icon: ZoomOut, group: t('CommandPalette.groups.character'), action: () => activeTabId && setTabZoom(activeTabId, stepSheetZoom(getActiveSheetZoom(), -1)) },
+      { id: 'resetSheetZoom', scope: 'character', label: t('CommandPalette.commands.resetSheetZoom'), keywords: ['zoom', 'reset', 'scale', 'size', '100', 'sheet'], icon: RotateCcw, group: t('Common.characterSheet'), action: () => activeTabId && setTabZoom(activeTabId, DEFAULT_SHEET_ZOOM) },
+      { id: 'zoomInSheet', scope: 'character', label: t('CommandPalette.commands.zoomInSheet'), keywords: ['zoom', 'in', 'scale', 'bigger', 'larger', 'sheet'], icon: ZoomIn, group: t('Common.characterSheet'), action: () => activeTabId && setTabZoom(activeTabId, stepSheetZoom(getActiveSheetZoom(), 1)) },
+      { id: 'zoomOutSheet', scope: 'character', label: t('CommandPalette.commands.zoomOutSheet'), keywords: ['zoom', 'out', 'scale', 'smaller', 'sheet'], icon: ZoomOut, group: t('Common.characterSheet'), action: () => activeTabId && setTabZoom(activeTabId, stepSheetZoom(getActiveSheetZoom(), -1)) },
 
       // ##########################
       // ###   CREATION GROUP   ###

@@ -117,11 +117,11 @@ export function GeneralSettingsPane() {
                   <Button
                      variant={isMobileFABMode ? 'default' : 'outline'}
                      onClick={() => setMobileFABMode(true)}
-                     title={t('SettingsDialog.mobileFABMode.fab')}
+                     title={t('Common.floatingButtons')}
                      className="flex-1 min-w-0 cursor-pointer"
                   >
                      <Menu className="mr-2 h-4 w-4 shrink-0" />
-                     <span className="truncate">{t('SettingsDialog.mobileFABMode.fab')}</span>
+                     <span className="truncate">{t('Common.floatingButtons')}</span>
                   </Button>
                </div>
             </div>

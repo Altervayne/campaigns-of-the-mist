@@ -53,34 +53,22 @@
          "Global": "Ansicht folgt den globalen Einstellungen"
       }
    },
-
-
-
    "CharacterSheetPage": {
-
       "characterNamePlaceholder": "Charakter Name...",
-
       "addCard": "Karte hinzufügen",
       "dropToLoadCharacter": "Ziehe den Character hier hin um ihn vollständig zu laden. Aber vorsicht, dass wird den bisher aktiven Charakter ersetzen.",
       "dropToImport": "Ziehe die Datei hier hin um die Komponente in das Charakterblatt zu importieren. Wenn du einen Charakter hier hin ziehst, wird es den aktiven Charakter ersetzen.",
-
       "SidebarMenu": {
          "sidebarTitle": "Menü",
-
          "editMode": "Editiermodus",
-
-
          "saveToDrawer": "Save Charakter speichern",
          "exportCharacter": "Charakter exportieren",
          "importCharacter": "Charakter importieren",
          "importComponent": "Komponente importieren",
-
          "resetCharacter": "Charakter zurücksetzen",
          "resetConfirmTitle": "Sind Sie sicher, dass Sie den Charakter zurücksetzen wollen?",
          "resetConfirmDescription": "Diese Aktion ist zerstörend. Ihr aktiver Charakter wird gelöscht und mit einem leeren Charakter ersetzt. Wenn sie die App nicht neu laden, können Sie den den alten Charakter mit der Rückgängig Funktion immernoch wiederherstellen.",
-         "resetConfirmCancelButton": "Abbrechen",
          "resetConfirmButton": "Charakter wurde zurückgesetzt.",
-
          "settings": "Einstellngen"
       }
    },
@@ -89,46 +77,33 @@
       "redo": "Widerherstellen"
    },
    "Drawer": {
-      "title": "Drawer",
       "toggleView": "Wechsele den Ansichtsmodus zwischen ausführlicher Vorschau und Listenansicht der Elemente des Drawer",
-
       "emptyFolder": "Dieser Ordner ist leer; Zeit ihn zu füllen!",
       "addFolder": "Ordner hinzufügen",
-
       "dropToImport": "Ziehe die Datei hierhin um sie in den Drawer zu importieren.",
-
       "Actions": {
          "addFolderTitle": "Neuen Ordner erstellen",
          "createFolder": "Ordner erstellen",
-
          "nameItemTitle": "Wie möchten Sie den Eintrag nennen?",
-
          "rename": "Umbenennen",
          "renameFolderTitle": "Sie benennen den Ordner um.",
          "renameItemTitle": "Sie bennennen den Eintrag um.",
          "saveChanges": "Speichern",
-
          "delete": "Löschen",
          "deleteFolderTitle": "Sind sie sicher, dass Sie den Ordner löschen wollen?",
          "deleteItemTitle": "Sind sie sicher, dass Sie den Eintrag löschen wollen?",
          "deleteFolderMessage": "Der Ordner und seine Inhalte werden für immer gelöscht.",
          "deleteItemMessage": "Der Eintrag wird für immer gelöscht.",
          "confirmDelete": "Löschen",
-
-         "move": "Verschieben",
          "moveVerb": "Es wird verschoben...",
          "moveHere": "Hierher verschieben",
          "moveFolderTitle": "Einen ordner über den Drawer verschieben",
          "moveItemTitle": "Einen Eintrag über den Drawer verschieben",
          "moveUp": "Zurück",
-
          "export": "Exportieren",
          "exportFull": "Den gesamten Drawer exportieren",
          "import": "Datei in den aktuelleln Ordner importieren",
-         "cancel": "Abbrechen",
-
          "defaultNames": {
-            "characterCard": "Charakter Karte",
             "fullSheet": "Vollständiger Charakterbogen",
             "characterTheme": "Themenkarte",
             "groupTheme": "Gruppen Themenkarte",
@@ -137,13 +112,10 @@
             "defaultItem": "Neuer Eintrag"
          }
       },
-
       "Types": {
          "unavailablePreview": "Für diesen Eintrag ist die Vorschau nicht verfügbar.",
-
          "LEGENDS": "Legend in the Mist",
          "OTHERSCAPE": "Otherscape",
-
          "LEGENDS_FULL_CHARACTER_SHEET": "Charakterbogen",
          "LEGENDS_CHARACTER_CARD": "Heldenkarte",
          "LEGENDS_CHARACTER_THEME": "Heldenthema",
@@ -151,14 +123,10 @@
          "LEGENDS_STATUS_TRACKER": "Status Tracker",
          "LEGENDS_STORY_TAG_TRACKER": "Handlungsmerkmal Tracker",
          "LEGENDS_STORY_THEME_TRACKER": "Handlungsthema Tracker",
-
          "cards": "Karten(n)",
          "trackers": "Tracker"
       }
    },
-
-
-
    "CreateCardDialog": {
       "title": "Themenkarte erstellen",
       "editTitle": "Themenkarte bearbeiten",
@@ -166,20 +134,16 @@
       "editDescription": "Wähle einer der folgenden Optionen um ein Themenbuch zu bearbeiten oder die Themenart der Themenkarte zu verändern Use the following options to modify the themebook or theme type of your Theme Card. Wenn du möchtest, kannst du eine eine individuelles Themenbuch erstellen.",
       "createButton": "Karte bestätigen",
       "updateButton": "Anpassungen bestätigen",
-
       "selectPlaceholder": "Kartenart...",
       "cardTypeLabel": "Kartenart",
       "themeCard": "Heldenthema",
       "fellowshipCard": "Gefolgschaftsthema",
-
       "selectThemeTypePlaceholder": "Wähle eine Themenart...",
       "themeTypeLabel": "Themenart",
-
       "selectThemebookPlaceholder": "Wähle oder schreibe ein Themenbuch...",
       "searchThemebookPlaceholder": "Suche oder erstelle ein Themenbuch...",
       "noThemebookFound": "Themenbuch wurde in den Standards nicht gefunden. Sie können es jedoch als individuelles Themenbuch verwenden!",
       "themebookLabel": "Themenbuch",
-      
       "startingTagsLabel": "Merkmale beginnen",
       "powerTagCountLabel": "Stärkemerkmal",
       "weaknessTagCountLabel": "Schwächemerkmal"
@@ -187,52 +151,39 @@
    "SettingsDialog": {
       "title": "App Einstellungen",
       "description": "Hier finden Sie allgemeine einstellbare Einstellungen für die App, wie das Farbschema oder den Hell- und Dunkelmodus.",
-
       "language": "Sprache",
       "selectLanguagePlaceholder": "Sprache wählen",
-
       "appearance": "Themen Modi",
-
       "light": "Heller Modus",
       "dark": "Dunkler Nodus",
-
       "cardView": {
          "title": "Karte umdrehen",
          "sideBySide": "Nebeneinander",
          "flipping": "Umdrehen aktiviert"
       },
-
       "trackerEdit": {
          "title": "Tracker in den Baerbeitungsmodus setzen",
          "unlocked": "nicht gesetzt",
          "locked": "gesetzt"
       },
-
-
       "migration": {
          "label": "Daten migrieren",
          "button": "Legacy Character Dateien migrieren"
       },
-
       "dangerZone": {
          "title": "Gefahrenzone",
          "description": "Diese Optionen sind äußerst zerstörerisch; ihre Verwendung erfolgt auf eigenes Risiko. Es wird um Bestätigung gebeten.",
-
-
          "deleteDrawerButton": "Drawer löschen",
          "deleteDrawerDialog": {
             "title": "Den gesamten Drawer löschen",
             "description": "Sie stehen kurz davor, Ihre Schublade vollständig zu löschen, einschließlich aller darin gespeicherten Elemente und Ordner. Sind Sie sich absolut sicher, dass Sie das tun möchten?",
-
             "confirm": "Ja, lösche meinen Drawer"
          },
-
          "resetButton": "App vollständig zurücksetzen",
          "resetDialog": {
             "title": "App vollständig zurücksetzen",
             "description": "Sie sind dabei, die App vollständig zurückzusetzen, wodurch alle Ihre Daten gelöscht werden. Sind Sie sich absolut sicher, dass Sie das tun möchten?",
             "confirmationPrompt": "Um fortzufahren, bitte schreiben Sie Folgendes in das untenstehende Feld:",
-
             "cancel": "Nein, ich möchte meine Daten behalten",
             "confirm": "Ja, lösche alles"
          }
@@ -255,24 +206,19 @@
    "PatchNotesDialog": {
       "title": "Campaigns of the Mist - Patch Hinweise",
       "description": "Sie werden die Patch-Notizen für die neuesten Versionen in diesem Fenster sehen.",
-
       "versionLabel": "Version",
       "selectVersion": "Wähle eine Version...",
-
       "pageCounterLabel": "Seite"
-
    },
    "MigrationDialog": {
       "title": "Legacy Charakter Daten migrieren",
       "description": "Hier können Sie alte Charakterdateien aus der Alpha-Version von Campaigns of the Mist in die neue, optimierte Version migrieren. Der Migrator platziert die aktualisierten Dateien im Wurzelverzeichnis Ihres Drawer",
       "thankYou": "Wenn Sie hier sind, haben Sie höchstwahrscheinlich die Alpha-Version von Campaigns of the Mist verwendet. Ich möchte mich persönlich bei Ihnen bedanken, dass Sie meine App genutzt haben, trotz ihrer vielen Mängel. Viel Liebe,",
-
       "dropzone": {
          "inactive": "Warte auf Datei...",
          "active": "Datei gefunden!",
          "fileTypes": "Legacy .json Dateien"
       },
-
       "cancel": "Schließe den Migrator",
       "migrateButton": "Migration beginnen"
    },
@@ -281,9 +227,7 @@
       "info": "Legacy-Daten aus der alten Alpha-Version von Campaigns of the Mist wurden in Ihrem Browser-Speicher gefunden.",
       "description": "Die App wird diese Daten als Bereinigungsmaßnahme löschen. Vorher kannst du deine alten Daten herunterladen, um sie bei den Migrationstools zu verwenden, wenn du möchtest.",
       "warning": "Wenn Sie auf Verwerfen drücken, werden die Daten gelöscht und für immer verloren sein. Diese Aktion kann nicht rückgängig gemacht werden. Durch Drücken von Herunterladen wird ein Download der Legacy-Daten im Browser ausgelöst.",
-
       "confirmationLabel": "Wenn Sie Ihre Daten verwerfen wolllen dann geben sie den folgenden Bestätigungstext in das Feld unten ein:",
-
       "dismissButton": "Verwerfen",
       "downloadButton": "Legacy Daten herrunterladen"
    },
@@ -291,9 +235,6 @@
       "title": "Wilkonnen zu Campaigns of the Mist!",
       "description": "Dies ist ein inoffizieller, von Fans erstellter Charaktermanager für TTRPGs von Son of Oak Game Studios. Alle Ihre Daten werden in Ihrem Browser gespeichert, um vollständige Privatsphäre zu gewährleisten."
    },
-
-
-
    "CommandPalette": {
       "placeholder_1": "Dein Wunsch ist mein Befehl...",
       "placeholder_2": "Bereite deine Anrufung vor...",
@@ -320,95 +261,61 @@
       "placeholder_23": "Mein Herr, das ist ein Wendy's...",
       "placeholder_24": "Möge Zeus mich niederstreken, wenn ich lügen sol...",
       "placeholder_25": "Das ist das schlimmste Kupfer das ich je gesehen habe...",
-
       "placeholders": {
          "renameCharacter": "Neuner Charaktername...",
-
-
          "themeType": "Wähle den Thementyp...",
          "themebook": "Wähle ein Themenbuch oder tippe ein indeviduelles...",
          "mainTagName": "Schreibe den Namen deines Hauptmerkmals...",
          "powerTags": "Anzahl an Stärkemerkmalen...",
          "weaknessTags": "Anzahl an Schwächemerkmalen...",
-
-
          "trackerType": "Wähle eine Tracker Art...",
          "trackerName": "Gib eine Tracker Namen ein..."
       },
-
       "actions": {
          "renameTo": "Ubenennen: \"{{name}}\"",
          "createWith": "Erstellen als: \"{{name}}\"",
          "setPowerTags": "Stärkemerkmale setzen auf: {{count}}",
          "setWeaknessTags": "Schwächemerkemale setzen auf: {{count}}"
       },
-
       "themes": {
          "theme-neutral": "Neutral",
          "theme-legends": "Legend in the Mist"
       },
-
       "empty": "Es wurden keine Kommandos gefudnen.",
-
       "groups": {
-         "general": "Allgemein",
          "settings": "Einstellgen",
          "export": "Export",
-         "character": "Charakterbogen",
          "creation": "Erstellung",
-
-
-
          "chooseThemeType": "Wähle die Themenart",
          "chooseThemebook": "Wähle ein Themenbuch"
       },
-
       "commands": {
          "toggleEdit": "Schalter: Bearbeitungsmodus",
          "toggleDrawer": "Schalter: Drawer",
          "openSettings": "Öffne: Einstellungen",
-
          "setThemeModeLight": "Setze: Themen Modus: Hell",
          "setThemeModeDark": "Setze: Themen Modus: Dunkel",
          "setThemePalette": "Setze: Themen Palette: [...]",
          "viewFlipping": "Setze: Kartenansicht: Umdrehen",
          "viewSideBySide": "Setze: Kartenansicht: Nebeneinander",
-
          "exportCharacter": "Export: Vollständigen Charakterbogen",
          "exportDrawer": "Export: Vollständigen Drawer",
-
          "renameCharacter": "Umbenenen: Charakter",
          "resetCharacter": "Zurücksetzen: Charakter",
-
          "createCard": "Erstellen: Themenkarte",
          "createTracker": "Erstellen: Tracker",
-         
          "cardTypeCharacter": "Art: Charakterthema",
          "cardTypeFellowship": "Art: Gefolgschaftsthema",
-
          "trackerTypeStatus": "Art: Status Tracker",
          "trackerTypeStoryTag": "Art: Handlungsmerkmal Tracker"
       }
    },
-
-
-
    "ThemeCard": {
-
-      "placeholderName": "SChreibe dein Hauptmerkmal...",
-      "noName": "KEIN NAME",
-      "power": "STRÄKE",
-      "weakness": "SCHWÄCHE",
-      
       "questTitle": "Aufgabe",
       "noQuest": "LEERER AUFGABENTEXT",
       "questPlaceholder": "Schreibe deinen Aufgabentext hier...",
-
       "addPowerTag": "Stärkemerkmal hinzufügen",
-      "addWeaknessTag": "Schwächemerkmal hinzufügen",
-
-      "improvements": "Spezialverbesserung",
-      "addImprovement": "Verbesserung hinzufügen"
+      "addWeaknessTag": "Schwächemerkmal hinzufügen"
    },
    "TagItem": {
       "placeholder": "Schreib das Merkmal...",
@@ -421,17 +328,11 @@
       "promise": "VERSPRECHEN"
    },
    "HeroCard": {
-      "title": "HEldenkarte",
       "noName": "KEIN HELDENNAME",
       "characterNamePlaceholder": "Charaktername...",
-
       "relationships": "Beziehungen der Gefolgschaft",
       "addRelationship": "Beziehung hinzufügen",
-      "companion": "Begleiter",
       "companionPlaceholder": "Gefolge",
-      "relationship": "Beziehung",
-      "relationshipPlaceholder": "Beziehung",
-
       "quintessences": "Quintessenzen",
       "addQuintessence": "Quintessenz hinzufügen"
    },
@@ -448,52 +349,60 @@
       "placeholder": "Schreibe die Verbesserung..."
    },
    "Trackers": {
-      "addStatus": "Status hinzufügen",
       "addStoryTag": "Handlungsmerkmal hinzufügen",
       "statusPlaceholder": "Gib den Status ein...",
       "statusNoName": "KEIN STATUS",
       "storyTagPlaceholder": "Gib das Handlungsmerkmal ein...",
       "storyTagNoName": "KEIN HANDLUNGSMERKMAL"
    },
-
-
-
    "LegendsData": {
       "themebook": {
          "circumstance": "Umstände",
          "devotion": "Hingabe",
          "past": "Vergangenheit",
          "people": "Völker",
-         "personality": "Persönlichkeit",
          "skillOrTrade": "Fähigkeit oder Handwerk",
          "trait": "Eigenschaft",
-
          "duty": "Pflicht",
          "influence": "Einfluss",
          "knowledge": "Wissen",
          "prodigiousAbility": "Außergewöhnliche Begabung",
-         "relic": "Relikt",
          "uncannyBeing": "Ungewöhnliches Wesen",
-
          "destiny": "Schicksal",
          "dominion": "Herrschaftsgebiet",
          "mastery": "Meisterschaft",
          "monstrosity": "Monströsität",
-
-         "companion": "Begleiter",
-         "magic": "Magie",
-         "possessions": "Besitztümer"
+         "magic": "Magie"
       }
    },
    "ThemeTypes": {
       "Origin": "Ursprung",
       "Adventure": "Abenteuer",
       "Greatness": "Grossartigkeit",
-
       "Logos": "Logos",
       "Mythos": "Mythos",
-
       "Self": "Ego",
       "Noise": "Rauschen"
+   },
+   "Common": {
+      "characterSheet": "Charakterbogen",
+      "cancel": "Abbrechen",
+      "move": "Verschieben",
+      "drawer": "Drawer",
+      "characterCard": "Charakter Karte",
+      "heroCard": "HEldenkarte",
+      "addStatus": "Status hinzufügen",
+      "general": "Allgemein",
+      "writeYourMainTag": "SChreibe dein Hauptmerkmal...",
+      "noName": "KEIN NAME",
+      "power": "STRÄKE",
+      "weakness": "SCHWÄCHE",
+      "specialImprovements": "Spezialverbesserung",
+      "addImprovement": "Verbesserung hinzufügen",
+      "relation": "Beziehung",
+      "companion": "Begleiter",
+      "personality": "Persönlichkeit",
+      "relic": "Relikt",
+      "possessions": "Besitztümer"
    }
 }

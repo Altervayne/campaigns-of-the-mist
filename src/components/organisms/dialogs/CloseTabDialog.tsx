@@ -37,7 +37,7 @@ export function CloseTabDialog({ isOpen, onOpenChange, name, onConfirm }: CloseT
                <AlertDialogDescription>{t('Tabs.closeTabDialog.description', { name })}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-               <AlertDialogCancel className="cursor-pointer">{t('Tabs.closeTabDialog.cancel')}</AlertDialogCancel>
+               <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
                <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
                   onClick={onConfirm}

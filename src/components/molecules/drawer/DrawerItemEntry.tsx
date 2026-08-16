@@ -77,7 +77,7 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={onMove} className="cursor-pointer">
                               <Move className="mr-2 h-4 w-4" />
-                              <span>{t('Drawer.Actions.move')}</span>
+                              <span>{t('Common.move')}</span>
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
                               <Upload className="mr-2 h-4 w-4" />

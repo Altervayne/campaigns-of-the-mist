@@ -164,8 +164,8 @@ export function SeedPanel({ theme, isMobile = false }: { theme: CustomTheme; isM
                {/* Seeds: one group when shared, two aligned Light/Dark groups when separate. */}
                {separateModes ? (
                   <div className="flex flex-col gap-3">
-                     <SeedGroup heading={t('SettingsDialog.themes.lightColumn')} seeds={light} onChange={setLight} tier={tier} isMobile={isMobile} />
-                     <SeedGroup heading={t('SettingsDialog.themes.darkColumn')} seeds={dark} onChange={setDark} tier={tier} isMobile={isMobile} />
+                     <SeedGroup heading={t('Common.light')} seeds={light} onChange={setLight} tier={tier} isMobile={isMobile} />
+                     <SeedGroup heading={t('Common.dark')} seeds={dark} onChange={setDark} tier={tier} isMobile={isMobile} />
                   </div>
                ) : (
                   <SeedGroup seeds={light} onChange={setLight} tier={tier} isMobile={isMobile} />

@@ -77,13 +77,13 @@ export function MobileNoteTopBar({
                   variant="ghost"
                   size="sm"
                   onClick={onToggleReadEdit}
-                  aria-label={isEditing ? t('NoteView.mobile.read') : t('NoteView.mobile.edit')}
+                  aria-label={isEditing ? t('NoteView.mobile.read') : t('Common.edit')}
                >
                   {isEditing ? <BookOpen className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
                </IconButton>
                <Popover open={isMoreOpen} onOpenChange={setIsMoreOpen}>
                   <PopoverTrigger asChild>
-                     <IconButton variant="ghost" size="sm" aria-label={t('NoteView.mobile.more')}>
+                     <IconButton variant="ghost" size="sm" aria-label={t('Common.moreOptions')}>
                         <MoreHorizontal className="h-5 w-5" />
                      </IconButton>
                   </PopoverTrigger>

@@ -33,9 +33,9 @@ import type { ImageCardDetails } from '@/lib/types/character';
 
 /** The aspect presets, in the order they read left to right. */
 const ASPECTS = [
-   { id: 'portrait', preset: IMAGE_CARD_PRESETS.portrait, labelKey: 'MobileEditPortrait.aspectPortrait' },
-   { id: 'square', preset: IMAGE_CARD_PRESETS.square, labelKey: 'MobileEditPortrait.aspectSquare' },
-   { id: 'landscape', preset: IMAGE_CARD_PRESETS.landscape, labelKey: 'MobileEditPortrait.aspectLandscape' },
+   { id: 'portrait', preset: IMAGE_CARD_PRESETS.portrait, labelKey: 'Common.portrait' },
+   { id: 'square', preset: IMAGE_CARD_PRESETS.square, labelKey: 'Common.square' },
+   { id: 'landscape', preset: IMAGE_CARD_PRESETS.landscape, labelKey: 'Common.landscape' },
 ] as const;
 
 interface MobileEditPortraitProps {
@@ -178,7 +178,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
             <div className="p-4">
                <div className="flex gap-2 pb-safe">
                   <Button variant="outline" onClick={() => setConfirmDelete(false)} className="flex-1 h-11 cursor-pointer">
-                     {t('MobileEditPortrait.cancel')}
+                     {t('Common.cancel')}
                   </Button>
                   <Button variant="destructive" onClick={handleDelete} className="flex-1 h-11 cursor-pointer">
                      {t('MobileEditPortrait.deleteConfirm')}

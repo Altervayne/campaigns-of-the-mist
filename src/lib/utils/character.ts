@@ -48,13 +48,13 @@ export function deriveCardTitle(card: Card, t: TFunction): string {
    if (card.cardType === 'CHARACTER_CARD' && hasCharacterName(card.details)) {
       switch (card.details.game) {
          case 'LEGENDS':
-            return t('Cards.heroCard');
+            return t('Common.heroCard');
          case 'CITY_OF_MIST':
             return t('Cards.riftCard');
          case 'OTHERSCAPE':
-            return t('Cards.mercCard');
+            return t('Common.mercCard');
          default:
-            return t('Cards.characterCard');
+            return t('Common.characterCard');
       }
    }
 
@@ -99,7 +99,7 @@ export function deriveCardTitle(card: Card, t: TFunction): string {
    }
 
    if (card.cardType === 'IMAGE_CARD') {
-      return t('Cards.portraitCard');
+      return t('Common.portrait');
    }
 
    // Challenge cards carry their own name (the challenge's identity).
@@ -108,7 +108,7 @@ export function deriveCardTitle(card: Card, t: TFunction): string {
    }
 
    // Fallback to card type
-   return t('Cards.themeCard');
+   return t('Common.theme');
 }
 
 /**

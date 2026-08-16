@@ -45,7 +45,7 @@ export default function MobileSettingsGeneral({ onBack }: MobileSettingsGeneralP
 	};
 
 	return (
-		<MobileSettingsSubScreen title={t('SettingsShell.sections.general')} onBack={onBack}>
+		<MobileSettingsSubScreen title={t('Common.general')} onBack={onBack}>
 			{/* Language */}
 			<div className="space-y-2">
 				<Label className="text-sm font-semibold">{t('SettingsDialog.language')}</Label>
@@ -113,7 +113,7 @@ export default function MobileSettingsGeneral({ onBack }: MobileSettingsGeneralP
 					},
 					{
 						icon: <SquareMenu className="mr-2 h-5 w-5 shrink-0" />,
-						label: t('SettingsDialog.mobileFABMode.fab'),
+						label: t('Common.floatingButtons'),
 						isActive: isMobileFABMode,
 						onSelect: () => setMobileFABMode(true),
 					},
@@ -126,13 +126,13 @@ export default function MobileSettingsGeneral({ onBack }: MobileSettingsGeneralP
 				options={[
 					{
 						icon: <Hand className="w-8 h-8 -scale-x-100" />,
-						label: t('SettingsDialog.mobileHandedness.left'),
+						label: t('Common.left'),
 						isActive: mobileHandedness === 'left',
 						onSelect: () => setMobileHandedness('left'),
 					},
 					{
 						icon: <Hand className="w-8 h-8" />,
-						label: t('SettingsDialog.mobileHandedness.right'),
+						label: t('Common.right'),
 						isActive: mobileHandedness === 'right',
 						onSelect: () => setMobileHandedness('right'),
 					},

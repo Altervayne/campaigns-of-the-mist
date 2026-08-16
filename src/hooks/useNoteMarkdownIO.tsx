@@ -84,7 +84,7 @@ export function useNoteMarkdownIO() {
                <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningDescription')}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-               <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningCancel')}</AlertDialogCancel>
+               <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
                <AlertDialogAction className="cursor-pointer" onClick={confirmExport}>{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningConfirm')}</AlertDialogAction>
             </AlertDialogFooter>
          </AlertDialogContent>

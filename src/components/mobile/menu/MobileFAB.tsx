@@ -83,7 +83,7 @@ export default function MobileFAB({
 	const actions = [
 		{
 			id: 'sheet',
-			label: t('MobileFAB.sheet'),
+			label: t('Common.workspace'),
 			icon: Home,
 			onClick: () => {
 				onTabChange('sheet');
@@ -96,7 +96,7 @@ export default function MobileFAB({
 		},
 		{
 			id: 'drawer',
-			label: t('MobileFAB.drawer'),
+			label: t('Common.drawer'),
 			icon: FolderOpen,
 			onClick: () => {
 				onOpenDrawer();
@@ -108,7 +108,7 @@ export default function MobileFAB({
 		},
 		{
 			id: 'menu',
-			label: t('MobileFAB.menu'),
+			label: t('Common.menu'),
 			icon: LayoutGrid,
 			onClick: () => {
 				onOpenMenu();
@@ -224,7 +224,7 @@ export default function MobileFAB({
 						// among the flat outline buttons. Elsewhere, and whenever the menu is open, it is a real
 						// floating FAB: full 44px hitbox, shadow-2xl, 24px icon.
 						className={cn("h-11 w-11", seatedDrawer ? "shadow-none" : "shadow-2xl")}
-						aria-label={isExpanded ? t('MobileFAB.close') : t('MobileFAB.open')}
+						aria-label={isExpanded ? t('Common.close') : t('MobileFAB.open')}
 					>
 						<motion.div
 							animate={{ rotate: isExpanded ? 90 : 0 }}

@@ -160,7 +160,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
                >
                      {/* Shared header (identical to the Library's) - only the mode button differs: Expand here. */}
                      <DrawerHeader
-                        title={t('Drawer.title')}
+                        title={t('Common.drawer')}
                         isCompactDrawer={isCompactDrawer}
                         onToggleView={toggleCompactDrawer}
                         modeIcon={<Maximize2 className="h-6 w-6" />}

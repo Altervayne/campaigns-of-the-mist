@@ -97,7 +97,7 @@ export function NavigatorRow({
    const Glyph = rowGlyph(node, dead);
    const name = node.label ?? metadata?.displayName;
    const untitled = !name;
-   const displayName = name ?? t('Navigator.untitled');
+   const displayName = name ?? t('Common.untitled');
 
    // The row's hover title: the dead reason, the cycle hint, else the (possibly-truncated) name.
    const title = dead ? t('Notifications.link.targetNotFound') : seenAbove ? t('Navigator.seenAboveHint') : displayName;

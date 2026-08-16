@@ -118,7 +118,7 @@ export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPrev
                   {isEffectivelyEditing ? (
                      <Input
                         className="text-lg font-bold text-center grow border-0 shadow-none bg-card-paper-bg text-card-paper-fg"
-                        placeholder={tThemeCard('ThemeCard.placeholderName')}
+                        placeholder={tThemeCard('Common.writeYourMainTag')}
                         value={localMainTagName}
                         onChange={(e) => setLocalMainTagName(e.target.value)}
                      />
@@ -128,7 +128,7 @@ export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPrev
                            {tracker.mainTag.isActive ? <Disc2 className="h-5 w-5 text-primary" /> : <Circle className="h-4 w-4" />}
                         </Button>
                         <h3 className={cn("text-lg font-bold", tracker.mainTag.isScratched ? 'line-through opacity-50' : tracker.mainTag.isActive && 'underline')}>
-                           {tracker.mainTag.name || `[${tThemeCard('ThemeCard.noName')}]`}
+                           {tracker.mainTag.name || `[${tThemeCard('Common.noName')}]`}
                         </h3>
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => actions.updateTagInStoryTheme(tracker.id, 'mainTag', tracker.mainTag.id, { isScratched: !tracker.mainTag.isScratched })}>
                            <Flame className={cn('h-4 w-4', tracker.mainTag.isScratched && 'text-destructive fill-destructive')} />

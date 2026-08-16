@@ -102,7 +102,7 @@ export default function MobileNoteToolbelt({
       // FAB mode relocates the mode toggles off the top bar and into the wrench.
       {
          id: 'note-read',
-         label: isEditing ? t('NoteView.mobile.read') : t('NoteView.mobile.edit'),
+         label: isEditing ? t('NoteView.mobile.read') : t('Common.edit'),
          icon: isEditing ? BookOpen : PenLine,
          onClick: onToggleReadEdit,
          group: 'edit',

@@ -202,7 +202,7 @@ describe('story theme tracker across the Edit -> Play toggle', () => {
    it('keeps a main-tag name buffered right before the toggle', () => {
       render(<Harness><StoryThemeHarness /></Harness>);
 
-      fireEvent.change(screen.getByPlaceholderText('ThemeCard.placeholderName'), { target: { value: 'The Long Road' } });
+      fireEvent.change(screen.getByPlaceholderText('Common.writeYourMainTag'), { target: { value: 'The Long Road' } });
       setEditing(false);
       act(() => { vi.advanceTimersByTime(2000); });
 
@@ -234,7 +234,7 @@ function ThemeCardHarness() {
 }
 
 const renderThemeCard = () => render(<Harness><ThemeCardHarness /></Harness>);
-const typeMainTag = (value: string) => fireEvent.change(screen.getByPlaceholderText('ThemeCard.placeholderName'), { target: { value } });
+const typeMainTag = (value: string) => fireEvent.change(screen.getByPlaceholderText('Common.writeYourMainTag'), { target: { value } });
 const typeQuest = (value: string) => fireEvent.change(screen.getByPlaceholderText('ThemeCard.questPlaceholder'), { target: { value } });
 
 describe('theme card - one field at a time', () => {

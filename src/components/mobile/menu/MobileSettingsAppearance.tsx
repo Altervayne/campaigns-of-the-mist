@@ -27,7 +27,7 @@ export default function MobileSettingsAppearance({ onBack, onOpenEditor }: Mobil
 	const { mode, setMode } = useThemeMode();
 
 	return (
-		<MobileSettingsSubScreen title={t('SettingsShell.sections.appearance')} onBack={onBack}>
+		<MobileSettingsSubScreen title={t('Common.appearance')} onBack={onBack}>
 			{/* Mode: keyed on the chosen mode so a `system` pick lights `system`, not its resolved light/dark. */}
 			<MobileSettingsToggleGroup
 				dataTutorial="appearance-mode"
@@ -35,7 +35,7 @@ export default function MobileSettingsAppearance({ onBack, onOpenEditor }: Mobil
 				options={[
 					{
 						icon: <Sun className="mr-2 h-5 w-5 shrink-0" />,
-						label: t('SettingsDialog.modeLight'),
+						label: t('Common.light'),
 						isActive: mode === 'light',
 						onSelect: () => setMode('light'),
 					},
@@ -47,7 +47,7 @@ export default function MobileSettingsAppearance({ onBack, onOpenEditor }: Mobil
 					},
 					{
 						icon: <Moon className="mr-2 h-5 w-5 shrink-0" />,
-						label: t('SettingsDialog.modeDark'),
+						label: t('Common.dark'),
 						isActive: mode === 'dark',
 						onSelect: () => setMode('dark'),
 					},

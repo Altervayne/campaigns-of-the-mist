@@ -43,7 +43,7 @@ export function AbilityRow({ ability, onChange, onRemove }: { ability: Challenge
    return (
       <div className="flex flex-col gap-2 rounded-md border border-border p-2">
          <div className="flex items-center gap-2">
-            <Input value={ability.tag} onChange={(event) => onChange({ ...ability, tag: event.target.value })} placeholder={t('ChallengeCard.editor.abilityTagPlaceholder')} className="h-8 text-sm font-semibold" />
+            <Input value={ability.tag} onChange={(event) => onChange({ ...ability, tag: event.target.value })} placeholder={t('Common.threatName')} className="h-8 text-sm font-semibold" />
             <IconButton onClick={onRemove} label={t('ChallengeCard.editor.removeAbility')}><Trash2 className="h-4 w-4" /></IconButton>
          </div>
          <Textarea value={ability.flavor} onChange={(event) => onChange({ ...ability, flavor: event.target.value })} placeholder={t('ChallengeCard.editor.abilityFlavorPlaceholder')} className="min-h-14 resize-none text-sm" />
@@ -56,16 +56,16 @@ export function AbilityRow({ ability, onChange, onRemove }: { ability: Challenge
                      <Input
                         value={consequence.text}
                         onChange={(event) => onChange({ ...ability, consequences: updateRowById(ability.consequences, consequence.id, { text: event.target.value }) })}
-                        placeholder={t('ChallengeCard.editor.consequencePlaceholder')}
+                        placeholder={t('Common.aConsequence')}
                         className="h-8 text-sm"
                      />
-                     <IconButton onClick={() => onChange({ ...ability, consequences: removeRowById(ability.consequences, consequence.id) })} label={t('ChallengeCard.editor.remove')}><Trash2 className="h-4 w-4" /></IconButton>
+                     <IconButton onClick={() => onChange({ ...ability, consequences: removeRowById(ability.consequences, consequence.id) })} label={t('Common.remove')}><Trash2 className="h-4 w-4" /></IconButton>
                   </div>
                   <MentionPreview text={consequence.text} />
                </div>
             ))}
             <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ ...ability, consequences: addRow(ability.consequences, newConsequence()) })} className="cursor-pointer border border-dashed">
-               <Plus className="mr-1 h-4 w-4" />{t('ChallengeCard.editor.addConsequence')}
+               <Plus className="mr-1 h-4 w-4" />{t('Common.addConsequence')}
             </Button>
          </div>
       </div>
@@ -78,7 +78,7 @@ export function MightyTagRow({ mightyTag, onChange, onRemove }: { mightyTag: Mig
    return (
       <div className="flex items-center gap-2">
          <MightLevelPicker level={mightyTag.level} onPick={(level) => onChange({ ...mightyTag, level })} />
-         <Input value={mightyTag.label} onChange={(event) => onChange({ ...mightyTag, label: event.target.value })} placeholder={t('ChallengeCard.editor.mightyTagLabelPlaceholder')} className="h-8 text-sm" />
+         <Input value={mightyTag.label} onChange={(event) => onChange({ ...mightyTag, label: event.target.value })} placeholder={t('Common.eGFireproofHide')} className="h-8 text-sm" />
          <IconButton onClick={onRemove} label={t('ChallengeCard.editor.removeMightyTag')}><Trash2 className="h-4 w-4" /></IconButton>
       </div>
    );
@@ -90,7 +90,7 @@ export function SpecialRow({ special, onChange, onRemove }: { special: Challenge
    return (
       <div className="flex flex-col gap-2 rounded-md border border-border p-2">
          <div className="flex items-center gap-2">
-            <Input value={special.name} onChange={(event) => onChange({ ...special, name: event.target.value })} placeholder={t('ChallengeCard.editor.specialNamePlaceholder')} className="h-8 text-sm font-semibold" />
+            <Input value={special.name} onChange={(event) => onChange({ ...special, name: event.target.value })} placeholder={t('Common.specialName')} className="h-8 text-sm font-semibold" />
             <IconButton onClick={onRemove} label={t('ChallengeCard.editor.removeSpecial')}><Trash2 className="h-4 w-4" /></IconButton>
          </div>
          <Textarea value={special.body} onChange={(event) => onChange({ ...special, body: event.target.value })} placeholder={t('ChallengeCard.editor.specialBodyPlaceholder')} className="min-h-14 resize-none text-sm" />
@@ -105,7 +105,7 @@ export function CustomMoveRow({ move, onChange, onRemove }: { move: CityCustomMo
    return (
       <div className="flex flex-col gap-2 rounded-md border border-border p-2">
          <div className="flex items-center gap-2">
-            <Input value={move.name} onChange={(event) => onChange({ ...move, name: event.target.value })} placeholder={t('ChallengeCard.editor.customMoveNamePlaceholder')} className="h-8 text-sm font-semibold" />
+            <Input value={move.name} onChange={(event) => onChange({ ...move, name: event.target.value })} placeholder={t('Common.moveName')} className="h-8 text-sm font-semibold" />
             <IconButton onClick={onRemove} label={t('ChallengeCard.editor.removeCustomMove')}><Trash2 className="h-4 w-4" /></IconButton>
          </div>
          <Textarea value={move.description} onChange={(event) => onChange({ ...move, description: event.target.value })} placeholder={t('ChallengeCard.editor.customMoveDescriptionPlaceholder')} className="min-h-14 resize-none text-sm" />

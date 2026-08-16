@@ -100,7 +100,7 @@ const OtherscapeCharacterCardContent = React.memo(
             {"h-30 shadow-none pointer-events-none border-2 border-card-border": isDrawerPreview}
          )}>
             <CardHeader className="p-0">
-               <CardHeaderMolecule title={t('OtherscapeCharacterCard.title')}></CardHeaderMolecule>
+               <CardHeaderMolecule title={t('Common.mercCard')}></CardHeaderMolecule>
             </CardHeader>
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="w-full text-center px-2 py-1 mb-1 shrink-0">
@@ -384,7 +384,7 @@ const OtherscapeCharacterCardContent = React.memo(
                      {isEditing && (
                         <div className="p-2">
                            <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={handleAddRelationship}>
-                              <PlusCircle className="h-4 w-4 mr-2" /> {t('OtherscapeCharacterCard.addRelationship')}
+                              <PlusCircle className="h-4 w-4 mr-2" /> {t('Common.addCrewMember')}
                            </Button>
                         </div>
                      )}
@@ -403,8 +403,8 @@ const OtherscapeCharacterCardContent = React.memo(
             "card-type-character-os",
             {"h-30 shadow-none pointer-events-none border-2 border-card-border": isDrawerPreview}
          )}>
-            <CardHeaderMolecule title={t('OtherscapeCharacterCard.title')} />
-            <CardSectionHeader title={`${tSpecials('OtherscapeCharacterCard.Specials.title')}`}></CardSectionHeader>
+            <CardHeaderMolecule title={t('Common.mercCard')} />
+            <CardSectionHeader title={`${tSpecials('Common.specials')}`}></CardSectionHeader>
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="grow space-y-0 overflow-y-auto overflow-x-hidden overscroll-contain min-w-0" ref={specialsScrollRef}>
                   {details.specials.map((tag, index) => (
@@ -423,7 +423,7 @@ const OtherscapeCharacterCardContent = React.memo(
                   {isEditing && (
                      <div className="p-2 w-full">
                         <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={() => actions.addTag(card.id, 'specials')}>
-                           <PlusCircle className="h-4 w-4 mr-2" /> {tSpecials('OtherscapeCharacterCard.Specials.addSpecial')}
+                           <PlusCircle className="h-4 w-4 mr-2" /> {tSpecials('Common.addSpecial')}
                         </Button>
                      </div>
                   )}

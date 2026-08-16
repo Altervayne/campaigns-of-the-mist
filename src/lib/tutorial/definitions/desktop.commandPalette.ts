@@ -27,14 +27,14 @@ export const DESKTOP_COMMAND_PALETTE_TUTORIAL: TutorialDefinition = {
    id: 'desktop.commandPalette',
    platform: 'desktop',
    system: 'palette',
-   titleKey: 'TutorialsDialog.tutorials.commandPalette.title',
+   titleKey: 'Common.theCommandPalette',
    teachKey: 'TutorialsDialog.tutorials.commandPalette.teach',
    icon: Command,
    needsDemo: 'character',
    steps: [
       {
          id: 'welcome',
-         titleKey: 'Tutorial.commandPalette.welcome_title',
+         titleKey: 'Common.theCommandPalette',
          bodyKey: 'Tutorial.commandPalette.welcome_body',
          placement: 'center',
          advance: { on: 'next-click' },

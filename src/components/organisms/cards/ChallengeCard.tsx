@@ -239,7 +239,7 @@ export const ChallengeCard = React.memo(
                            <Textarea
                               value={localFlavor}
                               onChange={(event) => setLocalFlavor(event.target.value)}
-                              placeholder={t('Cards.challenge.flavorPlaceholder')}
+                              placeholder={t('Common.whatThePlayersSee')}
                               className="min-h-20 resize-none border-0 bg-card-popover-bg/40 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                            />
                            {localFlavor.includes('{') && (
@@ -270,7 +270,7 @@ export const ChallengeCard = React.memo(
                    scrolls its own overflow so a heavy section can't starve the others. */}
                <CardContent className="flex min-h-0 grow flex-col overflow-hidden p-0">
                   {/* Limits: the statuses required to defeat it. */}
-                  <CardSectionHeader title={t('Cards.challenge.limits')} icon={Skull} />
+                  <CardSectionHeader title={t('Common.limits')} icon={Skull} />
                   <div ref={limitsScrollRef} className="max-h-24 min-w-0 shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain">
                      {isEditing ? (
                         <div className="flex flex-col gap-1 p-2">
@@ -278,14 +278,14 @@ export const ChallengeCard = React.memo(
                               <StatusEditRow
                                  key={limit.id}
                                  status={limit}
-                                 namePlaceholder={t('Cards.challenge.limitNamePlaceholder')}
+                                 namePlaceholder={t('Common.eGBurn')}
                                  onCommitName={(name) => commitLimitById(limit.id, { name })}
                                  onCommitTier={(tier) => commitLimitById(limit.id, { tier })}
                                  onRemove={() => removeLimitById(limit.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addLimit')} onClick={addLimit} />
+                           <AddRowButton label={t('Common.addLimit')} onClick={addLimit} />
                         </div>
                      ) : (
                         <div className="flex flex-wrap gap-1 p-2">
@@ -306,27 +306,27 @@ export const ChallengeCard = React.memo(
                                  <StatusEditRow
                                     key={status.id}
                                     status={status}
-                                    namePlaceholder={t('Cards.challenge.statusNamePlaceholder')}
+                                    namePlaceholder={t('Common.eGBloodied')}
                                     onCommitName={(name) => commitStatusById(status.id, { name })}
                                     onCommitTier={(tier) => commitStatusById(status.id, { tier })}
                                     onRemove={() => removeStatusById(status.id)}
-                                    removeLabel={t('Cards.challenge.remove')}
+                                    removeLabel={t('Common.remove')}
                                  />
                               ))}
-                              <AddRowButton label={t('Cards.challenge.addStatus')} onClick={addStatus} />
+                              <AddRowButton label={t('Common.addStatus')} onClick={addStatus} />
                            </div>
                            <div className="flex flex-col gap-1">
                               {details.tags.map((tag) => (
                                  <TagEditRow
                                     key={tag.id}
                                     tag={tag}
-                                    namePlaceholder={t('Cards.challenge.tagNamePlaceholder')}
+                                    namePlaceholder={t('Common.eGFast')}
                                     onCommitName={(name) => commitTagById(tag.id, { name })}
                                     onRemove={() => removeTagById(tag.id)}
-                                    removeLabel={t('Cards.challenge.remove')}
+                                    removeLabel={t('Common.remove')}
                                  />
                               ))}
-                              <AddRowButton label={t('Cards.challenge.addTag')} onClick={addTag} />
+                              <AddRowButton label={t('Common.addTag')} onClick={addTag} />
                            </div>
                            {details.game === 'LEGENDS' && (
                               <div className="flex flex-col gap-1">
@@ -334,14 +334,14 @@ export const ChallengeCard = React.memo(
                                     <MightyTagEditRow
                                        key={mightyTag.id}
                                        mightyTag={mightyTag}
-                                       labelPlaceholder={t('Cards.challenge.mightyTagLabelPlaceholder')}
+                                       labelPlaceholder={t('Common.eGFireproofHide')}
                                        onCommitLevel={(level) => commitMightyTagById(mightyTag.id, { level })}
                                        onCommitLabel={(label) => commitMightyTagById(mightyTag.id, { label })}
                                        onRemove={() => removeMightyTagById(mightyTag.id)}
-                                       removeLabel={t('Cards.challenge.remove')}
+                                       removeLabel={t('Common.remove')}
                                     />
                                  ))}
-                                 <AddRowButton label={t('Cards.challenge.addMightyTag')} onClick={addMightyTag} />
+                                 <AddRowButton label={t('Common.addMightyTag')} onClick={addMightyTag} />
                               </div>
                            )}
                         </div>
@@ -362,7 +362,7 @@ export const ChallengeCard = React.memo(
                       (header included) is absent in read mode with none, and only appears to edit. */}
                   {(details.specials.length > 0 || isEditing) && (
                      <>
-                        <CardSectionHeader title={t('Cards.challenge.specials')} icon={Sparkles} />
+                        <CardSectionHeader title={t('Common.specials')} icon={Sparkles} />
                         <div ref={specialsScrollRef} className="max-h-24 min-w-0 shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain">
                            {isEditing ? (
                               <div className="flex flex-col gap-2 p-2">
@@ -370,15 +370,15 @@ export const ChallengeCard = React.memo(
                                     <SpecialEditRow
                                        key={special.id}
                                        special={special}
-                                       namePlaceholder={t('Cards.challenge.specialNamePlaceholder')}
+                                       namePlaceholder={t('Common.specialName')}
                                        bodyPlaceholder={t('Cards.challenge.specialBodyPlaceholder')}
                                        onCommitName={(name) => commitSpecialById(special.id, { name })}
                                        onCommitBody={(body) => commitSpecialById(special.id, { body })}
                                        onRemove={() => removeSpecialById(special.id)}
-                                       removeLabel={t('Cards.challenge.remove')}
+                                       removeLabel={t('Common.remove')}
                                     />
                                  ))}
-                                 <AddRowButton label={t('Cards.challenge.addSpecial')} onClick={addSpecial} />
+                                 <AddRowButton label={t('Common.addSpecial')} onClick={addSpecial} />
                               </div>
                            ) : (
                               <div className="flex flex-col gap-2 p-2">
@@ -396,7 +396,7 @@ export const ChallengeCard = React.memo(
 
                   {/* Threats & Consequences: a threat-name pill with its flavor inline, over a skull-bulleted
                       list. The meatiest section - grows to fill the height the other two don't claim. */}
-                  <CardSectionHeader title={t('Cards.challenge.threatsAndConsequences')} icon={Swords} />
+                  <CardSectionHeader title={t('Common.threatsConsequences')} icon={Swords} />
                   <div ref={threatsScrollRef} className="min-h-16 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
                      <div className="flex flex-col gap-2 p-2">
                         {details.abilities.map((ability) => (

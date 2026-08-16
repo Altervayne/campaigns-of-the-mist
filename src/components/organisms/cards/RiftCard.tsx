@@ -175,8 +175,8 @@ const RiftCardContent = React.memo(
                <div className="flex flex-col grow overflow-hidden min-h-0">
                   <CardSectionHeader title={t('RiftCard.Crew.title')} />
                   <div className={cn("grid gap-1 bg-card-accent/15 px-2 border-b shrink-0", isEditing ? "grid-cols-12" : "grid-cols-10")}>
-                     <p className="col-span-6 text-sm text-center py-1">{t('RiftCard.Crew.name')}</p>
-                     <p className="col-span-2 text-sm text-center py-1">{t('RiftCard.Crew.help')}</p>
+                     <p className="col-span-6 text-sm text-center py-1">{t('Common.name')}</p>
+                     <p className="col-span-2 text-sm text-center py-1">{t('Common.help')}</p>
                      <p className="col-span-2 text-sm text-center py-1">{t('RiftCard.Crew.hurt')}</p>
                      {isEditing && <p className="col-span-2 text-sm text-center py-1"></p>}
                   </div>
@@ -188,11 +188,11 @@ const RiftCardContent = React.memo(
                                  <Input
                                     value={member.name}
                                     onChange={(e) => handleCrewMemberChange(member.id, 'name', e.target.value)}
-                                    placeholder={t('RiftCard.Crew.name')}
+                                    placeholder={t('Common.name')}
                                     className="h-7 text-xs"
                                  />
                               ) : (
-                                 <div className="text-xs py-1 text-center truncate">{member.name || t('RiftCard.Crew.noName')}</div>
+                                 <div className="text-xs py-1 text-center truncate">{member.name || t('Common.noName')}</div>
                               )}
                            </div>
                            <div className="col-span-2">
@@ -235,7 +235,7 @@ const RiftCardContent = React.memo(
                      ))}
                      {isEditing && (
                         <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={handleAddCrewMember}>
-                           <PlusCircle className="h-4 w-4 mr-2" /> {t('RiftCard.Crew.addCrewMember')}
+                           <PlusCircle className="h-4 w-4 mr-2" /> {t('Common.addCrewMember')}
                         </Button>
                      )}
                   </div>

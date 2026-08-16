@@ -41,13 +41,13 @@ export function SidebarSubmenuToggles({ isCollapsed, isDrawerOpen, onToggleDrawe
          isCollapsed ? "px-0" : "px-2"
       )}>
          <SidebarButton data-tutorial="drawer-toggle" isCollapsed={isCollapsed} onClick={onToggleDrawer} variant={isDrawerOpen ? 'secondary' : 'default'} Icon={BookUser}>
-            {t('CharacterSheetPage.SidebarMenu.drawer')}
+            {t('Common.drawer')}
          </SidebarButton>
          <SidebarButton data-tutorial="dice-tray-button" isCollapsed={isCollapsed} onClick={toggleDiceTray} variant={isDiceTrayOpen ? 'secondary' : 'default'} Icon={Dices}>
-            {t('CharacterSheetPage.SidebarMenu.diceTray')}
+            {t('Common.diceTray')}
          </SidebarButton>
          <SidebarButton data-tutorial="navigator-button" isCollapsed={isCollapsed} onClick={toggleNavigator} variant={navigatorOpen ? 'secondary' : 'default'} Icon={Waypoints}>
-            {t('CharacterSheetPage.SidebarMenu.navigator')}
+            {t('Common.navigator')}
          </SidebarButton>
       </motion.section>
    );

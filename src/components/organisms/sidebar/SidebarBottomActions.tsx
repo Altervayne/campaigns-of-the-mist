@@ -60,14 +60,14 @@ export function SidebarBottomActions({ isCollapsed, activeWindow, onOpenMenu, on
             {/* What's new carries the New! dot in its corner until the section is opened. */}
             <div className="relative">
                <SidebarButton data-tutorial="whats-new-button" isCollapsed={isCollapsed} onClick={onOpenWhatsNew} Icon={Sparkles}>
-                  {t('CharacterSheetPage.SidebarMenu.whatsNew')}
+                  {t('Common.whatSNew')}
                </SidebarButton>
                {hasUnreadPatchNotes && (
                   <span className="pointer-events-none absolute right-2 top-2 size-2 rounded-full bg-primary" aria-hidden />
                )}
             </div>
             <SidebarButton data-tutorial="help-button" isCollapsed={isCollapsed} onClick={onOpenHelp} Icon={LifeBuoy}>
-               {t('CharacterSheetPage.SidebarMenu.help')}
+               {t('Common.help')}
             </SidebarButton>
          </motion.section>
       </div>

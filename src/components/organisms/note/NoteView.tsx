@@ -292,7 +292,7 @@ function NoteSurface() {
          bold: t('NoteView.format.bold'),
          italic: t('NoteView.format.italic'),
          strikethrough: t('NoteView.format.strikethrough'),
-         link: t('NoteView.format.link'),
+         link: t('Common.link'),
       },
       // The bar only shows while editing, so the picker can open directly (no mode flip needed).
       onInsertLink: () => { setLinkEditSeed(null); setLinkPickerOpen(true); },
@@ -376,7 +376,7 @@ function NoteSurface() {
                            onChange={(event) => handleTitleInput(event.target.value)}
                            onBlur={flushTitleMirror}
                            className="mb-4 w-full bg-transparent text-4xl font-bold text-paper-foreground placeholder:text-paper-foreground/40 focus:outline-none"
-                           placeholder={t('NoteView.titlePlaceholder')}
+                           placeholder={t('Common.untitledNote')}
                         />
                      </div>
                   )}

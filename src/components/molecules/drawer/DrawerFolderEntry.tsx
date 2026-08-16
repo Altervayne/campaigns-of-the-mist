@@ -100,7 +100,7 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMove(); }} className="cursor-pointer">
                               <Move className="mr-2 h-4 w-4" />
-                              <span>{t('Drawer.Actions.move')}</span>
+                              <span>{t('Common.move')}</span>
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
                               <Upload className="mr-2 h-4 w-4" />

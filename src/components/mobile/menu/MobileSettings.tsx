@@ -59,8 +59,8 @@ export default function MobileSettings({ onOpenGeneral, onOpenAppearance, onOpen
 		{
 			labelKey: 'SettingsShell.groups.configure',
 			categories: [
-				{ id: 'general', labelKey: 'SettingsShell.sections.general', icon: SlidersHorizontal, onOpen: onOpenGeneral },
-				{ id: 'appearance', labelKey: 'SettingsShell.sections.appearance', icon: Palette, onOpen: onOpenAppearance },
+				{ id: 'general', labelKey: 'Common.general', icon: SlidersHorizontal, onOpen: onOpenGeneral },
+				{ id: 'appearance', labelKey: 'Common.appearance', icon: Palette, onOpen: onOpenAppearance },
 				{ id: 'cardPalettes', labelKey: 'SettingsShell.sections.cardPalettes', icon: SwatchBook, onOpen: onOpenCardPalettes },
 				{ id: 'data', labelKey: 'SettingsShell.sections.data', icon: Database, onOpen: onOpenData },
 			],
@@ -68,8 +68,8 @@ export default function MobileSettings({ onOpenGeneral, onOpenAppearance, onOpen
 		{
 			labelKey: 'SettingsShell.groups.help',
 			categories: [
-				{ id: 'learn', labelKey: 'SettingsShell.sections.learn', icon: GraduationCap, onOpen: onOpenLearn },
-				{ id: 'whatsNew', labelKey: 'SettingsShell.sections.whatsNew', icon: Sparkles, onOpen: onOpenWhatsNew, showDot: hasUnreadPatchNotes },
+				{ id: 'learn', labelKey: 'Common.learn', icon: GraduationCap, onOpen: onOpenLearn },
+				{ id: 'whatsNew', labelKey: 'Common.whatSNew', icon: Sparkles, onOpen: onOpenWhatsNew, showDot: hasUnreadPatchNotes },
 				{ id: 'announcements', labelKey: 'SettingsShell.sections.announcements', icon: Megaphone, onOpen: onOpenAnnouncements, showDot: hasUnseenAnnouncements },
 				{ id: 'about', labelKey: 'SettingsShell.sections.about', icon: Info, onOpen: onOpenAbout },
 			],

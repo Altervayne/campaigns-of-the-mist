@@ -76,7 +76,7 @@ export function boardItemDisplayName(item: BoardItem, t: TFunction): string {
          // A zone's name lives on its content (the canvas header edits it there), so the group node reads it too.
          return content.label?.trim() || t('BoardView.addZone');
       case 'note':
-         return t('LayersPanel.untitledNote');
+         return t('Common.untitledNote');
       case 'text':
          return t('LayersPanel.untitledText');
       case 'card':

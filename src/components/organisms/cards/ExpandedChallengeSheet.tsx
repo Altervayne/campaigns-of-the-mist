@@ -191,8 +191,8 @@ export function SheetImageBand({ url, name, isEditing, commitImage }: {
                <button
                   type="button"
                   onClick={() => commitImage(null)}
-                  title={t('ChallengeCard.editor.removeImage')}
-                  aria-label={t('ChallengeCard.editor.removeImage')}
+                  title={t('Common.remove')}
+                  aria-label={t('Common.remove')}
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-card-paper-fg/60 transition-colors hover:bg-card-popover-bg hover:text-card-paper-fg cursor-pointer"
                >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -281,7 +281,7 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
                      <Textarea
                         value={localFlavor}
                         onChange={(event) => setLocalFlavor(event.target.value)}
-                        placeholder={t('Cards.challenge.flavorPlaceholder')}
+                        placeholder={t('Common.whatThePlayersSee')}
                         className="min-h-16 resize-none border-0 bg-card-popover-bg/40 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                      />
                      {localFlavor.includes('{') && (
@@ -301,21 +301,21 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
             {/* LEFT third: Limits + Tags & Statuses, its own scroll well. */}
             <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
                <section>
-                  <SheetSectionHeader title={t('Cards.challenge.limits')} icon={Skull} />
+                  <SheetSectionHeader title={t('Common.limits')} icon={Skull} />
                   {isEditing ? (
                      <div className="flex flex-col gap-1">
                         {details.limits.map((limit) => (
                            <StatusEditRow
                               key={limit.id}
                               status={limit}
-                              namePlaceholder={t('Cards.challenge.limitNamePlaceholder')}
+                              namePlaceholder={t('Common.eGBurn')}
                               onCommitName={(name) => limitOps.commitById(limit.id, { name })}
                               onCommitTier={(tier) => limitOps.commitById(limit.id, { tier })}
                               onRemove={() => limitOps.removeById(limit.id)}
-                              removeLabel={t('Cards.challenge.remove')}
+                              removeLabel={t('Common.remove')}
                            />
                         ))}
-                        <AddRowButton label={t('Cards.challenge.addLimit')} onClick={limitOps.add} />
+                        <AddRowButton label={t('Common.addLimit')} onClick={limitOps.add} />
                      </div>
                   ) : (
                      <div className="flex flex-wrap gap-1">
@@ -335,27 +335,27 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
                               <StatusEditRow
                                  key={status.id}
                                  status={status}
-                                 namePlaceholder={t('Cards.challenge.statusNamePlaceholder')}
+                                 namePlaceholder={t('Common.eGBloodied')}
                                  onCommitName={(name) => statusOps.commitById(status.id, { name })}
                                  onCommitTier={(tier) => statusOps.commitById(status.id, { tier })}
                                  onRemove={() => statusOps.removeById(status.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addStatus')} onClick={statusOps.add} />
+                           <AddRowButton label={t('Common.addStatus')} onClick={statusOps.add} />
                         </div>
                         <div className="flex flex-col gap-1">
                            {details.tags.map((tag) => (
                               <TagEditRow
                                  key={tag.id}
                                  tag={tag}
-                                 namePlaceholder={t('Cards.challenge.tagNamePlaceholder')}
+                                 namePlaceholder={t('Common.eGFast')}
                                  onCommitName={(name) => tagOps.commitById(tag.id, { name })}
                                  onRemove={() => tagOps.removeById(tag.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addTag')} onClick={tagOps.add} />
+                           <AddRowButton label={t('Common.addTag')} onClick={tagOps.add} />
                         </div>
                         {details.game === 'LEGENDS' && (
                            <div className="flex flex-col gap-1">
@@ -363,14 +363,14 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
                                  <MightyTagEditRow
                                     key={mightyTag.id}
                                     mightyTag={mightyTag}
-                                    labelPlaceholder={t('Cards.challenge.mightyTagLabelPlaceholder')}
+                                    labelPlaceholder={t('Common.eGFireproofHide')}
                                     onCommitLevel={(level) => mightyTagOps.commitById(mightyTag.id, { level })}
                                     onCommitLabel={(label) => mightyTagOps.commitById(mightyTag.id, { label })}
                                     onRemove={() => mightyTagOps.removeById(mightyTag.id)}
-                                    removeLabel={t('Cards.challenge.remove')}
+                                    removeLabel={t('Common.remove')}
                                  />
                               ))}
-                              <AddRowButton label={t('Cards.challenge.addMightyTag')} onClick={mightyTagOps.add} />
+                              <AddRowButton label={t('Common.addMightyTag')} onClick={mightyTagOps.add} />
                            </div>
                         )}
                      </div>
@@ -399,22 +399,22 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
                    read mode with none, shown while editing so the first can be added. */}
                {(details.specials.length > 0 || isEditing) && (
                   <section className="mb-4">
-                     <SheetSectionHeader title={t('Cards.challenge.specials')} icon={Sparkles} />
+                     <SheetSectionHeader title={t('Common.specials')} icon={Sparkles} />
                      {isEditing ? (
                         <div className="flex flex-col gap-2">
                            {details.specials.map((special) => (
                               <SpecialEditRow
                                  key={special.id}
                                  special={special}
-                                 namePlaceholder={t('Cards.challenge.specialNamePlaceholder')}
+                                 namePlaceholder={t('Common.specialName')}
                                  bodyPlaceholder={t('Cards.challenge.specialBodyPlaceholder')}
                                  onCommitName={(name) => specialOps.commitById(special.id, { name })}
                                  onCommitBody={(body) => specialOps.commitById(special.id, { body })}
                                  onRemove={() => specialOps.removeById(special.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addSpecial')} onClick={specialOps.add} />
+                           <AddRowButton label={t('Common.addSpecial')} onClick={specialOps.add} />
                         </div>
                      ) : (
                         <div className="flex flex-col gap-3">
@@ -429,7 +429,7 @@ export const ExpandedChallengeSheet = forwardRef<HTMLDivElement, ExpandedChallen
                   </section>
                )}
 
-               <SheetSectionHeader title={t('Cards.challenge.threatsAndConsequences')} icon={Swords} />
+               <SheetSectionHeader title={t('Common.threatsConsequences')} icon={Swords} />
                {isEditing ? (
                   <ThreatsEditor abilities={details.abilities} commitAbilityById={commitAbilityById} addAbility={addAbility} removeAbilityById={removeAbilityById} />
                ) : details.abilities.length > 0 ? (
@@ -506,7 +506,7 @@ function ThreatsEditor({ abilities, commitAbilityById, addAbility, removeAbility
                   onClick={() => setFocusedId(ability.id)}
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-card-paper-fg/5 cursor-pointer"
                >
-                  <ThreatPill tag={ability.tag || t('Cards.challenge.untitledThreat')} />
+                  <ThreatPill tag={ability.tag || t('Common.untitled')} />
                   <span className="min-w-0 flex-1 truncate text-xs text-card-paper-fg/70">{ability.flavor}</span>
                   {ability.consequences.length > 0 && (
                      <span className="shrink-0 rounded-full bg-card-paper-fg/10 px-1.5 py-0.5 text-[0.65rem] text-card-paper-fg/60">
@@ -516,7 +516,7 @@ function ThreatsEditor({ abilities, commitAbilityById, addAbility, removeAbility
                </button>
             );
          })}
-         <AddRowButton label={t('Cards.challenge.addThreat')} onClick={onAddAbility} />
+         <AddRowButton label={t('Common.addThreat')} onClick={onAddAbility} />
       </div>
    );
 }

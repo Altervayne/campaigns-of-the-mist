@@ -185,7 +185,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
          )}>
          {/* Shared header (identical to the side panel's) - only the mode button differs: Contract here. */}
          <DrawerHeader
-            title={t('Drawer.title')}
+            title={t('Common.drawer')}
             isCompactDrawer={isCompactDrawer}
             onToggleView={toggleCompactDrawer}
             modeIcon={<Minimize2 className="h-6 w-6" />}

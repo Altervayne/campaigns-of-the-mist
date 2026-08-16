@@ -276,7 +276,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, 
    // editing bar. The cover, table, image, and links are live via their own tap-to-sheet flows.
    const inertFormatController = useMemo<FormatController>(() => ({
       editable: false,
-      labels: { bold: t('NoteView.format.bold'), italic: t('NoteView.format.italic'), strikethrough: t('NoteView.format.strikethrough'), link: t('NoteView.format.link') },
+      labels: { bold: t('NoteView.format.bold'), italic: t('NoteView.format.italic'), strikethrough: t('NoteView.format.strikethrough'), link: t('Common.link') },
       onInsertLink: () => {},
    }), [t]);
    // The link-edit controller is LIVE on mobile: `onCaretLinkChange` reports the caret's link (arming the chip)
@@ -325,7 +325,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, 
    return (
       <div className="flex h-full w-full flex-col overflow-hidden bg-background text-foreground">
          <MobileNoteTopBar
-            title={localTitle.trim() || t('NoteView.titlePlaceholder')}
+            title={localTitle.trim() || t('Common.untitledNote')}
             isEditing={isEditing}
             isSource={mode === 'source'}
             onToggleReadEdit={toggleReadEdit}
@@ -349,7 +349,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, 
                      value={localTitle}
                      onChange={(event) => setLocalTitle(event.target.value)}
                      className="mb-4 w-full bg-transparent text-2xl font-bold text-paper-foreground placeholder:text-paper-foreground/40 focus:outline-none"
-                     placeholder={t('NoteView.titlePlaceholder')}
+                     placeholder={t('Common.untitledNote')}
                   />
                )}
                {isEditing ? (

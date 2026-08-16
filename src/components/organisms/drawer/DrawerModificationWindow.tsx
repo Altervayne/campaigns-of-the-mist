@@ -45,7 +45,7 @@ export const DrawerModificationWindow = React.forwardRef<HTMLInputElement, Drawe
       if (!initialName && action.type === 'add-item' && action.target && 'type' in action.target) {
          const itemType = (action.target as PendingDrawerItem).type;
          switch (itemType) {
-            case 'CHARACTER_CARD':        initialName = t('Drawer.Actions.defaultNames.characterCard'); break;
+            case 'CHARACTER_CARD':        initialName = t('Common.characterCard'); break;
             case 'FULL_CHARACTER_SHEET':  initialName = t('Drawer.Actions.defaultNames.fullSheet'); break;
             case 'CHARACTER_THEME':       initialName = t('Drawer.Actions.defaultNames.characterTheme'); break;
             case 'GROUP_THEME':           initialName = t('Drawer.Actions.defaultNames.groupTheme'); break;
@@ -129,7 +129,7 @@ export const DrawerModificationWindow = React.forwardRef<HTMLInputElement, Drawe
                <p className="text-sm text-muted-foreground">{t(isFolder ? 'Drawer.Actions.deleteFolderMessage' : 'Drawer.Actions.deleteItemMessage', { name: (action.target && 'name' in action.target) ? action.target.name : '' })}</p>
             )}
             <div className="flex justify-end gap-2 mt-4">
-               <Button variant="ghost" onClick={onClose} className="cursor-pointer">{t('Drawer.Actions.cancel')}</Button>
+               <Button variant="ghost" onClick={onClose} className="cursor-pointer">{t('Common.cancel')}</Button>
                <Button variant={isDelete ? 'destructive' : 'default'} onClick={() => onConfirm(inputValue)} className="cursor-pointer">
                   {confirmText}
                </Button>

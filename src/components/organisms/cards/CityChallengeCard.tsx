@@ -195,19 +195,19 @@ export const CityChallengeCard = React.memo(
                            <Input
                               value={localLogos}
                               onChange={(event) => setLocalLogos(event.target.value)}
-                              placeholder={t('Cards.challenge.logosSubtitlePlaceholder')}
+                              placeholder={t('Common.logosSubtitle')}
                               className="h-7 border-0 bg-card-popover-bg/40 px-2 py-0.5 text-xs text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                            />
                            <Input
                               value={localMythos}
                               onChange={(event) => setLocalMythos(event.target.value)}
-                              placeholder={t('Cards.challenge.mythosSubtitlePlaceholder')}
+                              placeholder={t('Common.mythosSubtitle')}
                               className="h-7 border-0 bg-card-popover-bg/40 px-2 py-0.5 text-xs text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                            />
                            <Textarea
                               value={localFlavor}
                               onChange={(event) => setLocalFlavor(event.target.value)}
-                              placeholder={t('Cards.challenge.flavorPlaceholder')}
+                              placeholder={t('Common.whatThePlayersSee')}
                               className="min-h-20 resize-none border-0 bg-card-popover-bg/40 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                            />
                            {localFlavor.includes('{') && (
@@ -233,7 +233,7 @@ export const CityChallengeCard = React.memo(
 
                <CardContent className="flex min-h-0 grow flex-col overflow-hidden p-0">
                   {/* Spectrums: the challenge's tiered fronts, name-tier pills. */}
-                  <CardSectionHeader title={t('Cards.challenge.spectrums')} icon={Gauge} />
+                  <CardSectionHeader title={t('Common.spectrums')} icon={Gauge} />
                   <div ref={spectrumsScrollRef} className="max-h-24 min-w-0 shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain">
                      {isEditing ? (
                         <div className="flex flex-col gap-1 p-2">
@@ -241,14 +241,14 @@ export const CityChallengeCard = React.memo(
                               <StatusEditRow
                                  key={spectrum.id}
                                  status={spectrum}
-                                 namePlaceholder={t('Cards.challenge.spectrumNamePlaceholder')}
+                                 namePlaceholder={t('Common.eGInfluence')}
                                  onCommitName={(name) => commitSpectrumById(spectrum.id, { name })}
                                  onCommitTier={(tier) => commitSpectrumById(spectrum.id, { tier })}
                                  onRemove={() => removeSpectrumById(spectrum.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addSpectrum')} onClick={addSpectrum} />
+                           <AddRowButton label={t('Common.addSpectrum')} onClick={addSpectrum} />
                         </div>
                      ) : (
                         <div className="flex flex-wrap gap-1 p-2">
@@ -260,7 +260,7 @@ export const CityChallengeCard = React.memo(
                   </div>
 
                   {/* Custom Moves: a name pill over rich body text (a Threat minus consequences). */}
-                  <CardSectionHeader title={t('Cards.challenge.customMoves')} />
+                  <CardSectionHeader title={t('Common.customMoves')} />
                   <div ref={customMovesScrollRef} className="max-h-28 min-w-0 shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain">
                      {isEditing ? (
                         <div className="flex flex-col gap-2 p-2">
@@ -268,15 +268,15 @@ export const CityChallengeCard = React.memo(
                               <CustomMoveEditRow
                                  key={move.id}
                                  move={move}
-                                 namePlaceholder={t('Cards.challenge.customMoveNamePlaceholder')}
+                                 namePlaceholder={t('Common.moveName')}
                                  descriptionPlaceholder={t('Cards.challenge.customMoveDescriptionPlaceholder')}
                                  onCommitName={(name) => commitCustomMoveById(move.id, { name })}
                                  onCommitDescription={(description) => commitCustomMoveById(move.id, { description })}
                                  onRemove={() => removeCustomMoveById(move.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addCustomMove')} onClick={addCustomMove} />
+                           <AddRowButton label={t('Common.addMove')} onClick={addCustomMove} />
                         </div>
                      ) : (
                         <div className="flex flex-col gap-2 p-2">
@@ -291,7 +291,7 @@ export const CityChallengeCard = React.memo(
                   </div>
 
                   {/* Hard Moves: double-chevron bullets. */}
-                  <CardSectionHeader title={t('Cards.challenge.hardMoves')} />
+                  <CardSectionHeader title={t('Common.hardMoves')} />
                   <div ref={hardMovesScrollRef} className="max-h-24 min-w-0 shrink-0 overflow-y-auto overflow-x-hidden overscroll-contain">
                      {isEditing ? (
                         <div className="flex flex-col gap-2 p-2">
@@ -299,13 +299,13 @@ export const CityChallengeCard = React.memo(
                               <MoveEditRow
                                  key={move.id}
                                  move={move}
-                                 placeholder={t('Cards.challenge.hardMovePlaceholder')}
+                                 placeholder={t('Common.aHardMove')}
                                  onCommitText={(text) => commitHardMoveById(move.id, { text })}
                                  onRemove={() => removeHardMoveById(move.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addHardMove')} onClick={addHardMove} />
+                           <AddRowButton label={t('Common.addHardMove')} onClick={addHardMove} />
                         </div>
                      ) : (
                         <MoveList moves={details.hardMoves} kind="hard" mentionClick={mentionClick} emptyLabel={t('Cards.challenge.noHardMoves')} textClassName="p-2 text-xs" />
@@ -313,7 +313,7 @@ export const CityChallengeCard = React.memo(
                   </div>
 
                   {/* Soft Moves: single-chevron bullets. The meatiest tail - grows to fill the rest. */}
-                  <CardSectionHeader title={t('Cards.challenge.softMoves')} />
+                  <CardSectionHeader title={t('Common.softMoves')} />
                   <div ref={softMovesScrollRef} className="min-h-16 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
                      {isEditing ? (
                         <div className="flex flex-col gap-2 p-2">
@@ -321,13 +321,13 @@ export const CityChallengeCard = React.memo(
                               <MoveEditRow
                                  key={move.id}
                                  move={move}
-                                 placeholder={t('Cards.challenge.softMovePlaceholder')}
+                                 placeholder={t('Common.aSoftMove')}
                                  onCommitText={(text) => commitSoftMoveById(move.id, { text })}
                                  onRemove={() => removeSoftMoveById(move.id)}
-                                 removeLabel={t('Cards.challenge.remove')}
+                                 removeLabel={t('Common.remove')}
                               />
                            ))}
-                           <AddRowButton label={t('Cards.challenge.addSoftMove')} onClick={addSoftMove} />
+                           <AddRowButton label={t('Common.addSoftMove')} onClick={addSoftMove} />
                         </div>
                      ) : (
                         <MoveList moves={details.softMoves} kind="soft" mentionClick={mentionClick} emptyLabel={t('Cards.challenge.noSoftMoves')} textClassName="p-2 text-xs" />

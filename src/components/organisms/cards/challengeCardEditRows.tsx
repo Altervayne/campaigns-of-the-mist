@@ -491,7 +491,7 @@ export function AbilityEditRow({ ability, onPatch, onRemove }: {
             <Input
                value={localTag}
                onChange={(event) => setLocalTag(event.target.value)}
-               placeholder={t('Cards.challenge.threatNamePlaceholder')}
+               placeholder={t('Common.threatName')}
                className="h-7 min-w-0 flex-1 border-0 bg-transparent px-2 py-0.5 text-xs font-semibold shadow-none text-card-paper-fg placeholder:text-card-paper-fg/50 focus-visible:ring-card-accent/50"
             />
             <button type="button" onClick={onRemove} title={t('Cards.challenge.removeThreat')} aria-label={t('Cards.challenge.removeThreat')} className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-card-paper-fg/60 hover:bg-card-paper-fg/10 hover:text-card-paper-fg cursor-pointer">
@@ -510,13 +510,13 @@ export function AbilityEditRow({ ability, onPatch, onRemove }: {
                <ConsequenceEditRow
                   key={consequence.id}
                   consequence={consequence}
-                  placeholder={t('Cards.challenge.consequencePlaceholder')}
+                  placeholder={t('Common.aConsequence')}
                   onCommitText={(text) => onPatch((current) => ({ ...current, consequences: updateRowById(current.consequences, consequence.id, { text }) }))}
                   onRemove={() => onPatch((current) => ({ ...current, consequences: removeRowById(current.consequences, consequence.id) }))}
-                  removeLabel={t('Cards.challenge.remove')}
+                  removeLabel={t('Common.remove')}
                />
             ))}
-            <AddRowButton label={t('Cards.challenge.addConsequence')} onClick={() => onPatch((current) => ({ ...current, consequences: addRow(current.consequences, newConsequence()) }))} />
+            <AddRowButton label={t('Common.addConsequence')} onClick={() => onPatch((current) => ({ ...current, consequences: addRow(current.consequences, newConsequence()) }))} />
          </div>
       </div>
    );

@@ -98,7 +98,7 @@ export function ImagePicker({ assetId, onChange }: { assetId: string | null; onC
             </Button>
             {url && (
                <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)} className="cursor-pointer text-destructive">
-                  <Trash2 className="mr-1 h-4 w-4" />{t('ChallengeCard.editor.removeImage')}
+                  <Trash2 className="mr-1 h-4 w-4" />{t('Common.remove')}
                </Button>
             )}
          </div>

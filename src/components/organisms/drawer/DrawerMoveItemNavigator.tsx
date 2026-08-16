@@ -98,7 +98,7 @@ export function DrawerMoveItemNavigator({ action, onConfirm, onClose }: { action
          </div>
 
          <footer className="p-4 border-t flex gap-2 justify-end">
-            <Button variant="ghost" onClick={onClose} className="cursor-pointer">{t('Drawer.Actions.cancel')}</Button>
+            <Button variant="ghost" onClick={onClose} className="cursor-pointer">{t('Common.cancel')}</Button>
             <Button
                onClick={() => onConfirm(currentNavFolderId ?? undefined)}
                disabled={parentOfItemToMoveId === currentNavFolderId}

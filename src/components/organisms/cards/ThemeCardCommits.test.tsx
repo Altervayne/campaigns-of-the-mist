@@ -105,7 +105,7 @@ afterEach(() => {
 describe('City theme card - main tag and mystery dirty at once', () => {
    beforeEach(() => { startCharacter('CITY_OF_MIST', themeOptions('CHARACTER_THEME')); });
 
-   const typeMainTag = (value: string) => typeInto('ThemeCard.placeholderName', value);
+   const typeMainTag = (value: string) => typeInto('Common.writeYourMainTag', value);
    const typeMystery = (value: string) => typeInto('ThemeCard.mysteryPlaceholder', value);
    const read = () => detailsOfType<{ mainTag: Tag; mystery: string | null }>('CHARACTER_THEME');
 
@@ -177,8 +177,8 @@ describe('City crew card - main tag and identity dirty at once', () => {
    it('keeps both with no toggle at all', () => {
       render(<Harness><CityHarness cardType="GROUP_THEME" /></Harness>);
 
-      typeInto('ThemeCard.placeholderName', 'The Night Shift');
-      typeInto('ThemeCard.identityPlaceholder', 'We answer the calls nobody else takes.');
+      typeInto('Common.writeYourMainTag', 'The Night Shift');
+      typeInto('Common.writeYourIdentityText', 'We answer the calls nobody else takes.');
       act(() => { vi.advanceTimersByTime(2000); });
 
       const details = detailsOfType<{ mainTag: Tag; identity: string | null }>('GROUP_THEME');
@@ -196,7 +196,7 @@ describe('City crew card - main tag and identity dirty at once', () => {
 describe('Otherscape theme card - main tag and ritual dirty at once', () => {
    beforeEach(() => { startCharacter('OTHERSCAPE', themeOptions('CHARACTER_THEME')); });
 
-   const typeMainTag = (value: string) => typeInto('OtherscapeThemeCard.placeholderName', value);
+   const typeMainTag = (value: string) => typeInto('Common.writeYourMainTag', value);
    const typeRitual = (value: string) => typeInto('OtherscapeThemeCard.ritualPlaceholder', value);
    const read = () => detailsOfType<{ mainTag: Tag; mystery: string | null }>('CHARACTER_THEME');
 
@@ -244,8 +244,8 @@ describe('Otherscape crew card - main tag and identity dirty at once', () => {
    it('keeps both with no toggle at all', () => {
       render(<Harness><OtherscapeHarness cardType="GROUP_THEME" /></Harness>);
 
-      typeInto('OtherscapeThemeCard.placeholderName', 'The Quiet Contract');
-      typeInto('OtherscapeThemeCard.identityPlaceholder', 'Nobody knows we were here.');
+      typeInto('Common.writeYourMainTag', 'The Quiet Contract');
+      typeInto('Common.writeYourIdentityText', 'Nobody knows we were here.');
       act(() => { vi.advanceTimersByTime(2000); });
 
       const details = detailsOfType<{ mainTag: Tag; identity: string | null }>('GROUP_THEME');
@@ -337,7 +337,7 @@ describe('main tag commits rebuild from live state', () => {
       startCharacter('LEGENDS', { ...themeOptions('CHARACTER_THEME'), themeType: 'Origin' });
       render(<Harness><LegendsThemeCardHarness /></Harness>);
 
-      typeInto('ThemeCard.placeholderName', 'Sword of the North');
+      typeInto('Common.writeYourMainTag', 'Sword of the North');
       setEditing(false);
       fireEvent.click(screen.getAllByRole('button')[0]); // the main-tag activation dot
       act(() => { vi.advanceTimersByTime(2000); });

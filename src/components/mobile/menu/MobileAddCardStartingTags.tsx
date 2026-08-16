@@ -51,7 +51,7 @@ export function MobileAddCardStartingTags({ cardType, powerTagsCount, setPowerTa
 				{/* Weakness/Flaw Tags */}
 				<div className="space-y-2">
 					<Label htmlFor="weakness-tags" className="text-sm">
-						{cardType === 'LOADOUT_THEME' ? t('CreateCardDialog.flawTagCountLabel') : t('CreateCardDialog.weaknessTagCountLabel')}
+						{cardType === 'LOADOUT_THEME' ? t('Common.flaws') : t('CreateCardDialog.weaknessTagCountLabel')}
 					</Label>
 					<Input
 						id="weakness-tags"
@@ -67,7 +67,7 @@ export function MobileAddCardStartingTags({ cardType, powerTagsCount, setPowerTa
 				{cardType === 'LOADOUT_THEME' && (
 					<div className="space-y-2">
 						<Label htmlFor="wildcard-slots" className="text-sm">
-							{t('CreateCardDialog.wildcardSlotsLabel')}
+							{t('Common.wildcardSlots')}
 						</Label>
 						<Input
 							id="wildcard-slots"

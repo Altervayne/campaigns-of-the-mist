@@ -101,7 +101,7 @@ export function MobileNoteTableSheet({ request, onClose }: MobileNoteTableSheetP
                      <TableSheetButton icon={ArrowRightToLine} label={t('NoteView.tableSheet.insertColumnRight')} onClick={() => runAdvance('insertColumnRight', actions.insertColumnRight)} />
                   </TableSheetGroup>
 
-                  <TableSheetGroup title={t('NoteView.tableSheet.groupMove')}>
+                  <TableSheetGroup title={t('Common.move')}>
                      <TableSheetButton icon={ArrowUp} label={t('NoteView.tableSheet.moveRowUp')} disabled={!actions.canMoveRowUp} onClick={() => runAdvance('moveRowUp', actions.moveRowUp)} />
                      <TableSheetButton icon={ArrowDown} label={t('NoteView.tableSheet.moveRowDown')} disabled={!actions.canMoveRowDown} onClick={() => runAdvance('moveRowDown', actions.moveRowDown)} />
                      <TableSheetButton icon={ArrowLeft} label={t('NoteView.tableSheet.moveColumnLeft')} disabled={!actions.canMoveColumnLeft} onClick={() => runAdvance('moveColumnLeft', actions.moveColumnLeft)} />
@@ -109,15 +109,15 @@ export function MobileNoteTableSheet({ request, onClose }: MobileNoteTableSheetP
                   </TableSheetGroup>
 
                   <TableSheetGroup title={t('NoteView.tableSheet.groupAlign')}>
-                     <TableSheetButton icon={AlignLeft} label={t('NoteView.tableSheet.alignLeft')} onClick={() => runAlign('left')} />
+                     <TableSheetButton icon={AlignLeft} label={t('Common.left')} onClick={() => runAlign('left')} />
                      <TableSheetButton icon={AlignCenter} label={t('NoteView.tableSheet.alignCenter')} onClick={() => runAlign('center')} />
-                     <TableSheetButton icon={AlignRight} label={t('NoteView.tableSheet.alignRight')} onClick={() => runAlign('right')} />
+                     <TableSheetButton icon={AlignRight} label={t('Common.right')} onClick={() => runAlign('right')} />
                   </TableSheetGroup>
 
                   <TableSheetGroup title={t('NoteView.tableSheet.groupDelete')}>
                      <TableSheetButton icon={Trash2} label={t('NoteView.tableSheet.deleteRow')} destructive disabled={!actions.canDeleteRow} onClick={() => runAdvance('deleteRow', actions.deleteRow)} />
                      <TableSheetButton icon={Trash2} label={t('NoteView.tableSheet.deleteColumn')} destructive disabled={!actions.canDeleteColumn} onClick={() => runAdvance('deleteColumn', actions.deleteColumn)} />
-                     <TableSheetButton icon={Trash2} label={t('NoteView.tableSheet.deleteTable')} destructive onClick={runDeleteTable} />
+                     <TableSheetButton icon={Trash2} label={t('Common.table')} destructive onClick={runDeleteTable} />
                   </TableSheetGroup>
                </div>
             </div>

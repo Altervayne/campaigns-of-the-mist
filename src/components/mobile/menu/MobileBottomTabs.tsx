@@ -30,17 +30,17 @@ export default function MobileBottomTabs({ activeTab, onTabChange, isToolbeltOpe
 	const tabs = [
 		{
 			id: 'sheet' as TabId,
-			label: t('MobileBottomTabs.sheet'),
+			label: t('Common.workspace'),
 			icon: Home,
 		},
 		{
 			id: 'drawer' as TabId,
-			label: t('MobileBottomTabs.drawer'),
+			label: t('Common.drawer'),
 			icon: FolderOpen,
 		},
 		{
 			id: 'menu' as TabId,
-			label: t('MobileBottomTabs.menu'),
+			label: t('Common.menu'),
 			icon: MoreHorizontal,
 		},
 	];

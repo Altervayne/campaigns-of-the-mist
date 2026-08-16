@@ -42,7 +42,7 @@ const KIND_ICON: Record<TabType, LucideIcon> = { board: LayoutGrid, note: Notebo
 /** The untitled fallback key per tab kind, for a crumb whose snapshot name was empty. */
 const KIND_UNTITLED: Record<TabType, string> = {
    board: 'Tabs.untitledBoard',
-   note: 'Tabs.untitledNote',
+   note: 'Common.untitledNote',
    character: 'Tabs.untitled',
 };
 

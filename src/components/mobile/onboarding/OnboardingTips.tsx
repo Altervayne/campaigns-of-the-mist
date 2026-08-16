@@ -107,14 +107,14 @@ export default function OnboardingTips({ onNext, onBack, onSkip }: OnboardingTip
 					onClick={onSkip}
 					className="cursor-pointer text-muted-foreground"
 				>
-					{t('MobileOnboarding.navigation.skip')}
+					{t('Common.skip')}
 				</Button>
 
 				<Button
 					onClick={onNext}
 					className="cursor-pointer"
 				>
-					{t('MobileOnboarding.navigation.next')}
+					{t('Common.next')}
 					<ChevronRight className="w-4 h-4 ml-1" />
 				</Button>
 			</div>

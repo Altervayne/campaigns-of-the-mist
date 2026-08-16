@@ -75,7 +75,7 @@ export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSe
 						disabled={mode === 'edit'}
 						className="h-auto min-h-12 text-base justify-start"
 					>
-						{t('CreateCardDialog.otherscapeLoadoutCard')}
+						{t('Common.loadoutTheme')}
 					</Button>
 				)}
 

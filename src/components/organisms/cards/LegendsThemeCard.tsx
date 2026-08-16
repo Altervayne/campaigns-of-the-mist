@@ -153,7 +153,7 @@ export const LegendsThemeCard = React.memo(
                   <CardHeaderMolecule title={t('Cards.fellowshipCard')} />
                )}
                <div className="px-2 text-xs font-semibold text-center">
-                  <span>{t('ThemeCard.power')}</span> • <span className="text-destructive/50">{t('ThemeCard.weakness')}</span>
+                  <span>{t('Common.power')}</span> • <span className="text-destructive/50">{t('Common.weakness')}</span>
                </div>
             </CardHeader>
             
@@ -169,13 +169,13 @@ export const LegendsThemeCard = React.memo(
                   {isEditing ? (
                      <Input 
                         className="text-xl font-bold text-center grow border-0 shadow-none"
-                        placeholder={t('ThemeCard.placeholderName')}
+                        placeholder={t('Common.writeYourMainTag')}
                         value={localMainTagName}
                         onChange={(e) => setLocalMainTagName(e.target.value)}
                      />
                   ) : (
                      <h2 className={cn("text-xl font-bold", details.mainTag.isScratched ? 'line-through opacity-50' : details.mainTag.isActive && 'underline')}>
-                        {details.mainTag.name || `[${t('ThemeCard.noName')}]`}
+                        {details.mainTag.name || `[${t('Common.noName')}]`}
                      </h2>
                   )}
                   <div className="w-6">
@@ -236,7 +236,7 @@ export const LegendsThemeCard = React.memo(
                <CardHeaderMolecule title={card.title} />
             )}
             
-            <CardSectionHeader title={t('ThemeCard.improvements')} />
+            <CardSectionHeader title={t('Common.specialImprovements')} />
 
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="grow overflow-y-auto space-y-0 p-0 overscroll-contain" ref={improvementsScrollRef}>
@@ -253,7 +253,7 @@ export const LegendsThemeCard = React.memo(
                   {isEditing && (
                      <div className="p-2 w-full">
                         <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={() => actions.addBlandTag(card.id, 'improvements')}>
-                           <PlusCircle className="h-4 w-4 mr-2" /> {t('ThemeCard.addImprovement')}
+                           <PlusCircle className="h-4 w-4 mr-2" /> {t('Common.addImprovement')}
                         </Button>
                      </div>
                   )}

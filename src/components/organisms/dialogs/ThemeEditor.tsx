@@ -140,8 +140,8 @@ export function ThemeEditor({ theme, headerLeft, headerRight }: { theme: CustomT
                <div key={group.id} className="flex flex-col gap-1 rounded-md border border-border/60 p-2">
                   <div className="flex items-center gap-2">
                      <span className="min-w-0 flex-1 text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t(`SettingsDialog.themes.groups.${group.id}`)}</span>
-                     <span className="w-24 text-center text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t('SettingsDialog.themes.lightColumn')}</span>
-                     <span className="w-24 text-center text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t('SettingsDialog.themes.darkColumn')}</span>
+                     <span className="w-24 text-center text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t('Common.light')}</span>
+                     <span className="w-24 text-center text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{t('Common.dark')}</span>
                   </div>
                   {group.tokens.map((token) => {
                      const tokenLabel = t(`SettingsDialog.themes.tokens.${token}`);
@@ -152,12 +152,12 @@ export function ThemeEditor({ theme, headerLeft, headerRight }: { theme: CustomT
                               <InfoTip text={t(`SettingsDialog.themes.tokenPurpose.${token}`)} />
                            </div>
                            <div className="flex w-24 items-center gap-1">
-                              <TokenSwatch value={draft.light[token]} label={`${tokenLabel} · ${t('SettingsDialog.themes.lightColumn')}`} onPick={(hex) => setToken('light', token, hex)} warning={warningText(lightByFg.get(token))} />
-                              <HexInput value={draft.light[token]} label={`${tokenLabel} · ${t('SettingsDialog.themes.lightColumn')}`} onCommit={(hex) => setToken('light', token, hex)} className="min-w-0 flex-1" />
+                              <TokenSwatch value={draft.light[token]} label={`${tokenLabel} · ${t('Common.light')}`} onPick={(hex) => setToken('light', token, hex)} warning={warningText(lightByFg.get(token))} />
+                              <HexInput value={draft.light[token]} label={`${tokenLabel} · ${t('Common.light')}`} onCommit={(hex) => setToken('light', token, hex)} className="min-w-0 flex-1" />
                            </div>
                            <div className="flex w-24 items-center gap-1">
-                              <TokenSwatch value={draft.dark[token]} label={`${tokenLabel} · ${t('SettingsDialog.themes.darkColumn')}`} onPick={(hex) => setToken('dark', token, hex)} warning={warningText(darkByFg.get(token))} />
-                              <HexInput value={draft.dark[token]} label={`${tokenLabel} · ${t('SettingsDialog.themes.darkColumn')}`} onCommit={(hex) => setToken('dark', token, hex)} className="min-w-0 flex-1" />
+                              <TokenSwatch value={draft.dark[token]} label={`${tokenLabel} · ${t('Common.dark')}`} onPick={(hex) => setToken('dark', token, hex)} warning={warningText(darkByFg.get(token))} />
+                              <HexInput value={draft.dark[token]} label={`${tokenLabel} · ${t('Common.dark')}`} onCommit={(hex) => setToken('dark', token, hex)} className="min-w-0 flex-1" />
                            </div>
                         </div>
                      );

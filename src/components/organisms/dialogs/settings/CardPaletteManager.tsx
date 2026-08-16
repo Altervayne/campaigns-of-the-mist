@@ -235,8 +235,8 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   variant="ghost"
                   size="icon"
                   onClick={(event) => { event.stopPropagation(); editCustom(row); }}
-                  title={t('SettingsDialog.themes.edit')}
-                  aria-label={t('SettingsDialog.themes.edit')}
+                  title={t('Common.edit')}
+                  aria-label={t('Common.edit')}
                   className={`absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
                >
                   <Pencil className="h-4 w-4" />
@@ -261,7 +261,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   {row.isCustom && (
                      <>
                         <DropdownMenuItem onClick={() => editCustom(row)} className="cursor-pointer">
-                           <Palette className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.themes.edit')}</span>
+                           <Palette className="mr-2 h-4 w-4" /><span>{t('Common.edit')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => startRename(row.id, row.label)} className="cursor-pointer">
                            <Pencil className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.cardPalettes.rename')}</span>

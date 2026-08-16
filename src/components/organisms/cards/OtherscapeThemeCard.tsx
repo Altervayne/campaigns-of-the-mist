@@ -178,13 +178,13 @@ export const OtherscapeThemeCard = React.memo(
                ) : card.cardType === 'GROUP_THEME' ? (
                   <CardHeaderMolecule title={t('OtherscapeThemeCard.crewThemeTitle')} />
                ) : (
-                  <CardHeaderMolecule title={t('OtherscapeThemeCard.loadoutTitle')} />
+                  <CardHeaderMolecule title={t('Common.loadoutTheme')} />
                )}
                <div className="px-2 text-xs font-semibold text-center">
                   {card.cardType === 'LOADOUT_THEME' ? (
                      <><span>{t('OtherscapeThemeCard.gearTitle')}</span> • <span style={{ color: 'var(--card-destructive-bg)' }}>{t('OtherscapeThemeCard.flaw')}</span></>
                   ) : (
-                     <><span>{t('OtherscapeThemeCard.power')}</span> • <span style={{ color: 'var(--card-destructive-bg)' }}>{t('OtherscapeThemeCard.weakness')}</span></>
+                     <><span>{t('Common.power')}</span> • <span style={{ color: 'var(--card-destructive-bg)' }}>{t('Common.weakness')}</span></>
                   )}
                </div>
             </CardHeader>
@@ -195,7 +195,7 @@ export const OtherscapeThemeCard = React.memo(
                   <>
                      {/* Wildcard Slots as single line */}
                      <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold bg-black/10 border-y border-card-accent/30">
-                        <span>{t('OtherscapeThemeCard.wildcardSlots')}</span>
+                        <span>{t('Common.wildcardSlots')}</span>
                         <div className="flex items-center gap-2">
                            {isEditing && (
                               <Button
@@ -245,7 +245,7 @@ export const OtherscapeThemeCard = React.memo(
                         {isEditing && <Button variant="ghost" size="sm" className="m-2 border border-dashed cursor-pointer" onClick={() => actions.addTag(card.id, 'powerTags')}><PlusCircle className="h-4 w-4 mr-2"/>{t('OtherscapeThemeCard.addGearTag')}</Button>}
 
                         {/* Flaws Section */}
-                        <CardSectionHeader title={t('OtherscapeThemeCard.flawsTitle')} className="mt-2" />
+                        <CardSectionHeader title={t('Common.flaws')} className="mt-2" />
                         {details.weaknessTags.map((tag, index) =>
                            <TagItem key={tag.id} cardId={card.id} tag={tag} tagType="weakness" isEditing={isEditing} index={index} isDark />
                         )}
@@ -266,13 +266,13 @@ export const OtherscapeThemeCard = React.memo(
                         {isEditing ? (
                            <Input
                               className="text-xl font-bold text-center grow border-0 shadow-none"
-                              placeholder={t('OtherscapeThemeCard.placeholderName')}
+                              placeholder={t('Common.writeYourMainTag')}
                               value={localMainTagName}
                               onChange={(e) => setLocalMainTagName(e.target.value)}
                            />
                         ) : (
                            <h2 className={cn("text-xl font-bold", details.mainTag.isScratched ? 'line-through opacity-50' : details.mainTag.isActive && 'underline')}>
-                              {details.mainTag.name || `[${t('OtherscapeThemeCard.noName')}]`}
+                              {details.mainTag.name || `[${t('Common.noName')}]`}
                            </h2>
                         )}
                         <div className="w-6">
@@ -298,12 +298,12 @@ export const OtherscapeThemeCard = React.memo(
                <CardFooter className="p-0 flex flex-col min-h-[37%] max-h-[37%]">
                   <CardSectionHeader title={`${
                      card.cardType === 'GROUP_THEME'
-                        ? t('OtherscapeThemeCard.identityTitle')
+                        ? t('Common.identity')
                         : card.cardType === 'CHARACTER_THEME'
                            ? ((details as OtherscapeThemeDetails).themeType === 'Mythos'
                               ? t('OtherscapeThemeCard.ritualTitle')
                               : (details as OtherscapeThemeDetails).themeType === 'Self'
-                                 ? t('OtherscapeThemeCard.identityTitle')
+                                 ? t('Common.identity')
                                  : t('OtherscapeThemeCard.itchTitle'))
                            : t('OtherscapeThemeCard.descriptionTitle')
                   }`}></CardSectionHeader>
@@ -313,12 +313,12 @@ export const OtherscapeThemeCard = React.memo(
                            className="h-full p-0.5 text-xs text-center bg-card-paper-bg/10 border-card-accent/20 resize-none"
                            placeholder={
                               card.cardType === 'GROUP_THEME'
-                                 ? t('OtherscapeThemeCard.identityPlaceholder')
+                                 ? t('Common.writeYourIdentityText')
                                  : card.cardType === 'CHARACTER_THEME'
                                     ? ((details as OtherscapeThemeDetails).themeType === 'Mythos'
                                        ? t('OtherscapeThemeCard.ritualPlaceholder')
                                        : (details as OtherscapeThemeDetails).themeType === 'Self'
-                                          ? t('OtherscapeThemeCard.identityPlaceholder')
+                                          ? t('Common.writeYourIdentityText')
                                           : t('OtherscapeThemeCard.itchPlaceholder'))
                                     : t('OtherscapeThemeCard.descriptionPlaceholder')
                            }
@@ -329,12 +329,12 @@ export const OtherscapeThemeCard = React.memo(
                         <p className="p-2 text-xs text-center whitespace-pre-wrap">{
                            mysteryIdentityOrDescription || `[${
                               card.cardType === 'GROUP_THEME'
-                                 ? t('OtherscapeThemeCard.noIdentity')
+                                 ? t('Common.emptyIdentityText')
                                  : card.cardType === 'CHARACTER_THEME'
                                     ? ((details as OtherscapeThemeDetails).themeType === 'Mythos'
                                        ? t('OtherscapeThemeCard.noRitual')
                                        : (details as OtherscapeThemeDetails).themeType === 'Self'
-                                          ? t('OtherscapeThemeCard.noIdentity')
+                                          ? t('Common.emptyIdentityText')
                                           : t('OtherscapeThemeCard.noItch'))
                                     : t('OtherscapeThemeCard.noDescription')
                            }]`
@@ -372,10 +372,10 @@ export const OtherscapeThemeCard = React.memo(
             ) : card.cardType === 'GROUP_THEME' ? (
                <CardHeaderMolecule title={t('OtherscapeThemeCard.crewThemeTitle')} />
             ) : (
-               <CardHeaderMolecule title={t('OtherscapeThemeCard.loadoutTitle')} />
+               <CardHeaderMolecule title={t('Common.loadoutTheme')} />
             )}
 
-            <CardSectionHeader title={t('OtherscapeThemeCard.improvements')} />
+            <CardSectionHeader title={t('Common.specialImprovements')} />
 
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="grow overflow-y-auto space-y-0 p-0 overscroll-contain" ref={improvementsScrollRef}>
@@ -392,7 +392,7 @@ export const OtherscapeThemeCard = React.memo(
                   {isEditing && (
                      <div className="p-2 w-full">
                         <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={() => actions.addBlandTag(card.id, 'improvements')}>
-                           <PlusCircle className="h-4 w-4 mr-2" /> {t('OtherscapeThemeCard.addImprovement')}
+                           <PlusCircle className="h-4 w-4 mr-2" /> {t('Common.addImprovement')}
                         </Button>
                      </div>
                   )}

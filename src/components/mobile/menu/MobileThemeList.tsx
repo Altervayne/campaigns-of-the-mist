@@ -159,7 +159,7 @@ export function MobileThemeList({ onOpenEditor }: MobileThemeListProps) {
                   {/* Presets can only be duplicated (into an editable custom); customs also edit/rename/delete. */}
                   {customId && (
                      <DropdownMenuItem onClick={() => editTheme(entry)} className="cursor-pointer">
-                        <Palette className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.themes.edit')}</span>
+                        <Palette className="mr-2 h-4 w-4" /><span>{t('Common.edit')}</span>
                      </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => duplicateTheme(entry)} className="cursor-pointer">

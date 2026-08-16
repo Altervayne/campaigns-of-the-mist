@@ -47,11 +47,11 @@ export function LegacyCharacterBackupDialog({ isOpen, onOpenChange, onRemoved }:
          removeBlob={removeLegacyCharacterBlob}
          title={t('SettingsDialog.legacyCharacterBackup.confirmTitle')}
          description={t('SettingsDialog.legacyCharacterBackup.confirmDescription')}
-         downloadButtonLabel={t('SettingsDialog.legacyCharacterBackup.downloadBackupButton')}
-         backupDownloadedLabel={t('SettingsDialog.legacyCharacterBackup.backupDownloadedLabel')}
-         confirmCheckboxLabel={t('SettingsDialog.legacyCharacterBackup.confirmCheckbox')}
-         removeButtonLabel={t('SettingsDialog.legacyCharacterBackup.removeButton')}
-         cancelLabel={t('SettingsDialog.legacyCharacterBackup.cancel')}
+         downloadButtonLabel={t('Common.downloadBackup')}
+         backupDownloadedLabel={t('Common.backupDownloaded')}
+         confirmCheckboxLabel={t('Common.iUnderstandTheOld')}
+         removeButtonLabel={t('Common.removeOldCopy')}
+         cancelLabel={t('Common.cancel')}
          exportFailedMessage={t('Notifications.character.legacyBackupExportFailed')}
          downloadedMessage={t('Notifications.character.legacyBackupDownloaded')}
          removedMessage={t('Notifications.character.legacyBackupRemoved')}

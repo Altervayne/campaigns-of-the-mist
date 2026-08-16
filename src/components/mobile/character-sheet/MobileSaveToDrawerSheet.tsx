@@ -73,7 +73,7 @@ export default function MobileSaveToDrawerSheet({
 						onClick={handleCancel}
 						className="flex-1 cursor-pointer h-11"
 					>
-						{t('Drawer.Actions.cancel')}
+						{t('Common.cancel')}
 					</Button>
 					<Button
 						onClick={handleConfirm}

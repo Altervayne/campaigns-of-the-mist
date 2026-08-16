@@ -148,7 +148,7 @@ export function MobileWorkspaceSwitcher({ isOpen, onClose, onSwitched }: MobileW
 								key={tab.id}
 								tab={tab}
 								isActive={tab.id === activeTabId}
-								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, tab.type === 'note' ? t('Tabs.untitledNote') : t('Tabs.untitled'))}
+								title={rowTitle(tab, tab.id === activeTabId, activeCharacterName, tab.type === 'note' ? t('Common.untitledNote') : t('Tabs.untitled'))}
 								isDirty={isTabDirty(tab)}
 								onSelect={() => handleSelect(tab.id)}
 								onRequestClose={tab.type === 'character' || tab.type === 'note' ? () => setPendingClose(tab) : undefined}

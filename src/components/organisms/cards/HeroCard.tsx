@@ -107,7 +107,7 @@ const HeroCardContent = React.memo(
             {"h-30 shadow-none pointer-events-none border-2 border-card-border": isDrawerPreview}
          )}>
             <CardHeader className="p-0">
-               <CardHeaderMolecule title={t('HeroCard.title')}></CardHeaderMolecule>
+               <CardHeaderMolecule title={t('Common.heroCard')}></CardHeaderMolecule>
             </CardHeader>
             
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
@@ -128,8 +128,8 @@ const HeroCardContent = React.memo(
                   <CardSectionHeader title={t('HeroCard.relationships')} icon={Users} />
                   <div className="flex flex-col grow align-middle overflow-y-auto overflow-x-hidden overscroll-contain min-w-0" ref={relationshipsScrollRef}>
                      <div className="flex bg-card-accent/15">
-                        <p className="grow text-sm text-center py-1 border-b">{t('HeroCard.companion')}</p>
-                        <p className="grow text-sm text-center py-1 border-b">{t('HeroCard.relationship')}</p>
+                        <p className="grow text-sm text-center py-1 border-b">{t('Common.companion')}</p>
+                        <p className="grow text-sm text-center py-1 border-b">{t('Common.relation')}</p>
                      </div>
                      {details.fellowshipRelationships.map((relation, index) => (
                         <FellowshipRelationshipItem key={relation.id} cardId={card.id} relationship={relation} isEditing={isEditing} index={index} />
@@ -184,7 +184,7 @@ const HeroCardContent = React.memo(
             "card-type-hero",
             {"h-30 shadow-none pointer-events-none border-2 border-card-border": isDrawerPreview}
          )}>
-            <CardHeaderMolecule title={t('HeroCard.title')} />
+            <CardHeaderMolecule title={t('Common.heroCard')} />
             <CardSectionHeader title={`${tBackpack('backpack.title')}`}></CardSectionHeader>
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="grow space-y-0 overflow-y-auto overflow-x-hidden overscroll-contain min-w-0" ref={backpackScrollRef}>

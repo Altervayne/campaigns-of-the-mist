@@ -75,7 +75,7 @@ export function MigrationNoticeDialog({ isOpen, onClose }: MigrationNoticeDialog
             <DialogFooter className="gap-2 sm:gap-2">
                <Button variant="outline" onClick={handleExportOldData} className="cursor-pointer">
                   {exported ? <Check className="mr-2 h-4 w-4 text-primary" /> : <Download className="mr-2 h-4 w-4" />}
-                  {exported ? t('MigrationNotice.exportedLabel') : t('MigrationNotice.exportButton')}
+                  {exported ? t('Common.backupDownloaded') : t('MigrationNotice.exportButton')}
                </Button>
                <Button onClick={onClose} className="cursor-pointer">{t('MigrationNotice.dismissButton')}</Button>
             </DialogFooter>

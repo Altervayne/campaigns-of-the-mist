@@ -158,7 +158,7 @@ export const CityThemeCard = React.memo(
                   <CardHeaderMolecule title={t('ThemeCard.crewThemeTitle')} />
                )}
                <div className="px-2 text-xs font-semibold text-center">
-                  <span>{t('ThemeCard.power')}</span> • <span className="text-destructive/50">{t('ThemeCard.weakness')}</span>
+                  <span>{t('Common.power')}</span> • <span className="text-destructive/50">{t('Common.weakness')}</span>
                </div>
             </CardHeader>
 
@@ -174,13 +174,13 @@ export const CityThemeCard = React.memo(
                   {isEditing ? (
                      <Input
                         className="text-xl font-bold text-center grow border-0 shadow-none"
-                        placeholder={t('ThemeCard.placeholderName')}
+                        placeholder={t('Common.writeYourMainTag')}
                         value={localMainTagName}
                         onChange={(e) => setLocalMainTagName(e.target.value)}
                      />
                   ) : (
                      <h2 className={cn("text-xl font-bold", details.mainTag.isScratched ? 'line-through opacity-50' : details.mainTag.isActive && 'underline')}>
-                        {details.mainTag.name || `[${t('ThemeCard.noName')}]`}
+                        {details.mainTag.name || `[${t('Common.noName')}]`}
                      </h2>
                   )}
                   <div className="w-6">
@@ -202,17 +202,17 @@ export const CityThemeCard = React.memo(
 
             {!isDrawerPreview &&
                <CardFooter className="p-0 flex flex-col min-h-[37%] max-h-[37%]">
-                  <CardSectionHeader title={`${card.cardType === 'GROUP_THEME' ? t('ThemeCard.identityTitle') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.mysteryTitle') : t('ThemeCard.identityTitle'))}`}></CardSectionHeader>
+                  <CardSectionHeader title={`${card.cardType === 'GROUP_THEME' ? t('Common.identity') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.mysteryTitle') : t('Common.identity'))}`}></CardSectionHeader>
                   <div className="w-full grow overflow-y-auto overflow-x-hidden overscroll-contain min-w-0" ref={mysteryScrollRef}>
                      {isEditing ? (
                         <Textarea
                            className="h-full p-0.5 text-xs text-center bg-card-paper-bg/10 border-card-accent/20 resize-none"
-                           placeholder={card.cardType === 'GROUP_THEME' ? t('ThemeCard.identityPlaceholder') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.mysteryPlaceholder') : t('ThemeCard.identityPlaceholder'))}
+                           placeholder={card.cardType === 'GROUP_THEME' ? t('Common.writeYourIdentityText') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.mysteryPlaceholder') : t('Common.writeYourIdentityText'))}
                            value={localMystery || ''}
                            onChange={(e) => setLocalMystery(e.target.value)}
                         />
                      ) : (
-                        <p className="p-2 text-xs text-center whitespace-pre-wrap">{mysteryOrIdentity || `[${card.cardType === 'GROUP_THEME' ? t('ThemeCard.noIdentity') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.noMystery') : t('ThemeCard.noIdentity'))}]`}</p>
+                        <p className="p-2 text-xs text-center whitespace-pre-wrap">{mysteryOrIdentity || `[${card.cardType === 'GROUP_THEME' ? t('Common.emptyIdentityText') : ((details as CityThemeDetails).themeType === 'Mythos' ? t('ThemeCard.noMystery') : t('Common.emptyIdentityText'))}]`}</p>
                      )}
                   </div>
 
@@ -249,7 +249,7 @@ export const CityThemeCard = React.memo(
                <CardHeaderMolecule title={t('ThemeCard.crewThemeTitle')} />
             )}
 
-            <CardSectionHeader title={t('ThemeCard.improvements')} />
+            <CardSectionHeader title={t('Common.specialImprovements')} />
 
             <CardContent className="grow flex flex-col p-0 overflow-hidden min-h-0">
                <div className="grow overflow-y-auto space-y-0 p-0 overscroll-contain" ref={improvementsScrollRef}>
@@ -266,7 +266,7 @@ export const CityThemeCard = React.memo(
                   {isEditing && (
                      <div className="p-2 w-full">
                         <Button variant="ghost" size="sm" className="w-full border border-dashed cursor-pointer" onClick={() => actions.addBlandTag(card.id, 'improvements')}>
-                           <PlusCircle className="h-4 w-4 mr-2" /> {t('ThemeCard.addImprovement')}
+                           <PlusCircle className="h-4 w-4 mr-2" /> {t('Common.addImprovement')}
                         </Button>
                      </div>
                   )}

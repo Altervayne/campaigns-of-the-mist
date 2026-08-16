@@ -41,7 +41,7 @@ export function DesktopTutorialList() {
 
    return (
       <div className="grid gap-2">
-         <Label className="text-left">{t('TutorialsDialog.listLabel')}</Label>
+         <Label className="text-left">{t('Common.tutorials')}</Label>
 
          <div className="grid gap-1.5">
             {tutorials.map((definition) => {

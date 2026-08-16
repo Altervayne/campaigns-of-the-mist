@@ -56,7 +56,7 @@ export function CityChallengeEditorForm({ card, onDone }: { card: CardData; onDo
    return (
       <div className="flex flex-col gap-5">
          {/* Name. */}
-         <Field label={t('ChallengeCard.editor.name')}>
+         <Field label={t('Common.name')}>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t(`Cards.challenge.namePlaceholder.${details.game}`)} />
          </Field>
 
@@ -78,41 +78,41 @@ export function CityChallengeEditorForm({ card, onDone }: { card: CardData; onDo
          {/* Subtitles (both always present). */}
          <div className="grid grid-cols-2 gap-4">
             <Field label={t('ChallengeCard.editor.logosSubtitle')}>
-               <Input value={logosSubtitle} onChange={(event) => setLogosSubtitle(event.target.value)} placeholder={t('ChallengeCard.editor.logosSubtitlePlaceholder')} />
+               <Input value={logosSubtitle} onChange={(event) => setLogosSubtitle(event.target.value)} placeholder={t('Common.logosSubtitle')} />
             </Field>
             <Field label={t('ChallengeCard.editor.mythosSubtitle')}>
-               <Input value={mythosSubtitle} onChange={(event) => setMythosSubtitle(event.target.value)} placeholder={t('ChallengeCard.editor.mythosSubtitlePlaceholder')} />
+               <Input value={mythosSubtitle} onChange={(event) => setMythosSubtitle(event.target.value)} placeholder={t('Common.mythosSubtitle')} />
             </Field>
          </div>
 
          {/* Flavor. */}
          <Field label={t('ChallengeCard.editor.flavor')}>
-            <Textarea value={flavor} onChange={(event) => setFlavor(event.target.value)} placeholder={t('ChallengeCard.editor.flavorPlaceholder')} className="min-h-20 resize-none" />
+            <Textarea value={flavor} onChange={(event) => setFlavor(event.target.value)} placeholder={t('Common.whatThePlayersSee')} className="min-h-20 resize-none" />
             <MentionPreview text={flavor} />
          </Field>
 
          {/* Spectrums (name + tier). */}
          <ListSection
-            label={t('ChallengeCard.editor.spectrums')}
-            addLabel={t('ChallengeCard.editor.addSpectrum')}
+            label={t('Common.spectrums')}
+            addLabel={t('Common.addSpectrum')}
             onAdd={() => setSpectrums((current) => [...current, newStatus()])}
          >
             {spectrums.map((spectrum) => (
                <StatusRow
                   key={spectrum.id}
                   status={spectrum}
-                  namePlaceholder={t('ChallengeCard.editor.spectrumNamePlaceholder')}
+                  namePlaceholder={t('Common.eGInfluence')}
                   onChange={(next) => setSpectrums((current) => current.map((entry) => (entry.id === spectrum.id ? next : entry)))}
                   onRemove={() => setSpectrums((current) => current.filter((entry) => entry.id !== spectrum.id))}
-                  removeLabel={t('ChallengeCard.editor.remove')}
+                  removeLabel={t('Common.remove')}
                />
             ))}
          </ListSection>
 
          {/* Custom moves: a name + rich description (no consequences). */}
          <ListSection
-            label={t('ChallengeCard.editor.customMoves')}
-            addLabel={t('ChallengeCard.editor.addCustomMove')}
+            label={t('Common.customMoves')}
+            addLabel={t('Common.addMove')}
             onAdd={() => setCustomMoves((current) => [...current, newCustomMove()])}
          >
             {customMoves.map((move) => (
@@ -127,15 +127,15 @@ export function CityChallengeEditorForm({ card, onDone }: { card: CardData; onDo
 
          {/* Hard moves: bare rich text. */}
          <ListSection
-            label={t('ChallengeCard.editor.hardMoves')}
-            addLabel={t('ChallengeCard.editor.addHardMove')}
+            label={t('Common.hardMoves')}
+            addLabel={t('Common.addHardMove')}
             onAdd={() => setHardMoves((current) => [...current, newHardMove()])}
          >
             {hardMoves.map((move) => (
                <MoveRow
                   key={move.id}
                   move={move}
-                  placeholder={t('ChallengeCard.editor.hardMovePlaceholder')}
+                  placeholder={t('Common.aHardMove')}
                   onChange={(next) => setHardMoves((current) => current.map((entry) => (entry.id === move.id ? next : entry)))}
                   onRemove={() => setHardMoves((current) => current.filter((entry) => entry.id !== move.id))}
                />
@@ -144,15 +144,15 @@ export function CityChallengeEditorForm({ card, onDone }: { card: CardData; onDo
 
          {/* Soft moves: bare rich text. */}
          <ListSection
-            label={t('ChallengeCard.editor.softMoves')}
-            addLabel={t('ChallengeCard.editor.addSoftMove')}
+            label={t('Common.softMoves')}
+            addLabel={t('Common.addSoftMove')}
             onAdd={() => setSoftMoves((current) => [...current, newSoftMove()])}
          >
             {softMoves.map((move) => (
                <MoveRow
                   key={move.id}
                   move={move}
-                  placeholder={t('ChallengeCard.editor.softMovePlaceholder')}
+                  placeholder={t('Common.aSoftMove')}
                   onChange={(next) => setSoftMoves((current) => current.map((entry) => (entry.id === move.id ? next : entry)))}
                   onRemove={() => setSoftMoves((current) => current.filter((entry) => entry.id !== move.id))}
                />
@@ -160,7 +160,7 @@ export function CityChallengeEditorForm({ card, onDone }: { card: CardData; onDo
          </ListSection>
 
          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onDone} className="cursor-pointer">{t('ChallengeCard.editor.cancel')}</Button>
+            <Button type="button" variant="outline" onClick={onDone} className="cursor-pointer">{t('Common.cancel')}</Button>
             <Button type="button" onClick={handleSave} className="cursor-pointer">{t('ChallengeCard.editor.save')}</Button>
          </DialogFooter>
       </div>

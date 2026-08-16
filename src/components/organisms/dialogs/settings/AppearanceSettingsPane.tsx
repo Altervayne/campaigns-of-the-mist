@@ -35,9 +35,9 @@ import type { ThemeMode } from '@/lib/theme/themeMode';
 
 /** The three light/dark modes as a segmented track: `system` exposed alongside the two pinned modes. */
 const MODE_OPTIONS: { value: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
-   { value: 'light', icon: Sun, labelKey: 'SettingsDialog.modeLight' },
+   { value: 'light', icon: Sun, labelKey: 'Common.light' },
    { value: 'system', icon: Monitor, labelKey: 'SettingsDialog.modeSystem' },
-   { value: 'dark', icon: Moon, labelKey: 'SettingsDialog.modeDark' },
+   { value: 'dark', icon: Moon, labelKey: 'Common.dark' },
 ];
 
 /**
@@ -119,7 +119,7 @@ export function AppearanceSettingsPane() {
    const editorHeaderLeft = (nameNode: ReactNode) => (
       <div className="flex min-w-0 flex-1 items-center gap-2">
          <Button variant="ghost" size="sm" onClick={() => guardedSwitch(() => setEditorOpen(false))} className="shrink-0 cursor-pointer">
-            <ChevronLeft className="h-4 w-4" />{t('SettingsShell.sections.appearance')}
+            <ChevronLeft className="h-4 w-4" />{t('Common.appearance')}
          </Button>
          {nameNode}
       </div>
@@ -194,7 +194,7 @@ export function AppearanceSettingsPane() {
             {/* Theme: the live list (select = apply), plus a button into the editor takeover on the active theme. */}
             <div className="grid gap-3">
                <div className="flex items-center justify-between gap-2">
-                  <Label className="text-left">{t('SettingsDialog.theme')}</Label>
+                  <Label className="text-left">{t('Common.theme')}</Label>
                   <Button data-tutorial="themes-edit" variant="outline" size="sm" onClick={() => setEditorOpen(true)} className="shrink-0 cursor-pointer">
                      <Palette className="h-4 w-4 shrink-0" />{t('SettingsDialog.themes.editThemes')}
                   </Button>

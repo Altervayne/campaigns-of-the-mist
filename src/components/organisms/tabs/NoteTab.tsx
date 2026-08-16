@@ -44,7 +44,7 @@ export function NoteTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) 
    const instance = useMemo(() => getOrCreateNoteInstance(tab.id), [tab.id]);
    const title = useStore(instance, (state) => state.note?.title);
    const hasUnsavedChanges = useStore(instance, (state) => state.hasUnsavedChanges);
-   const label = title && title.trim().length > 0 ? title : t('Tabs.untitledNote');
+   const label = title && title.trim().length > 0 ? title : t('Common.untitledNote');
 
    const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
    const handleRequestClose = () => {

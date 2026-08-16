@@ -77,7 +77,7 @@ describe('MobileNoteSurface', () => {
       expect(queryByTestId('note-editor')).toBeNull();
 
       // Back to Edit.
-      fireEvent.click(getByLabelText('NoteView.mobile.edit'));
+      fireEvent.click(getByLabelText('Common.edit'));
       expect(getByTestId('note-editor')).not.toBeNull();
       expect(queryByTestId('note-document')).toBeNull();
    });

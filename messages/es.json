@@ -79,46 +79,33 @@
          "Global": "La vista sigue los ajustes globales"
       }
    },
-
-
-
    "CharacterSheetPage": {
       "loading": "Cargando personaje...",
-
       "newCharacterName": "Nuevo personaje",
       "characterNamePlaceholder": "Nombre del personaje...",
-
       "addCard": "Añadir tarjeta",
       "dropToLoadCharacter": "Suelta aquí un elemento de hoja de personaje para cargar el personaje completo. Esto reemplazará a tu personaje activo.",
       "dropToImport": "Suelta aquí tu archivo para importar el componente a tu hoja de personaje. Si sueltas un personaje completo, reemplazará a tu personaje activo.",
-
       "SidebarMenu": {
          "sidebarTitle": "Menú",
-
          "editMode": "Modo Edición",
          "playMode": "Modo Juego",
-
          "openDrawer": "Abrir Cajón",
          "closeDrawer": "Cerrar Cajón",
-
          "saveToDrawer": "Guardar personaje",
          "saveToDrawerAs": "Guardar personaje como...",
          "exportCharacter": "Exportar personaje",
          "importCharacter": "Importar personaje",
          "importComponent": "Importar componente",
-
          "resetCharacter": "Reiniciar personaje",
          "resetConfirmTitle": "¿Seguro que quieres reiniciar tu personaje?",
          "resetConfirmDescription": "Esta acción es destructiva. Tu personaje activo se eliminará y se reemplazará por un personaje vacío. Si no recargas la aplicación, aún podrás recuperar tu antiguo personaje con la función de deshacer.",
-         "resetConfirmCancelButton": "Cancelar",
          "resetConfirmButton": "Reiniciar el personaje",
-
          "returnToMenu": "Volver al menú",
          "unloadConfirmTitle": "¿Seguro que quieres volver al menú?",
          "unloadConfirmDescription": "Esta acción es IRREVERSIBLE. Tu personaje activo se descargará y el historial se borrará. Asegúrate de haber guardado tu personaje en el cajón o de haberlo exportado.",
          "unloadConfirmCancelButton": "Cancelar",
          "unloadConfirmButton": "Volver al menú",
-
          "settings": "Ajustes",
          "info": "Información de la aplicación",
          "patchNotes": "Notas del parche"
@@ -129,72 +116,54 @@
       "redo": "Rehacer"
    },
    "Drawer": {
-      "title": "Cajón",
       "toggleView": "Cambia la vista de los elementos del Cajón entre vista previa y lista simple",
       "compactView": "Cambiar a la vista de lista compacta para los elementos del Cajón",
       "close": "Cerrar el cajón",
       "backToRoot": "Volver a la raíz",
-      "namePlaceholder": "Nombre",
       "noSubfolders": "No hay subcarpetas",
       "selectThisFolder": "Seleccionar esta carpeta",
       "movingUnknown": "(desconocido)",
-
       "root": "Raíz",
       "empty": "Vacío",
       "emptyDrawer": "¡Tu Cajón está vacío!",
-
       "folderCount_one": "{{count}} carpeta",
       "folderCount_other": "{{count}} carpetas",
       "itemCount_one": "{{count}} elemento",
       "itemCount_other": "{{count}} elementos",
-
       "emptyFolder": "Esta carpeta está vacía. ¡Es hora de llenarla!",
       "addFolder": "Añadir carpeta",
       "folderNamePlaceholder": "Nombre de la carpeta...",
       "importedDrawerDefaultName": "Cajón importado",
-
       "dropToImport": "Arrastra aquí un archivo para importarlo a tu Cajón",
-
       "Actions": {
          "addFolderTitle": "Crear una carpeta",
          "createFolder": "Crear carpeta",
-
          "addToCharacter": "Añadir al personaje activo",
-
          "selectFolder": "Seleccionar destino",
          "selectThisFolder": "Mover aquí",
          "selectRoot": "Mover a la raíz",
-
          "nameItemTitle": "¿Qué nombre quieres ponerle a este elemento?",
-
          "rename": "Renombrar",
          "renameFolderTitle": "Estás renombrando esta carpeta.",
          "renameItemTitle": "Estás renombrando este elemento.",
          "saveChanges": "Guardar",
-
          "delete": "Eliminar",
          "deleteFolderTitle": "¿Seguro que quieres eliminar esta carpeta?",
          "deleteItemTitle": "¿Seguro que quieres eliminar este elemento?",
          "deleteFolderMessage": "La carpeta y todo lo que contiene se eliminarán para siempre.",
          "deleteItemMessage": "El elemento se eliminará para siempre.",
          "confirmDelete": "Eliminar",
-
-         "move": "Mover",
          "moveVerb": "Moviendo",
          "moveHere": "Mover aquí",
          "moveFolderTitle": "Moviendo una carpeta por el Cajón",
          "moveItemTitle": "Moviendo un elemento por el Cajón",
          "moveToRoot": "Ir a la raíz del Cajón",
          "moveUp": "Atrás",
-
          "export": "Exportar",
          "exportFull": "Exporta tu Cajón",
          "import": "Importa un archivo a la carpeta actual",
-         "cancel": "Cancelar",
          "confirm": "Confirmar",
-
          "defaultNames": {
-            "characterCard": "Tarjeta de personaje",
             "fullSheet": "Hoja de personaje completa",
             "characterTheme": "Tarjeta de tema",
             "groupTheme": "Tarjeta de tema de grupo",
@@ -203,14 +172,11 @@
             "defaultItem": "Nuevo elemento"
          }
       },
-
       "Types": {
          "unavailablePreview": "La vista previa no está disponible para este elemento.",
-
          "LEGENDS": "Legend in the Mist",
          "OTHERSCAPE": "Otherscape",
          "CITY_OF_MIST": "City of Mist",
-
          "LEGENDS_FULL_CHARACTER_SHEET": "Hoja de personaje",
          "LEGENDS_CHARACTER_CARD": "Tarjeta de héroe",
          "LEGENDS_CHARACTER_THEME": "Tema de héroe",
@@ -218,7 +184,6 @@
          "LEGENDS_STATUS_TRACKER": "Marcador de estado",
          "LEGENDS_STORY_TAG_TRACKER": "Marcador de etiqueta narrativa",
          "LEGENDS_STORY_THEME_TRACKER": "Marcador de tema narrativo",
-
          "CITY_OF_MIST_FULL_CHARACTER_SHEET": "Hoja de personaje",
          "CITY_OF_MIST_CHARACTER_CARD": "Tarjeta de grieta",
          "CITY_OF_MIST_CHARACTER_THEME": "Tema de grieta",
@@ -226,7 +191,6 @@
          "CITY_OF_MIST_STATUS_TRACKER": "Marcador de estado",
          "CITY_OF_MIST_STORY_TAG_TRACKER": "Marcador de etiqueta narrativa",
          "CITY_OF_MIST_STORY_THEME_TRACKER": "Marcador de tema narrativo",
-
          "OTHERSCAPE_FULL_CHARACTER_SHEET": "Hoja de personaje",
          "OTHERSCAPE_CHARACTER_CARD": "Tarjeta de mercenario",
          "OTHERSCAPE_CHARACTER_THEME": "Tema de mercenario",
@@ -235,25 +199,17 @@
          "OTHERSCAPE_STATUS_TRACKER": "Marcador de estado",
          "OTHERSCAPE_STORY_TAG_TRACKER": "Marcador de etiqueta narrativa",
          "OTHERSCAPE_STORY_THEME_TRACKER": "Marcador de tema narrativo",
-
          "cards": "Tarjeta(s)",
          "trackers": "Marcador(es)"
       }
    },
    "Cards": {
-      "heroCard": "Tarjeta de héroe",
       "riftCard": "Tarjeta de grieta",
-      "mercCard": "Tarjeta de mercenario",
-      "characterCard": "Tarjeta de personaje",
       "fellowshipCard": "Compañía",
       "crewCard": "Banda",
       "otherscapeCrewCard": "Banda",
-      "otherscapeLoadoutCard": "Equipamiento",
-      "themeCard": "Tema"
+      "otherscapeLoadoutCard": "Equipamiento"
    },
-
-
-
    "CreateCardDialog": {
       "title": "Crear una tarjeta de tema",
       "editTitle": "Editar una tarjeta de tema",
@@ -261,7 +217,6 @@
       "editDescription": "Usa las siguientes opciones para modificar el libreto de tema o el tipo de tema de tu tarjeta de tema. Puedes crear un libreto de tema personalizado si lo deseas.",
       "createButton": "Confirmar tarjeta",
       "updateButton": "Confirmar modificaciones",
-
       "selectPlaceholder": "Tipo de tarjeta...",
       "cardTypeLabel": "Tipo de tarjeta",
       "themeCard": "Tema de héroe",
@@ -270,67 +225,49 @@
       "crewCard": "Tema de banda",
       "otherscapeThemeCard": "Tema de mercenario",
       "otherscapeCrewCard": "Tema de banda",
-      "otherscapeLoadoutCard": "Tema de equipamiento",
-
       "selectThemeTypePlaceholder": "Selecciona un tipo de tema...",
       "themeTypeLabel": "Tipo de tema",
-
       "selectThemebookPlaceholder": "Selecciona o escribe un libreto de tema...",
       "searchThemebookPlaceholder": "Busca o crea un libreto de tema...",
       "noThemebookFound": "Libreto de tema no encontrado entre los predeterminados. ¡Aún puedes usarlo como libreto de tema personalizado!",
       "themebookLabel": "Libreto de tema",
-
       "startingTagsLabel": "Etiquetas iniciales",
       "powerTagCountLabel": "Etiquetas de poder",
       "weaknessTagCountLabel": "Etiquetas de debilidad",
-      "gearTagCountLabel": "Objetos de equipo",
-      "flawTagCountLabel": "Defectos",
-      "wildcardSlotsLabel": "Espacios comodín"
+      "gearTagCountLabel": "Objetos de equipo"
    },
    "SettingsDialog": {
       "title": "Ajustes de la aplicación",
       "description": "Aquí encontrarás ajustes configurables para la aplicación en general, como el tema de color o el modo claro y oscuro.",
-
       "language": "Idioma",
       "selectLanguagePlaceholder": "Selecciona un idioma",
       "selectThemePlaceholder": "Selecciona un tema",
-
       "accentColor": "Paleta de tema",
       "appearance": "Modo de tema",
-
       "light": "Modo claro",
       "dark": "Modo oscuro",
-
       "cardView": {
          "title": "Giro de tarjetas",
          "sideBySide": "Paralelo",
          "flipping": "Giro activado"
       },
-
       "trackerEdit": {
          "title": "Forzar marcadores en Modo Edición",
          "unlocked": "Libre",
          "locked": "Forzado"
       },
-
       "mobileFABMode": {
          "title": "Modo de interfaz móvil",
-         "bottomTabs": "Pestañas inferiores",
-         "fab": "Botones flotantes"
+         "bottomTabs": "Pestañas inferiores"
       },
-
       "mobileNavigation": {
          "title": "Navegación móvil",
          "bottomTabs": "Pestañas inferiores",
          "fab": "Botón flotante"
       },
-
       "mobileHandedness": {
-         "title": "Lado de la interfaz móvil",
-         "left": "Izquierda",
-         "right": "Derecha"
+         "title": "Lado de la interfaz móvil"
       },
-
       "gestureHints": {
          "title": "Consejos de gestos",
          "shown": "Mostrar",
@@ -338,43 +275,33 @@
          "replayLabel": "Restablecer los consejos de gestos",
          "replayButton": "Mostrar de nuevo los consejos de gestos"
       },
-
       "toolbeltMode": {
          "title": "Modo cinturón de herramientas",
          "sidePanel": "Panel lateral",
          "fab": "Botón flotante"
       },
-
       "tutorial": "Tutorial de la aplicación",
       "tutorialButton": "Iniciar el tutorial",
-
       "onboarding": "Configuración inicial",
       "onboardingButton": "Reiniciar la introducción",
-
       "migration": {
          "label": "Migrar datos",
          "button": "Migrar archivos de personaje antiguos"
       },
-
       "dangerZone": {
          "title": "Zona peligrosa",
          "description": "Estas opciones son destructivas; úsalas bajo tu propia responsabilidad. Se te pedirá confirmación.",
-
-
          "deleteDrawerButton": "Eliminar Cajón",
          "deleteDrawerDialog": {
             "title": "Eliminar Cajón completo",
             "description": "Estás a punto de eliminar por completo tu cajón, incluyendo todos los elementos y carpetas que contiene. ¿Estás seguro de que eso es lo que quieres hacer?",
-
             "confirm": "Sí, eliminar mi Cajón"
          },
-
          "resetButton": "Reinicio completo de la aplicación",
          "resetDialog": {
             "title": "Reinicio completo de la aplicación",
             "description": "Estás a punto de reiniciar por completo la aplicación, eliminando todos tus datos en el proceso. ¿Estás absolutamente seguro de que eso es lo que quieres hacer?",
             "confirmationPrompt": "Para continuar, escribe lo siguiente en el cuadro de abajo:",
-
             "cancel": "No, quiero conservar mis datos",
             "confirm": "Sí, eliminar todo"
          }
@@ -400,15 +327,11 @@
    "PatchNotesDialog": {
       "title": "Notas del parche",
       "description": "En esta ventana verás las notas del parche de las versiones más recientes.",
-
       "versionLabel": "Versión",
       "selectVersion": "Selecciona una versión...",
-
       "pageCounterLabel": "Página",
-
       "previousNote": "Notas del parche anterior",
       "nextNote": "Notas del parche siguiente",
-
       "close": "Cerrar"
    },
    "MigrationDialog": {
@@ -416,13 +339,11 @@
       "removeFile": "Quitar archivo",
       "description": "Aquí puedes migrar archivos de personaje antiguos de la versión alfa de Characters of the Mist a la nueva versión. El migrador colocará los archivos actualizados en la raíz de tu Cajón.",
       "thankYou": "Si estás aquí, lo más probable es que usaras la versión alfa de Characters of the Mist. Me gustaría darte las gracias personalmente por usar mi aplicación, a pesar de sus muchos defectos. Con mucho cariño,",
-
       "dropzone": {
          "inactive": "Esperando un archivo...",
          "active": "¡Archivo detectado!",
          "fileTypes": "archivos .json antiguos"
       },
-
       "cancel": "Cerrar migrador",
       "migrateButton": "Iniciar migración"
    },
@@ -431,9 +352,7 @@
       "info": "Se encontraron datos antiguos de la vieja versión alfa de Characters of the Mist en el almacenamiento de tu navegador.",
       "description": "La aplicación va a eliminar estos datos como medida de limpieza. Antes de eso, puedes descargar tus datos antiguos para usarlos con las herramientas de migración si quieres.",
       "warning": "Si pulsas Descartar, los datos se eliminarán y se perderán para siempre. No podrás deshacerlo. Al pulsar Descargar se iniciará la descarga de los datos antiguos en el navegador.",
-
       "confirmationLabel": "Si deseas descartar tus datos, escribe el siguiente texto de confirmación en el campo de abajo:",
-
       "dismissButton": "Descartar",
       "downloadButton": "Descargar datos antiguos"
    },
@@ -471,9 +390,6 @@
       "startTutorialButton": "Iniciar tutorial",
       "patchNotesButton": "Ver notas del parche"
    },
-
-
-
    "CommandPalette": {
       "placeholder_1": "Tus deseos son órdenes...",
       "placeholder_2": "Prepara tu encantamiento...",
@@ -500,79 +416,58 @@
       "placeholder_23": "Señor, esto es un Wendy's...",
       "placeholder_24": "Que el mismísimo Zeus me fulmine si estoy minti-...",
       "placeholder_25": "Este tiene que ser el peor poli que he visto en mi vida...",
-
       "placeholders": {
          "renameCharacter": "Nombre del nuevo personaje...",
-
-
          "newCardName": "Etiqueta principal de la nueva tarjeta...",
          "themeType": "Selecciona el tipo de tu tema...",
          "themebook": "Selecciona un libreto de tema o escribe uno personalizado...",
          "mainTagName": "Escribe tu etiqueta principal...",
          "powerTags": "Número de etiquetas de poder...",
          "weaknessTags": "Número de etiquetas de debilidad...",
-
-
          "trackerType": "Selecciona un tipo de marcador...",
          "trackerName": "Introduce el nombre del marcador..."
       },
-
       "actions": {
          "renameTo": "Renombrar a: «{{name}}»",
          "createWith": "Crear con: «{{name}}»",
          "setPowerTags": "Establecer etiquetas de poder: {{count}}",
          "setWeaknessTags": "Establecer etiquetas de debilidad: {{count}}"
       },
-
       "themes": {
          "theme-neutral": "Neutral",
          "theme-legends": "Legend in the Mist",
          "theme-otherscape": "Metro: Otherscape",
          "theme-city-of-mist": "City of Mist"
       },
-
       "empty": "No se encontró ningún comando.",
       "label": "Paleta de comandos",
-
       "groups": {
-         "general": "General",
          "settings": "Ajustes",
          "export": "Exportar",
-         "character": "Hoja de personaje",
          "creation": "Crear",
-
-
          "themePalette": "Elige una nueva paleta de colores",
-
          "chooseThemeType": "Elige un tipo de tema",
          "chooseThemebook": "Elige un libreto de tema"
       },
-
       "commands": {
          "toggleEdit": "Alternar: Modo Edición",
          "toggleDrawer": "Alternar: Cajón",
          "openSettings": "Abrir: Ajustes",
-
          "setThemeModeLight": "Activar: Modo Claro",
          "setThemeModeDark": "Activar: Modo Oscuro",
          "setThemePalette": "Activar: Paleta de colores: [...]",
          "viewFlipping": "Activar: Vista de tarjeta: Giro",
          "viewSideBySide": "Activar: Vista de tarjeta: Paralelo",
-
          "exportCharacter": "Exportar: Hoja de personaje",
          "exportDrawer": "Exportar: Cajón",
-
          "renameCharacter": "Renombrar: Personaje",
          "resetCharacter": "Reiniciar: Personaje",
-
          "createCard": "Crear: Tarjeta de tema",
          "createTracker": "Crear: Marcador",
-
          "cardTypeCharacter": "Tipo: Tema de personaje",
          "cardTypeFellowship": "Tipo: Tema de compañía",
          "cardTypeCrew": "Tipo: Tema de banda",
          "cardTypeLoadout": "Tipo: Tema de equipamiento",
-
          "trackerTypeStatus": "Tipo: Marcador de estado",
          "trackerTypeStoryTag": "Tipo: Marcador de etiqueta narrativa"
       }
@@ -580,197 +475,121 @@
    "Tutorial": {
       "welcome_title": "¡Bienvenido a Characters of the Mist!",
       "welcome_content": "Este breve recorrido te guiará por las funciones principales. Puedes salir en cualquier momento pulsando la «X» de la parte superior derecha de esta pequeña ventana, o haciendo clic fuera de ella. Si sales por accidente, puedes volver a iniciar el tutorial desde el menú de Ajustes.",
-
       "mainMenuGames_title": "Elige tu juego",
       "mainMenuGames_content": "Characters of the Mist es compatible con tres sistemas de juego: Legend in the Mist, City of Mist y Otherscape. Puedes crear personajes para cualquiera de estos sistemas.",
-
       "mainMenuLegends_title": "Legend in the Mist",
       "mainMenuLegends_content": "Para este tutorial, crearemos un personaje de Legend in the Mist. ¡Haz clic en esta tarjeta para seleccionarla y luego procederemos a crear tu primer personaje!",
-
       "mainMenuCreate_title": "Crea tu personaje",
       "mainMenuCreate_content": "Haz clic en este botón para crear una nueva hoja de personaje de Legend in the Mist. Esto te llevará a la interfaz principal de la hoja de personaje.",
-
       "sidebar_title": "Barra lateral principal",
       "sidebar_content": "Esta es la barra lateral principal. Contiene acciones globales, como alternar el modo edición, abrir el cajón y acceder a los ajustes.",
-
       "playArea_title": "Hoja de personaje",
       "playArea_content": "Esto es lo que Characters of the Mist puede llamar tu «Área de juego» u «Hoja de personaje». Contiene tus marcadores y tarjetas. Todos se pueden arrastrar, lo que te permite reordenarlos o guardarlos en el Cajón. Más sobre eso en un momento. Puedes soltar un archivo externo aquí para importarlo.",
-
       "characterName_title": "Nombre del personaje",
       "characterName_content": "Puedes editar el nombre de tu personaje aquí en cualquier momento. Tus cambios se guardan automáticamente.",
-
       "trackers_title": "Marcadores",
       "trackers_content": "Este área contiene tus marcadores de estado y de etiqueta narrativa, junto con tus marcadores de tema narrativo. Puedes añadir nuevos cuando estés en «Modo Edición». Cada marcador tiene una pestaña deslizante que aparece al pasar el ratón por encima. Con ella puedes moverlos o exportarlos.",
-
       "cards_title": "Tarjetas",
       "cards_content": "Este área contiene las tarjetas de tu personaje, ya sea una tarjeta de tema o una tarjeta de personaje. Cada tarjeta, al igual que los marcadores, tiene una pestaña deslizante que aparece al pasar el ratón por encima. Encontrarás un asidero de arrastre para moverlas y unos cuantos botones para girar, eliminar (en Modo Edición) o exportar la tarjeta.",
-
       "menuCollapse_title": "Colapsar",
       "menuCollapse_content": "Este botón te permite colapsar la barra lateral en una versión mucho más fina, con solo iconos en los botones.",
-
       "menuUndoRedo_title": "Deshacer/Rehacer",
       "menuUndoRedo_content": "Estos botones te permiten deshacer y rehacer acciones en tu hoja de personaje. Si tu última acción fue en la hoja de personaje, también puedes usar CTRL+Z y CTRL+Y.",
-
       "menuEditDrawer_title": "Modo Edición y Cajón",
       "menuEditDrawer_content": "Estos dos botones te permiten activar el Modo Edición o abrir tu Cajón. Volveremos a ellos en un momento.",
-
       "saveCharacter_title": "Guardar un personaje",
       "saveCharacter_content": "Este botón te permite guardar tu personaje actual como un archivo dentro de tu Cajón; más sobre eso en un momento.",
-
       "exportCharacter_title": "Exportar un personaje",
       "exportCharacter_content": "Este botón te permite exportar tu personaje actual, indicando a tu navegador que descargue un archivo.",
-
       "importCharacter_title": "Importar un personaje",
       "importCharacter_content": "Este botón te pide que elijas un archivo. Si le das un archivo de personaje de Characters of the Mist, cargará ese archivo en la aplicación como tu nuevo personaje activo.",
-
       "importComponent_title": "Importar un componente",
       "importComponent_content": "Este botón también te pide que elijas un archivo. Si le das un archivo de tarjeta o marcador de Characters of the Mist, lo cargará y lo añadirá a tu personaje actual.",
-
       "resetCharacter_title": "Reiniciar tu personaje",
       "resetCharacter_content": "Este botón elimina por completo tu personaje activo, convirtiendo tu hoja de personaje en una hoja en blanco para empezar de cero.",
-
       "unloadCharacter_title": "Limpiar personaje",
       "unloadCharacter_content": "Este botón limpia tu personaje activo, eliminándolo y borrando todo el historial de acciones de la función de deshacer/rehacer. Esto te devuelve al menú principal con una aplicación limpia y sin ningún personaje cargado de fondo.",
-
       "settings_title": "Ajustes",
       "settings_content": "Este botón abre el menú de Ajustes, donde puedes acceder a funciones como elegir la paleta de color de tu aplicación, el modo claro u oscuro o reiniciar todos tus datos. Aquí también encontrarás la herramienta de Migración, que te permite migrar los datos antiguos de Characters of the Mist a esta nueva versión.",
-
       "appInfo_title": "Información de la aplicación",
       "appInfo_content": "Este botón abre un menú de información que contiene una sección general «Acerca de» de esta aplicación, información de licencia y créditos.",
-
       "patchNotes_title": "Notas del parche",
       "patchNotes_content": "Este botón abre un menú donde puedes consultar el historial de notas del parche de la aplicación.",
-
       "editMode_title": "Modo Edición",
       "editMode_content": "Este botón te permite entrar en «Modo Edición». Esto te permite añadir, eliminar y modificar tarjetas y marcadores.",
-
       "playMode_title": "Modo Juego",
       "playMode_content": "Cuando el Modo Edición está activado, el botón ahora te permite volver al «Modo Juego», una visualización ligera de tus tarjetas y marcadores. En Modo Juego, solo están disponibles las funcionalidades básicas para evitar saturar la interfaz.",
-
       "addStatus_title": "Añadir estado",
       "addStatus_content": "En Modo Edición, ahora puedes ver un botón para añadir un nuevo marcador de estado.",
-
       "addStoryTag_title": "Añadir etiqueta narrativa",
       "addStoryTag_content": "Del mismo modo, ahora puedes ver un botón para añadir un nuevo marcador de etiqueta narrativa. Puedes evolucionar una etiqueta narrativa a un tema narrativo con un botón de la barra de herramientas que aparece al pasar el ratón por encima del marcador.",
-
       "addCard_title": "Añadir nuevas tarjetas",
       "addCard_content": "Además, este botón ha aparecido ahora en tu lista de tarjetas, lo que te permite crear una tarjeta.",
-
       "openAddCard_title": "Abrir el creador de tarjetas",
       "openAddCard_content": "Ahora vamos a ver cómo funciona la creación de una tarjeta.",
-
       "creationDialog_title": "Creación de tarjetas",
       "creationDialog_content": "Este diálogo te permite definir las propiedades de la nueva tarjeta.",
-
       "menuDrawer_title": "Abrir/Cerrar el Cajón",
       "menuDrawer_content": "Este botón abre el Cajón, donde se almacenan todos tus personajes, temas y elementos. Vamos a echar un vistazo al Cajón.",
-
       "drawer_title": "El Cajón",
       "drawer_content": "Este es tu Cajón, un potente sistema de almacenamiento que puedes usar para guardar, hacer copias de seguridad y organizar elementos individuales como tarjetas y marcadores, pero también hojas de personaje completas. Puedes soltar un archivo externo aquí para importarlo.",
-
       "drawerUndoRedo_title": "Deshacer/Rehacer",
       "drawerUndoRedo_content": "Al igual que en el menú lateral, el Cajón tiene un par de botones de deshacer/rehacer. Estos botones te permiten deshacer o rehacer acciones dentro del Cajón. Igual que con la hoja de personaje, si tu última acción fue en el Cajón, puedes usar CTRL+Z y CTRL+Y.",
-
       "drawerRichView_title": "Vista enriquecida",
       "drawerRichView_content": "De forma predeterminada, el Cajón muestra los elementos con lo que Characters of the Mist llama «Vista enriquecida». Esto es esencialmente una vista previa de la cabecera de la tarjeta, o del marcador completo. Esto puede ocupar mucho espacio e impedirte ver muchos elementos a la vez, así que puedes activarlo y desactivarlo aquí.",
-
       "drawerFolders_title": "Carpetas",
       "drawerFolders_content": "Aquí es donde están tus carpetas. Encontrarás un botón «Añadir carpeta» aquí, que te permitirá crear una nueva carpeta en tu ubicación actual. Las carpetas tienen un menú contextual al que puedes acceder pulsando los «...» de la derecha. ¡Puedes arrastrar las carpetas con el marcador de arrastre de la izquierda!",
-
       "drawerItems_title": "Elementos",
       "drawerItems_content": "Aquí es donde se encuentran tus elementos. Los elementos son hojas de personaje, tarjetas o marcadores. Puedes añadir elementos guardando tu personaje, o arrastrándolos y soltándolos desde tu hoja de personaje al Cajón. Cada elemento también tiene un menú contextual con varias opciones, y se puede arrastrar.",
-
       "drawerImport_title": "Importar un archivo",
       "drawerImport_content": "Puedes importar un archivo externo a tu Cajón. El archivo tiene que ser un archivo válido de Characters of the Mist, es decir, un Cajón, una hoja de personaje, una tarjeta, una carpeta o un marcador.",
-
       "drawerExport_title": "Exportar tu Cajón",
       "drawerExport_content": "Este botón te permite exportar tu Cajón COMPLETO como un archivo.",
-
       "commandPalette_title": "Paleta de comandos",
       "commandPalette_content": "Aunque este tutorial no se extenderá demasiado sobre ello, Characters of the Mist ofrece una potente Paleta de comandos que te permite usar las funciones de la aplicación con nada más que tu teclado. Para usarla, simplemente pulsa CTRL+K. Ten en cuenta que esta función está orientada a usuarios avanzados.",
-
       "closingWords_title": "El final",
       "closingWords_content": "Aquí termina este breve tutorial. Siéntete libre de explorar funciones más complejas, y si encuentras un error, un problema o necesitas cualquier tipo de ayuda, no dudes en contactarme en el Discord oficial de Tools of the Mist. Puedes encontrar el enlace en la sección «Información de la aplicación». ¡Muchísimas gracias por usar Characters of the Mist!"
    },
-
-
-
    "ThemeCard": {
       "fellowshipTitle": "Tema de compañía",
       "crewThemeTitle": "Tema de banda",
-
-      "placeholderName": "Escribe tu etiqueta principal...",
       "mainTagPlaceholder": "Escribe tu etiqueta principal...",
-      "noName": "SIN NOMBRE",
-      "power": "PODER",
-      "weakness": "DEBILIDAD",
-
       "questTitle": "Misión",
       "noQuest": "TEXTO DE MISIÓN VACÍO",
       "questPlaceholder": "Escribe aquí el texto de tu misión...",
-
       "mysteryTitle": "Misterio",
       "noMystery": "TEXTO DE MISTERIO VACÍO",
       "mysteryPlaceholder": "Escribe aquí el texto de tu misterio...",
-
-      "identityTitle": "Identidad",
-      "noIdentity": "TEXTO DE IDENTIDAD VACÍO",
-      "identityPlaceholder": "Escribe aquí el texto de tu identidad...",
-
       "mythos": "Mythos",
       "logos": "Logos",
       "attention": "Atención",
       "fade": "Desvanecimiento",
       "crack": "Fisura",
-
       "addPowerTag": "Añadir etiqueta de poder",
-      "addWeaknessTag": "Añadir etiqueta de debilidad",
-
-      "improvements": "Mejoras especiales",
-      "addImprovement": "Añadir mejora"
+      "addWeaknessTag": "Añadir etiqueta de debilidad"
    },
    "OtherscapeThemeCard": {
       "crewThemeTitle": "Tema de banda",
-      "loadoutTitle": "Tema de equipamiento",
-
-      "placeholderName": "Escribe tu etiqueta principal...",
-      "noName": "SIN NOMBRE",
-      "power": "PODER",
-      "weakness": "DEBILIDAD",
       "flaw": "DEFECTO",
-
       "ritualTitle": "Ritual",
       "noRitual": "TEXTO DE RITUAL VACÍO",
       "ritualPlaceholder": "Escribe aquí el texto de tu ritual...",
-
-      "identityTitle": "Identidad",
-      "noIdentity": "TEXTO DE IDENTIDAD VACÍO",
-      "identityPlaceholder": "Escribe aquí el texto de tu identidad...",
-
       "itchTitle": "Necesidad",
       "noItch": "TEXTO DE NECESIDAD VACÍO",
       "itchPlaceholder": "Escribe aquí el texto de tu necesidad...",
-
       "descriptionTitle": "Descripción",
       "noDescription": "DESCRIPCIÓN VACÍA",
       "descriptionPlaceholder": "Escribe aquí la descripción de tu equipamiento...",
-
       "attention": "Atención",
       "fade": "Desvanecimiento",
       "crack": "Fisura",
       "upgrade": "Mejora",
       "decay": "Declive",
-
-      "improvements": "Mejoras especiales",
-      "addImprovement": "Añadir mejora",
-
       "gearTitle": "EQUIPO",
       "addGearTag": "Añadir equipo",
-      "flawsTitle": "Defectos",
       "addFlawTag": "Añadir defecto",
       "loadedGear": "Equipo activo",
       "unloadedGear": "Equipo inactivo",
-      "wildcardSlots": "Espacios comodín",
       "noGear": "Sin equipo"
    },
    "TagItem": {
@@ -798,11 +617,7 @@
       "noName": "SIN NOMBRE DE GRIETA",
       "Crew": {
          "title": "Banda",
-         "name": "Nombre",
-         "help": "Ayuda",
-         "hurt": "Hiere",
-         "noName": "SIN NOMBRE",
-         "addCrewMember": "Añadir miembro de la banda"
+         "hurt": "Hiere"
       },
       "buildup": "ACUMULACIÓN",
       "Nemesis": {
@@ -811,7 +626,6 @@
       }
    },
    "OtherscapeCharacterCard": {
-      "title": "Tarjeta de mercenario",
       "characterNamePlaceholder": "Nombre del mercenario...",
       "noName": "SIN NOMBRE DE PERSONAJE",
       "essence": "Esencia",
@@ -832,30 +646,16 @@
          }
       },
       "relationships": "Relaciones de banda",
-      "addRelationship": "Añadir miembro de la banda",
       "companionPlaceholder": "Miembro",
-      "relationshipPlaceholder": "Relación",
-      "relationshipCompanionNoName": "SIN NOMBRE",
-      "relationshipRelationNoName": "SIN RELACIÓN",
-      "Specials": {
-         "title": "Especiales",
-         "addSpecial": "Añadir especial"
-      }
+      "relationshipRelationNoName": "SIN RELACIÓN"
    },
    "HeroCard": {
-      "title": "Tarjeta de héroe",
       "noName": "SIN NOMBRE DE HÉROE",
       "characterNamePlaceholder": "Nombre del personaje...",
-
       "relationships": "Relaciones de compañía",
       "addRelationship": "Añadir relación",
-      "companion": "Compañero",
       "companionPlaceholder": "Camarada",
-      "relationship": "Relación",
-      "relationshipCompanionNoName": "SIN NOMBRE",
-      "relationshipPlaceholder": "Relación",
       "relationshipRelationNoName": "SIN ETIQUETA",
-
       "quintessences": "Quintaesencias",
       "addQuintessence": "Añadir quintaesencia"
    },
@@ -882,7 +682,6 @@
       "noName": "SIN NÉMESIS"
    },
    "Trackers": {
-      "addStatus": "Añadir estado",
       "addStoryTag": "Añadir etiqueta narrativa",
       "addStoryTheme": "Añadir tema narrativo",
       "statusPlaceholder": "Rellena tu estado...",
@@ -890,34 +689,24 @@
       "storyTagPlaceholder": "Rellena tu etiqueta narrativa...",
       "storyTagNoName": "SIN ETIQUETA NARRATIVA"
    },
-
-
-
    "LegendsData": {
       "themebook": {
          "circumstance": "Circunstancia",
          "devotion": "Devoción",
          "past": "Pasado",
          "people": "Gente",
-         "personality": "Personalidad",
          "skillOrTrade": "Habilidad u oficio",
          "trait": "Rasgo",
-
          "duty": "Deber",
          "influence": "Influencia",
          "knowledge": "Conocimiento",
          "prodigiousAbility": "Habilidad prodigiosa",
-         "relic": "Reliquia",
          "uncannyBeing": "Ser inquietante",
-
          "destiny": "Destino",
          "dominion": "Dominio",
          "mastery": "Maestría",
          "monstrosity": "Monstruosidad",
-
-         "companion": "Compañero",
-         "magic": "Magia",
-         "possessions": "Posesiones"
+         "magic": "Magia"
       }
    },
    "CityData": {
@@ -927,30 +716,23 @@
          "divination": "Adivinación",
          "expression": "Expresión",
          "mobility": "Movilidad",
-         "relic": "Reliquia",
          "subversion": "Subversión",
          "training": "Entrenamiento",
-
          "definingEvent": "Evento decisivo",
          "definingRelationship": "Relación decisiva",
          "mission": "Misión",
-         "personality": "Personalidad",
          "occupation": "Ocupación"
       }
    },
    "OtherscapeData": {
       "themebook": {
          "artifact": "Artefacto",
-         "esoterica": "Esotérica",
          "exposure": "Exposición",
-
          "affiliation": "Afiliación",
          "assets": "Recursos",
          "expertise": "Pericia",
          "horizon": "Horizonte",
-         "personality": "Personalidad",
          "troubledPast": "Pasado turbulento",
-
          "augmentation": "Aumento",
          "cuttingEdge": "Vanguardia"
       }
@@ -959,23 +741,17 @@
       "Origin": "Origen",
       "Adventure": "Aventura",
       "Greatness": "Grandeza",
-
       "Logos": "Logos",
       "Mythos": "Mythos",
-
       "Self": "Yo",
       "Noise": "Ruido"
    },
-
-
-
    "MobileCharacterSheet": {
       "noCharacter": "No hay ningún personaje cargado",
       "loadCharacterPrompt": "Carga un personaje desde el cajón o crea uno nuevo para empezar.",
       "drawerHint": "Toca la pestaña Cajón de abajo para explorar tus personajes guardados.",
       "trackersTab": "Marcadores",
       "cardsTab": "Tarjetas",
-      "statuses": "Estados",
       "storyTags": "Etiquetas narrativas",
       "storyThemes": "Temas narrativos",
       "reorderCards": "Reordenar tarjetas"
@@ -985,19 +761,12 @@
       "cardCounter": "Tarjeta {{current}} de {{total}}"
    },
    "MobileBottomTabs": {
-      "sheet": "Hoja",
-      "drawer": "Cajón",
-      "menu": "Menú",
       "edit": "Editar",
       "toolbelt": "Herramientas"
    },
    "MobileFAB": {
       "edit": "Modo Edición",
-      "drawer": "Cajón",
-      "sheet": "Hoja",
-      "menu": "Menú",
-      "open": "Abrir menú",
-      "close": "Cerrar"
+      "open": "Abrir menú"
    },
    "Toolbelt": {
       "title": "Cinturón de herramientas",
@@ -1033,7 +802,6 @@
       "confirm": "Guardar"
    },
    "MobileMenu": {
-      "title": "Menú",
       "description": "Accede a los ajustes y acciones de la aplicación",
       "settings": "Ajustes",
       "info": "Acerca de",
@@ -1069,8 +837,7 @@
          "rightHanded": "Mano derecha",
          "navigation": "Estilo de interfaz",
          "navigationHint": "Elige cómo interactúas con la aplicación",
-         "bottomTabs": "Pestañas y paneles",
-         "floatingButton": "Botones flotantes"
+         "bottomTabs": "Pestañas y paneles"
       },
       "tips": {
          "title": "Consejos de gestos",
@@ -1087,9 +854,7 @@
          "tutorialReminder": "Puedes reiniciar el tutorial en cualquier momento desde los Ajustes"
       },
       "navigation": {
-         "back": "Atrás",
-         "next": "Siguiente",
-         "skip": "Omitir"
+         "back": "Atrás"
       }
    },
    "MobileTutorial": {
@@ -1186,6 +951,47 @@
       "moreOptions": "Más opciones",
       "done": "Hecho",
       "back": "Atrás",
-      "name": "Nombre"
+      "name": "Nombre",
+      "characterSheet": "Hoja de personaje",
+      "cancel": "Cancelar",
+      "move": "Mover",
+      "left": "Izquierda",
+      "right": "Derecha",
+      "drawer": "Cajón",
+      "help": "Ayuda",
+      "close": "Cerrar",
+      "theme": "Tema",
+      "characterCard": "Tarjeta de personaje",
+      "heroCard": "Tarjeta de héroe",
+      "mercCard": "Tarjeta de mercenario",
+      "loadoutTheme": "Tema de equipamiento",
+      "addStatus": "Añadir estado",
+      "addSpecial": "Añadir especial",
+      "specials": "Especiales",
+      "statuses": "Estados",
+      "flaws": "Defectos",
+      "wildcardSlots": "Espacios comodín",
+      "general": "General",
+      "floatingButtons": "Botones flotantes",
+      "next": "Siguiente",
+      "skip": "Omitir",
+      "writeYourMainTag": "Escribe tu etiqueta principal...",
+      "noName": "SIN NOMBRE",
+      "power": "PODER",
+      "weakness": "DEBILIDAD",
+      "identity": "Identidad",
+      "emptyIdentityText": "TEXTO DE IDENTIDAD VACÍO",
+      "writeYourIdentityText": "Escribe aquí el texto de tu identidad...",
+      "specialImprovements": "Mejoras especiales",
+      "addImprovement": "Añadir mejora",
+      "addCrewMember": "Añadir miembro de la banda",
+      "relation": "Relación",
+      "companion": "Compañero",
+      "personality": "Personalidad",
+      "relic": "Reliquia",
+      "possessions": "Posesiones",
+      "esoterica": "Esotérica",
+      "workspace": "Hoja",
+      "menu": "Menú"
    }
 }

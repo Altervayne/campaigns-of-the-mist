@@ -108,7 +108,7 @@ export function MobileTrackersSection({ character, areTrackersEditable, isEditin
 				{(character.trackers.statuses.length > 0 || areTrackersEditable) && (
 				<section>
 					<h3 className="text-sm font-semibold text-muted-foreground mb-2 text-center">
-						{t('MobileCharacterSheet.statuses')}
+						{t('Common.statuses')}
 					</h3>
 					<div className="flex flex-wrap justify-center gap-2">
 						<SortableContext items={statusIds} strategy={rectSortingStrategy}>
@@ -145,7 +145,7 @@ export function MobileTrackersSection({ character, areTrackersEditable, isEditin
 								)}
 							>
 								<PlusCircle className="mr-2 h-4 w-4" />
-								{t('Trackers.addStatus')}
+								{t('Common.addStatus')}
 							</Button>
 						)}
 					</div>

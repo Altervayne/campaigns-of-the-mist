@@ -62,7 +62,7 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
    return (
       <div className="flex flex-col gap-5">
          {/* Name. */}
-         <Field label={t('ChallengeCard.editor.name')}>
+         <Field label={t('Common.name')}>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t(`Cards.challenge.namePlaceholder.${details.game}`)} />
          </Field>
 
@@ -85,42 +85,42 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
 
          {/* Flavor. */}
          <Field label={t('ChallengeCard.editor.flavor')}>
-            <Textarea value={flavor} onChange={(event) => setFlavor(event.target.value)} placeholder={t('ChallengeCard.editor.flavorPlaceholder')} className="min-h-20 resize-none" />
+            <Textarea value={flavor} onChange={(event) => setFlavor(event.target.value)} placeholder={t('Common.whatThePlayersSee')} className="min-h-20 resize-none" />
             <MentionPreview text={flavor} />
          </Field>
 
          {/* Limits: the win-conditions. */}
          <ListSection
-            label={t('ChallengeCard.editor.limits')}
-            addLabel={t('ChallengeCard.editor.addLimit')}
+            label={t('Common.limits')}
+            addLabel={t('Common.addLimit')}
             onAdd={() => setLimits((current) => [...current, newStatus()])}
          >
             {limits.map((limit) => (
                <StatusRow
                   key={limit.id}
                   status={limit}
-                  namePlaceholder={t('ChallengeCard.editor.limitNamePlaceholder')}
+                  namePlaceholder={t('Common.eGBurn')}
                   onChange={(next) => setLimits((current) => current.map((entry) => (entry.id === limit.id ? next : entry)))}
                   onRemove={() => setLimits((current) => current.filter((entry) => entry.id !== limit.id))}
-                  removeLabel={t('ChallengeCard.editor.remove')}
+                  removeLabel={t('Common.remove')}
                />
             ))}
          </ListSection>
 
          {/* Statuses (name + tier). */}
          <ListSection
-            label={t('ChallengeCard.editor.statuses')}
-            addLabel={t('ChallengeCard.editor.addStatus')}
+            label={t('Common.statuses')}
+            addLabel={t('Common.addStatus')}
             onAdd={() => setStatuses((current) => [...current, newStatus()])}
          >
             {statuses.map((status) => (
                <StatusRow
                   key={status.id}
                   status={status}
-                  namePlaceholder={t('ChallengeCard.editor.statusNamePlaceholder')}
+                  namePlaceholder={t('Common.eGBloodied')}
                   onChange={(next) => setStatuses((current) => current.map((entry) => (entry.id === status.id ? next : entry)))}
                   onRemove={() => setStatuses((current) => current.filter((entry) => entry.id !== status.id))}
-                  removeLabel={t('ChallengeCard.editor.remove')}
+                  removeLabel={t('Common.remove')}
                />
             ))}
          </ListSection>
@@ -128,7 +128,7 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
          {/* Tags (name only). */}
          <ListSection
             label={t('ChallengeCard.editor.tags')}
-            addLabel={t('ChallengeCard.editor.addTag')}
+            addLabel={t('Common.addTag')}
             onAdd={() => setTags((current) => [...current, newTag()])}
          >
             {tags.map((tag) => (
@@ -136,10 +136,10 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
                   <Input
                      value={tag.name}
                      onChange={(event) => setTags((current) => current.map((entry) => (entry.id === tag.id ? { ...entry, name: event.target.value } : entry)))}
-                     placeholder={t('ChallengeCard.editor.tagNamePlaceholder')}
+                     placeholder={t('Common.eGFast')}
                      className="h-8 text-sm"
                   />
-                  <IconButton onClick={() => setTags((current) => current.filter((entry) => entry.id !== tag.id))} label={t('ChallengeCard.editor.remove')}><Trash2 className="h-4 w-4" /></IconButton>
+                  <IconButton onClick={() => setTags((current) => current.filter((entry) => entry.id !== tag.id))} label={t('Common.remove')}><Trash2 className="h-4 w-4" /></IconButton>
                </div>
             ))}
          </ListSection>
@@ -148,7 +148,7 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
          {isLegends && (
             <ListSection
                label={t('ChallengeCard.editor.mightyTags')}
-               addLabel={t('ChallengeCard.editor.addMightyTag')}
+               addLabel={t('Common.addMightyTag')}
                onAdd={() => setMightyTags((current) => [...current, newMightyTag()])}
             >
                {mightyTags.map((mightyTag) => (
@@ -164,8 +164,8 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
 
          {/* Specials: a bold name + rich body (markdown + mentions). */}
          <ListSection
-            label={t('ChallengeCard.editor.specials')}
-            addLabel={t('ChallengeCard.editor.addSpecial')}
+            label={t('Common.specials')}
+            addLabel={t('Common.addSpecial')}
             onAdd={() => setSpecials((current) => [...current, newSpecial()])}
          >
             {specials.map((special) => (
@@ -180,8 +180,8 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
 
          {/* Abilities: tag + flavor + nested consequences. */}
          <ListSection
-            label={t('ChallengeCard.editor.abilities')}
-            addLabel={t('ChallengeCard.editor.addAbility')}
+            label={t('Common.threatsConsequences')}
+            addLabel={t('Common.addThreat')}
             onAdd={() => setAbilities((current) => [...current, newAbility()])}
          >
             {abilities.map((ability) => (
@@ -195,7 +195,7 @@ export function ChallengeEditorForm({ card, onDone }: { card: CardData; onDone: 
          </ListSection>
 
          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onDone} className="cursor-pointer">{t('ChallengeCard.editor.cancel')}</Button>
+            <Button type="button" variant="outline" onClick={onDone} className="cursor-pointer">{t('Common.cancel')}</Button>
             <Button type="button" onClick={handleSave} className="cursor-pointer">{t('ChallengeCard.editor.save')}</Button>
          </DialogFooter>
       </div>

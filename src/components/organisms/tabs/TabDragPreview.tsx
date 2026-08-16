@@ -104,7 +104,7 @@ function NoteTabPreview({ tab }: { tab: OpenTab }) {
    const { t } = useTranslation();
    const instance = useMemo(() => getOrCreateNoteInstance(tab.id), [tab.id]);
    const title = useStore(instance, (state) => state.note?.title);
-   const label = title && title.trim().length > 0 ? title : t('Tabs.untitledNote');
+   const label = title && title.trim().length > 0 ? title : t('Common.untitledNote');
 
    return (
       <TabPreviewChip

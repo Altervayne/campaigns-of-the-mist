@@ -183,7 +183,7 @@ export function NavigatorPanel() {
    return (
       <motion.aside
          data-tutorial="navigator-panel"
-         aria-label={t('Navigator.title')}
+         aria-label={t('Common.navigator')}
          initial={{ width: 0 }}
          animate={{ width: '18rem' }}
          exit={{ width: 0 }}
@@ -195,7 +195,7 @@ export function NavigatorPanel() {
          {/* Header: the lighter `bg-card` chrome (the Sidebar's header treatment). */}
          <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-2.5">
             <Waypoints className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="text-sm font-semibold text-foreground">{t('Navigator.title')}</span>
+            <span className="text-sm font-semibold text-foreground">{t('Common.navigator')}</span>
             <span className="ml-auto text-xs tabular-nums text-muted-foreground">{showEmpty ? 0 : rows.length}</span>
             <button
                type="button"

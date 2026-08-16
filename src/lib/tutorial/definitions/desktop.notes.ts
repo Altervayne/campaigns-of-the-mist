@@ -36,14 +36,14 @@ export const DESKTOP_NOTES_TUTORIAL: TutorialDefinition = {
    id: 'desktop.notes',
    platform: 'desktop',
    system: 'notes',
-   titleKey: 'TutorialsDialog.tutorials.notes.title',
+   titleKey: 'Common.notes',
    teachKey: 'TutorialsDialog.tutorials.notes.teach',
    icon: NotebookPen,
    needsDemo: 'note',
    steps: [
       {
          id: 'welcome',
-         titleKey: 'Tutorial.notes.welcome_title',
+         titleKey: 'Common.notes',
          bodyKey: 'Tutorial.notes.welcome_body',
          placement: 'center',
          advance: { on: 'next-click' },
@@ -114,7 +114,7 @@ export const DESKTOP_NOTES_TUTORIAL: TutorialDefinition = {
          // The toolbar: type it or click it. Spotlight the whole row so the reader sees every control at once.
          id: 'toolbar',
          anchorKey: 'note-toolbar',
-         titleKey: 'Tutorial.notes.toolbar_title',
+         titleKey: 'Common.theToolbar',
          bodyKey: 'Tutorial.notes.toolbar_body',
          placement: 'bottom',
          advance: { on: 'next-click' },

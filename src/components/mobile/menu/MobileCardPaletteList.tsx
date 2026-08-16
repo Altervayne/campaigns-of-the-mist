@@ -177,7 +177,7 @@ export function MobileCardPaletteList({ game, onOpenEditor }: { game: CardPalett
                   {/* The Default is immutable, so it only Duplicates; customs also edit / rename / export / delete. */}
                   {row.isCustom && (
                      <DropdownMenuItem onClick={() => editPalette(row)} className="cursor-pointer">
-                        <Palette className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.themes.edit')}</span>
+                        <Palette className="mr-2 h-4 w-4" /><span>{t('Common.edit')}</span>
                      </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => duplicatePalette(row)} className="cursor-pointer">

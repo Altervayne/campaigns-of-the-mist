@@ -151,8 +151,8 @@ export function CardCreationForm({ game, mode, cardData, allowCharacterCard = fa
                      {game === 'LEGENDS' && <SelectItem value="GROUP_THEME">{t('CreateCardDialog.fellowshipCard')}</SelectItem>}
                      {game === 'CITY_OF_MIST' && <SelectItem value="GROUP_THEME">{t('CreateCardDialog.crewCard')}</SelectItem>}
                      {game === 'OTHERSCAPE' && <SelectItem value="GROUP_THEME">{t('CreateCardDialog.otherscapeCrewCard')}</SelectItem>}
-                     {game === 'OTHERSCAPE' && <SelectItem value="LOADOUT_THEME">{t('CreateCardDialog.otherscapeLoadoutCard')}</SelectItem>}
-                     {allowCharacterCard && <SelectItem value="CHARACTER_CARD">{game === 'OTHERSCAPE' ? t('CreateCardDialog.mercCard') : game === 'CITY_OF_MIST' ? t('CreateCardDialog.riftCard') : t('CreateCardDialog.heroCard')}</SelectItem>}
+                     {game === 'OTHERSCAPE' && <SelectItem value="LOADOUT_THEME">{t('Common.loadoutTheme')}</SelectItem>}
+                     {allowCharacterCard && <SelectItem value="CHARACTER_CARD">{game === 'OTHERSCAPE' ? t('Common.mercCard') : game === 'CITY_OF_MIST' ? t('CreateCardDialog.riftCard') : t('Common.heroCard')}</SelectItem>}
                   </SelectContent>
                </Select>
             </div>
@@ -231,12 +231,12 @@ export function CardCreationForm({ game, mode, cardData, allowCharacterCard = fa
                                           <Input id="power-tags" type="number" value={powerTagsCount} onChange={e => setPowerTagsCount(Number(e.target.value))} className="col-span-2" />
                                        </div>
                                        <div className="grid grid-cols-3 items-center gap-4">
-                                          <Label htmlFor="weakness-tags" className="text-right">{cardType === 'LOADOUT_THEME' ? t('CreateCardDialog.flawTagCountLabel') : t('CreateCardDialog.weaknessTagCountLabel')}</Label>
+                                          <Label htmlFor="weakness-tags" className="text-right">{cardType === 'LOADOUT_THEME' ? t('Common.flaws') : t('CreateCardDialog.weaknessTagCountLabel')}</Label>
                                           <Input id="weakness-tags" type="number" value={weaknessTagsCount} onChange={e => setWeaknessTagsCount(Number(e.target.value))} className="col-span-2" />
                                        </div>
                                        {cardType === 'LOADOUT_THEME' && (
                                           <div className="grid grid-cols-3 items-center gap-4">
-                                             <Label htmlFor="wildcard-slots" className="text-right">{t('CreateCardDialog.wildcardSlotsLabel')}</Label>
+                                             <Label htmlFor="wildcard-slots" className="text-right">{t('Common.wildcardSlots')}</Label>
                                              <Input id="wildcard-slots" type="number" value={wildcardSlots} onChange={e => setWildcardSlots(Number(e.target.value))} className="col-span-2" />
                                           </div>
                                        )}

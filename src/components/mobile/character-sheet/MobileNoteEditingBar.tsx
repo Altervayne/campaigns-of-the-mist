@@ -123,14 +123,14 @@ export function MobileNoteEditingBar({
                   <PanelTop className="h-5 w-5" />
                </EditingBarButton>
                {/* Context-aware, never greyed: in a link it opens the options sheet; otherwise it inserts a link. */}
-               <EditingBarButton label={linkCaret ? t('NoteView.mobile.linkChip') : t('NoteView.toolbar.insertLink')} onClick={onLinkChip}>
+               <EditingBarButton label={linkCaret ? t('Common.link') : t('NoteView.toolbar.insertLink')} onClick={onLinkChip}>
                   <Link className="h-5 w-5" />
                </EditingBarButton>
                <BarDivider />
                {/* Context-aware, never greyed: in a table it opens the slide-up; otherwise it inserts a starter
                    table (the slide-up then grows it). Hand-typing pipe rows on a phone is a non-starter. */}
                <EditingBarButton
-                  label={canOpenTable ? t('NoteView.mobile.tableChip') : t('NoteView.toolbar.insertTable')}
+                  label={canOpenTable ? t('Common.table') : t('NoteView.toolbar.insertTable')}
                   onClick={canOpenTable ? onOpenTable : () => insertTable(2, 2)}
                >
                   <Table className="h-5 w-5" />

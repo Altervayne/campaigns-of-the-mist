@@ -169,7 +169,7 @@ describe('MobileDrawerContextMenu special actions', () => {
       await act(async () => {});
 
       expect(screen.queryByText(ADD_TO_CHARACTER_ROW)).toBeNull();
-      expect(screen.getByText('Drawer.Actions.move')).toBeTruthy();
+      expect(screen.getByText('Common.move')).toBeTruthy();
       expect(screen.getByText('Drawer.Actions.export')).toBeTruthy();
    });
 });

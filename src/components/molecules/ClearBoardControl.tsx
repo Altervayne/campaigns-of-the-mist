@@ -60,7 +60,7 @@ function ClearBoardControlInner({ store, isCollapsed }: { store: BoardStore; isC
                   <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer">{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmCancelButton')}</AlertDialogCancel>
+                  <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={handleClear}>{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>

@@ -125,13 +125,13 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
                      <Input
                         value={localLogos}
                         onChange={(event) => setLocalLogos(event.target.value)}
-                        placeholder={t('Cards.challenge.logosSubtitlePlaceholder')}
+                        placeholder={t('Common.logosSubtitle')}
                         className="h-8 border-0 bg-card-popover-bg/40 px-2 py-1 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                      />
                      <Input
                         value={localMythos}
                         onChange={(event) => setLocalMythos(event.target.value)}
-                        placeholder={t('Cards.challenge.mythosSubtitlePlaceholder')}
+                        placeholder={t('Common.mythosSubtitle')}
                         className="h-8 border-0 bg-card-popover-bg/40 px-2 py-1 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                      />
                   </div>
@@ -150,7 +150,7 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
                      <Textarea
                         value={localFlavor}
                         onChange={(event) => setLocalFlavor(event.target.value)}
-                        placeholder={t('Cards.challenge.flavorPlaceholder')}
+                        placeholder={t('Common.whatThePlayersSee')}
                         className="min-h-16 resize-none border-0 bg-card-popover-bg/40 text-sm text-card-paper-fg placeholder:text-card-paper-fg/50 shadow-none focus-visible:ring-card-accent/50"
                      />
                      {localFlavor.includes('{') && (
@@ -169,21 +169,21 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
             {/* LEFT third: Spectrums, its own scroll well. */}
             <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
                <section>
-                  <SheetSectionHeader title={t('Cards.challenge.spectrums')} icon={Gauge} />
+                  <SheetSectionHeader title={t('Common.spectrums')} icon={Gauge} />
                   {isEditing ? (
                      <div className="flex flex-col gap-1">
                         {details.spectrums.map((spectrum) => (
                            <StatusEditRow
                               key={spectrum.id}
                               status={spectrum}
-                              namePlaceholder={t('Cards.challenge.spectrumNamePlaceholder')}
+                              namePlaceholder={t('Common.eGInfluence')}
                               onCommitName={(name) => spectrumOps.commitById(spectrum.id, { name })}
                               onCommitTier={(tier) => spectrumOps.commitById(spectrum.id, { tier })}
                               onRemove={() => spectrumOps.removeById(spectrum.id)}
-                              removeLabel={t('Cards.challenge.remove')}
+                              removeLabel={t('Common.remove')}
                            />
                         ))}
-                        <AddRowButton label={t('Cards.challenge.addSpectrum')} onClick={spectrumOps.add} />
+                        <AddRowButton label={t('Common.addSpectrum')} onClick={spectrumOps.add} />
                      </div>
                   ) : (
                      <div className="flex flex-wrap gap-1">
@@ -201,22 +201,22 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
             {/* RIGHT two-thirds: Custom Moves, then Hard Moves, then Soft Moves, one scroll well. */}
             <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
                <section>
-                  <SheetSectionHeader title={t('Cards.challenge.customMoves')} />
+                  <SheetSectionHeader title={t('Common.customMoves')} />
                   {isEditing ? (
                      <div className="flex flex-col gap-2">
                         {details.customMoves.map((move) => (
                            <CustomMoveEditRow
                               key={move.id}
                               move={move}
-                              namePlaceholder={t('Cards.challenge.customMoveNamePlaceholder')}
+                              namePlaceholder={t('Common.moveName')}
                               descriptionPlaceholder={t('Cards.challenge.customMoveDescriptionPlaceholder')}
                               onCommitName={(name) => customMoveOps.commitById(move.id, { name })}
                               onCommitDescription={(description) => customMoveOps.commitById(move.id, { description })}
                               onRemove={() => customMoveOps.removeById(move.id)}
-                              removeLabel={t('Cards.challenge.remove')}
+                              removeLabel={t('Common.remove')}
                            />
                         ))}
-                        <AddRowButton label={t('Cards.challenge.addCustomMove')} onClick={customMoveOps.add} />
+                        <AddRowButton label={t('Common.addMove')} onClick={customMoveOps.add} />
                      </div>
                   ) : details.customMoves.length > 0 ? (
                      <div className="flex flex-col gap-2">
@@ -233,20 +233,20 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
                </section>
 
                <section>
-                  <SheetSectionHeader title={t('Cards.challenge.hardMoves')} />
+                  <SheetSectionHeader title={t('Common.hardMoves')} />
                   {isEditing ? (
                      <div className="flex flex-col gap-2">
                         {details.hardMoves.map((move) => (
                            <MoveEditRow
                               key={move.id}
                               move={move}
-                              placeholder={t('Cards.challenge.hardMovePlaceholder')}
+                              placeholder={t('Common.aHardMove')}
                               onCommitText={(text) => hardMoveOps.commitById(move.id, { text })}
                               onRemove={() => hardMoveOps.removeById(move.id)}
-                              removeLabel={t('Cards.challenge.remove')}
+                              removeLabel={t('Common.remove')}
                            />
                         ))}
-                        <AddRowButton label={t('Cards.challenge.addHardMove')} onClick={hardMoveOps.add} />
+                        <AddRowButton label={t('Common.addHardMove')} onClick={hardMoveOps.add} />
                      </div>
                   ) : (
                      <MoveList moves={details.hardMoves} kind="hard" mentionClick={mentionClick} emptyLabel={t('Cards.challenge.noHardMoves')} textClassName="text-sm" />
@@ -254,20 +254,20 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
                </section>
 
                <section>
-                  <SheetSectionHeader title={t('Cards.challenge.softMoves')} />
+                  <SheetSectionHeader title={t('Common.softMoves')} />
                   {isEditing ? (
                      <div className="flex flex-col gap-2">
                         {details.softMoves.map((move) => (
                            <MoveEditRow
                               key={move.id}
                               move={move}
-                              placeholder={t('Cards.challenge.softMovePlaceholder')}
+                              placeholder={t('Common.aSoftMove')}
                               onCommitText={(text) => softMoveOps.commitById(move.id, { text })}
                               onRemove={() => softMoveOps.removeById(move.id)}
-                              removeLabel={t('Cards.challenge.remove')}
+                              removeLabel={t('Common.remove')}
                            />
                         ))}
-                        <AddRowButton label={t('Cards.challenge.addSoftMove')} onClick={softMoveOps.add} />
+                        <AddRowButton label={t('Common.addSoftMove')} onClick={softMoveOps.add} />
                      </div>
                   ) : (
                      <MoveList moves={details.softMoves} kind="soft" mentionClick={mentionClick} emptyLabel={t('Cards.challenge.noSoftMoves')} textClassName="text-sm" />

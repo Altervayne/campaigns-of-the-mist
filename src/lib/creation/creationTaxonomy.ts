@@ -56,7 +56,7 @@ export type CreationGroup = CreationBoardGroup | CreationGameGroup;
 
 /** The tracker kinds the Game group offers, mirroring the drawer's tracker glyphs. */
 const TRACKER_ROWS: CreationTrackerRow[] = [
-   { id: 'status', trackerType: 'STATUS', itemType: 'STATUS_TRACKER', labelKey: 'Trackers.addStatus' },
+   { id: 'status', trackerType: 'STATUS', itemType: 'STATUS_TRACKER', labelKey: 'Common.addStatus' },
    { id: 'story-tag', trackerType: 'STORY_TAG', itemType: 'STORY_TAG_TRACKER', labelKey: 'Trackers.addStoryTag' },
    { id: 'story-theme', trackerType: 'STORY_THEME', itemType: 'STORY_THEME_TRACKER', labelKey: 'Trackers.addStoryTheme' },
 ];

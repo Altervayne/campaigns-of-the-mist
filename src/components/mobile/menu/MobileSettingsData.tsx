@@ -122,7 +122,7 @@ export default function MobileSettingsData({ onBack }: MobileSettingsDataProps) 
 					className="w-full h-12 text-base justify-start"
 				>
 					<Upload className="mr-3 h-5 w-5 shrink-0" />
-					<span className="flex-1 text-left truncate">{t('SettingsDialog.backup.restoreButton')}</span>
+					<span className="flex-1 text-left truncate">{t('Common.restoreFromBackup')}</span>
 					<ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
 				</Button>
 				<p className="text-xs text-muted-foreground">{t('SettingsDialog.backup.description')}</p>
@@ -214,7 +214,7 @@ export default function MobileSettingsData({ onBack }: MobileSettingsDataProps) 
 				open={isRestoreBackupDialogOpen}
 				onOpenChange={setIsRestoreBackupDialogOpen}
 				onConfirm={handleConfirmRestore}
-				title={t('SettingsDialog.backup.restoreDialog.title')}
+				title={t('Common.restoreFromBackup')}
 				description={t('SettingsDialog.backup.restoreDialog.description')}
 				confirmationText="REPLACE ALL MY DATA"
 				confirmButtonText={t('SettingsDialog.backup.restoreDialog.confirm')}
