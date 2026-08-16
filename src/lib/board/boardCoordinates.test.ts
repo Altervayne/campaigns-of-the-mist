@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { MAX_ZOOM, MIN_ZOOM, TOOLBAR_EDGE_CLEARANCE, TOOLBAR_TOP_CLEARANCE, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, toolbarClampDown, toolbarClampX, zoomToCursor } from './boardCoordinates';
+import { MAX_ZOOM, MIN_ZOOM, TOOLBAR_BOTTOM_CLEARANCE, TOOLBAR_EDGE_CLEARANCE, TOOLBAR_TOP_CLEARANCE, centerViewport, clampZoom, fitViewport, gridSpacing, itemsInMarquee, screenDeltaToWorld, screenToWorld, toolbarClampDown, toolbarClampX, zoomToCursor } from './boardCoordinates';
 
 // -- Type Imports --
 import type { BoardItem, Viewport } from '@/lib/types/board';
@@ -186,26 +186,46 @@ describe('itemsInMarquee', () => {
 });
 
 describe('toolbarClampDown', () => {
-   it('returns nothing while the box top sits at or below the clearance line', () => {
+   const TALL = 10000; // tall clip: the bottom clamp never engages, so these pin the top-edge behavior
+
+   it('returns nothing while the box top sits between the top and bottom clearance lines', () => {
       const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
-      expect(toolbarClampDown(TOOLBAR_TOP_CLEARANCE, viewport)).toBeUndefined();
-      expect(toolbarClampDown(500, viewport)).toBeUndefined();
+      expect(toolbarClampDown(TOOLBAR_TOP_CLEARANCE, viewport, TALL)).toBeUndefined();
+      expect(toolbarClampDown(500, viewport, TALL)).toBeUndefined();
    });
 
-   it('returns the world-px overshoot once the box top runs above the clearance line', () => {
+   it('returns the world-px overshoot once the box top runs above the top clearance line', () => {
       const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
       // Top at screen 8, so the bar must drop 40px to reach the clearance line.
-      expect(toolbarClampDown(8, viewport)).toBe(TOOLBAR_TOP_CLEARANCE - 8);
+      expect(toolbarClampDown(8, viewport, TALL)).toBe(TOOLBAR_TOP_CLEARANCE - 8);
    });
 
-   it('measures the overshoot in screen px but reports it in world px', () => {
+   it('measures the top overshoot in screen px but reports it in world px', () => {
       // Top at world -100, zoom 2 -> screen -200; overshoot 248 screen px = 124 world px.
-      expect(toolbarClampDown(-100, { x: 0, y: 0, zoom: 2 })).toBe((TOOLBAR_TOP_CLEARANCE + 200) / 2);
+      expect(toolbarClampDown(-100, { x: 0, y: 0, zoom: 2 }, TALL)).toBe((TOOLBAR_TOP_CLEARANCE + 200) / 2);
    });
 
-   it('follows the pan, so panning the box back down releases the clamp', () => {
-      expect(toolbarClampDown(0, { x: 0, y: 0, zoom: 1 })).toBe(TOOLBAR_TOP_CLEARANCE);
-      expect(toolbarClampDown(0, { x: 0, y: TOOLBAR_TOP_CLEARANCE, zoom: 1 })).toBeUndefined();
+   it('follows the pan, so panning the box back down releases the top clamp', () => {
+      expect(toolbarClampDown(0, { x: 0, y: 0, zoom: 1 }, TALL)).toBe(TOOLBAR_TOP_CLEARANCE);
+      expect(toolbarClampDown(0, { x: 0, y: TOOLBAR_TOP_CLEARANCE, zoom: 1 }, TALL)).toBeUndefined();
+   });
+
+   it('raises the bar (negative) once the box top runs below the bottom clearance line', () => {
+      const viewport: Viewport = { x: 0, y: 0, zoom: 1 };
+      const clipH = 600;
+      // Top at screen 500 is above the bottom line (600 - 8 = 592): no clamp.
+      expect(toolbarClampDown(500, viewport, clipH)).toBeUndefined();
+      // Top at screen 700 is 108 past the bottom line, so the bar lifts by that much (negative = up).
+      expect(toolbarClampDown(700, viewport, clipH)).toBe(-(700 - (clipH - TOOLBAR_BOTTOM_CLEARANCE)));
+   });
+
+   it('reports the bottom overshoot in world px at non-1 zoom', () => {
+      // Top world 400, zoom 2 -> screen 800; clip 600, bottom line 592; overshoot 208 screen = 104 world, raised.
+      expect(toolbarClampDown(400, { x: 0, y: 0, zoom: 2 }, 600)).toBe(-((800 - (600 - TOOLBAR_BOTTOM_CLEARANCE)) / 2));
+   });
+
+   it('skips the bottom clamp until the clip is measured (height 0)', () => {
+      expect(toolbarClampDown(9999, { x: 0, y: 0, zoom: 1 }, 0)).toBeUndefined();
    });
 });
 

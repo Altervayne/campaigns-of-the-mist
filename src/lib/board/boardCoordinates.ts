@@ -52,14 +52,28 @@ export function screenDeltaToWorld(deltaX: number, deltaY: number, zoom: number)
 export const TOOLBAR_TOP_CLEARANCE = 48;
 
 /**
- * World-px to push a selection's toolbar down so it clears the clip's top edge, from the world Y of the
- * box it anchors to; undefined when the box sits low enough to need none (a stable value, so an unclamped
- * box still skips a pan re-render). `topWorld` must already carry any live move delta.
+ * Screen-px a selection's toolbar keeps clear of the clip's BOTTOM edge. The bar grows upward from its
+ * anchor, so the anchor only has to stay a hair inside the bottom edge for the whole bar to stay visible.
  */
-export function toolbarClampDown(topWorld: number, viewport: Viewport): number | undefined {
+export const TOOLBAR_BOTTOM_CLEARANCE = 8;
+
+/**
+ * World-px to shift a selection's toolbar VERTICALLY so it stays reachable, from the world Y of the box it
+ * anchors to. POSITIVE lowers the bar when the box runs off the clip's TOP (the bar grows upward and would
+ * otherwise float out of reach above the canvas); NEGATIVE raises it when the box runs off the clip's
+ * BOTTOM. Undefined when the box sits in the clear band (a stable value, so an unclamped box still skips a
+ * pan re-render). `topWorld` must already carry any live move delta; `clipHeight` is the clip's screen height.
+ */
+export function toolbarClampDown(topWorld: number, viewport: Viewport, clipHeight: number): number | undefined {
    const topScreen = viewport.y + topWorld * viewport.zoom;
-   const overshoot = TOOLBAR_TOP_CLEARANCE - topScreen;
-   return overshoot > 0 ? overshoot / viewport.zoom : undefined;
+   const overTop = TOOLBAR_TOP_CLEARANCE - topScreen;
+   if (overTop > 0) return overTop / viewport.zoom;
+   // Off the bottom: pull the bar up so its anchor lands just inside the clip (skip until the clip is measured).
+   if (clipHeight > 0) {
+      const overBottom = topScreen - (clipHeight - TOOLBAR_BOTTOM_CLEARANCE);
+      if (overBottom > 0) return -overBottom / viewport.zoom;
+   }
+   return undefined;
 }
 
 /** Screen-px a selection's floating toolbar keeps clear of the clip's left and right edges. */

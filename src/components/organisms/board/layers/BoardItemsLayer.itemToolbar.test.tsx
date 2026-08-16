@@ -53,6 +53,7 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
       <BoardItemsLayer
          viewport={overrides.viewport ?? { x: 0, y: 0, zoom: 1 }}
          clipWidth={1000}
+         clipHeight={100000}
          items={{ a: ITEM }}
          nonZoneItems={[ITEM]}
          zoneItems={[]}

@@ -35,11 +35,11 @@ import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
  * Its host spans the whole selection bbox and must stay inert so a press still reaches the items inside
  * it, so the bar re-arms pointer events on itself.
  *
- * When the selection's top runs off the top of the canvas, the bar would float out of reach above it;
- * `clampDown` (world px, from the canvas) lowers the bar's anchor so it sticks just below the clip's top
- * edge and floats over the selection instead. `clampX` does the same sideways against the clip's
- * left/right edges, where the adjacent panels begin: the bar gives up its left-alignment near an edge
- * rather than being cut off by the clip.
+ * When the selection runs off an edge the bar would float out of reach; `clampDown` (world px, from the
+ * canvas) shifts it vertically to stick just inside the clip: positive lowers it off the top edge,
+ * negative raises it off the bottom, floating over the selection instead. `clampX` does the same sideways
+ * against the clip's left/right edges, where the adjacent panels begin: the bar gives up its left-alignment
+ * near an edge rather than being cut off by the clip.
  */
 
 interface BoardGroupToolbarProps {
@@ -52,7 +52,8 @@ interface BoardGroupToolbarProps {
    alignableCount: number;
    onAlign: (edge: AlignEdge) => void;
    onDistribute: (axis: DistributeAxis) => void;
-   /** World-px to lower the bar so it clears the clip's top edge (a selection off the top); 0 = no clamp. */
+   /** World-px to shift the bar vertically so it clears the clip: positive lowers it off the top edge,
+       negative raises it off the bottom; 0 = no clamp. */
    clampDown?: number;
    /** World-px to slide the bar sideways so it clears the clip's left/right edge; 0 = no clamp. */
    clampX?: number;

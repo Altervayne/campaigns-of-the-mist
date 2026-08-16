@@ -37,6 +37,7 @@ interface BoardItemsLayerProps {
    viewport: Viewport;
    /** The clip's screen width, so a floating toolbar can be held inside its left/right edges. */
    clipWidth: number;
+   clipHeight: number;
    items: Record<string, BoardItem>;
    /** Paint order: non-zone items first, then zones - each rendered by the same single pass. */
    nonZoneItems: BoardItem[];
@@ -93,6 +94,7 @@ interface BoardItemsLayerProps {
 export function BoardItemsLayer({
    viewport,
    clipWidth,
+   clipHeight,
    items,
    nonZoneItems,
    zoneItems,
@@ -148,7 +150,7 @@ export function BoardItemsLayer({
     */
    const toolbarClampFor = (item: BoardItem): number | undefined => {
       if (item.id !== soleSelectedId) return undefined;
-      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0), viewport);
+      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0), viewport, clipHeight);
    };
 
    /**
@@ -310,7 +312,7 @@ export function BoardItemsLayer({
             <div className="pointer-events-none absolute" style={{ left: groupBbox.x, top: groupBbox.y, width: groupBbox.width, height: groupBbox.height, zIndex: groupToolbarZIndex(layerCount) }}>
                <BoardGroupToolbar
                   zoom={viewport.zoom}
-                  clampDown={toolbarClampDown(groupBbox.y, viewport)}
+                  clampDown={toolbarClampDown(groupBbox.y, viewport, clipHeight)}
                   clampX={toolbarClampX(groupBbox.x + groupToolbar.metrics.anchorOffset, groupToolbar.metrics.screenWidth, 'left', clipWidth, viewport)}
                   measureRef={groupToolbar.measureRef}
                   onMoveStart={(event) => {

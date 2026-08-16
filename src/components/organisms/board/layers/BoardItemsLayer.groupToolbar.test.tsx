@@ -54,12 +54,15 @@ const MOVE_LABEL = 'BoardView.moveItem';
 
 /** A clip wide enough that only a deliberately placed bbox reaches an edge. */
 const CLIP_WIDTH = 1000;
+/** A clip tall enough the off-bottom clamp never engages, so these tests pin the top/side behavior. */
+const CLIP_HEIGHT = 100000;
 
 /** The layer with nothing but a multi-selection: no items to paint, so only the group toolbar renders. */
 function renderLayer(overrides: {
    viewport: Viewport;
    groupBbox: { x: number; y: number; width: number; height: number };
    clipWidth?: number;
+   clipHeight?: number;
    moveDeltaFor?: (id: string) => { x: number; y: number } | null;
    handleMoveStart?: (id: string) => void;
    handleDuplicateSelection?: () => Promise<void>;
@@ -69,6 +72,7 @@ function renderLayer(overrides: {
       <BoardItemsLayer
          viewport={overrides.viewport}
          clipWidth={overrides.clipWidth ?? CLIP_WIDTH}
+         clipHeight={overrides.clipHeight ?? CLIP_HEIGHT}
          items={{}}
          nonZoneItems={[]}
          zoneItems={[]}
