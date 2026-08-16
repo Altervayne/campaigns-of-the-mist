@@ -178,7 +178,7 @@ export function BoardItemsLayer({
             toolbarClampX={toolbarClampXFor(item)}
             toolbarMeasureRef={itemToolbar.measureRef}
             toolbarOverlay={toolbarOverlay}
-            zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount)}
+            zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount, item.kind === 'zone')}
             memberCount={members?.length}
             resizeMin={members ? zoneContentMinSize(item, members) : item.kind === 'portal' ? PORTAL_MIN_SIZE : undefined}
             zoom={viewport.zoom}

@@ -46,6 +46,15 @@ describe('board layering bands', () => {
       }
    });
 
+   it('a selected zone keeps its unselected rank so its members stay on top', () => {
+      for (const rank of [0, 2, 4]) {
+         // Selecting a zone does not lift it into the raised band...
+         expect(itemZIndex(rank, true, n, true)).toBe(itemZIndex(rank, false, n, true));
+         // ...so an unselected member ranked above it still paints over it and stays clickable.
+         expect(itemZIndex(rank + 1, false, n)).toBeGreaterThan(itemZIndex(rank, true, n, true));
+      }
+   });
+
    it('the bands are disjoint for small N (0, 1) too', () => {
       for (const count of [0, 1]) {
          const conn = connectionsZIndex(count);

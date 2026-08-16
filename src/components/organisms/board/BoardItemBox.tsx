@@ -419,9 +419,11 @@ export const BoardItemBox = memo(function BoardItemBox({
 
          <div
             onPointerDown={handleBodyPointerDown}
-            // A portalled dialog (e.g. the image cropper) is a React descendant of this item, so its
-            // events bubble the component tree back here; ignore double-clicks that came from one.
-            onDoubleClick={(event) => { if (event.target instanceof Element && event.target.closest('[role="dialog"]')) return; onDeepAction(item.id); }}
+            // Toggle the deep view only on a real body double-click. Skip it when the double-click lands on
+            // an interactive control (a card's steppers, add / remove buttons, the toolbar) so rapid clicks
+            // there never flip the mode, and skip events bubbling the component tree from a portalled dialog
+            // (the image cropper), which is a React descendant of this item.
+            onDoubleClick={(event) => { if (event.target instanceof Element && event.target.closest('[role="dialog"], button, input, textarea, select, a')) return; onDeepAction(item.id); }}
             onPointerEnter={() => setHovered(true)}
             onPointerLeave={() => setHovered(false)}
             // A collapsed zone's bar carries the zone's tint (matching the expanded frame) so the

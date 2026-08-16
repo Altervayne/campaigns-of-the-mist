@@ -84,9 +84,11 @@ const variants: sideVariants = {
 /**
  * The shared class for a toolbar action button (`<Button variant="outline" size="icon">`). Exported so a
  * card that portals its own controls INTO this toolbar (the sheet journal) styles them identically to the
- * built-in grip/delete/flip buttons rather than copying the string.
+ * built-in grip/delete/flip buttons rather than copying the string. Uses the toolbar's own popover tokens
+ * (not the card paper's) so the icons stay readable on the toolbar surface for any paper color; the dark
+ * override stops the outline variant's `dark:bg-input` from clobbering the base fill.
  */
-export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg";
+export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 cursor-pointer bg-card-popover-bg text-card-popover-fg dark:bg-card-popover-bg";
 
 export const ViewModeIcon = ({ mode }: { mode: CardViewMode | null | undefined }) => {
    if (mode === 'SIDE_BY_SIDE') return <BookOpen className="h-4 w-4" />;
@@ -143,7 +145,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onFlip}
                      >
                         <RefreshCw className="h-4 w-4" />
@@ -154,7 +156,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onEditCard}
                      >
                         <Edit2 className="h-4 w-4" />
@@ -165,7 +167,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onExport}
                      >
                         <Upload className="h-4 w-4" />
@@ -185,7 +187,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onStoryTagNegative}
                      >
                         {
@@ -198,7 +200,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onUpgradeStoryTag}
                      >
                         <BookPlus className="h-4 w-4"/>
@@ -209,7 +211,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                        className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onDowngradeStoryTheme}
                      >
                         <BookMinus className="h-4 w-4"/>
@@ -222,7 +224,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                            <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7 cursor-pointer bg-card-paper-bg text-card-paper-fg"
+                              className={TOOLBAR_ACTION_BUTTON_CLASS}
                               onClick={onCycleViewMode}
                            >
                               <ViewModeIcon mode={cardViewMode} />
