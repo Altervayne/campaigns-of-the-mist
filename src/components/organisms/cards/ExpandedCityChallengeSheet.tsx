@@ -19,7 +19,7 @@ import type { RowListOps } from '@/components/organisms/cards/challengeCardEditR
 import { EmptyState, SheetImageBand, SheetSectionHeader, StarRating } from '@/components/organisms/cards/ExpandedChallengeSheet';
 
 // -- Shared Factories --
-import { cityChallengePaletteClass } from '@/lib/cards/challengeCardFactories';
+import { cityChallengePaletteClass, primaryTypeColor } from '@/lib/cards/challengeCardFactories';
 
 // -- Type Imports --
 import type { ChallengeStatus, CityChallengeDetails, CityCustomMove, CityMove } from '@/lib/types/character';
@@ -188,7 +188,7 @@ export const ExpandedCityChallengeSheet = forwardRef<HTMLDivElement, ExpandedCit
                   ) : (
                      <div className="flex flex-wrap gap-1">
                         {details.spectrums.length > 0
-                           ? details.spectrums.map((spectrum) => <LimitPill key={spectrum.id} status={spectrum} />)
+                           ? details.spectrums.map((spectrum) => <LimitPill key={spectrum.id} status={spectrum} color={primaryTypeColor(details.primaryType)} />)
                            : <EmptyState label={t('Cards.challenge.noSpectrums')} />}
                      </div>
                   )}

@@ -34,13 +34,16 @@ import type { MentionSegment } from '@/lib/challenge/parseMentions';
  */
 
 /** The challenge's win-conditions: an outlined `name-tier` pill (LitM) or a filled accent pill (Otherscape lime). */
-export function LimitPill({ status, accent = false }: { status: ChallengeStatus; accent?: boolean }) {
+/** A name+tier pill. Default is the neutral popover chip; `accent` fills with the card accent; `color`
+ *  fills with an explicit hue (City spectrums tint by their primary type). */
+export function LimitPill({ status, accent = false, color }: { status: ChallengeStatus; accent?: boolean; color?: string }) {
    return (
       <span
          className={cn(
             'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold',
-            accent ? 'bg-card-accent text-card-paper-bg' : 'border border-card-border/40 bg-card-popover-bg text-card-popover-fg',
+            color ? 'text-white' : accent ? 'bg-card-accent text-card-paper-bg' : 'border border-card-border/40 bg-card-popover-bg text-card-popover-fg',
          )}
+         style={color ? { backgroundColor: color } : undefined}
       >
          <span>{status.name}</span>
          <span className="tabular-nums opacity-80">{status.tier}</span>

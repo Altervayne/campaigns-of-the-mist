@@ -34,7 +34,7 @@ import { useSheetMentionCreate } from '@/hooks/character-sheet/useSheetMentionCr
 import { useLiveCardDetails } from '@/hooks/character-sheet/useLiveCardDetails';
 
 // -- Utils Imports --
-import { addRow, cityChallengePaletteClass, newCustomMove, newHardMove, newSoftMove, newStatus, removeRowById, updateRowById } from '@/lib/cards/challengeCardFactories';
+import { addRow, cityChallengePaletteClass, newCustomMove, newHardMove, newSoftMove, newStatus, primaryTypeColor, removeRowById, updateRowById } from '@/lib/cards/challengeCardFactories';
 
 // -- Type Imports --
 import type { CardComponentProps } from '@/components/organisms/cards/resolveCardComponent';
@@ -253,7 +253,7 @@ export const CityChallengeCard = React.memo(
                      ) : (
                         <div className="flex flex-wrap gap-1 p-2">
                            {details.spectrums.length > 0
-                              ? details.spectrums.map((spectrum) => <LimitPill key={spectrum.id} status={spectrum} />)
+                              ? details.spectrums.map((spectrum) => <LimitPill key={spectrum.id} status={spectrum} color={primaryTypeColor(details.primaryType)} />)
                               : <p className="text-sm italic text-card-paper-fg/70">{`[${t('Cards.challenge.noSpectrums')}]`}</p>}
                         </div>
                      )}
