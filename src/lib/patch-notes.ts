@@ -7,6 +7,18 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.2.0',
+      content: `
+### ✨ Features
+* **Custom Game Cards Palettes**: A new section in the settings menu, right under Appearance, now lets you modify the color palettes of individual card types from individual games so they suit your tastes better. Just like app themes, these can be exported and imported to share amongst yourselves. 
+* **Roll Tables**: A new Rich Element has been added to Boards : Roll tables ! You can now write a list of outcomes along with their weights, and the roll table lets you roll to pick an outcome.
+* **Board Alignment Utilities**: Boards now feature two ways to better line things up. An active snapping helper if you keep SHIFT pressed while dragging something, that will snap it to nearby edges and centers, and help you replicate nearby margins, and a quick alignment button in the selection toolbar to help you align every item in a selection vertically and horizontally.
+
+### 🔧 Changes
+* The Board Name input now renders *under* the selection toolbar on the Board.
+`,
+   },
+   {
       version: '2.1.0',
       content: `
 ### ✨ Features
