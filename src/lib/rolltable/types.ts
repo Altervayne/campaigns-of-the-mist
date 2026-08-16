@@ -22,13 +22,21 @@ export interface RollResultEntry {
 export const ROLL_TABLE_HISTORY_CAP = 20;
 
 /**
- * A roll table's content: its title, weighted entries, the last settled roll, and a capped history.
- * The board-item and drawer-item wrappers add their own discriminants (`kind` / item `type`); the
- * game lives on the wrapper (game-agnostic, so `NEUTRAL`), never in here.
+ * How an entry's leading cell reads: its raw pick `weight`, the cumulative dice-style `range` it owns,
+ * or its `percent` share of the total. Purely presentational; the roll always weights by raw weight.
+ */
+export type RollTableDisplay = 'range' | 'weight' | 'percent';
+
+/**
+ * A roll table's content: its title, weighted entries, the entry-cell display mode, the last settled
+ * roll, and a capped history. The board-item and drawer-item wrappers add their own discriminants
+ * (`kind` / item `type`); the game lives on the wrapper (game-agnostic, so `NEUTRAL`), never in here.
+ * `display` is optional so tables saved before it existed open unchanged; readers normalize to 'range'.
  */
 export interface RollTableContent {
    title: string;
    entries: RollTableEntry[];
+   display?: RollTableDisplay;
    lastRoll?: RollResultEntry | null;
    history?: RollResultEntry[];
 }

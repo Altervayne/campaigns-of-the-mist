@@ -2,15 +2,11 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// -- Other Library Imports --
-import cuid from 'cuid';
-
 // -- Icon Imports --
 import { Dices } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { appendRollResult, rollOnTable } from '@/lib/rolltable/rollOnTable';
 
 // -- Component Imports --
 import { RollTableResult } from './RollTableResult';
@@ -19,42 +15,36 @@ import { RollTableResult } from './RollTableResult';
 import { useBoardMentionMint } from '@/hooks/board/useBoardMentionMint';
 
 // -- Type Imports --
-import type { BoardItem, BoardItemContent, RollTableBoardContent } from '@/lib/types/board';
-import type { RollResultEntry } from '@/lib/rolltable/types';
+import type { BoardItem, RollTableBoardContent } from '@/lib/types/board';
 
 /*
- * The roll control and output for a table. Rolling reads the COMMITTED entries (never the edit draft),
- * picks one by weight, and writes the result plus a capped history through the item's non-undoable cache so
- * a roll never lands on the undo stack. A tapped `{brace}` token in the shown result mints a tracker beside
- * the item. The Roll button pins to the bottom, stops pointer propagation so a click never moves the item,
- * and no-ops on an empty table.
+ * The roll control and output for a table. The roll itself is owned by the shared roll hook in the item;
+ * this pins the result area and the Roll button to the bottom. During a roll the result shows the live
+ * text and the button dims; a tapped `{brace}` token in a settled result mints a tracker beside the item.
+ * The button stops pointer propagation so a click never moves the item, and no-ops on an empty table.
  */
 
 interface RollTableFooterProps {
    item: BoardItem;
    content: RollTableBoardContent;
-   onCacheLastKnown: (id: string, content: BoardItemContent) => void;
+   /** The live highlighted-entry text during a roll, or null at rest. */
+   liveText: string | null;
+   isRolling: boolean;
+   onRoll: () => void;
 }
 
-export function RollTableFooter({ item, content, onCacheLastKnown }: RollTableFooterProps) {
+export function RollTableFooter({ item, content, liveText, isRolling, onRoll }: RollTableFooterProps) {
    const { t } = useTranslation();
    const handleMentionClick = useBoardMentionMint(item);
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
    const isEmpty = content.entries.length === 0;
-
-   const roll = () => {
-      const picked = rollOnTable(content.entries);
-      if (!picked) return;
-      const result: RollResultEntry = { id: cuid(), entryId: picked.id, text: picked.text };
-      const next: RollTableBoardContent = { ...content, lastRoll: result, history: appendRollResult(content.history ?? [], result) };
-      onCacheLastKnown(item.id, next);
-   };
 
    return (
       <div className="flex shrink-0 flex-col">
          <RollTableResult
             lastRoll={content.lastRoll}
             history={content.history ?? []}
+            liveText={liveText}
             resultLabel={t('BoardView.rollTableResultLabel')}
             emptyLabel={t('BoardView.rollTableEmptyResult')}
             historyLabel={t('BoardView.rollTableHistory')}
@@ -65,13 +55,14 @@ export function RollTableFooter({ item, content, onCacheLastKnown }: RollTableFo
                type="button"
                disabled={isEmpty}
                onPointerDown={stopDrag}
-               onClick={roll}
+               onClick={onRoll}
                className={cn(
                   'flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 cursor-pointer',
                   isEmpty && 'pointer-events-none opacity-50',
+                  isRolling && 'opacity-80',
                )}
             >
-               <Dices className="h-4 w-4" />
+               <Dices className={cn('h-4 w-4', isRolling && 'animate-pulse')} />
                {t('BoardView.rollTableRoll')}
             </button>
          </div>

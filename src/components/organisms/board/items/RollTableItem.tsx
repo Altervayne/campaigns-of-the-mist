@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -11,28 +11,34 @@ import { Plus } from 'lucide-react';
 // -- Component Imports --
 import { RollTableEntryRow } from './rolltable/RollTableEntryRow';
 import { RollTableFooter } from './rolltable/RollTableFooter';
+import { RollTableHeader } from './rolltable/RollTableHeader';
 import { RollTableReadView } from './rolltable/RollTableReadView';
 
 // -- Hook Imports --
 import { useCommitOnUnmount } from '@/hooks/useCommitOnUnmount';
+import { useRollTableRoll } from '@/hooks/board/useRollTableRoll';
+
+// -- Utils Imports --
+import { computeEntryLabels, computeRangeStarts, normalizeRollTableContent, rangeEndToWeight } from '@/lib/rolltable/rollTableDisplay';
 
 // -- Type Imports --
 import type { BoardItem, BoardItemContent, RollTableBoardContent } from '@/lib/types/board';
-import type { RollTableEntry } from '@/lib/rolltable/types';
+import type { RollTableDisplay, RollTableEntry } from '@/lib/rolltable/types';
 
 /*
- * A roll table board item: an editable title over a list of weighted entries (a weight number + result
- * text), with a pinned footer that rolls and shows the result. The title and entries are held in a local
- * draft; text/weight edits commit once on blur (one undoable command per edit session, since
- * `updateItemContent` is not coalescible), while structural edits (add / remove / reorder) commit
- * immediately. The draft re-syncs from the store on an external change (undo/redo) via the
- * adjust-state-during-render pattern, and flushes on unmount for the board's tab-switch case.
+ * A roll table board item: a header (title + a display-mode toggle when selected) over a list of weighted
+ * entries (a weight number + result text) rendered as ruled rows, with a pinned footer that rolls and
+ * shows the result. The title and entries are held in a local draft; text/weight edits commit once on blur
+ * (one undoable command per edit session, since `updateItemContent` is not coalescible), while structural
+ * edits (add / remove / reorder / display mode) commit immediately. The draft re-syncs from the store on
+ * an external change (undo/redo) via the adjust-state-during-render pattern, and flushes on unmount for the
+ * board's tab-switch case.
  *
- * Selecting is decoupled from editing: a selected-but-not-editing table shows a plain read view that
- * drags to move, and the editing sub-state swaps in the fields. The footer is always present. Rolling
- * reads the committed content and writes through a non-undoable cache (in the footer), independent of the
- * edit draft. Every field / control stops pointer propagation so typing or a text selection never starts
- * a canvas move.
+ * Selecting is decoupled from editing: a selected-but-not-editing table shows a plain read view that drags
+ * to move, and the editing sub-state swaps in the fields. The footer is always present. Rolling reads the
+ * committed content through the shared roll hook and writes via a non-undoable cache, independent of the
+ * edit draft; its live state highlights the landing row and shows the live text. Every field / control
+ * stops pointer propagation so typing or a text selection never starts a canvas move.
  */
 
 interface RollTableDraft {
@@ -44,6 +50,8 @@ interface RollTableItemProps {
    /** The board item (its rect anchors a minted mention tracker beside the table). */
    item: BoardItem;
    content: RollTableBoardContent;
+   /** Selection state: reveals the display-mode toggle in the header. */
+   isSelected: boolean;
    /** Editing sub-state: mounts the editable fields over the read view. */
    isEditing: boolean;
    onContentChange: (content: BoardItemContent) => void;
@@ -57,13 +65,17 @@ function entriesMatch(a: RollTableEntry[], b: RollTableEntry[]): boolean {
    return a.every((entry, index) => entry.id === b[index].id && entry.weight === b[index].weight && entry.text === b[index].text);
 }
 
-export function RollTableItem({ item, content, isEditing, onContentChange, onCacheLastKnown, onRequestSelect }: RollTableItemProps) {
+export function RollTableItem({ item, content, isSelected, isEditing, onContentChange, onCacheLastKnown, onRequestSelect }: RollTableItemProps) {
    const { t } = useTranslation();
 
+   // Default the display mode without rewriting saved data; the field persists once a commit spreads it.
+   const normalized = useMemo(() => normalizeRollTableContent(content), [content]);
+   const display = normalized.display ?? 'range';
+
    const [draft, setDraft] = useState<RollTableDraft>({ title: content.title, entries: content.entries });
-   // Re-sync from the store on an external content change (undo/redo). Reference-compared: while typing
-   // only the draft changes (commit is on blur), so the store content is unchanged and this never clobbers
-   // an in-progress edit.
+   // Re-sync from the store on an external content change (undo/redo). Reference-compared against the raw
+   // prop: while typing only the draft changes (commit is on blur), so the store content is unchanged and
+   // this never clobbers an in-progress edit.
    const [synced, setSynced] = useState(content);
    if (content !== synced) {
       setSynced(content);
@@ -71,10 +83,11 @@ export function RollTableItem({ item, content, isEditing, onContentChange, onCac
    }
 
    // Commits read the latest draft / content from refs, so they stay correct from a blur, a structural
-   // action, or the unmount flush regardless of render timing.
+   // action, or the unmount flush regardless of render timing. The content ref holds the normalized shape
+   // so every commit carries `display`.
    const draftRef = useRef(draft);
-   const contentRef = useRef(content);
-   useEffect(() => { draftRef.current = draft; contentRef.current = content; });
+   const contentRef = useRef(normalized);
+   useEffect(() => { draftRef.current = draft; contentRef.current = normalized; });
 
    const commit = useCallback(() => {
       const current = contentRef.current;
@@ -107,6 +120,13 @@ export function RollTableItem({ item, content, isEditing, onContentChange, onCac
       setDraft((current) => ({ ...current, entries: current.entries.map((entry) => (entry.id === id ? { ...entry, text } : entry)) }));
    const setEntryWeight = (id: string, weight: number) =>
       setDraft((current) => ({ ...current, entries: current.entries.map((entry) => (entry.id === id ? { ...entry, weight } : entry)) }));
+   // Editing a range end sets the weight from the row's derived start; following rows re-derive their
+   // start on the next render, so their ranges reflow automatically.
+   const setEntryEnd = (id: string, end: number) =>
+      setDraft((current) => {
+         const starts = computeRangeStarts(current.entries);
+         return { ...current, entries: current.entries.map((entry, index) => (entry.id === id ? { ...entry, weight: rangeEndToWeight(end, starts[index]) } : entry)) };
+      });
 
    const addEntry = () => {
       const current = draftRef.current;
@@ -126,60 +146,86 @@ export function RollTableItem({ item, content, isEditing, onContentChange, onCac
       applyStructural({ ...current, entries });
    };
 
-   const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
+   // Toggling the display mode is a normal undoable content change; folds any buffered draft edits in.
+   const setDisplay = (next: RollTableDisplay) => {
+      if (next === contentRef.current.display) return;
+      const current = draftRef.current;
+      onContentChange({ ...contentRef.current, title: current.title, entries: current.entries, display: next });
+   };
 
-   const editBody = (
-      <>
-         <input
-            type="text"
-            value={draft.title}
-            onChange={(event) => setTitle(event.target.value)}
-            onFocus={onRequestSelect}
-            onBlur={commit}
-            onPointerDown={stopDrag}
-            placeholder={t('BoardView.rollTableTitlePlaceholder')}
-            className="shrink-0 border-b border-border bg-transparent px-2 py-1.5 text-sm font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground/60"
-         />
-         <div className="flex flex-col gap-1.5 p-2">
-            {draft.entries.map((entry, index) => (
-               <RollTableEntryRow
-                  key={entry.id}
-                  entry={entry}
-                  index={index}
-                  count={draft.entries.length}
-                  textPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
-                  weightLabel={t('BoardView.rollTableWeightLabel')}
-                  removeLabel={t('BoardView.rollTableRemoveEntry')}
-                  moveUpLabel={t('BoardView.rollTableMoveEntryUp')}
-                  moveDownLabel={t('BoardView.rollTableMoveEntryDown')}
-                  onTextChange={setEntryText}
-                  onWeightChange={setEntryWeight}
-                  onRemove={removeEntry}
-                  onMove={moveEntry}
-                  onCommit={commit}
-                  onFieldFocus={onRequestSelect}
-               />
-            ))}
-            <button
-               type="button"
-               onPointerDown={stopDrag}
-               onClick={addEntry}
-               className="mt-0.5 flex items-center gap-1.5 self-start rounded-sm px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-               <Plus className="h-3.5 w-3.5" />
-               {t('BoardView.rollTableAddEntry')}
-            </button>
-         </div>
-      </>
-   );
+   const { roll, liveIndex, liveText, isRolling } = useRollTableRoll({ item, content: normalized, onCacheLastKnown });
+
+   const labels = useMemo(() => computeEntryLabels(draft.entries, display), [draft.entries, display]);
+   const starts = useMemo(() => computeRangeStarts(draft.entries), [draft.entries]);
+   // The last-rolled row stays lit, tracked by entry id so it follows reorders and edits and simply drops
+   // out if that row is deleted. During a roll the hook's liveIndex takes over the read view instead.
+   const highlightId = normalized.lastRoll?.entryId ?? null;
+   const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
 
    return (
       <div className="flex min-h-0 w-full flex-1 flex-col bg-card text-card-foreground">
-         {isEditing ? editBody : (
+         <RollTableHeader
+            isEditing={isEditing}
+            isSelected={isSelected}
+            title={draft.title}
+            titlePlaceholder={t('BoardView.rollTableTitlePlaceholder')}
+            display={display}
+            onTitleChange={setTitle}
+            onTitleCommit={commit}
+            onTitleFocus={onRequestSelect}
+            onDisplayChange={setDisplay}
+            displayModeLabel={t('BoardView.rollTableDisplayModeLabel')}
+            rangeLabel={t('BoardView.rollTableDisplayRange')}
+            weightLabel={t('BoardView.rollTableDisplayWeight')}
+            percentLabel={t('BoardView.rollTableDisplayPercent')}
+         />
+
+         {isEditing ? (
+            <div className="flex flex-col">
+               <div className="flex flex-col divide-y divide-border">
+                  {draft.entries.map((entry, index) => (
+                     <RollTableEntryRow
+                        key={entry.id}
+                        entry={entry}
+                        index={index}
+                        count={draft.entries.length}
+                        display={display}
+                        start={starts[index]}
+                        textPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
+                        weightLabel={t('BoardView.rollTableWeightLabel')}
+                        removeLabel={t('BoardView.rollTableRemoveEntry')}
+                        moveUpLabel={t('BoardView.rollTableMoveEntryUp')}
+                        moveDownLabel={t('BoardView.rollTableMoveEntryDown')}
+                        hint={display === 'percent' ? labels[index] : undefined}
+                        highlighted={entry.id === highlightId}
+                        onTextChange={setEntryText}
+                        onWeightChange={setEntryWeight}
+                        onEndChange={setEntryEnd}
+                        onRemove={removeEntry}
+                        onMove={moveEntry}
+                        onCommit={commit}
+                        onFieldFocus={onRequestSelect}
+                     />
+                  ))}
+               </div>
+               <div className="flex flex-col p-2">
+                  <button
+                     type="button"
+                     onPointerDown={stopDrag}
+                     onClick={addEntry}
+                     className="flex items-center justify-center gap-1 rounded border border-dashed border-border py-1 text-xs text-muted-foreground hover:border-foreground hover:text-foreground cursor-pointer"
+                  >
+                     <Plus className="h-3 w-3" />
+                     {t('BoardView.rollTableAddEntry')}
+                  </button>
+               </div>
+            </div>
+         ) : (
             <RollTableReadView
-               title={draft.title}
                entries={draft.entries}
-               titlePlaceholder={t('BoardView.rollTableTitlePlaceholder')}
+               labels={labels}
+               liveIndex={liveIndex}
+               highlightId={highlightId}
                entryPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
             />
          )}
@@ -188,8 +234,9 @@ export function RollTableItem({ item, content, isEditing, onContentChange, onCac
              stays pinned to the bottom (the box reads its floor as height minus this spacer). */}
          <div data-board-fill-spacer className="min-h-0 flex-1" />
 
-         {/* Rolling uses the committed content, so it stays correct regardless of the edit draft. */}
-         <RollTableFooter item={item} content={content} onCacheLastKnown={onCacheLastKnown} />
+         {/* Rolling uses the committed content via the shared hook, so it stays correct regardless of the
+             edit draft. */}
+         <RollTableFooter item={item} content={normalized} liveText={liveText} isRolling={isRolling} onRoll={roll} />
       </div>
    );
 }

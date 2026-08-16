@@ -25,13 +25,15 @@ import type { RollResultEntry } from '@/lib/rolltable/types';
 interface RollTableResultProps {
    lastRoll: RollResultEntry | null | undefined;
    history: RollResultEntry[];
+   /** The live highlighted-entry text mid-roll (plain, no mint); null at rest. */
+   liveText: string | null;
    resultLabel: string;
    emptyLabel: string;
    historyLabel: string;
    onMentionClick: (segment: MentionSegment) => void;
 }
 
-export function RollTableResult({ lastRoll, history, resultLabel, emptyLabel, historyLabel, onMentionClick }: RollTableResultProps) {
+export function RollTableResult({ lastRoll, history, liveText, resultLabel, emptyLabel, historyLabel, onMentionClick }: RollTableResultProps) {
    const [open, setOpen] = useState(false);
    const stopDrag = (event: ReactPointerEvent) => event.stopPropagation();
    // The newest result already shows above; the log lists the ones before it.
@@ -41,7 +43,11 @@ export function RollTableResult({ lastRoll, history, resultLabel, emptyLabel, hi
       <div className="flex shrink-0 flex-col border-t border-border">
          <div className="flex flex-col gap-0.5 px-2 py-1.5">
             <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{resultLabel}</span>
-            {lastRoll ? (
+            {liveText !== null ? (
+               <div className="max-h-24 overflow-hidden">
+                  <span className="text-sm">{liveText}</span>
+               </div>
+            ) : lastRoll ? (
                <div data-board-wheel-scroll className="max-h-24 overflow-y-auto">
                   <NoteMarkdown content={lastRoll.text} onMentionClick={onMentionClick} />
                </div>

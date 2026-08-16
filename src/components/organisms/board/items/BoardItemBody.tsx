@@ -75,7 +75,7 @@ export function BoardItemBody({ item, isSelected, isEditing, toolbarSlot, sideSl
       case 'dice-tray':
          return <DiceTrayItem item={item} content={content} isSelected={isSelected} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onRequestSelect={onRequestSelect} />;
       case 'roll-table':
-         return <RollTableItem item={item} content={content} isEditing={isEditing} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onRequestSelect={onRequestSelect} />;
+         return <RollTableItem item={item} content={content} isSelected={isSelected} isEditing={isEditing} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onRequestSelect={onRequestSelect} />;
       case 'card':
          return <BoardCardItem item={item} content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onAdoptSource={onAdoptSource} onDelete={onDelete} />;
       case 'tracker':

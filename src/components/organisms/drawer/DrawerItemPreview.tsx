@@ -17,6 +17,7 @@ import { CharacterSheetPreview } from '@/components/molecules/CharacterSheetPrev
 import { StoryThemeTrackerCard } from '@/components/organisms/trackers/StoryThemeTracker';
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
+import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { FitToBox } from '@/components/molecules/drawer/FitToBox';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
@@ -161,15 +162,23 @@ function RollTablePreview({ table }: { table: RollTableContent }) {
    const { t } = useTranslation();
    const title = typeof table?.title === 'string' ? table.title : '';
    const entries = Array.isArray(table?.entries) ? table.entries : [];
+   const display = normalizeRollTableContent({ title, entries, display: table?.display }).display ?? 'range';
+   const labels = computeEntryLabels(entries, display);
 
    return (
-      <div className="h-45 w-45 overflow-hidden rounded-md border border-border bg-card text-card-foreground">
-         <RollTableReadView
-            title={title}
-            entries={entries}
-            titlePlaceholder={t('BoardView.rollTableTitlePlaceholder')}
-            entryPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
-         />
+      <div className="flex h-45 w-45 flex-col overflow-hidden rounded-md border border-border bg-card text-card-foreground">
+         <div className={cn('shrink-0 truncate border-b border-border px-2 py-1.5 text-sm font-semibold', !title && 'text-muted-foreground/60')}>
+            {title || t('BoardView.rollTableTitlePlaceholder')}
+         </div>
+         <div className="min-h-0 flex-1 overflow-hidden">
+            <RollTableReadView
+               entries={entries}
+               labels={labels}
+               liveIndex={null}
+               highlightId={null}
+               entryPlaceholder={t('BoardView.rollTableEntryPlaceholder')}
+            />
+         </div>
       </div>
    );
 }

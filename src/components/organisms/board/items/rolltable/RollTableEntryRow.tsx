@@ -8,27 +8,39 @@ import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // -- Type Imports --
-import type { RollTableEntry } from '@/lib/rolltable/types';
+import type { RollTableDisplay, RollTableEntry } from '@/lib/rolltable/types';
 
 /*
- * One editable entry: a weight number field and the result text field, plus reorder and remove controls.
- * The weight input keeps its own display buffer so it can show a transient empty value while typing;
- * only a valid integer (>= 1) flows back to the draft, and blur reverts an invalid display. Text and
- * weight edits are buffered by the parent (committed on blur); the controls stop pointer propagation so
- * editing never starts a canvas move.
+ * One editable entry: its result text plus reorder / remove controls, and a leading cell that follows the
+ * table's display mode. In 'weight' mode the cell is the raw weight field. In 'range' mode it is a
+ * read-only START prefix (derived from the preceding rows) followed by an editable END field, where the
+ * weight is `end - start + 1`; editing an end reflows the rows below it. In 'percent' mode the weight field
+ * stays editable with the read-only percent shown beside it. Each numeric field keeps its own display
+ * buffer so it tolerates a transient empty value while typing (blur reverts an invalid one), and every
+ * control stops pointer propagation so editing never starts a canvas move.
  */
 
 interface RollTableEntryRowProps {
    entry: RollTableEntry;
    index: number;
    count: number;
+   /** The table's active display mode; picks the leading cell. */
+   display: RollTableDisplay;
+   /** This row's cumulative range start (1-based), for the range cell's prefix and end math. */
+   start: number;
    textPlaceholder: string;
    weightLabel: string;
    removeLabel: string;
    moveUpLabel: string;
    moveDownLabel: string;
+   /** The read-only percent label, shown beside the weight field in 'percent' mode. */
+   hint?: string;
+   /** Whether this row is the last-rolled result, kept lit while editing. */
+   highlighted?: boolean;
    onTextChange: (id: string, text: string) => void;
    onWeightChange: (id: string, weight: number) => void;
+   /** Sets the weight from an edited range end (weight = end - start + 1, floored to 1). */
+   onEndChange: (id: string, end: number) => void;
    onRemove: (id: string) => void;
    onMove: (id: string, direction: -1 | 1) => void;
    /** Persists the buffered field edits (bound to the parent's commit). */
@@ -41,13 +53,18 @@ export function RollTableEntryRow({
    entry,
    index,
    count,
+   display,
+   start,
    textPlaceholder,
    weightLabel,
    removeLabel,
    moveUpLabel,
    moveDownLabel,
+   hint,
+   highlighted,
    onTextChange,
    onWeightChange,
+   onEndChange,
    onRemove,
    onMove,
    onCommit,
@@ -76,19 +93,64 @@ export function RollTableEntryRow({
       onCommit();
    };
 
+   // Display buffer for the range END field. The end derives from start + weight; it re-syncs whenever
+   // either shifts (undo/redo, or a preceding row's weight change reflowing this row's start).
+   const end = start + entry.weight - 1;
+   const [endText, setEndText] = useState(String(end));
+   const [syncedEnd, setSyncedEnd] = useState(end);
+   if (end !== syncedEnd) {
+      setSyncedEnd(end);
+      setEndText(String(end));
+   }
+
+   const handleEndInput = (value: string) => {
+      setEndText(value);
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isNaN(parsed) && parsed >= start) onEndChange(entry.id, parsed);
+   };
+   // An empty or below-start display on blur snaps back to the committed end (start .. weight-1 band).
+   const handleEndBlur = () => {
+      const parsed = Number.parseInt(endText, 10);
+      if (Number.isNaN(parsed) || parsed < start) setEndText(String(end));
+      onCommit();
+   };
+
    return (
-      <div className="flex items-center gap-1.5">
-         <input
-            type="text"
-            inputMode="numeric"
-            aria-label={weightLabel}
-            value={weightText}
-            onChange={(event) => handleWeightInput(event.target.value)}
-            onFocus={onFieldFocus}
-            onBlur={handleWeightBlur}
-            onPointerDown={stopDrag}
-            className="w-10 shrink-0 rounded border border-border bg-transparent px-1 py-1 text-center text-xs tabular-nums outline-none focus:border-primary"
-         />
+      <div className={cn('flex items-center gap-1.5 px-2 py-1.5', highlighted && 'bg-primary/15')}>
+         {display === 'range' ? (
+            <div className="flex shrink-0 items-center gap-0.5 text-xs tabular-nums text-muted-foreground">
+               <span>{start}</span>
+               <span>-</span>
+               <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label={weightLabel}
+                  value={endText}
+                  onChange={(event) => handleEndInput(event.target.value)}
+                  onFocus={onFieldFocus}
+                  onBlur={handleEndBlur}
+                  onPointerDown={stopDrag}
+                  className="w-9 rounded border border-border bg-transparent px-1 py-1 text-center text-foreground outline-none focus:border-primary"
+               />
+            </div>
+         ) : (
+            <>
+               <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label={weightLabel}
+                  value={weightText}
+                  onChange={(event) => handleWeightInput(event.target.value)}
+                  onFocus={onFieldFocus}
+                  onBlur={handleWeightBlur}
+                  onPointerDown={stopDrag}
+                  className="w-10 shrink-0 rounded border border-border bg-transparent px-1 py-1 text-center text-xs tabular-nums outline-none focus:border-primary"
+               />
+               {display === 'percent' && hint !== undefined && (
+                  <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{hint}</span>
+               )}
+            </>
+         )}
          <input
             type="text"
             value={entry.text}
