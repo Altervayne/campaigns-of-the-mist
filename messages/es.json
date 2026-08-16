@@ -128,8 +128,6 @@
       "emptyDrawer": "¡Tu Cajón está vacío!",
       "folderCount_one": "{{count}} carpeta",
       "folderCount_other": "{{count}} carpetas",
-      "itemCount_one": "{{count}} elemento",
-      "itemCount_other": "{{count}} elementos",
       "emptyFolder": "Esta carpeta está vacía. ¡Es hora de llenarla!",
       "addFolder": "Añadir carpeta",
       "folderNamePlaceholder": "Nombre de la carpeta...",
@@ -992,6 +990,8 @@
       "possessions": "Posesiones",
       "esoterica": "Esotérica",
       "workspace": "Hoja",
-      "menu": "Menú"
+      "menu": "Menú",
+      "itemCount_one": "{{count}} elemento",
+      "itemCount_other": "{{count}} elementos"
    }
 }

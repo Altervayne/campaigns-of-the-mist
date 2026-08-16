@@ -66,7 +66,7 @@ describe('MobileDrawerDragOverlay folder snapshot', () => {
 
       expect(screen.getByText('Folder A')).toBeTruthy();
       expect(snapshot(container).textContent).toContain('Drawer.folderCount:2');
-      expect(snapshot(container).textContent).toContain('Drawer.itemCount:3');
+      expect(snapshot(container).textContent).toContain('Common.itemCount:3');
    });
 
    it('labels a folder with no children as empty', () => {

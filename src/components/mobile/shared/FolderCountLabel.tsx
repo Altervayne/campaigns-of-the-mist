@@ -30,7 +30,7 @@ export function FolderCountLabel({ folders, items }: FolderCountLabelProps) {
 		<p className="text-xs text-muted-foreground">
 			{folders > 0 && t('Drawer.folderCount', { count: folders })}
 			{folders > 0 && items > 0 && ', '}
-			{items > 0 && t('Drawer.itemCount', { count: items })}
+			{items > 0 && t('Common.itemCount', { count: items })}
 			{folders === 0 && items === 0 && t('Drawer.empty')}
 		</p>
 	);

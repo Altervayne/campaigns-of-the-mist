@@ -387,8 +387,6 @@
       "reorder": "Drag to reorder",
       "layerName": "Layer {{n}}",
       "untitledText": "Untitled text",
-      "memberCount_one": "{{count}} item",
-      "memberCount_other": "{{count}} items",
       "strokeCount_one": "{{count}} stroke",
       "strokeCount_other": "{{count}} strokes",
       "mergeCount_one": "Merge {{count}} layer",
@@ -717,8 +715,6 @@
       "emptyDrawer": "Your Drawer is completely empty!",
       "folderCount_one": "{{count}} folder",
       "folderCount_other": "{{count}} folders",
-      "itemCount_one": "{{count}} item",
-      "itemCount_other": "{{count}} items",
       "emptyFolder": "This Folder is empty. Time to fill it!",
       "addFolder": "Add Folder",
       "folderNamePlaceholder": "Folder name...",
@@ -2315,6 +2311,8 @@
       "possessions": "Possessions",
       "esoterica": "Esoterica",
       "workspace": "Workspace",
-      "menu": "Menu"
+      "menu": "Menu",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items"
    }
 }

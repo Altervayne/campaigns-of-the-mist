@@ -108,7 +108,7 @@ export function boardItemMetadata(item: BoardItem, t: TFunction, memberCount?: n
 /** The kind-specific half of the metadata line, or `undefined` when a kind carries nothing beyond position. */
 function boardItemDetail(item: BoardItem, t: TFunction, memberCount?: number): string | undefined {
    const content = item.content;
-   if (content.kind === 'zone') return t('LayersPanel.memberCount', { count: memberCount ?? 0 });
+   if (content.kind === 'zone') return t('Common.itemCount', { count: memberCount ?? 0 });
    if (content.kind === 'drawing') return t('LayersPanel.strokeCount', { count: content.strokes.length });
    return undefined;
 }

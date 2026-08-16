@@ -387,8 +387,6 @@
       "reorder": "Glissez pour réordonner",
       "layerName": "Calque {{n}}",
       "untitledText": "Texte sans titre",
-      "memberCount_one": "{{count}} élément",
-      "memberCount_other": "{{count}} éléments",
       "strokeCount_one": "{{count}} tracé",
       "strokeCount_other": "{{count}} tracés",
       "mergeCount_one": "Fusionner {{count}} calque",
@@ -717,8 +715,6 @@
       "emptyDrawer": "Votre Tiroir est complètement vide !",
       "folderCount_one": "{{count}} dossier",
       "folderCount_other": "{{count}} dossiers",
-      "itemCount_one": "{{count}} élément",
-      "itemCount_other": "{{count}} éléments",
       "emptyFolder": "Ce Dossier est vide. Il est temps de le remplir !",
       "addFolder": "Créer un Dossier",
       "folderNamePlaceholder": "Nom du dossier...",
@@ -2315,6 +2311,8 @@
       "possessions": "Possessions",
       "esoterica": "Ésotérique",
       "workspace": "Fiche",
-      "menu": "Menu"
+      "menu": "Menu",
+      "itemCount_one": "{{count}} élément",
+      "itemCount_other": "{{count}} éléments"
    }
 }
