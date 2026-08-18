@@ -305,6 +305,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // Merge needs the live selection, so it rides the request bridge and reuses the footer's mergeable
       // reasoning (no-op + toast if the current selection isn't a contiguous drawing run).
       { id: 'mergeSelectedLayers', scope: 'board', label: t('CommandPalette.commands.mergeSelectedLayers'), keywords: ['merge', 'combine', 'flatten', 'layers', 'drawings', 'board'], icon: Combine, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('mergeSelectedLayers') },
+      { id: 'resetRotation', scope: 'board', label: t('CommandPalette.commands.resetRotation'), keywords: ['reset', 'rotation', 'rotate', 'angle', 'orientation', 'straighten', 'unrotate', 'board'], icon: RotateCcw, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('resetRotation') },
       // Align / distribute the current multi-selection to its bounding box. The canvas owns the selection,
       // so each routes through the request bridge; align no-ops under 2 items, distribute under 3.
       { id: 'alignLeft', scope: 'board', label: t('CommandPalette.commands.alignLeft'), keywords: ['align', 'left', 'edge', 'selection', 'board'], icon: AlignStartVertical, group: t('CommandPalette.groups.tools'), action: () => requestBoardAction('align:left') },

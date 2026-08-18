@@ -195,6 +195,48 @@ export function createResizeItemCommand(id: string, patch: ResizePatch): BoardCo
 }
 
 /**
+ * Rotate an item to an absolute angle (degrees). Captures the original rotation on first `do()`; undo
+ * restores it. Coalescible (`rotate:<id>`): a rotate burst collapses to one undo step, keeping the
+ * original "before".
+ */
+class BoardRotateCommand implements BoardCommand {
+   readonly label = 'rotate-item';
+   readonly coalesceKey: string;
+   private readonly id: string;
+   private before: number | null = null;
+   /** Public so a coalescing merge can adopt a later command's target angle. */
+   after: number;
+
+   constructor(id: string, rotation: number) {
+      this.id = id;
+      this.after = rotation;
+      this.coalesceKey = `rotate:${id}`;
+   }
+
+   async do(): Promise<void> {
+      if (this.before === null) {
+         const item = await getItem(this.id);
+         if (!item) throw new BoardNotFoundError(`Board item not found: ${this.id}`);
+         this.before = item.rotation ?? 0;
+      }
+      await updateItem(this.id, { rotation: this.after });
+   }
+
+   async undo(): Promise<void> {
+      if (this.before !== null) await updateItem(this.id, { rotation: this.before });
+   }
+
+   mergeCoalesced(next: BoardCommand): void {
+      if (next instanceof BoardRotateCommand) this.after = next.after;
+   }
+}
+
+/** Rotate an item to an absolute angle in degrees (coalescible). */
+export function createRotateItemCommand(id: string, rotation: number): BoardCommand {
+   return new BoardRotateCommand(id, rotation);
+}
+
+/**
  * Set an item's z. Captures the previous z on first `do()`; undo restores it. z is a
  * free integer (see {@link nextZ}/{@link bottomZ}), so this never reindexes siblings.
  */

@@ -15,6 +15,7 @@ import {
    createMoveItemCommand,
    createRemoveStrokesCommand,
    createResizeItemCommand,
+   createRotateItemCommand,
    createSetItemLabelCommand,
    createSetItemZCommand,
    createSetItemZoneCommand,
@@ -22,6 +23,7 @@ import {
    createUpdateItemContentAndSizeCommand,
 } from '@/lib/board/boardCommands';
 import { connectionsReferencing } from '@/lib/board/boardConnections';
+import { normalizeAngle } from '@/lib/board/boardRotation';
 import { byZThenId, flattenBoardOrder, repairBoardZ } from '@/lib/board/boardTree';
 import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxWithoutMany } from '@/lib/board/drawingStyle';
 import { zoneContaining } from '@/lib/board/zoneMembership';
@@ -111,6 +113,8 @@ export interface BoardState {
        */
       duplicateItems: (ids: string[]) => Promise<string[]>;
       resizeItem: (id: string, patch: ResizePatch) => Promise<void>;
+      /** Rotates an item to an absolute angle in degrees (normalized to [0,360)) as one undo step. */
+      rotateItem: (id: string, rotation: number) => Promise<void>;
       /**
        * Writes an item's width/height WITHOUT a command (no undo entry) - for the auto-height
        * follow, where the box measures its content and syncs the true height. User resizes
@@ -633,6 +637,14 @@ export function createBoardStore(options: { viewportSaveDebounceMs?: number } = 
                const existing = get().items[id];
                if (existing) set((state) => ({ items: { ...state.items, [id]: { ...existing, ...patch } } }));
                await runItemMutation(createResizeItemCommand(id, patch));
+            },
+
+            rotateItem: async (id, rotation) => {
+               markDirty();
+               const normalized = normalizeAngle(rotation);
+               const existing = get().items[id];
+               if (existing) set((state) => ({ items: { ...state.items, [id]: { ...existing, rotation: normalized } } }));
+               await runItemMutation(createRotateItemCommand(id, normalized));
             },
 
             syncItemSize: async (id, size) => {

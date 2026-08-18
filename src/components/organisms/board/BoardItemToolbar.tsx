@@ -8,6 +8,9 @@ import { ArrowDownToLine, ArrowUpToLine, GripVertical, Spline, Trash2 } from 'lu
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
+// -- Component Imports --
+import { BoardAngleField } from './fields/BoardAngleField';
+
 /*
  * The floating action bar for a selected board item: a frosted row that pops up offset
  * above the item, holding every action (move, connect, raise/lower, the item's own
@@ -33,6 +36,12 @@ interface BoardItemToolbarProps {
    onBringToFront: () => void;
    onSendToBack: () => void;
    onDelete: () => void;
+   /** True for the free-form kinds that can be rotated: shows the angle field. */
+   rotatable?: boolean;
+   /** The item's current rotation in degrees (shown in the angle field). */
+   rotation?: number;
+   /** Commits an absolute rotation (degrees) from the angle field / its reset control. */
+   onRotate?: (deg: number) => void;
    /** Mount point for the selected item's own actions (the per-kind slot). */
    slotRef: (node: HTMLDivElement | null) => void;
    /** Extra world-px lift above the item's top edge (a zone passes its title-bar height so the bar shows). */
@@ -45,7 +54,7 @@ interface BoardItemToolbarProps {
    measureRef: (node: HTMLDivElement | null) => void;
 }
 
-export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToFront, onSendToBack, onDelete, slotRef, measureRef, extraBottom = 0, clampDown = 0, clampX = 0 }: BoardItemToolbarProps) {
+export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToFront, onSendToBack, onDelete, rotatable = false, rotation = 0, onRotate, slotRef, measureRef, extraBottom = 0, clampDown = 0, clampX = 0 }: BoardItemToolbarProps) {
    const { t } = useTranslation();
 
    // The bar anchors at the item's top edge (bottom:100%), lifted by any zone title-bar and lowered by the
@@ -98,6 +107,15 @@ export function BoardItemToolbar({ zoom, onMoveStart, onConnectStart, onBringToF
                <ToolbarButton title={t('BoardView.sendToBack')} onClick={onSendToBack}>
                   <ArrowDownToLine className="h-4 w-4" />
                </ToolbarButton>
+
+               {/* Rotation angle field, bracketed like the per-kind slot. Only the free-form rotatable kinds
+                   show it (post-it / image / text / drawing). */}
+               {rotatable && onRotate && (
+                  <div className="flex items-center gap-0.5">
+                     <div className="w-px self-stretch bg-border mx-1" />
+                     <BoardAngleField value={rotation} onCommit={onRotate} />
+                  </div>
+               )}
 
                {/* Per-kind action slot: the selected item portals its own actions in here, bracketed by
                    dividers that set it apart from the universal controls. The whole group hides when the

@@ -1,11 +1,13 @@
 // -- React Imports --
 import { memo, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { screenDeltaToWorld } from '@/lib/board/boardCoordinates';
 import { MIN_ITEM_SIZE, computeResize, effectiveHeight, fitContentHeight, fitContentWidth, shouldSyncMeasuredHeight, shouldSyncMeasuredSize } from '@/lib/board/boardResize';
+import { isRotatableKind, rotatedResize, rotatedTopExtra } from '@/lib/board/boardRotation';
 import { COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_WIDTH } from '@/lib/board/zoneCollapse';
 import { EXPANDED_CARD_SIZE } from '@/lib/board/embedDrawerItem';
 import { isExpandedCardItem } from '@/lib/board/expandedCardItem';
@@ -14,6 +16,9 @@ import { ZONE_TITLE_BAR_HEIGHT } from './items/ZoneItem';
 // -- Component Imports --
 import { BoardItemBody } from './items/BoardItemBody';
 import { BoardItemToolbar } from './BoardItemToolbar';
+
+// -- Custom Hooks --
+import { useBoardItemRotate } from '@/hooks/board/useBoardItemRotate';
 
 // -- Type Imports --
 import type { BoardItem, BoardItemContent, BoardItemKind } from '@/lib/types/board';
@@ -33,6 +38,8 @@ import type { ResizePatch } from '@/lib/board/boardCommands';
 
 /** Resize-grip hit size in screen px (counter-scaled by zoom so it stays constant on screen). */
 const HANDLE_SCREEN_SIZE = 14;
+
+/** Gap from the box's top edge to the rotate knob, in screen px (counter-scaled by zoom). */
 
 /** Selection-outline thickness in screen px (counter-scaled by zoom, like the grip, so it never thins out at low zoom). */
 const RING_SCREEN_PX = 2;
@@ -105,6 +112,8 @@ interface BoardItemBoxProps {
    /** Pointer-down on the move grip; the canvas owns the (group-aware) move gesture. */
    onMoveStart: (id: string, event: ReactPointerEvent) => void;
    onResize: (id: string, patch: ResizePatch) => void;
+   /** Commits an absolute rotation (degrees) for this item (undoable). */
+   onRotate: (id: string, rotation: number) => void;
    /** Non-undoable size write for the auto-height follow (measured content height). */
    onSyncSize: (id: string, size: { width?: number; height?: number }) => void;
    onUpdateContent: (id: string, content: BoardItemContent) => void;
@@ -164,6 +173,7 @@ export const BoardItemBox = memo(function BoardItemBox({
    onDeepAction,
    onMoveStart,
    onResize,
+   onRotate,
    onSyncSize,
    onUpdateContent,
    onCacheLastKnown,
@@ -178,11 +188,18 @@ export const BoardItemBox = memo(function BoardItemBox({
    resizeMin,
    zIndex,
 }: BoardItemBoxProps) {
+   const { t } = useTranslation();
    // Live resize rect (full rect during a resize); the commit reads from the ref so it
    // never depends on a stale closure. The group move offset is owned by the canvas and
    // arrives as `moveDelta`.
    const [resizeRect, setResizeRect] = useState<DragRect | null>(null);
    const resizeStart = useRef<{ x: number; y: number; orig: DragRect; rect: DragRect } | null>(null);
+
+   // Rotation gesture (free-form kinds only): the live angle drives the box transform; the stored angle
+   // otherwise. The resize-while-rotated math reads the stored angle, which never changes mid-resize.
+   const isRotatable = isRotatableKind(item.kind);
+   const rotate = useBoardItemRotate({ item, onRotate });
+   const rotation = rotate.liveRotation ?? item.rotation ?? 0;
 
    // The toolbar's per-kind slot, state-backed so the body re-renders to portal into it
    // once it mounts (and portals nothing while the item is unselected and the bar is gone).
@@ -297,10 +314,16 @@ export const BoardItemBox = memo(function BoardItemBox({
       const posterAspect = item.content.kind === 'portal' && item.content.style.visual?.kind === 'image' && item.content.style.visual.mode === 'poster'
          ? item.content.style.visual.aspect
          : undefined;
-      const next = computeResize(start.orig, delta, {
+      const min = {
          width: resizeMin?.width ?? MIN_ITEM_SIZE,
          height: minHeight ? Math.max(MIN_ITEM_SIZE, contentHeight) : resizeMin?.height ?? MIN_ITEM_SIZE,
-      }, posterAspect);
+      };
+      // A rotated box grows along its LOCAL axes and repositions so the opposite corner stays pinned; an
+      // unrotated box keeps the exact grow-from-top-left path (x/y fixed). Only post-its/images are both
+      // rotatable and grip-resizable, so the aspect-locked poster path never coincides with rotation.
+      const next = item.rotation
+         ? rotatedResize(start.orig, delta, item.rotation, min)
+         : computeResize(start.orig, delta, min, posterAspect);
       start.rect = next;
       setResizeRect(next);
    };
@@ -308,10 +331,15 @@ export const BoardItemBox = memo(function BoardItemBox({
    const handleResizePointerUp = (event: ReactPointerEvent) => {
       const start = resizeStart.current;
       resizeStart.current = null;
-      // Commit (and clear the live rect) before releasing capture, so the resize can't be lost
-      // if the release throws. Bottom-right only grows the size; x/y never move. The dragged
-      // height is the user's (undoable) choice; a min-height item's move already floored it.
-      if (start) onResize(item.id, { width: start.rect.width, height: start.rect.height });
+      // Commit (and clear the live rect) before releasing capture, so the resize can't be lost if the
+      // release throws. An unrotated bottom-right resize only grows the size (x/y never move); a rotated
+      // one also repositions to pin the opposite corner, so it carries x/y too. The dragged size is the
+      // user's (undoable) choice; a min-height item's move already floored it.
+      if (start) {
+         onResize(item.id, item.rotation
+            ? { width: start.rect.width, height: start.rect.height, x: start.rect.x, y: start.rect.y }
+            : { width: start.rect.width, height: start.rect.height });
+      }
       setResizeRect(null);
       event.currentTarget.releasePointerCapture(event.pointerId);
    };
@@ -393,7 +421,7 @@ export const BoardItemBox = memo(function BoardItemBox({
             width: boxWidth,
             height: boxHeight,
             zIndex,
-            transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
+            transform: rotation ? `rotate(${rotation}deg)` : undefined,
          }}
       >
          {/* A zone's tinted rectangle, filling the box behind the header/chrome (a later sibling paints on
@@ -487,33 +515,55 @@ export const BoardItemBox = memo(function BoardItemBox({
             <>
                {/* The action bar renders in the canvas's selection-toolbar overlay (a sibling of the world
                    layer stacked above the board name pill), so it clears that chrome while the item body
-                   stays below it. A world-rect wrapper at the box's live rect reproduces the box's own
-                   positioning frame: the bar's `bottom:100%` still anchors to the item's top edge, and the
-                   off-edge clamps measure against the width the box actually renders at. The wrapper is inert
-                   (the bar re-arms pointer events) so it never shadows the item beneath. */}
+                   stays below it. A world-rect wrapper at the box's live rect reproduces the box's positioning
+                   frame but stays UPRIGHT (no rotation), so the bar never tilts with a rotated item; the bar's
+                   `bottom:100%` anchors to the item's top edge, lifted by `extraBottom` above the rotated top.
+                   The wrapper is inert (the bar re-arms pointer events) so it never shadows the item beneath. */}
                {toolbarOverlay &&
                   createPortal(
                      <div
                         className="pointer-events-none absolute"
-                        style={{ left: rect.x, top: rect.y, width: boxWidth, height: boxHeight, transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined }}
+                        style={{ left: rect.x, top: rect.y, width: boxWidth, height: boxHeight }}
                      >
                         <BoardItemToolbar
                            zoom={zoom}
                            clampDown={toolbarClamp}
                            clampX={toolbarClampX}
                            measureRef={toolbarMeasureRef}
-                           // An expanded zone's title bar sits above the frame too; lift the toolbar above it.
-                           extraBottom={isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0}
+                           // Lifts above obstructions the upright bar would otherwise overlap: an expanded
+                           // zone's title bar, or (for a rotated item) the extra height the rotation adds, so
+                           // the bar hugs the rotated item's visual top instead of tilting with it. A zone is
+                           // never rotatable, so the two never combine.
+                           extraBottom={(isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0) + (isRotatable && rotation ? rotatedTopExtra(boxWidth, boxHeight, rotation) : 0)}
                            onMoveStart={(event) => onMoveStart(item.id, event)}
                            onConnectStart={(event) => onConnectStart(item.id, event)}
                            onBringToFront={() => onBringToFront(item.id)}
                            onSendToBack={() => onSendToBack(item.id)}
                            onDelete={() => onDelete(item.id)}
+                           rotatable={isRotatable}
+                           rotation={rotation}
+                           onRotate={(deg) => onRotate(item.id, deg)}
                            slotRef={setToolbarSlot}
                         />
                      </div>,
                      toolbarOverlay,
                   )}
+
+               {/* Bottom-left rotate handle: a CIRCLE (vs the square resize grip), shown for every rotatable
+                   kind. The free bottom-left corner keeps it clear of the top toolbar and the bottom-right
+                   resize grip. It lives inside the transformed frame, so it swings with the box like a
+                   design-tool rotate handle. Text + drawing have no resize grip but still get this. */}
+               {isRotatable && (
+                  <div
+                     onPointerDown={rotate.onPointerDown}
+                     onPointerMove={rotate.onPointerMove}
+                     onPointerUp={rotate.onPointerUp}
+                     title={t('BoardView.rotateItem')}
+                     aria-label={t('BoardView.rotateItem')}
+                     className="pointer-events-auto absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 rounded-full border border-background bg-primary"
+                     style={{ width: gripSize, height: gripSize, cursor: 'grab' }}
+                  />
+               )}
 
                {/* Single bottom-right resize grip, counter-scaled to a constant on-screen size. It stays on
                    the box (not the overlay); a zone's box is click-through, so re-arm pointer events here.

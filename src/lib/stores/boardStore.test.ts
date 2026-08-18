@@ -208,6 +208,21 @@ describe('mutating actions', () => {
       expect(store.getState().items['item-1']).toMatchObject({ width: 100, height: 100, x: 10, y: 20 });
    });
 
+   it('rotateItem persists a normalized angle, undo restores the prior rotation', async () => {
+      const board = await repository.createBoard('Board');
+      await repository.addItem(makeRecord('item-1', board.id, 0, { rotation: 30 }));
+      const store = createBoardStore();
+      await store.getState().actions.hydrate(board.id);
+
+      // An over-360 angle normalizes into [0, 360) on write.
+      await store.getState().actions.rotateItem('item-1', 380);
+      expect(store.getState().items['item-1'].rotation).toBe(20);
+      expect((await repository.getItem('item-1'))?.rotation).toBe(20);
+
+      await store.getState().actions.undo();
+      expect(store.getState().items['item-1'].rotation).toBe(30);
+   });
+
    it('updateItemContent persists new content, undo restores the old content', async () => {
       const board = await repository.createBoard('Board');
       await repository.addItem(makeRecord('item-1', board.id, 0, { content: { kind: 'post-it', mode: 'copy', data: { id: 'n3', text: 'old' } } }));

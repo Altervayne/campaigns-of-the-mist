@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { fitViewport } from '@/lib/board/boardCoordinates';
 import { flattenBoardOrder } from '@/lib/board/boardTree';
 import { alignPositions, distributePositions, type AlignEdge, type DistributeAxis, type Rect } from '@/lib/board/boardAlign';
+import { isRotatableKind } from '@/lib/board/boardRotation';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { PendingEraseContext } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
@@ -445,6 +446,15 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       void actions.moveItemsTo(withZoneMembers(state.items, state.selectedIds, distributePositions(rects, axis)));
    }, [selectionRects, store, actions]);
 
+   // Clear the rotation of every rotatable item in the selection (the palette's reset-rotation command).
+   const resetSelectedRotation = useCallback(() => {
+      const state = store.getState();
+      for (const id of state.selectedIds) {
+         const item = state.items[id];
+         if (item && isRotatableKind(item.kind) && (item.rotation ?? 0) !== 0) void actions.rotateItem(id, 0);
+      }
+   }, [store, actions]);
+
    const { clearBoardAction } = useAppGeneralStateActions();
 
    // The command palette has no cursor point to drop at and doesn't know the selection, so it requests
@@ -526,6 +536,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             actions.setViewport(fitViewport(portals, clip, PORTAL_FRAME_PADDING));
          }
       }
+      else if (pendingBoardAction === 'resetRotation') resetSelectedRotation();
       else if (pendingBoardAction.startsWith('align:')) applyAlign(pendingBoardAction.slice('align:'.length) as AlignEdge);
       else if (pendingBoardAction.startsWith('distribute:')) applyDistribute(pendingBoardAction.slice('distribute:'.length) as DistributeAxis);
       else if (pendingBoardAction.startsWith('embedNote:')) embedNoteAt(pendingBoardAction.slice('embedNote:'.length), viewCenter);

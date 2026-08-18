@@ -5,6 +5,7 @@ import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { zoneContentMinSize } from '@/lib/board/zoneMembership';
 import { connectionsZIndex, groupToolbarZIndex, itemZIndex } from '@/lib/board/boardLayering';
 import { toolbarClampDown, toolbarClampX } from '@/lib/board/boardCoordinates';
+import { isRotatableKind, rotatedTopExtra } from '@/lib/board/boardRotation';
 import { PORTAL_MIN_SIZE } from '@/lib/board/portalSizing';
 
 // -- Custom Hooks --
@@ -150,7 +151,9 @@ export function BoardItemsLayer({
     */
    const toolbarClampFor = (item: BoardItem): number | undefined => {
       if (item.id !== soleSelectedId) return undefined;
-      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0), viewport, clipHeight);
+      // The upright bar sits above the rotated item's visual top, so clamp against that higher anchor.
+      const topExtra = item.rotation && isRotatableKind(item.kind) ? rotatedTopExtra(item.width, item.height, item.rotation) : 0;
+      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0) - topExtra, viewport, clipHeight);
    };
 
    /**
@@ -191,6 +194,7 @@ export function BoardItemsLayer({
             onDeepAction={handleItemDoubleClick}
             onMoveStart={handleMoveStart}
             onResize={actions.resizeItem}
+            onRotate={actions.rotateItem}
             onSyncSize={actions.syncItemSize}
             onUpdateContent={actions.updateItemContent}
             onCacheLastKnown={actions.cacheReferenceLastKnown}

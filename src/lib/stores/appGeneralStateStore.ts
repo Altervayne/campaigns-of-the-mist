@@ -40,6 +40,7 @@ export type BoardAction =
    | `setGrid:${BoardGridType}`
    | 'focusJumpToCoordinate'
    | 'mergeSelectedLayers'
+   | 'resetRotation'
    | 'frameConnections'
    | 'framePortals'
    | 'align:left'
