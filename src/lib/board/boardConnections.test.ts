@@ -75,6 +75,15 @@ describe('connectionEndpoints', () => {
       expect(connectionEndpoints(box, { x: 150, y: 80, width: 0, height: 0 }).from).toEqual({ x: 100, y: 65 });
    });
 
+   it('anchors on a rotated box real edge, not the axis-aligned one', () => {
+      // A 100x40 box centred at the origin, rotated 90deg: its visual extent is 40 wide (x in [-20, 20]).
+      // A line heading right must meet x=20 (the rotated edge), not x=50 (the un-rotated edge).
+      const box = { x: -50, y: -20, width: 100, height: 40, radius: 0, rotation: 90 };
+      const { from } = connectionEndpoints(box, { x: 100, y: 0, width: 0, height: 0 });
+      expect(from.x).toBeCloseTo(20);
+      expect(from.y).toBeCloseTo(0);
+   });
+
    it('anchors a circular kind (pin) to its circle, not its box corner', () => {
       const pin = { x: 0, y: 0, width: 28, height: 28, circle: true }; // centre (14,14), r=14
       // Diagonal approach: the box corner (28,28) would overhang; the circle point sits on the dot.

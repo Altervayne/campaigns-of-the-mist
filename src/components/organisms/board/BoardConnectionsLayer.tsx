@@ -88,7 +88,9 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
       // other (rounded) kind - including the collapsed-zone bar - clamps to its corner radius.
       const base = isBar ? collapsedBarRect(moved) : { x: moved.x, y: moved.y, width: moved.width, height: moved.height };
       if (!isBar && moved.kind === 'pin') return { ...base, circle: true };
-      return { ...base, radius: CONNECTION_CORNER_RADIUS };
+      // A rotated endpoint (post-it / image / text / drawing) tilts the outline so the anchor meets its
+      // real edge; a collapsed-zone bar is never rotated, so it stays axis-aligned.
+      return { ...base, radius: CONNECTION_CORNER_RADIUS, rotation: isBar ? undefined : moved.rotation };
    };
 
    // The selected line's live color while its picker is open: shown on the line before the

@@ -1,3 +1,6 @@
+// -- Utils Imports --
+import { rotateVec } from './boardRotation';
+
 // -- Type Imports --
 import type { BoardItem, ConnectionArrow, ConnectionStyle } from '@/lib/types/board';
 
@@ -17,8 +20,9 @@ export interface Point {
 /**
  * The minimal placement a connection endpoint reads from an item. `radius` is the corner radius
  * (world units) so the anchor lands on the straight part of a rounded outline, not in the corner
- * gap; `circle` marks a circular kind (the pin) so the anchor meets the dot exactly. Both optional:
- * absent radius is a sharp box (back-compat); the free end (cursor) passes a zero-size rect.
+ * gap; `circle` marks a circular kind (the pin) so the anchor meets the dot exactly; `rotation`
+ * (degrees, center-origin) tilts the outline so the anchor meets a rotated item's real edge. All
+ * optional: absent radius is a sharp box (back-compat); the free end (cursor) passes a zero-size rect.
  */
 export interface RectLike {
    x: number;
@@ -27,6 +31,7 @@ export interface RectLike {
    height: number;
    radius?: number;
    circle?: boolean;
+   rotation?: number;
 }
 
 /** The default corner radius (world units) for the connection anchor clamp on rounded kinds. */
@@ -76,6 +81,25 @@ function edgePoint(cx: number, cy: number, hw: number, hh: number, dx: number, d
  * centre-to-centre line meets that item's visible outline, so the line runs edge-to-edge without
  * overhanging a rounded corner. Pass a zero-size rect for a free end (the connect-drag preview).
  */
+/**
+ * The edge point for one endpoint item along the world ray `(worldDx, worldDy)` from its center,
+ * accounting for its `rotation` (degrees, center-origin). The ray is folded into the box's local frame
+ * (rotate -deg), the axis-aligned edge is solved there off the center, then rotated back to world
+ * (rotate +deg). At 0 deg this is exactly the axis-aligned `edgePoint`. A circle is rotation-invariant.
+ */
+function edgeOf(item: RectLike, cx: number, cy: number, worldDx: number, worldDy: number): Point {
+   const hw = item.width / 2;
+   const hh = item.height / 2;
+   const r = item.radius ?? 0;
+   const circle = item.circle ?? false;
+   const deg = item.rotation ?? 0;
+   if (!deg) return edgePoint(cx, cy, hw, hh, worldDx, worldDy, r, circle);
+   const localRay = rotateVec({ x: worldDx, y: worldDy }, -deg);
+   const localEdge = edgePoint(0, 0, hw, hh, localRay.x, localRay.y, r, circle); // offset from the center
+   const worldOffset = rotateVec(localEdge, deg);
+   return { x: cx + worldOffset.x, y: cy + worldOffset.y };
+}
+
 export function connectionEndpoints(fromItem: RectLike, toItem: RectLike): { from: Point; to: Point } {
    const aCx = fromItem.x + fromItem.width / 2;
    const aCy = fromItem.y + fromItem.height / 2;
@@ -84,8 +108,8 @@ export function connectionEndpoints(fromItem: RectLike, toItem: RectLike): { fro
    const dx = bCx - aCx;
    const dy = bCy - aCy;
    return {
-      from: edgePoint(aCx, aCy, fromItem.width / 2, fromItem.height / 2, dx, dy, fromItem.radius ?? 0, fromItem.circle ?? false),
-      to: edgePoint(bCx, bCy, toItem.width / 2, toItem.height / 2, -dx, -dy, toItem.radius ?? 0, toItem.circle ?? false),
+      from: edgeOf(fromItem, aCx, aCy, dx, dy),
+      to: edgeOf(toItem, bCx, bCy, -dx, -dy),
    };
 }
 
