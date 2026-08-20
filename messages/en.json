@@ -385,6 +385,7 @@
       "connectionPathOrthogonal": "Right angle",
       "connectionPathCircle": "Curved",
       "connectionPathBezier": "Bezier",
+      "connectionControlHandle": "Curve handle",
       "deleteConnection": "Delete connection",
       "itemActions": "More actions",
       "saveItemToDrawer": "Save to drawer",

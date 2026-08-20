@@ -12,8 +12,12 @@ import { connectionMidpoint, connectionPath } from '@/lib/board/connectionPath';
 import { collapsedBarRect, isConnectionCollapsedAway, resolveEndpointAnchor } from '@/lib/board/zoneCollapse';
 import { pushRecentColor, readRecentColors } from '@/lib/recentColors';
 
+// -- Hook Imports --
+import { useConnectionControlDrag } from '@/hooks/board/useConnectionControlDrag';
+
 // -- Component Imports --
 import { ColorPickerPopover } from '@/components/molecules/color/ColorPickerPopover';
+import { ConnectionControlHandles } from './ConnectionControlHandles';
 import { ConnectionPathTypePicker } from './ConnectionPathTypePicker';
 
 // -- Type Imports --
@@ -97,6 +101,10 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
    // single committed command on close (so a picker drag never floods undo).
    const [colorPreview, setColorPreview] = useState<{ id: string; color: string } | null>(null);
 
+   // The selected bezier's live control offsets while a handle is dragged: shown on the curve +
+   // handles before the single committed command on release (same one-command discipline as color).
+   const [controlPreview, setControlPreview] = useState<{ id: string; controls: ConnectionControls } | null>(null);
+
    // The live preview line during a connect drag: source edge -> cursor (a free end).
    const previewLine = (() => {
       if (!connectPreview) return null;
@@ -106,6 +114,30 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
    })();
 
    const selectedConnection = connections.find((connection) => connection.id === selectedId);
+
+   // The selected bezier's live endpoints + controls, fed to the handle-drag hook (null unless the
+   // selection is an editable bezier that still resolves to two live items).
+   const selectedBezierTarget = (() => {
+      if (!selectedConnection) return null;
+      const content = selectedConnection.content as ConnectionBoardContent;
+      if ((content.style.pathType ?? 'straight') !== 'bezier') return null;
+      const fromItem = items[content.from];
+      const toItem = items[content.to];
+      if (!fromItem || !toItem) return null;
+      if (isConnectionCollapsedAway(fromItem, toItem, items, collapsedZoneIds)) return null;
+      const { from, to } = connectionEndpoints(endpointRect(fromItem), endpointRect(toItem));
+      return { from, to, controls: content.style.controls };
+   })();
+
+   const controlDrag = useConnectionControlDrag({
+      target: selectedBezierTarget,
+      zoom,
+      onPreview: (controls) => setControlPreview(selectedConnection && controls ? { id: selectedConnection.id, controls } : null),
+      onCommit: (controls) => {
+         if (!selectedConnection) return;
+         onUpdateStyle(selectedConnection.id, { ...(selectedConnection.content as ConnectionBoardContent).style, controls });
+      },
+   });
 
    return (
       <>
@@ -128,8 +160,11 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
                const effectiveColor = colorPreview?.id === connection.id ? colorPreview.color : content.style.color;
                const dashArray = dashArrayFor(content.style.dash, content.style.width);
                const pathType = content.style.pathType ?? 'straight';
+               // While a handle is dragged the selected bezier reads the live preview offsets; otherwise
+               // the stored ones (or auto). The same `controls` shape the curve, the marker, and the handles.
+               const effectiveControls = controlPreview?.id === connection.id ? controlPreview.controls : content.style.controls;
                // One shared `d` drives the visible line, the selection halo, and the hit target.
-               const d = connectionPath(pathType, from, to, content.style.controls);
+               const d = connectionPath(pathType, from, to, effectiveControls);
 
                return (
                   <g key={connection.id}>
@@ -156,7 +191,7 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
                      {/* The center marker (part of the line, always visible), in the line's own color. */}
                      {content.style.arrow && (
                         <ConnectionArrowMarker
-                           pathType={pathType} from={from} to={to} controls={content.style.controls}
+                           pathType={pathType} from={from} to={to} controls={effectiveControls}
                            arrow={content.style.arrow} width={content.style.width} color={effectiveColor}
                         />
                      )}
@@ -174,6 +209,17 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
                            onSelect(connection.id);
                         }}
                      />
+                     {/* The bezier's two draggable control handles + tethers, above the line, selection only. */}
+                     {isSelected && pathType === 'bezier' && (
+                        <ConnectionControlHandles
+                           from={from} to={to} controls={effectiveControls} zoom={zoom}
+                           c1Label={t('BoardView.connectionControlHandle')}
+                           c2Label={t('BoardView.connectionControlHandle')}
+                           onPointerDown={controlDrag.onPointerDown}
+                           onPointerMove={controlDrag.onPointerMove}
+                           onPointerUp={controlDrag.onPointerUp}
+                        />
+                     )}
                   </g>
                );
             })}

@@ -47,11 +47,13 @@ function circleControl(from: Point, to: Point): Point {
 }
 
 /**
- * The two cubic control points: stored `controls` are OFFSETS from their endpoints; absent, they
- * auto-place along the chord toward the other end AND perpendicular (same side as the circle-curve),
- * so the auto cubic reads as a gentle arc the user later bends, not a straight colinear line.
+ * The two cubic control points in WORLD coordinates: stored `controls` are OFFSETS from their endpoints;
+ * absent, they auto-place along the chord toward the other end AND perpendicular (same side as the
+ * circle-curve), so the auto cubic reads as a gentle arc the user later bends, not a straight colinear
+ * line. The same points the rendered curve uses, so the drag handles + tethers sit on the visible curve
+ * whether the offsets are stored or auto.
  */
-function bezierControls(from: Point, to: Point, controls?: ConnectionControls): { c1: Point; c2: Point } {
+export function bezierControlPoints(from: Point, to: Point, controls?: ConnectionControls): { c1: Point; c2: Point } {
    if (controls) {
       return {
          c1: { x: from.x + controls.c1.x, y: from.y + controls.c1.y },
@@ -93,7 +95,7 @@ export function connectionPath(type: ConnectionPathType, from: Point, to: Point,
          return `M ${f(from.x)} ${f(from.y)} Q ${f(ctrl.x)} ${f(ctrl.y)} ${f(to.x)} ${f(to.y)}`;
       }
       case 'bezier': {
-         const { c1, c2 } = bezierControls(from, to, controls);
+         const { c1, c2 } = bezierControlPoints(from, to, controls);
          return `M ${f(from.x)} ${f(from.y)} C ${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(to.x)} ${f(to.y)}`;
       }
       case 'straight':
@@ -150,7 +152,7 @@ export function connectionMidpoint(type: ConnectionPathType, from: Point, to: Po
       case 'circle':
          return quadraticMidpoint(from, circleControl(from, to), to);
       case 'bezier': {
-         const { c1, c2 } = bezierControls(from, to, controls);
+         const { c1, c2 } = bezierControlPoints(from, to, controls);
          return cubicMidpoint(from, c1, c2, to);
       }
       case 'straight':
@@ -160,4 +162,16 @@ export function connectionMidpoint(type: ConnectionPathType, from: Point, to: Po
             tangent: chordUnit(from, to),
          };
    }
+}
+
+/**
+ * The new stored OFFSET for a dragged bezier control: its start WORLD position shifted by the pointer's
+ * screen delta (converted to world by `/ zoom`), re-expressed relative to its `endpoint` (`from` for c1,
+ * `to` for c2). Pure, so the handle-drag math is unit-tested without the DOM.
+ */
+export function draggedControlOffset(startControlWorld: Point, endpoint: Point, screenDelta: Point, zoom: number): Point {
+   return {
+      x: startControlWorld.x + screenDelta.x / zoom - endpoint.x,
+      y: startControlWorld.y + screenDelta.y / zoom - endpoint.y,
+   };
 }

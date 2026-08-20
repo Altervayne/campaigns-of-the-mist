@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { connectionMidpoint, connectionPath } from './connectionPath';
+import { bezierControlPoints, connectionMidpoint, connectionPath, draggedControlOffset } from './connectionPath';
 
 // -- Type Imports --
 import type { Point } from './boardConnections';
@@ -82,5 +82,36 @@ describe('connectionMidpoint', () => {
       expect(point.x).toBeCloseTo(100);
       expect(point.y).toBeLessThan(0);
       isUnit(tangent);
+   });
+});
+
+describe('bezierControlPoints', () => {
+   it('turns stored offsets into world control points', () => {
+      const controls = { c1: { x: 10, y: -20 }, c2: { x: -10, y: -20 } };
+      // c1 = from + c1; c2 = to + c2.
+      expect(bezierControlPoints({ x: 0, y: 0 }, { x: 200, y: 0 }, controls)).toEqual({
+         c1: { x: 10, y: -20 },
+         c2: { x: 190, y: -20 },
+      });
+   });
+
+   it('auto-places the two controls when absent, matching the rendered curve', () => {
+      // Same points connectionPath bakes into `M 0 0 C 50 30 150 30 200 0`.
+      expect(bezierControlPoints({ x: 0, y: 0 }, { x: 200, y: 0 })).toEqual({
+         c1: { x: 50, y: 30 },
+         c2: { x: 150, y: 30 },
+      });
+   });
+});
+
+describe('draggedControlOffset', () => {
+   it('converts a screen drag to a new offset from c1 endpoint (from)', () => {
+      // Screen delta (20,40) at zoom 2 -> world (10,20); start world (50,30) -> (60,50); offset from (0,0).
+      expect(draggedControlOffset({ x: 50, y: 30 }, { x: 0, y: 0 }, { x: 20, y: 40 }, 2)).toEqual({ x: 60, y: 50 });
+   });
+
+   it('re-expresses c2 relative to its endpoint (to)', () => {
+      // Screen delta (-40,-40) at zoom 2 -> world (-20,-20); start (150,30) -> (130,10); offset from (200,0).
+      expect(draggedControlOffset({ x: 150, y: 30 }, { x: 200, y: 0 }, { x: -40, y: -40 }, 2)).toEqual({ x: -70, y: 10 });
    });
 });

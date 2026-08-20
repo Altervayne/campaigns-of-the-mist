@@ -385,6 +385,7 @@
       "connectionPathOrthogonal": "[TO COMPLETE]",
       "connectionPathCircle": "[TO COMPLETE]",
       "connectionPathBezier": "[TO COMPLETE]",
+      "connectionControlHandle": "[TO COMPLETE]",
       "deleteConnection": "Supprimer la connexion",
       "itemActions": "Plus d'actions",
       "saveItemToDrawer": "Enregistrer dans le tiroir",

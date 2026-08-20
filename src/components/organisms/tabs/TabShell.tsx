@@ -74,7 +74,7 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
          data-tab-id={tabId}
          style={{ transform: CSS.Translate.toString(transform), transition }}
          className={cn(
-            'group relative flex shrink-0 items-center gap-1.5 ml-1.5 border-l border-r border-t border-secondary rounded-t-[10px] pr-1 max-w-80',
+            'group relative flex shrink-0 items-center gap-1.5 ml-1.5 border-l border-r border-t border-secondary rounded-t-lg pr-1 max-w-80',
             // Active tab: same fill as the content below, lifted above the strip's
             // bottom border and pulled down 1px to overlap it, so it reads as one
             // connected surface (no seam). Inactive tabs are lighter recessed chips.
