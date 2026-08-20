@@ -358,6 +358,7 @@
       "journalEmptyPage": "Page vide",
       "imageUpload": "Téléverser une image",
       "imageChange": "Changer l'image",
+      "imageMask": "[TO COMPLETE]",
       "imageRemove": "Supprimer l'image",
       "imageToggleFit": "Basculer le mode d'affichage",
       "imageDefaultTitle": "Image",
@@ -587,6 +588,10 @@
       "lowResolution": "Faible résolution : Le résultat pourrait avoir l'air pixellisé, ou de mauvaise qualité."
    },
    "BoardStencil": {
+      "title": "[TO COMPLETE]",
+      "apply": "[TO COMPLETE]",
+      "maskNone": "[TO COMPLETE]",
+      "applyFailed": "[TO COMPLETE]",
       "maskRoughCircle": "[TO COMPLETE]",
       "maskHexagon": "[TO COMPLETE]",
       "maskRoughRectangle": "[TO COMPLETE]",

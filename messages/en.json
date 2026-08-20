@@ -358,6 +358,7 @@
       "journalEmptyPage": "Empty page",
       "imageUpload": "Upload image",
       "imageChange": "Change image",
+      "imageMask": "Mask image",
       "imageRemove": "Remove image",
       "imageToggleFit": "Toggle cover / contain",
       "imageDefaultTitle": "Image",
@@ -587,6 +588,10 @@
       "lowResolution": "Low resolution: the result may look soft or pixelated at this size."
    },
    "BoardStencil": {
+      "title": "Mask image",
+      "apply": "Apply",
+      "maskNone": "None (rectangle)",
+      "applyFailed": "Could not apply the mask.",
       "maskRoughCircle": "Rough circle",
       "maskHexagon": "Hexagon",
       "maskRoughRectangle": "Rough rectangle",

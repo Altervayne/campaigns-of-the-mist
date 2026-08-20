@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Scaling, Upload } from 'lucide-react';
+import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Scaling, Shapes, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 // -- Store and Hook Imports --
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useImageStencil } from '@/hooks/useImageStencil';
 import { useDrawerStore } from '@/lib/stores/drawerStore';
 import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 
@@ -46,8 +47,9 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
       (hash) => onContentChange({ kind: 'image', assetId: hash, fit: content.fit }),
       { aspect: 'free' },
    );
+   const stencil = useImageStencil((next) => onContentChange(next));
 
-   const showSpinner = isProcessing || (content.assetId !== null && isLoading);
+   const showSpinner = isProcessing || stencil.isProcessing || (content.assetId !== null && isLoading);
 
    // Save As: mint this image as a game-agnostic IMAGE_CARD in the drawer. Mint only - an image has no
    // source link, so there is no write-back and nothing to adopt. Reads the drawer/app state directly (a
@@ -62,14 +64,18 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
    const toggleFit = () => onContentChange({ kind: 'image', assetId: content.assetId, fit: content.fit === 'cover' ? 'contain' : 'cover' });
    const removeImage = () => onContentChange({ kind: 'image', assetId: null, fit: content.fit });
 
+   // A masked image is a shape: it drops the placeholder plate (which would show through the transparent
+   // corners) and fits the whole shape in the box (`contain`), so no aspect crops the shape off.
+   const isMasked = !!content.maskId;
+
    return (
-      <div className="relative h-full w-full bg-muted">
+      <div className={cn('relative h-full w-full', !isMasked && 'bg-muted')}>
          {showSpinner ? (
             <div className="flex h-full w-full items-center justify-center">
                <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
             </div>
          ) : url ? (
-            <img src={url} alt="" draggable={false} className={cn('h-full w-full', content.fit === 'contain' ? 'object-contain' : 'object-cover')} />
+            <img src={url} alt="" draggable={false} className={cn('h-full w-full', isMasked || content.fit === 'contain' ? 'object-contain' : 'object-cover')} />
          ) : (
             // A padding frame stays part of the draggable body so an empty image box can
             // still be moved (the upload button itself stops pointer propagation).
@@ -99,6 +105,9 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
                <ImageControl title={t('BoardView.imageChange')} onClick={openPicker}>
                   <ImageIcon className="h-4 w-4" />
                </ImageControl>
+               <ImageControl title={t('BoardView.imageMask')} onClick={() => stencil.open(content)}>
+                  <Shapes className="h-4 w-4" />
+               </ImageControl>
                <ImageControl title={t('BoardView.saveItemToDrawerAs')} onClick={saveImageToDrawer}>
                   <SaveAll className="h-4 w-4" />
                </ImageControl>
@@ -111,6 +120,7 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
 
          <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />
          {cropperDialog}
+         {stencil.dialog}
       </div>
    );
 }
