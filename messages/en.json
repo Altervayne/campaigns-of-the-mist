@@ -586,6 +586,13 @@
       "apply": "Apply",
       "lowResolution": "Low resolution: the result may look soft or pixelated at this size."
    },
+   "BoardStencil": {
+      "maskRoughCircle": "Rough circle",
+      "maskHexagon": "Hexagon",
+      "maskRoughRectangle": "Rough rectangle",
+      "maskTornEdge": "Torn edge",
+      "maskOrganicBlob": "Organic blob"
+   },
    "MobileEditPortrait": {
       "title": "Edit Portrait",
       "missing": "This portrait is no longer available.",

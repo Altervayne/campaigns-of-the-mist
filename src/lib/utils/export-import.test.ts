@@ -79,6 +79,28 @@ describe('collectAssetIdsFromContent', () => {
       expect(collectAssetIdsFromContent(character([])).size).toBe(0);
    });
 
+   it('folds BOTH the baked and the source asset of a stenciled board image (re-mask survives import)', () => {
+      const board: Board = {
+         id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
+         items: [
+            { id: 'img', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'image', assetId: 'baked-h', sourceAssetId: 'source-h', maskId: 'hexagon', fit: 'cover' } },
+         ],
+      };
+
+      expect(collectAssetIdsFromContent(board)).toEqual(new Set(['baked-h', 'source-h']));
+   });
+
+   it('folds only the assetId for an unmasked board image (no source)', () => {
+      const board: Board = {
+         id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
+         items: [
+            { id: 'img', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'image', assetId: 'plain-h', fit: 'cover' } },
+         ],
+      };
+
+      expect(collectAssetIdsFromContent(board)).toEqual(new Set(['plain-h']));
+   });
+
    it('finds inline-image hashes in a note body (so an exported note bundles its images)', () => {
       // The SAME grammar the GC uses, exercised through the export path - the two must never drift.
       const note = { id: 'n1', title: 'Handout', body: '![a map](asset:1234abcd5678)\n\n![](asset:9999ffff0000)' };
@@ -174,6 +196,32 @@ describe('exportToFile embedded entities', () => {
 
       expect(file.embedded?.characters?.['old-1']).toEqual(char);
       expect(file.assets?.['portrait-1']).toMatchObject({ mimeType: 'image/webp', width: 2, height: 2 });
+   });
+
+   it('embeds BOTH the baked and source bytes of a stenciled image, and an import round-trip restores both', async () => {
+      const baked = new Uint8Array([1, 1, 2, 3, 5]);
+      const source = new Uint8Array([8, 13, 21, 34]);
+      await storeAsset({ hash: 'baked-h', blob: new Blob([baked], { type: 'image/webp' }), mimeType: 'image/webp', width: 4, height: 4, byteSize: baked.length });
+      await storeAsset({ hash: 'source-h', blob: new Blob([source], { type: 'image/webp' }), mimeType: 'image/webp', width: 6, height: 6, byteSize: source.length });
+
+      const stenciled = (): Board => ({
+         id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
+         items: [
+            { id: 'img', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'image', assetId: 'baked-h', sourceAssetId: 'source-h', maskId: 'hexagon', fit: 'cover' } },
+         ],
+      });
+
+      const file = await captureExport(() => exportToFile(stenciled(), 'FULL_BOARD', 'NEUTRAL', 'board'));
+
+      expect(file.assets?.['baked-h']).toMatchObject({ mimeType: 'image/webp', width: 4, height: 4 });
+      expect(file.assets?.['source-h']).toMatchObject({ mimeType: 'image/webp', width: 6, height: 6 });
+
+      // Clear the store and re-import: both the displayed bake and the re-mask source must return.
+      await drawerDatabase.assets.clear();
+      await rehydrateEmbeddedAssets(file.assets!);
+
+      expect(await drawerDatabase.assets.get('baked-h')).toBeDefined();
+      expect(await drawerDatabase.assets.get('source-h')).toBeDefined();
    });
 });
 

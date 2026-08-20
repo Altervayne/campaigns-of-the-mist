@@ -586,6 +586,13 @@
       "apply": "Appliquer",
       "lowResolution": "Faible résolution : Le résultat pourrait avoir l'air pixellisé, ou de mauvaise qualité."
    },
+   "BoardStencil": {
+      "maskRoughCircle": "[TO COMPLETE]",
+      "maskHexagon": "[TO COMPLETE]",
+      "maskRoughRectangle": "[TO COMPLETE]",
+      "maskTornEdge": "[TO COMPLETE]",
+      "maskOrganicBlob": "[TO COMPLETE]"
+   },
    "MobileEditPortrait": {
       "title": "Modifier le Portrait",
       "missing": "Ce portrait n'est plus disponible.",

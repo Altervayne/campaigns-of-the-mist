@@ -70,6 +70,21 @@ function seedBoardItem(id: string, kind: 'image' | 'post-it', assetId: string | 
    });
 }
 
+/** Adds a stenciled board image item: the baked `assetId` plus the kept pre-mask `sourceAssetId`. */
+function seedStenciledImage(id: string, assetId: string, sourceAssetId: string) {
+   return drawerDatabase.boardItems.add({
+      id,
+      boardId: 'board-1',
+      kind: 'image',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      z: 0,
+      content: { kind: 'image', assetId, sourceAssetId, maskId: 'hexagon', fit: 'cover' },
+   });
+}
+
 /** Adds an embedded board CARD copy carrying an IMAGE_CARD whose `details.assetId` references an asset. */
 function seedBoardCardCopy(id: string, assetId: string) {
    return drawerDatabase.boardItems.add({
@@ -185,6 +200,28 @@ describe('collectReferencedAssetHashes', () => {
 
       expect(referenced.has('asset-board')).toBe(true);
       expect(referenced.size).toBe(1);
+   });
+
+   it('retains BOTH the baked and the source asset of a stenciled image (masking must not strand the original)', async () => {
+      await seedStenciledImage('masked-item', 'asset-baked', 'asset-source');
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('asset-baked')).toBe(true);
+      expect(referenced.has('asset-source')).toBe(true);
+      expect(referenced.size).toBe(2);
+   });
+
+   it('lets an OLD baked asset be collected on re-mask while the shared source survives', async () => {
+      // Re-masking rebakes source -> a NEW asset; the item now points at the new bake + the same
+      // source. The stale old bake is referenced by nothing, so it must NOT appear (it is collectable),
+      // while the source, still referenced, must survive.
+      await seedStenciledImage('masked-item', 'asset-baked-new', 'asset-source');
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('asset-baked-old')).toBe(false);
+      expect(referenced.has('asset-source')).toBe(true);
    });
 
    it('ignores a board image item whose assetId is null (empty image box)', async () => {

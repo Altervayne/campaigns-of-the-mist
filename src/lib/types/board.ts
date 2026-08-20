@@ -37,11 +37,23 @@ export interface BoardGrid {
 /** The kinds of item a board can hold. `connection` is a non-spatial line between two items. */
 export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' | 'card' | 'tracker' | 'connection' | 'pin' | 'dice-tray' | 'roll-table' | 'zone' | 'character' | 'portal' | 'text' | 'drawing';
 
-/** An image card on the board; reuses IMAGE_CARD semantics (references the shared asset store). */
+/**
+ * An image card on the board; reuses IMAGE_CARD semantics (references the shared asset store).
+ *
+ * A masked (stenciled) image bakes source x shape into a NEW asset: `assetId` is the baked result,
+ * `sourceAssetId` is the kept original (so a re-mask/reset re-runs on the source), and `maskId` names
+ * the applied preset (a bundled shape, so it is portable - nothing to export). Both are absent on an
+ * unmasked image, so pre-stencil boards read unchanged. When both are set, the asset walkers (GC +
+ * export) MUST count `sourceAssetId` alongside `assetId`, or masking would strand the original.
+ */
 export interface ImageBoardContent {
    kind: 'image';
    assetId: string | null;
    fit: 'cover' | 'contain';
+   /** The pre-mask original, kept for re-mask / reset. Absent on an unmasked image. */
+   sourceAssetId?: string;
+   /** Which preset mask is applied (a bundled shape id). Absent on an unmasked image. */
+   maskId?: string;
 }
 
 /**

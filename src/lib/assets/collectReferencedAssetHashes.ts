@@ -63,7 +63,11 @@ function collectFromItemContent(content: DrawerItemContent, into: Set<string>): 
  */
 function collectFromBoardItemContent(content: BoardItemContent, into: Set<string>): void {
    if (content.kind === 'image') {
+      // A stenciled image references TWO assets: the baked `assetId` AND the kept `sourceAssetId`
+      // (the pre-mask original re-mask/reset re-runs on). Both must count, or masking would strand
+      // the source for the sweep to reclaim.
       if (content.assetId) into.add(content.assetId);
+      if (content.sourceAssetId) into.add(content.sourceAssetId);
       return;
    }
    if (content.kind === 'card' && content.mode === 'copy' && content.data && typeof content.data === 'object' && 'details' in content.data) {
