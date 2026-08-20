@@ -233,6 +233,23 @@ export interface ZoneBoardContent {
 export type ConnectionDash = 'solid' | 'dashed' | 'dotted';
 
 /**
+ * How a connection routes between its two endpoints: a straight segment, a right-angle double-elbow,
+ * an auto arc, or an editable cubic curve. Optional on the style - absent reads as `straight`
+ * (pre-2.3.0 boards), backfilled to `straight` on load.
+ */
+export type ConnectionPathType = 'straight' | 'orthogonal' | 'circle' | 'bezier';
+
+/**
+ * A bezier connection's two control points, stored as OFFSETS from their endpoints (`c1` from `from`,
+ * `c2` from `to`), so moving or resizing an endpoint carries its handle along and the curve keeps its
+ * shape. Absent means the auto placement is used. Only meaningful for `pathType: 'bezier'`.
+ */
+export interface ConnectionControls {
+   c1: { x: number; y: number };
+   c2: { x: number; y: number };
+}
+
+/**
  * A center marker drawn at the connection's midpoint: `full` is a filled triangle arrowhead, `chevron`
  * an open "V". `direction` points the marker along the line - `forward` toward `to`, `backward` toward
  * `from`. Optional on the style: absent means no marker (the picker's "none" clears the field).
@@ -248,6 +265,10 @@ export interface ConnectionStyle {
    color: string;
    dash?: ConnectionDash;
    arrow?: ConnectionArrow;
+   /** Routing mode; absent reads as `straight`. */
+   pathType?: ConnectionPathType;
+   /** Bezier control-point offsets; absent uses the auto placement. */
+   controls?: ConnectionControls;
 }
 
 /** A user-styled line between two board items (endpoints are board-item ids). */

@@ -1,5 +1,5 @@
 // -- Type Imports --
-import type { BoardItem, ConnectionArrow } from '@/lib/types/board';
+import type { BoardItem, ConnectionArrow, ConnectionStyle } from '@/lib/types/board';
 
 /*
  * Pure geometry + lookup for board connections. A connection is a straight line drawn
@@ -32,8 +32,17 @@ export interface RectLike {
 /** The default corner radius (world units) for the connection anchor clamp on rounded kinds. */
 export const CONNECTION_CORNER_RADIUS = 8;
 
-/** Default styling for a freshly drawn connection (visible on both light and dark; solid by default). */
-export const DEFAULT_CONNECTION_STYLE = { width: 3, color: '#3b82f6' } as const;
+/** Default styling for a freshly drawn connection (visible on both light and dark; solid + straight by default). */
+export const DEFAULT_CONNECTION_STYLE = { width: 3, color: '#3b82f6', pathType: 'straight' } as const;
+
+/**
+ * Read-time default for an optional `pathType` (pre-2.3.0 connections have none). Backfills to
+ * `straight`, so it persists on the next content write without a destructive migration.
+ */
+export function normalizeConnectionStyle(style: ConnectionStyle): ConnectionStyle {
+   if (style.pathType) return style;
+   return { ...style, pathType: 'straight' };
+}
 
 /**
  * The point on an item's visible outline (centre `cx,cy`, half-extents `hw,hh`) along the ray
@@ -100,14 +109,13 @@ const ARROW_TAIL = { mult: 1.4, base: 3 };
 const ARROW_SPAN = { mult: 2, base: 3 };
 
 /**
- * The center marker's geometry for a connection between `from` and `to`. The marker centres on the
- * endpoints' midpoint and points along the line: `forward` toward `to`, `backward` toward `from` (a 180°
- * flip). Size scales with the connection `width`. Pure - the caller renders `full` as a filled triangle
- * and `chevron` as a stroked open polyline from the returned points.
+ * The center marker's geometry at an explicit path point `mid`, pointing along `tangent`: `forward`
+ * runs with the tangent, `backward` flips it 180°. Size scales with the connection `width`. Pure - the
+ * caller renders `full` as a filled triangle and `chevron` as a stroked open polyline. Path-aware, so
+ * the marker sits on a curve's midpoint with the local direction, not on the straight-line midpoint.
  */
-export function connectionArrowGeometry(from: Point, to: Point, arrow: ConnectionArrow, width: number): ArrowGeometry {
-   const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-   let angle = Math.atan2(to.y - from.y, to.x - from.x);
+export function connectionArrowGeometryAt(mid: Point, tangent: Point, arrow: ConnectionArrow, width: number): ArrowGeometry {
+   let angle = Math.atan2(tangent.y, tangent.x);
    if (arrow.direction === 'backward') angle += Math.PI;
 
    const tipLen = width * ARROW_TIP.mult + ARROW_TIP.base;
@@ -126,6 +134,16 @@ export function connectionArrowGeometry(from: Point, to: Point, arrow: Connectio
    const wingB = { x: baseX - px * span, y: baseY - py * span };
 
    return { points: [wingA, tip, wingB], mid };
+}
+
+/**
+ * The center marker's geometry for a straight connection between `from` and `to`: centred on the
+ * endpoints' midpoint, pointing along the line. Thin wrapper over {@link connectionArrowGeometryAt}
+ * for the straight case (and its tests); curved paths pass their own on-path point + tangent.
+ */
+export function connectionArrowGeometry(from: Point, to: Point, arrow: ConnectionArrow, width: number): ArrowGeometry {
+   const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+   return connectionArrowGeometryAt(mid, { x: to.x - from.x, y: to.y - from.y }, arrow, width);
 }
 
 /**

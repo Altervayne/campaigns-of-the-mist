@@ -5,6 +5,7 @@ import cuid from 'cuid';
 // -- Local Imports --
 import { drawerDatabase as db } from '@/lib/drawer/drawerDatabase';
 import { BOARD_SCHEMA_VERSION, DEFAULT_BOARD_GRID } from './boardRecords';
+import { normalizeConnectionStyle } from './boardConnections';
 import { BoardNotFoundError, BoardTransactionError } from './boardErrors';
 import * as demoBoardBackend from '@/lib/tutorial/demo/demoBoardBackend';
 
@@ -89,8 +90,17 @@ function toBoardItem(record: BoardItemRecord): BoardItem {
       rotation: record.rotation,
       zoneId: record.zoneId,
       label: record.label,
-      content: record.content,
+      content: normalizeContentOnRead(record.content),
    };
+}
+
+/**
+ * Read-time content defaults for optional fields added after some data was already saved. Currently
+ * backfills a connection's missing `pathType` to `straight`; persists on the next content write.
+ */
+function normalizeContentOnRead(content: BoardItem['content']): BoardItem['content'] {
+   if (content.kind === 'connection') return { ...content, style: normalizeConnectionStyle(content.style) };
+   return content;
 }
 
 // ==================

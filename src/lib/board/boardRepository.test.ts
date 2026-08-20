@@ -218,7 +218,7 @@ describe('importBoard / loadBoard round-trip', () => {
          items: [
             { id: 'a', kind: 'post-it', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'post-it', mode: 'copy', data: { id: 'n22', text: 'a' } } },
             { id: 'b', kind: 'post-it', x: 10, y: 10, width: 100, height: 100, z: 1, content: { kind: 'post-it', mode: 'copy', data: { id: 'n23', text: 'b' } } },
-            { id: 'conn', kind: 'connection', x: 0, y: 0, width: 0, height: 0, z: 2, content: { kind: 'connection', from: 'a', to: 'b', style: { width: 2, color: '#f00' } } },
+            { id: 'conn', kind: 'connection', x: 0, y: 0, width: 0, height: 0, z: 2, content: { kind: 'connection', from: 'a', to: 'b', style: { width: 2, color: '#f00', pathType: 'straight' } } },
          ],
       };
 
@@ -229,6 +229,26 @@ describe('importBoard / loadBoard round-trip', () => {
       // The connection still points at the same item ids (no re-id occurred).
       const connection = reloaded!.items.find((i) => i.kind === 'connection');
       expect(connection!.content).toMatchObject({ kind: 'connection', from: 'a', to: 'b' });
+   });
+
+   it('backfills a legacy connection with no pathType to straight on read', async () => {
+      await repository.importBoard({
+         id: 'board-legacy',
+         name: 'Legacy',
+         viewport: { x: 0, y: 0, zoom: 1 },
+         drawerItemId: null,
+         nextLayerSeq: 1,
+         items: [
+            { id: 'a', kind: 'post-it', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'post-it', mode: 'copy', data: { id: 'n24', text: 'a' } } },
+            { id: 'b', kind: 'post-it', x: 10, y: 10, width: 100, height: 100, z: 1, content: { kind: 'post-it', mode: 'copy', data: { id: 'n25', text: 'b' } } },
+            // Pre-2.3.0 connection: no pathType stored.
+            { id: 'conn', kind: 'connection', x: 0, y: 0, width: 0, height: 0, z: 2, content: { kind: 'connection', from: 'a', to: 'b', style: { width: 2, color: '#f00' } } },
+         ],
+      });
+
+      const reloaded = await repository.loadBoard('board-legacy');
+      const connection = reloaded!.items.find((i) => i.kind === 'connection')!;
+      expect(connection.content).toMatchObject({ kind: 'connection', style: { pathType: 'straight' } });
    });
 
    it('replaces any existing rows for the same board id on import', async () => {

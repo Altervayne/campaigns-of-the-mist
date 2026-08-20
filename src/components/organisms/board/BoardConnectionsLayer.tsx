@@ -7,15 +7,17 @@ import { ArrowLeftRight, Trash2 } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { CONNECTION_CORNER_RADIUS, connectionArrowGeometry, connectionEndpoints } from '@/lib/board/boardConnections';
+import { CONNECTION_CORNER_RADIUS, connectionArrowGeometryAt, connectionEndpoints } from '@/lib/board/boardConnections';
+import { connectionMidpoint, connectionPath } from '@/lib/board/connectionPath';
 import { collapsedBarRect, isConnectionCollapsedAway, resolveEndpointAnchor } from '@/lib/board/zoneCollapse';
 import { pushRecentColor, readRecentColors } from '@/lib/recentColors';
 
 // -- Component Imports --
 import { ColorPickerPopover } from '@/components/molecules/color/ColorPickerPopover';
+import { ConnectionPathTypePicker } from './ConnectionPathTypePicker';
 
 // -- Type Imports --
-import type { BoardItem, ConnectionArrow, ConnectionBoardContent, ConnectionDash, ConnectionStyle } from '@/lib/types/board';
+import type { BoardItem, ConnectionArrow, ConnectionBoardContent, ConnectionControls, ConnectionDash, ConnectionPathType, ConnectionStyle } from '@/lib/types/board';
 import type { Point, RectLike } from '@/lib/board/boardConnections';
 
 /*
@@ -123,37 +125,49 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
                // Show the live picker color on the selected line; otherwise the committed color.
                const effectiveColor = colorPreview?.id === connection.id ? colorPreview.color : content.style.color;
                const dashArray = dashArrayFor(content.style.dash, content.style.width);
+               const pathType = content.style.pathType ?? 'straight';
+               // One shared `d` drives the visible line, the selection halo, and the hit target.
+               const d = connectionPath(pathType, from, to, content.style.controls);
 
                return (
                   <g key={connection.id}>
                      {isSelected && (
-                        <line
-                           x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                        <path
+                           d={d}
+                           fill="none"
                            stroke="var(--primary)"
                            strokeOpacity={0.35}
                            strokeWidth={content.style.width + 8 / zoom}
                            strokeLinecap="round"
+                           strokeLinejoin="round"
                         />
                      )}
-                     <line
-                        x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                     <path
+                        d={d}
+                        fill="none"
                         stroke={effectiveColor}
                         strokeWidth={content.style.width}
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                         strokeDasharray={dashArray}
                      />
                      {/* The center marker (part of the line, always visible), in the line's own color. */}
                      {content.style.arrow && (
-                        <ConnectionArrowMarker from={from} to={to} arrow={content.style.arrow} width={content.style.width} color={effectiveColor} />
+                        <ConnectionArrowMarker
+                           pathType={pathType} from={from} to={to} controls={content.style.controls}
+                           arrow={content.style.arrow} width={content.style.width} color={effectiveColor}
+                        />
                      )}
                      {/* Wide transparent hit path (always SOLID, so a dotted/dashed line stays clickable). */}
-                     <line
-                        x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                     <path
+                        d={d}
+                        fill="none"
                         stroke="transparent"
                         strokeWidth={Math.max(content.style.width, 14 / zoom)}
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                         style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-                        onPointerDown={(event: ReactPointerEvent<SVGLineElement>) => {
+                        onPointerDown={(event: ReactPointerEvent<SVGPathElement>) => {
                            event.stopPropagation();
                            onSelect(connection.id);
                         }}
@@ -183,17 +197,25 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
             if (!fromItem || !toItem) return null;
             if (isConnectionCollapsedAway(fromItem, toItem, items, collapsedZoneIds)) return null;
             const { from, to } = connectionEndpoints(endpointRect(fromItem), endpointRect(toItem));
-            const midX = (from.x + to.x) / 2;
-            const midY = (from.y + to.y) / 2;
+            const pathType = content.style.pathType ?? 'straight';
+            // Anchor the toolbar at the on-path midpoint, so it follows a bent line.
+            const { point: mid } = connectionMidpoint(pathType, from, to, content.style.controls);
             const effectiveColor = colorPreview?.id === selectedConnection.id ? colorPreview.color : content.style.color;
 
             return (
                <div
                   className="absolute"
-                  style={{ left: midX, top: midY, zIndex, transform: `translate(-50%, -50%) scale(${1 / zoom}) translateY(-44px)` }}
+                  style={{ left: mid.x, top: mid.y, zIndex, transform: `translate(-50%, -50%) scale(${1 / zoom}) translateY(-44px)` }}
                   onPointerDown={(event) => event.stopPropagation()}
                >
                   <div className="flex items-center gap-2 rounded-md border border-border bg-card/95 p-1.5 shadow-md backdrop-blur-sm">
+                     <ConnectionPathTypePicker
+                        pathType={pathType}
+                        onChange={(next) => onUpdateStyle(selectedConnection.id, { ...content.style, pathType: next })}
+                     />
+
+                     <div className="h-5 w-px bg-border" />
+
                      <div className="flex items-center gap-1" title={t('BoardView.lineWidth')}>
                         {WIDTH_PRESETS.map((width) => (
                            <button
@@ -379,12 +401,22 @@ function ConnectionColorControl({
 }
 
 /**
- * The connection's center marker, drawn in the world SVG at the line's midpoint in the line's own color.
- * `full` is a filled triangle; `chevron` an open stroked "V". Geometry is in world units (from the line
+ * The connection's center marker, drawn in the world SVG at the path's midpoint in the line's own color.
+ * `full` is a filled triangle; `chevron` an open stroked "V". It sits on the on-path midpoint and points
+ * along the local tangent, so it tracks a curve or elbow. Geometry is in world units (from the line
  * width), so it scales with the board exactly like the line and stays crisp at any zoom.
  */
-function ConnectionArrowMarker({ from, to, arrow, width, color }: { from: Point; to: Point; arrow: ConnectionArrow; width: number; color: string }) {
-   const { points } = connectionArrowGeometry(from, to, arrow, width);
+function ConnectionArrowMarker({ pathType, from, to, controls, arrow, width, color }: {
+   pathType: ConnectionPathType;
+   from: Point;
+   to: Point;
+   controls?: ConnectionControls;
+   arrow: ConnectionArrow;
+   width: number;
+   color: string;
+}) {
+   const { point, tangent } = connectionMidpoint(pathType, from, to, controls);
+   const { points } = connectionArrowGeometryAt(point, tangent, arrow, width);
    const d = points.map((p) => `${p.x},${p.y}`).join(' ');
    if (arrow.type === 'full') return <polygon points={d} fill={color} />;
    return <polyline points={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />;
