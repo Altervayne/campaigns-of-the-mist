@@ -387,6 +387,8 @@
       "connectionMarkerEnd": "End",
       "connectionLabel": "Label",
       "connectionLabelPlaceholder": "Label this connection",
+      "connectionLabelColor": "Color",
+      "connectionLabelColorDefault": "Default color",
       "connectionPathType": "Line shape",
       "connectionPathStraight": "Straight",
       "connectionPathOrthogonal": "Right angle",

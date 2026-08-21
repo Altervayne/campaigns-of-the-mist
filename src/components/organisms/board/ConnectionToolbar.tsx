@@ -21,7 +21,7 @@ import type { ConnectionStyle } from '@/lib/types/board';
  * center marker it edits. The container stops the pointer so a press inside it never reads as a
  * canvas click-away. Each change commits one undoable style update (the label commits on close).
  */
-export function ConnectionToolbar({ connectionId, style, x, y, zoom, zIndex, effectiveColor, onPreview, onUpdateStyle, onDelete }: {
+export function ConnectionToolbar({ connectionId, style, x, y, zoom, zIndex, effectiveColor, onPreview, onLabelColorPreview, onUpdateStyle, onDelete }: {
    connectionId: string;
    style: ConnectionStyle;
    x: number;
@@ -30,6 +30,7 @@ export function ConnectionToolbar({ connectionId, style, x, y, zoom, zIndex, eff
    zIndex: number;
    effectiveColor: string;
    onPreview: (color: string | null) => void;
+   onLabelColorPreview: (color: string | null) => void;
    onUpdateStyle: (id: string, style: ConnectionStyle) => void;
    onDelete: (id: string) => void;
 }) {
@@ -66,7 +67,7 @@ export function ConnectionToolbar({ connectionId, style, x, y, zoom, zIndex, eff
 
             <div className="h-5 w-px bg-border" />
 
-            <ConnectionLabelPopover style={style} onChange={commit} />
+            <ConnectionLabelPopover style={style} onChange={commit} onColorPreview={onLabelColorPreview} />
 
             <div className="h-5 w-px bg-border" />
 

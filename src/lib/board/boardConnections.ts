@@ -2,7 +2,7 @@
 import { rotateVec } from './boardRotation';
 
 // -- Type Imports --
-import type { BoardItem, ConnectionDash, ConnectionMarker, ConnectionMarkerPosition, ConnectionMarkers, ConnectionStyle } from '@/lib/types/board';
+import type { BoardItem, ConnectionDash, ConnectionLabelSize, ConnectionMarker, ConnectionMarkerPosition, ConnectionMarkers, ConnectionStyle } from '@/lib/types/board';
 
 /*
  * Pure geometry + lookup for board connections. A connection is a straight line drawn
@@ -39,6 +39,12 @@ export const CONNECTION_CORNER_RADIUS = 8;
 
 /** Default styling for a freshly drawn connection (visible on both light and dark; solid + straight by default). */
 export const DEFAULT_CONNECTION_STYLE = { width: 3, color: '#3b82f6', pathType: 'straight' } as const;
+
+/** Label chip font size (world px) per size preset; the chip renders in world units so this scales with the board. */
+export const CONNECTION_LABEL_SIZE_PX: Record<ConnectionLabelSize, number> = { xs: 14, sm: 18, md: 24, lg: 32, xl: 40, '2xl': 48 };
+
+/** The label size applied when none is stored. */
+export const DEFAULT_LABEL_SIZE: ConnectionLabelSize = 'md';
 
 /**
  * The SVG `strokeDasharray` for a dash style at stroke width `w`; solid -> none. Gaps scale WITH the width

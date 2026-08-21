@@ -3,7 +3,7 @@ import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
-import { CONNECTION_CORNER_RADIUS, connectionArrowGeometryAt, connectionEndpoints, dashArrayFor } from '@/lib/board/boardConnections';
+import { CONNECTION_CORNER_RADIUS, CONNECTION_LABEL_SIZE_PX, DEFAULT_LABEL_SIZE, connectionArrowGeometryAt, connectionEndpoints, dashArrayFor } from '@/lib/board/boardConnections';
 import { connectionMidpoint, connectionPath, connectionPointAt } from '@/lib/board/connectionPath';
 import { collapsedBarRect, isConnectionCollapsedAway, resolveEndpointAnchor } from '@/lib/board/zoneCollapse';
 
@@ -15,7 +15,7 @@ import { ConnectionControlHandles } from './ConnectionControlHandles';
 import { ConnectionToolbar } from './ConnectionToolbar';
 
 // -- Type Imports --
-import type { BoardItem, ConnectionBoardContent, ConnectionControls, ConnectionMarker, ConnectionMarkerPosition, ConnectionPathType, ConnectionStyle } from '@/lib/types/board';
+import type { BoardItem, ConnectionBoardContent, ConnectionControls, ConnectionLabelSize, ConnectionMarker, ConnectionMarkerPosition, ConnectionPathType, ConnectionStyle } from '@/lib/types/board';
 import type { Point, RectLike } from '@/lib/board/boardConnections';
 
 /*
@@ -76,6 +76,10 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
    // The selected line's live color while its picker is open: shown on the line before the
    // single committed command on close (so a picker drag never floods undo).
    const [colorPreview, setColorPreview] = useState<{ id: string; color: string } | null>(null);
+
+   // The selected connection's live LABEL color while its label-color picker is open (same one-command
+   // discipline as the line color, but painted on the label chip instead of the line).
+   const [labelColorPreview, setLabelColorPreview] = useState<{ id: string; color: string } | null>(null);
 
    // The selected bezier's live control offsets while a handle is dragged: shown on the curve +
    // handles before the single committed command on release (same one-command discipline as color).
@@ -228,7 +232,8 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
             const { from, to } = connectionEndpoints(endpointRect(fromItem), endpointRect(toItem));
             const pathType = content.style.pathType ?? 'straight';
             const { point: mid } = connectionMidpoint(pathType, from, to, content.style.controls);
-            return <ConnectionLabelChip key={connection.id} x={mid.x} y={mid.y} zIndex={zIndex} label={label} />;
+            const labelColor = labelColorPreview?.id === connection.id ? labelColorPreview.color : content.style.labelColor;
+            return <ConnectionLabelChip key={connection.id} x={mid.x} y={mid.y} zIndex={zIndex} label={label} size={content.style.labelSize} color={labelColor} />;
          })}
 
          {/* Style control for the selected connection, anchored at the on-path midpoint so it follows a
@@ -255,6 +260,7 @@ export function BoardConnectionsLayer({ items, connections, selectedId, zoom, mo
                   zIndex={zIndex}
                   effectiveColor={effectiveColor}
                   onPreview={(color) => setColorPreview(color == null ? null : { id: selectedConnection.id, color })}
+                  onLabelColorPreview={(color) => setLabelColorPreview(color == null ? null : { id: selectedConnection.id, color })}
                   onUpdateStyle={onUpdateStyle}
                   onDelete={onDelete}
                />
@@ -293,18 +299,24 @@ function ConnectionMarkerGlyph({ pathType, from, to, controls, pos, marker, widt
  * the line. It scales WITH the board (no counter-scale), so it grows and shrinks with the line it labels.
  * Theme-token chrome so it reads over any line color. Display only; the label is edited from the toolbar.
  */
-function ConnectionLabelChip({ x, y, zIndex, label }: {
+function ConnectionLabelChip({ x, y, zIndex, label, size, color }: {
    x: number;
    y: number;
    zIndex: number;
    label: string;
+   size?: ConnectionLabelSize;
+   color?: string;
 }) {
+   const fontSize = CONNECTION_LABEL_SIZE_PX[size ?? DEFAULT_LABEL_SIZE];
    return (
       <div
          className="pointer-events-none absolute"
          style={{ left: x, top: y, zIndex, transform: 'translate(-50%, -50%) translateY(-22px)' }}
       >
-         <span className="whitespace-nowrap rounded border border-border bg-card/95 px-1.5 py-0.5 text-xs text-foreground shadow-sm">
+         <span
+            className="whitespace-nowrap rounded border border-border bg-card/95 px-1.5 py-0.5 text-foreground shadow-sm"
+            style={{ fontSize, ...(color ? { color } : null) }}
+         >
             {label}
          </span>
       </div>

@@ -387,6 +387,8 @@
       "connectionMarkerEnd": "[TO COMPLETE]",
       "connectionLabel": "[TO COMPLETE]",
       "connectionLabelPlaceholder": "[TO COMPLETE]",
+      "connectionLabelColor": "[TO COMPLETE]",
+      "connectionLabelColorDefault": "[TO COMPLETE]",
       "connectionPathType": "[TO COMPLETE]",
       "connectionPathStraight": "[TO COMPLETE]",
       "connectionPathOrthogonal": "[TO COMPLETE]",

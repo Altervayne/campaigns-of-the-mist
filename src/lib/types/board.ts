@@ -280,6 +280,9 @@ export interface ConnectionMarker {
 /** Where a marker sits on a connection: at its `from` end, its on-path midpoint, or its `to` end. */
 export type ConnectionMarkerPosition = 'start' | 'middle' | 'end';
 
+/** The label chip's font size; absent reads as `md`. */
+export type ConnectionLabelSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
 /** The connection's positional markers: at most one per position, any mix. Absent positions draw nothing. */
 export interface ConnectionMarkers {
    start?: ConnectionMarker;
@@ -302,6 +305,10 @@ export interface ConnectionStyle {
    markers?: ConnectionMarkers;
    /** Optional midpoint label chip; absent or '' means none. */
    label?: string;
+   /** Label font size; absent reads as `md`. Ignored without a `label`. */
+   labelSize?: ConnectionLabelSize;
+   /** Label text color (hex); absent uses the default foreground. Ignored without a `label`. */
+   labelColor?: string;
    /** Routing mode; absent reads as `straight`. */
    pathType?: ConnectionPathType;
    /** Bezier control-point offsets; absent uses the auto placement. */
