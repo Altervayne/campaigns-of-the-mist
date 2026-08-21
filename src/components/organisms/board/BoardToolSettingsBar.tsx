@@ -8,13 +8,13 @@ import { Brush, Check, ChevronDown, Circle, Eraser, Highlighter, LayersPlus, Min
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { strokeColorToCss } from '@/lib/board/drawingStyle';
+import { CONNECTION_PALETTE } from '@/lib/board/boardConnections';
 import { pushRecentColor, readRecentColors } from '@/lib/recentColors';
 
 // -- Component Imports --
 import { ColorPickerPopover } from '@/components/molecules/color/ColorPickerPopover';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { CONNECTION_PALETTE } from './BoardConnectionsLayer';
 
 // -- Type Imports --
 import type { ActiveTool, BrushKind } from '@/lib/types/board';

@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { connectionArrowGeometry, connectionEndpoints, connectionsReferencing } from './boardConnections';
+import { DEFAULT_MARKER_DIRECTION, connectionArrowGeometry, connectionEndpoints, connectionsReferencing, normalizeConnectionStyle, setConnectionMarker } from './boardConnections';
 import { createBoard } from './boardRepository';
 import { createBoardStore } from '@/lib/stores/boardStore';
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
@@ -91,6 +91,68 @@ describe('connectionEndpoints', () => {
       expect(Math.hypot(from.x - 14, from.y - 14)).toBeCloseTo(14); // exactly on the circle
       expect(from.x).toBeCloseTo(14 + 14 / Math.SQRT2);
       expect(from.y).toBeCloseTo(14 + 14 / Math.SQRT2);
+   });
+});
+
+describe('normalizeConnectionStyle', () => {
+   it('migrates a legacy center `arrow` to `markers.middle` and drops `arrow`', () => {
+      const legacy = { width: 3, color: '#fff', pathType: 'straight', arrow: { type: 'full', direction: 'forward' } } as const;
+      const next = normalizeConnectionStyle(legacy) as typeof legacy & { markers?: { middle?: unknown } };
+      expect(next.markers).toEqual({ middle: { type: 'full', direction: 'forward' } });
+      expect('arrow' in next).toBe(false);
+   });
+
+   it('backfills a missing `pathType` while migrating the arrow', () => {
+      const legacy = { width: 3, color: '#fff', arrow: { type: 'chevron', direction: 'backward' } } as const;
+      const next = normalizeConnectionStyle(legacy);
+      expect(next.pathType).toBe('straight');
+      expect(next.markers).toEqual({ middle: { type: 'chevron', direction: 'backward' } });
+      expect('arrow' in next).toBe(false);
+   });
+
+   it('leaves an already-migrated style unchanged (idempotent)', () => {
+      const migrated = { width: 3, color: '#fff', pathType: 'straight', markers: { middle: { type: 'full', direction: 'forward' } } } as const;
+      const next = normalizeConnectionStyle(migrated);
+      expect(next).toBe(migrated); // same reference: nothing to do
+      expect(normalizeConnectionStyle(next)).toEqual(migrated);
+   });
+
+   it('leaves a style with neither `arrow` nor `pathType` gap clean', () => {
+      const clean = { width: 2, color: '#000', pathType: 'bezier' } as const;
+      expect(normalizeConnectionStyle(clean)).toBe(clean);
+   });
+});
+
+describe('setConnectionMarker', () => {
+   const full = { type: 'full', direction: 'forward' } as const;
+   const chevron = { type: 'chevron', direction: 'backward' } as const;
+
+   it('sets a marker at a position on an empty set', () => {
+      expect(setConnectionMarker(undefined, 'end', full)).toEqual({ end: full });
+   });
+
+   it('preserves the other positions when editing one', () => {
+      const next = setConnectionMarker({ start: chevron, end: full }, 'middle', full);
+      expect(next).toEqual({ start: chevron, middle: full, end: full });
+   });
+
+   it('clears one position and keeps the rest', () => {
+      const next = setConnectionMarker({ start: chevron, end: full }, 'end', undefined);
+      expect(next).toEqual({ start: chevron });
+   });
+
+   it('drops the whole set once the last marker is cleared', () => {
+      expect(setConnectionMarker({ middle: full }, 'middle', undefined)).toBeUndefined();
+   });
+
+   it('does not mutate the input', () => {
+      const markers = { start: chevron } as const;
+      setConnectionMarker(markers, 'end', full);
+      expect(markers).toEqual({ start: chevron });
+   });
+
+   it('carries a sensible default direction per position', () => {
+      expect(DEFAULT_MARKER_DIRECTION).toEqual({ start: 'backward', middle: 'forward', end: 'forward' });
    });
 });
 

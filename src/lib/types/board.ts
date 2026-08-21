@@ -268,21 +268,40 @@ export interface ConnectionControls {
 }
 
 /**
- * A center marker drawn at the connection's midpoint: `full` is a filled triangle arrowhead, `chevron`
- * an open "V". `direction` points the marker along the line - `forward` toward `to`, `backward` toward
- * `from`. Optional on the style: absent means no marker (the picker's "none" clears the field).
+ * A marker drawn on a connection at one of its positions: `full` is a filled triangle arrowhead,
+ * `chevron` an open "V". `direction` points the marker along the line - `forward` toward `to`,
+ * `backward` toward `from` - at whichever position it sits.
  */
-export interface ConnectionArrow {
+export interface ConnectionMarker {
    type: 'full' | 'chevron';
    direction: 'forward' | 'backward';
 }
 
-/** A connection's visual style: stroke width + color, plus an optional dash pattern and center marker. */
+/** Where a marker sits on a connection: at its `from` end, its on-path midpoint, or its `to` end. */
+export type ConnectionMarkerPosition = 'start' | 'middle' | 'end';
+
+/** The connection's positional markers: at most one per position, any mix. Absent positions draw nothing. */
+export interface ConnectionMarkers {
+   start?: ConnectionMarker;
+   middle?: ConnectionMarker;
+   end?: ConnectionMarker;
+}
+
+/**
+ * A connection's visual style: stroke width + color, plus optional dash, path routing, positional
+ * markers, and a short label. `markers` places a marker at start / middle / end (pre-positional data
+ * carried a single center `arrow`, migrated to `markers.middle` on load). `label` is optional text
+ * shown as a chip at the on-path midpoint; it rides the style bag through `onUpdateStyle` - absent
+ * or '' means no chip.
+ */
 export interface ConnectionStyle {
    width: number;
    color: string;
    dash?: ConnectionDash;
-   arrow?: ConnectionArrow;
+   /** Positional markers (start / middle / end); absent means no markers. */
+   markers?: ConnectionMarkers;
+   /** Optional midpoint label chip; absent or '' means none. */
+   label?: string;
    /** Routing mode; absent reads as `straight`. */
    pathType?: ConnectionPathType;
    /** Bezier control-point offsets; absent uses the auto placement. */

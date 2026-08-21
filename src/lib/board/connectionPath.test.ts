@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { bezierControlPoints, connectionMidpoint, connectionPath, draggedControlOffset } from './connectionPath';
+import { bezierControlPoints, connectionMidpoint, connectionPath, connectionPointAt, draggedControlOffset } from './connectionPath';
 
 // -- Type Imports --
 import type { Point } from './boardConnections';
@@ -82,6 +82,73 @@ describe('connectionMidpoint', () => {
       expect(point.x).toBeCloseTo(100);
       expect(point.y).toBeLessThan(0);
       isUnit(tangent);
+   });
+});
+
+describe('connectionPointAt', () => {
+   const isUnit = (v: Point) => expect(Math.hypot(v.x, v.y)).toBeCloseTo(1);
+   const from = { x: 0, y: 0 };
+
+   it('delegates `middle` to connectionMidpoint', () => {
+      const to = { x: 200, y: 0 };
+      expect(connectionPointAt('straight', from, to, undefined, 'middle')).toEqual(connectionMidpoint('straight', from, to, undefined));
+   });
+
+   it('straight: endpoints sit on from/to, tangent along the chord at both', () => {
+      const to = { x: 200, y: 0 };
+      expect(connectionPointAt('straight', from, to, undefined, 'start')).toEqual({ point: { x: 0, y: 0 }, tangent: { x: 1, y: 0 } });
+      expect(connectionPointAt('straight', from, to, undefined, 'end')).toEqual({ point: { x: 200, y: 0 }, tangent: { x: 1, y: 0 } });
+   });
+
+   it('orthogonal horizontal-first: first/last legs are horizontal, tangents along the chord', () => {
+      const to = { x: 200, y: 100 }; // |dx| >= |dy| -> horizontal first, corners (100,0) and (100,100)
+      const start = connectionPointAt('orthogonal', from, to, undefined, 'start');
+      const end = connectionPointAt('orthogonal', from, to, undefined, 'end');
+      expect(start).toEqual({ point: { x: 0, y: 0 }, tangent: { x: 1, y: 0 } });
+      expect(end).toEqual({ point: { x: 200, y: 100 }, tangent: { x: 1, y: 0 } });
+   });
+
+   it('orthogonal vertical-first: first/last legs are vertical', () => {
+      const to = { x: 100, y: 200 }; // |dy| > |dx| -> vertical first, corners (0,100) and (100,100)
+      expect(connectionPointAt('orthogonal', from, to, undefined, 'start').tangent).toEqual({ x: 0, y: 1 });
+      expect(connectionPointAt('orthogonal', from, to, undefined, 'end').tangent).toEqual({ x: 0, y: 1 });
+   });
+
+   it('circle: endpoint tangents aim toward the arc control (bow side at start, away at end)', () => {
+      const to = { x: 200, y: 0 }; // control at (100,40)
+      const start = connectionPointAt('circle', from, to, undefined, 'start');
+      const end = connectionPointAt('circle', from, to, undefined, 'end');
+      expect(start.point).toEqual({ x: 0, y: 0 });
+      expect(start.tangent.x).toBeGreaterThan(0); // toward `to`
+      expect(start.tangent.y).toBeGreaterThan(0); // toward the bow (control below the chord)
+      isUnit(start.tangent);
+      expect(end.point).toEqual({ x: 200, y: 0 });
+      expect(end.tangent.x).toBeGreaterThan(0); // still toward `to`
+      expect(end.tangent.y).toBeLessThan(0); // arriving from the bow side
+      isUnit(end.tangent);
+   });
+
+   it('bezier auto: endpoint tangents aim toward each near control point', () => {
+      const to = { x: 200, y: 0 }; // auto controls (50,30) and (150,30)
+      const start = connectionPointAt('bezier', from, to, undefined, 'start');
+      const end = connectionPointAt('bezier', from, to, undefined, 'end');
+      expect(start.tangent.x).toBeGreaterThan(0);
+      expect(start.tangent.y).toBeGreaterThan(0); // toward c1 = (50,30)
+      isUnit(start.tangent);
+      expect(end.tangent.x).toBeGreaterThan(0);
+      expect(end.tangent.y).toBeLessThan(0); // to - c2 = (50,-30)
+      isUnit(end.tangent);
+   });
+
+   it('bezier stored controls: endpoint tangents follow the stored offsets', () => {
+      const to = { x: 200, y: 0 };
+      const controls = { c1: { x: 10, y: -20 }, c2: { x: -10, y: -20 } }; // world c1=(10,-20), c2=(190,-20)
+      const start = connectionPointAt('bezier', from, to, controls, 'start');
+      const end = connectionPointAt('bezier', from, to, controls, 'end');
+      expect(start.tangent.y).toBeLessThan(0); // toward c1 above the chord
+      expect(end.tangent.y).toBeGreaterThan(0); // to - c2 = (10,20)
+      isUnit(start.tangent);
+      isUnit(end.tangent);
    });
 });
 

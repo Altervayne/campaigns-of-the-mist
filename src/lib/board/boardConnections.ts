@@ -2,7 +2,7 @@
 import { rotateVec } from './boardRotation';
 
 // -- Type Imports --
-import type { BoardItem, ConnectionArrow, ConnectionStyle } from '@/lib/types/board';
+import type { BoardItem, ConnectionDash, ConnectionMarker, ConnectionMarkerPosition, ConnectionMarkers, ConnectionStyle } from '@/lib/types/board';
 
 /*
  * Pure geometry + lookup for board connections. A connection is a straight line drawn
@@ -41,12 +41,63 @@ export const CONNECTION_CORNER_RADIUS = 8;
 export const DEFAULT_CONNECTION_STYLE = { width: 3, color: '#3b82f6', pathType: 'straight' } as const;
 
 /**
- * Read-time default for an optional `pathType` (pre-2.3.0 connections have none). Backfills to
- * `straight`, so it persists on the next content write without a destructive migration.
+ * The SVG `strokeDasharray` for a dash style at stroke width `w`; solid -> none. Gaps scale WITH the width
+ * so a round-capped dash/dot never has its gap swallowed by its own caps (a fixed gap fuses into a solid
+ * line once the stroke is thick). Used by both the rendered line and its toolbar preview so they match.
+ */
+export function dashArrayFor(dash: ConnectionDash | undefined, w: number): string | undefined {
+   if (dash === 'dashed') return `${w * 2.5} ${w * 2}`;
+   if (dash === 'dotted') return `0.01 ${w * 2}`; // round-capped zero dashes read as dots
+   return undefined;
+}
+
+/**
+ * The connection's curated palette: vivid colors chosen to read on light + dark boards. Deliberately
+ * distinct from the post-it pastels - the picker and recents are shared, the palette is per-context. A
+ * pick from here is NOT a "custom" color, so it never joins recents.
+ */
+export const CONNECTION_PALETTE = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7', '#f97316', '#64748b', '#0f172a', '#f8fafc'] as const;
+
+/**
+ * Read-time defaults for optional connection-style fields added after data was already saved.
+ * Backfills a missing `pathType` to `straight`, and migrates a legacy single center `arrow` to
+ * `markers.middle` (dropping `arrow`), so both persist on the next content write without a
+ * destructive migration. Idempotent: the arrow migration only fires while `arrow` is present and
+ * `markers` is absent, so a re-normalized style is returned unchanged.
  */
 export function normalizeConnectionStyle(style: ConnectionStyle): ConnectionStyle {
-   if (style.pathType) return style;
-   return { ...style, pathType: 'straight' };
+   // Legacy pre-positional-markers shape carried a single center `arrow`.
+   const legacy = style as ConnectionStyle & { arrow?: ConnectionMarker };
+   if (style.pathType && !legacy.arrow) return style;
+   const { arrow, ...rest } = legacy;
+   const next: ConnectionStyle = { ...rest };
+   if (!next.pathType) next.pathType = 'straight';
+   if (arrow && !next.markers) next.markers = { middle: arrow };
+   return next;
+}
+
+/** The direction a marker points when first added at a position: an arrowhead into the target at the
+    end, back toward the source at the start, along the line at the middle. */
+export const DEFAULT_MARKER_DIRECTION: Record<ConnectionMarkerPosition, ConnectionMarker['direction']> = {
+   start: 'backward',
+   middle: 'forward',
+   end: 'forward',
+};
+
+/**
+ * Set (or clear, with `undefined`) the marker at one position, preserving the others. Returns a fresh
+ * `markers` object, or `undefined` once no position carries a marker (so the style drops the whole
+ * `markers` key rather than holding an empty object).
+ */
+export function setConnectionMarker(
+   markers: ConnectionMarkers | undefined,
+   pos: ConnectionMarkerPosition,
+   marker: ConnectionMarker | undefined,
+): ConnectionMarkers | undefined {
+   const next: ConnectionMarkers = { ...markers };
+   if (marker) next[pos] = marker;
+   else delete next[pos];
+   return next.start || next.middle || next.end ? next : undefined;
 }
 
 /**
@@ -138,7 +189,7 @@ const ARROW_SPAN = { mult: 2, base: 3 };
  * caller renders `full` as a filled triangle and `chevron` as a stroked open polyline. Path-aware, so
  * the marker sits on a curve's midpoint with the local direction, not on the straight-line midpoint.
  */
-export function connectionArrowGeometryAt(mid: Point, tangent: Point, arrow: ConnectionArrow, width: number): ArrowGeometry {
+export function connectionArrowGeometryAt(mid: Point, tangent: Point, arrow: ConnectionMarker, width: number): ArrowGeometry {
    let angle = Math.atan2(tangent.y, tangent.x);
    if (arrow.direction === 'backward') angle += Math.PI;
 
@@ -165,7 +216,7 @@ export function connectionArrowGeometryAt(mid: Point, tangent: Point, arrow: Con
  * endpoints' midpoint, pointing along the line. Thin wrapper over {@link connectionArrowGeometryAt}
  * for the straight case (and its tests); curved paths pass their own on-path point + tangent.
  */
-export function connectionArrowGeometry(from: Point, to: Point, arrow: ConnectionArrow, width: number): ArrowGeometry {
+export function connectionArrowGeometry(from: Point, to: Point, arrow: ConnectionMarker, width: number): ArrowGeometry {
    const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
    return connectionArrowGeometryAt(mid, { x: to.x - from.x, y: to.y - from.y }, arrow, width);
 }

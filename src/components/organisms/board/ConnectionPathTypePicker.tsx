@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 import type { ConnectionPathType } from '@/lib/types/board';
 
 /*
- * The routing-mode control in the connection's midpoint toolbar: four buttons (straight / orthogonal /
- * circle / bezier), each a tiny inline preview of its shape, the active one ring-highlighted. Mirrors
- * the toolbar's dash / arrow picker pattern. A click commits the new `pathType` as one style update.
+ * The routing-mode control (the Path popover's content): four buttons (straight / orthogonal /
+ * circle / bezier), each a tiny inline preview of its shape, the active one ring-highlighted. A click
+ * commits the new `pathType` as one style update.
  */
 
 /** The path types, in toolbar order, paired with their label i18n keys. */
@@ -44,7 +44,7 @@ export function ConnectionPathTypePicker({ pathType, onChange }: { pathType: Con
 }
 
 /** A tiny glyph of a routing mode, for the toolbar buttons (uses the button's color). */
-function PathTypePreview({ type }: { type: ConnectionPathType }) {
+export function PathTypePreview({ type }: { type: ConnectionPathType }) {
    return (
       <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
          {type === 'straight' && <line x1="2" y1="6" x2="16" y2="6" />}

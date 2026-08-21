@@ -1,5 +1,5 @@
 // -- Type Imports --
-import type { ConnectionControls, ConnectionPathType } from '@/lib/types/board';
+import type { ConnectionControls, ConnectionMarkerPosition, ConnectionPathType } from '@/lib/types/board';
 import type { Point } from './boardConnections';
 
 /*
@@ -161,6 +161,45 @@ export function connectionMidpoint(type: ConnectionPathType, from: Point, to: Po
             point: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
             tangent: chordUnit(from, to),
          };
+   }
+}
+
+/**
+ * A point + unit tangent at a marker position on a connection. `middle` delegates to
+ * {@link connectionMidpoint}; `start` (t=0) and `end` (t=1) sit on `from` / `to` with the path's
+ * direction of travel there (per path type: straight -> along the chord; bezier -> toward its near
+ * control point; orthogonal -> along the first / last elbow leg; circle -> the arc tangent at the
+ * endpoint). The tangent always points along increasing t (toward `to`), so a `forward` marker points
+ * toward `to` at every position and a `backward` one toward `from`. Pure, so it is unit-tested.
+ */
+export function connectionPointAt(
+   type: ConnectionPathType,
+   from: Point,
+   to: Point,
+   controls: ConnectionControls | undefined,
+   pos: ConnectionMarkerPosition,
+): PathMidpoint {
+   if (pos === 'middle') return connectionMidpoint(type, from, to, controls);
+   const fallback = chordUnit(from, to);
+   switch (type) {
+      case 'orthogonal': {
+         const { c1, c2 } = orthogonalCorners(from, to);
+         if (pos === 'start') return { point: from, tangent: unit({ x: c1.x - from.x, y: c1.y - from.y }, fallback) };
+         return { point: to, tangent: unit({ x: to.x - c2.x, y: to.y - c2.y }, fallback) };
+      }
+      case 'circle': {
+         const ctrl = circleControl(from, to);
+         if (pos === 'start') return { point: from, tangent: unit({ x: ctrl.x - from.x, y: ctrl.y - from.y }, fallback) };
+         return { point: to, tangent: unit({ x: to.x - ctrl.x, y: to.y - ctrl.y }, fallback) };
+      }
+      case 'bezier': {
+         const { c1, c2 } = bezierControlPoints(from, to, controls);
+         if (pos === 'start') return { point: from, tangent: unit({ x: c1.x - from.x, y: c1.y - from.y }, fallback) };
+         return { point: to, tangent: unit({ x: to.x - c2.x, y: to.y - c2.y }, fallback) };
+      }
+      case 'straight':
+      default:
+         return { point: pos === 'start' ? from : to, tangent: fallback };
    }
 }
 
