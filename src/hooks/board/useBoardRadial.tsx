@@ -81,6 +81,10 @@ export function useBoardRadial({
     * `suppressRadialRef` (consumed here) so a drag never opens the menu.
     */
    const handleContextMenu = (event: ReactMouseEvent) => {
+      // A modal dialog (the stencil picker, a confirm) covers the board, but its right-clicks bubble here
+      // through the portal via React's event tree - opening the radial UNDER the modal, which then traps it.
+      // Bail so the dialog keeps its own native context behavior and no menu opens beneath it.
+      if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]')) return;
       // A right-drag pan (or a right-click that just finished a freeform polygon) already decided the menu
       // should stay closed; consume the flag and swallow the event so nothing reopens.
       if (suppressRadialRef.current) { suppressRadialRef.current = false; event.preventDefault(); event.stopPropagation(); return; }

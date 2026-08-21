@@ -116,8 +116,10 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
                />
             </div>
 
-            {/* Presets + None: always shown, a rectangle plus each bundled shape. */}
-            <div className="flex flex-wrap gap-2 border-t border-border px-4 py-3">
+            {/* Presets + None: always shown, a rectangle plus each bundled shape. An auto-fill grid whose
+                columns stretch (1fr) to fill the row edge to edge, so the tiles stay wide and leave no
+                trailing margin. */}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2 border-t border-border px-4 py-3">
                <MaskOption
                   label={t('BoardStencil.maskNone')}
                   active={selection === null}
@@ -151,7 +153,7 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
                      />
                   )}
                </div>
-               <div className="flex flex-wrap gap-2">
+               <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
                   {filtered.map((entry) => (
                      <LibraryMaskTile
                         key={entry.id}
@@ -166,7 +168,7 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
                      aria-label={t('BoardStencil.uploadCustom')}
                      onClick={() => fileInputRef.current?.click()}
                      disabled={busy}
-                     className="flex w-20 shrink-0 cursor-pointer flex-col items-center gap-1 rounded-md border border-border p-2 text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                     className="flex w-full cursor-pointer flex-col items-center gap-1 rounded-md border border-border p-2 text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                   >
                      <span className="flex h-10 w-10 items-center justify-center">
                         {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
@@ -249,7 +251,7 @@ function MaskOption({ label, active, onClick, children }: {
          aria-pressed={active}
          onClick={onClick}
          className={cn(
-            'flex w-20 shrink-0 cursor-pointer flex-col items-center gap-1 rounded-md border p-2 transition-colors',
+            'flex w-full cursor-pointer flex-col items-center gap-1 rounded-md border p-2 transition-colors',
             active ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
          )}
       >
