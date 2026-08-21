@@ -9,7 +9,7 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // -- Icon Imports --
-import { Database, GraduationCap, Info, Megaphone, Palette, SlidersHorizontal, Sparkles, SwatchBook } from 'lucide-react';
+import { Database, GraduationCap, Info, Megaphone, Palette, Shapes, SlidersHorizontal, Sparkles, SwatchBook } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { GeneralSettingsPane } from './GeneralSettingsPane';
 import { AppearanceSettingsPane } from './AppearanceSettingsPane';
 import { CardPalettesSettingsPane } from './CardPalettesSettingsPane';
+import { StencilsSettingsPane } from './StencilsSettingsPane';
 import { DataSettingsPane } from './DataSettingsPane';
 import { LearnSettingsPane } from './LearnSettingsPane';
 import { WhatsNewSettingsPane } from './WhatsNewSettingsPane';
@@ -47,7 +48,7 @@ import type { GuardedThemeSwitch } from '@/components/organisms/dialogs/themeSwi
  */
 
 export type SettingsGroupId = 'configure' | 'help';
-export type SettingsSectionId = 'general' | 'appearance' | 'cardPalettes' | 'data' | 'learn' | 'whatsNew' | 'announcements' | 'about';
+export type SettingsSectionId = 'general' | 'appearance' | 'cardPalettes' | 'stencils' | 'data' | 'learn' | 'whatsNew' | 'announcements' | 'about';
 
 interface SettingsSection {
    id: SettingsSectionId;
@@ -68,6 +69,7 @@ const SECTIONS: SettingsSection[] = [
    { id: 'general', group: 'configure', labelKey: 'Common.general', icon: SlidersHorizontal, Pane: GeneralSettingsPane },
    { id: 'appearance', group: 'configure', labelKey: 'Common.appearance', icon: Palette, Pane: AppearanceSettingsPane },
    { id: 'cardPalettes', group: 'configure', labelKey: 'SettingsShell.sections.cardPalettes', icon: SwatchBook, Pane: CardPalettesSettingsPane },
+   { id: 'stencils', group: 'configure', labelKey: 'SettingsShell.sections.stencils', icon: Shapes, Pane: StencilsSettingsPane },
    { id: 'data', group: 'configure', labelKey: 'SettingsShell.sections.data', icon: Database, Pane: DataSettingsPane },
    { id: 'learn', group: 'help', labelKey: 'Common.learn', icon: GraduationCap, Pane: LearnSettingsPane },
    { id: 'whatsNew', group: 'help', labelKey: 'Common.whatSNew', icon: Sparkles, Pane: WhatsNewSettingsPane },
@@ -83,6 +85,7 @@ const SECTION_ANCHORS: Record<SettingsSectionId, string> = {
    general: 'settings-general',
    appearance: 'settings-appearance',
    cardPalettes: 'settings-card-palettes',
+   stencils: 'settings-stencils',
    data: 'settings-data',
    learn: 'settings-learn',
    whatsNew: 'settings-whatsNew',

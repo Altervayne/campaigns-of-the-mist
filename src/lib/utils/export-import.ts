@@ -11,9 +11,21 @@ import type { ProcessedImage } from '@/lib/assets/processImage';
 import { collectFromNote } from '@/lib/notes/noteAssets';
 
 // `CUSTOM_THEME` is a 2.0-native type (themes live in app settings, not the drawer); it rides the same
-// envelope as everything else. A board (`FULL_BOARD`) rides it too.
-export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE';
-export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note | RollTableContent;
+// envelope as everything else. A board (`FULL_BOARD`) rides it too. `STENCIL` is a library entry (its mask
+// bytes ride the envelope's `assets` map, unlike the pure-JSON theme/palette exports).
+export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE' | 'STENCIL';
+export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note | RollTableContent | ExportedStencil;
+
+/**
+ * The content of a stencil-library export: the entry's name plus the hash of its owned mask asset. Unlike a
+ * palette (pure config), the mask is binary, so its bytes ride the envelope's `assets` map (keyed by this hash)
+ * and rehydrate through `storeAsset` on import. The entry's `id`/order/timestamps are local, so they never travel.
+ */
+export interface ExportedStencil {
+   name: string;
+   /** The owned alpha-mask asset's hash; its bytes are embedded in the envelope's `assets` map. */
+   maskAssetId: string;
+}
 
 /** One asset's bytes carried inside an exported file so the file is self-contained. */
 export interface EmbeddedAsset {
@@ -148,6 +160,10 @@ export function generateExportFilename(game: GameSystem, type: ExportableItemTyp
       case "CARD_PALETTE":
          textType = "Card-Palette"
          break;
+
+      case "STENCIL":
+         textType = "Stencil"
+         break;
    }
 
    const baseName = textGame ? `${textGame}_${textType}` : textType;
@@ -280,6 +296,8 @@ export function collectAssetIdsFromContent(content: ExportableContent): Set<stri
    const ids = new Set<string>();
    // A custom theme is just token sets - no asset references; bail before the item walks.
    if ('light' in content && 'dark' in content && 'radius' in content) return ids;
+   // A stencil references its one owned mask asset, whose bytes ride the envelope.
+   if ('maskAssetId' in content) { ids.add((content as ExportedStencil).maskAssetId); return ids; }
    if ('rootItems' in content) {
       // Drawer: root items + every folder subtree.
       for (const item of content.rootItems) collectFromItem(item, ids);
@@ -513,6 +531,30 @@ export function isExportedCardPalette(file: ExportFile): boolean {
       && (content.game === 'LEGENDS' || content.game === 'CITY_OF_MIST' || content.game === 'OTHERSCAPE')
       && typeof content.name === 'string'
       && !!content.cardTypes && typeof content.cardTypes === 'object';
+}
+
+/**
+ * Exports a single stencil to a .cotm file. A stencil is game-agnostic (NEUTRAL) but NOT asset-free: its mask
+ * is binary, so the envelope embeds the mask asset's bytes (like a board embeds its images). On import the bytes
+ * rehydrate through `storeAsset` (dedup-aware) and a fresh library entry keeps them.
+ */
+export async function exportStencil(name: string, maskAssetId: string) {
+   const content: ExportedStencil = { name, maskAssetId };
+   const fileName = generateExportFilename('NEUTRAL', 'STENCIL', name);
+   await exportToFile(content, 'STENCIL', 'NEUTRAL', fileName);
+};
+
+/**
+ * Whether a parsed file is a stencil export carrying its name and an embedded mask asset - so a
+ * palette/theme/malformed `.cotm` is rejected before it's added. The mask's bytes must be present in the
+ * `assets` map under the referenced hash (the import re-stores them and mints the keeping entry).
+ */
+export function isExportedStencil(file: ExportFile): boolean {
+   const content = file.content as Partial<ExportedStencil>;
+   return file.fileType === 'STENCIL'
+      && typeof content.name === 'string'
+      && typeof content.maskAssetId === 'string' && content.maskAssetId.length > 0
+      && !!file.assets && !!file.assets[content.maskAssetId];
 }
 
 /**

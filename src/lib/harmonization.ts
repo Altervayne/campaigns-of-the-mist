@@ -201,7 +201,7 @@ const hasRegisteredMigration = (dataType: GeneralItemType): boolean =>
 
 // Accepts any envelope item type the importers pass. A type with no registered migration (e.g. the
 // 2.0-native CUSTOM_THEME and CARD_PALETTE) has nothing to migrate and passes straight through unchanged.
-export function harmonizeData<T extends object>(data: T, dataType: GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE'): T {
+export function harmonizeData<T extends object>(data: T, dataType: GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE' | 'STENCIL'): T {
    if (!data || typeof data !== 'object') {
       return data;
    }

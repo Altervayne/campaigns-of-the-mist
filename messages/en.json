@@ -516,6 +516,10 @@
          "exported": "Card palette exported to downloads.",
          "imported": "Card palette imported."
       },
+      "stencil": {
+         "exported": "Stencil exported to downloads.",
+         "imported": "Stencil imported."
+      },
       "card": {
          "created": "Card created successfully.",
          "updated": "Card updated successfully."
@@ -942,6 +946,7 @@
       },
       "sections": {
          "cardPalettes": "Card palettes",
+         "stencils": "Stencils",
          "data": "Data and storage",
          "announcements": "Announcements",
          "about": "About"
@@ -964,6 +969,21 @@
       "appearance": "Theme Mode",
       "mode": "Mode",
       "modeSystem": "System",
+      "stencils": {
+         "description": "Saved masks you can reuse to shape any board image.",
+         "add": "Add stencil",
+         "import": "Import stencil",
+         "actionsMenu": "Stencil actions",
+         "rename": "Rename",
+         "renamePlaceholder": "Stencil name",
+         "export": "Export",
+         "delete": "Delete",
+         "deleteConfirmTitle": "Delete stencil?",
+         "deleteConfirmDescription": "\"{{name}}\" will be removed from your library. Images already using it keep their look; you just can't re-apply it by name.",
+         "deleteConfirmButton": "Delete",
+         "empty": "No stencils yet. Upload a mask to reuse its shape across board images.",
+         "noMatches": "No stencils match your search."
+      },
       "cardPalettes": {
          "game": "Game",
          "games": {
@@ -1466,6 +1486,7 @@
          "setThemePalette": "Set: Theme Palette: [...]",
          "manageThemes": "Open: Themes Manager",
          "openCardPalettes": "Open: Card Palettes",
+         "openStencilLibrary": "Open: Stencil Library",
          "viewFlipping": "Set: Card View: Flipping",
          "viewSideBySide": "Set: Card View: Side-by-Side",
          "exportCharacter": "Export: Full Character Sheet",

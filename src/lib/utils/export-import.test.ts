@@ -9,14 +9,17 @@ import {
    base64ToBytes,
    blobToBase64,
    collectAssetIdsFromContent,
+   exportStencil,
    exportToFile,
    generateExportFilename,
    isExportedCustomTheme,
+   isExportedStencil,
    rehydrateEmbeddedAssets,
 } from './export-import';
+import { addStencil, listStencils } from '@/lib/assets/stencilRepository';
 
 // -- Type Imports --
-import type { EmbeddedAsset, ExportFile } from './export-import';
+import type { EmbeddedAsset, ExportFile, ExportedStencil } from './export-import';
 import type { Card, Character } from '@/lib/types/character';
 import type { Board } from '@/lib/types/board';
 import type { Drawer, DrawerItem } from '@/lib/types/drawer';
@@ -160,6 +163,69 @@ describe('CUSTOM_THEME export/import', () => {
       expect(reIded.dark).toEqual(theme.dark);
       expect(reIded.radius).toBe(theme.radius);
       expect(reIded.generator).toEqual(theme.generator);
+   });
+});
+
+describe('STENCIL export/import', () => {
+   beforeEach(async () => { await drawerDatabase.stencils.clear(); });
+
+   const stencil = (maskAssetId = 'mask-h', name = 'Torn edge'): ExportedStencil => ({ name, maskAssetId });
+
+   /** Stores a small mask asset under `hash`, so an export can embed its bytes. */
+   async function storeMask(hash: string): Promise<void> {
+      const bytes = new Uint8Array([2, 4, 6, 8, 10, 12]);
+      await storeAsset({ hash, blob: new Blob([bytes], { type: 'image/webp' }), mimeType: 'image/webp', width: 8, height: 8, byteSize: bytes.length });
+   }
+
+   it('references its one owned mask asset (its bytes ride the envelope)', () => {
+      const ids = collectAssetIdsFromContent(stencil('mask-42'));
+      expect([...ids]).toEqual(['mask-42']);
+   });
+
+   it('names the file with a Stencil label and no game prefix', () => {
+      const name = generateExportFilename('NEUTRAL', 'STENCIL', 'Torn edge');
+      expect(name).toContain('Stencil');
+      expect(name).not.toMatch(/LitM|CoM|OS/);
+   });
+
+   it('isExportedStencil accepts an embedded-mask envelope and rejects others', async () => {
+      await storeMask('mask-h');
+      const file = await captureExport(() => exportStencil('Torn edge', 'mask-h'));
+
+      expect(isExportedStencil(file)).toBe(true);
+      // A palette envelope, a theme, and junk are all rejected.
+      expect(isExportedStencil({ fileType: 'CARD_PALETTE', game: 'LEGENDS', content: stencil() } as unknown as ExportFile)).toBe(false);
+      expect(isExportedStencil({ fileType: 'CUSTOM_THEME', game: 'NEUTRAL', content: { light: {}, dark: {} } } as unknown as ExportFile)).toBe(false);
+      expect(isExportedStencil({ fileType: 'STENCIL', game: 'NEUTRAL', content: {} } as unknown as ExportFile)).toBe(false);
+      // A STENCIL envelope whose mask bytes are absent from the assets map is rejected (the import needs them).
+      expect(isExportedStencil({ fileType: 'STENCIL', game: 'NEUTRAL', content: stencil('mask-h'), assets: {} } as unknown as ExportFile)).toBe(false);
+   });
+
+   it('builds an envelope carrying the name and the embedded mask bytes', async () => {
+      await storeMask('mask-h');
+      const file = await captureExport(() => exportStencil('Torn edge', 'mask-h'));
+
+      expect(file.fileType).toBe('STENCIL');
+      expect(file.content).toEqual({ name: 'Torn edge', maskAssetId: 'mask-h' });
+      expect(file.assets?.['mask-h']).toMatchObject({ mimeType: 'image/webp', width: 8, height: 8 });
+      expect(typeof file.assets?.['mask-h'].base64).toBe('string');
+   });
+
+   it('round-trips: rehydrating the mask then adding the entry keeps the asset (the import wiring)', async () => {
+      await storeMask('mask-h');
+      const file = await captureExport(() => exportStencil('Torn edge', 'mask-h'));
+
+      // Simulate an import onto a fresh machine: the store is empty, then the envelope rehydrates + mints an entry.
+      await drawerDatabase.assets.clear();
+      await drawerDatabase.stencils.clear();
+      await rehydrateEmbeddedAssets(file.assets!);
+      const content = file.content as ExportedStencil;
+      const record = await addStencil(content.name, content.maskAssetId);
+
+      expect(await drawerDatabase.assets.get('mask-h')).toBeDefined();
+      const rows = await listStencils();
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ id: record.id, name: 'Torn edge', maskAssetId: 'mask-h' });
    });
 });
 

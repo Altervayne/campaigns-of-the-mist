@@ -286,6 +286,10 @@ export const BoardItemBox = memo(function BoardItemBox({
    // overlays the body and stops the pointer, so this handler only fires on the non-editing (rendered) view.
    const handleBodyPointerDown = (event: ReactPointerEvent) => {
       if (event.button !== 0) return; // right-click selection + menu is handled by the canvas
+      // A portalled dialog (the stencil picker / image cropper) is a React descendant of this item, so its
+      // presses bubble here; ignore them - both the dialog surface and its overlay - so dragging inside the
+      // modal never moves the item behind it.
+      if (event.target instanceof Element && event.target.closest('[role="dialog"], [data-slot="dialog-overlay"]')) return;
       event.stopPropagation(); // don't start a background marquee / pan
       onItemPointerDown(item.id, event);
    };

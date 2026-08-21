@@ -40,6 +40,7 @@ export type DragItemType =
    | 'sheet-tracker'
    | 'theme'
    | 'card-palette'
+   | 'stencil'
    | 'journal-page';
 
 /**

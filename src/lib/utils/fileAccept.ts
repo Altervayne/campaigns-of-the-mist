@@ -26,6 +26,9 @@ export const ACCEPT_THEME_IMPORT = COTM_ENVELOPE;
 /** Card palettes imported into app settings; routed by the file's game. */
 export const ACCEPT_CARD_PALETTE_IMPORT = COTM_ENVELOPE;
 
+/** Stencils imported into the mask library (the envelope embeds the mask bytes). */
+export const ACCEPT_STENCIL_IMPORT = COTM_ENVELOPE;
+
 /** Notes imported as new or picked to update an open one, as an envelope or as plain Markdown. */
 export const ACCEPT_NOTE_IMPORT = `${COTM_ENVELOPE},${MARKDOWN}`;
 

@@ -21,6 +21,7 @@ export const DRAG_TYPES = {
    TAB: 'tab',
    THEME: 'theme',
    CARD_PALETTE: 'card-palette',
+   STENCIL: 'stencil',
    JOURNAL_PAGE: 'journal-page',
 } as const;
 

@@ -18,6 +18,7 @@ import { ACCEPT_MASK_IMAGE } from '@/lib/utils/fileAccept';
 import { MASK_PRESETS, getMaskPreset, type MaskPreset } from '@/lib/board/maskPresets';
 import { useStencilLibraryStore } from '@/lib/stores/stencilLibraryStore';
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
+import { StencilMaskGlyph } from '@/components/molecules/StencilMaskGlyph';
 
 // -- Type Imports --
 import type { StencilRecord } from '@/lib/assets/stencilRecords';
@@ -207,31 +208,13 @@ function maskImageStyle(url: string): React.CSSProperties {
    };
 }
 
-/** A `contain`-fit variant of the mask style for the small picker glyph (keeps the shape's own aspect). */
-function maskGlyphStyle(url: string): React.CSSProperties {
-   return {
-      WebkitMaskImage: `url(${url})`,
-      maskImage: `url(${url})`,
-      WebkitMaskSize: 'contain',
-      maskSize: 'contain',
-      WebkitMaskRepeat: 'no-repeat',
-      maskRepeat: 'no-repeat',
-      WebkitMaskPosition: 'center',
-      maskPosition: 'center',
-   };
-}
-
 /** One library entry's picker tile: its mask painted as a glyph over its name, highlighted when active. */
 function LibraryMaskTile({ entry, active, onClick }: { entry: StencilRecord; active: boolean; onClick: () => void }) {
-   const { url } = useAssetObjectUrl(entry.maskAssetId);
    return (
       <MaskOption label={entry.name} active={active} onClick={onClick}>
-         {url && (
-            <foreignObject x="0" y="0" width="100" height="100">
-               {/* The mask's opaque region, painted in the tile's foreground via CSS mask. */}
-               <div className="h-full w-full" style={{ backgroundColor: 'currentColor', ...maskGlyphStyle(url) }} />
-            </foreignObject>
-         )}
+         <foreignObject x="0" y="0" width="100" height="100">
+            <StencilMaskGlyph maskAssetId={entry.maskAssetId} />
+         </foreignObject>
       </MaskOption>
    );
 }

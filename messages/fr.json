@@ -516,6 +516,10 @@
          "exported": "Palette de cartes exportée vers vos téléchargements.",
          "imported": "Palette de cartes importée."
       },
+      "stencil": {
+         "exported": "[TO COMPLETE]",
+         "imported": "[TO COMPLETE]"
+      },
       "card": {
          "created": "Carte créée avec succès.",
          "updated": "Carte mise à jour avec succès."
@@ -942,6 +946,7 @@
       },
       "sections": {
          "cardPalettes": "Palettes de cartes",
+         "stencils": "[TO COMPLETE]",
          "data": "Données",
          "announcements": "Annonces",
          "about": "À Propos"
@@ -964,6 +969,21 @@
       "appearance": "Mode du Thème",
       "mode": "Mode",
       "modeSystem": "Système",
+      "stencils": {
+         "description": "[TO COMPLETE]",
+         "add": "[TO COMPLETE]",
+         "import": "[TO COMPLETE]",
+         "actionsMenu": "[TO COMPLETE]",
+         "rename": "[TO COMPLETE]",
+         "renamePlaceholder": "[TO COMPLETE]",
+         "export": "[TO COMPLETE]",
+         "delete": "[TO COMPLETE]",
+         "deleteConfirmTitle": "[TO COMPLETE]",
+         "deleteConfirmDescription": "[TO COMPLETE]",
+         "deleteConfirmButton": "[TO COMPLETE]",
+         "empty": "[TO COMPLETE]",
+         "noMatches": "[TO COMPLETE]"
+      },
       "cardPalettes": {
          "game": "Jeu",
          "games": {
@@ -1466,6 +1486,7 @@
          "setThemePalette": "Définir : Palette : [...]",
          "manageThemes": "Ouvrir : Gestionnaire de Thèmes",
          "openCardPalettes": "Ouvrir : Palettes de cartes",
+         "openStencilLibrary": "[TO COMPLETE]",
          "viewFlipping": "Définir : Vue des Cartes : Recto/Verso",
          "viewSideBySide": "Définir : Vue des Cartes : Côte à Côte",
          "exportCharacter": "Exporter : Fiche de Personnage",

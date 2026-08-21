@@ -12,12 +12,13 @@ import { ImageStencilDialog, type StencilSelection } from '@/components/molecule
 import { stencilImage } from '@/lib/assets/stencilImage';
 import { processImage } from '@/lib/assets/processImage';
 import { storeAsset, getAssetBlob } from '@/lib/assets/assetRepository';
-import { normalizeMaskUpload, MaskHasNoTransparencyError } from '@/lib/assets/normalizeMaskUpload';
+import { MaskHasNoTransparencyError } from '@/lib/assets/normalizeMaskUpload';
 
 // -- Mask Library + Content Derivation --
 import { getMaskPreset } from '@/lib/board/maskPresets';
 import { resolveStencilSourceHash, stenciledImageContent, resetImageContent } from '@/lib/board/stencilContent';
 import { useStencilLibraryStore } from '@/lib/stores/stencilLibraryStore';
+import { addUploadedStencil } from '@/lib/stores/addUploadedStencil';
 
 // -- Type Imports --
 import type { ImageBoardContent } from '@/lib/types/board';
@@ -95,9 +96,7 @@ export function useImageStencil(onApplied: (content: ImageBoardContent) => void)
    // file's base name), and returns the entry as the selection. Surfaces a friendly warning / error on failure.
    const quickAddToLibrary = async (file: File): Promise<StencilSelection> => {
       try {
-         const processed = await normalizeMaskUpload(file);
-         const maskAssetId = await storeAsset(processed);
-         const record = await useStencilLibraryStore.getState().actions.add(defaultStencilName(file, t('BoardStencil.untitledStencil')), maskAssetId);
+         const record = await addUploadedStencil(file, t('BoardStencil.untitledStencil'));
          return { kind: 'library', id: record.id };
       } catch (error) {
          toast.error(error instanceof MaskHasNoTransparencyError ? t('BoardStencil.maskNoTransparency') : t('BoardStencil.maskUploadFailed'));
@@ -147,12 +146,6 @@ export function useImageStencil(onApplied: (content: ImageBoardContent) => void)
    ) : null;
 
    return { open, dialog, isProcessing };
-}
-
-/** The default name a quick-added stencil takes: the file's base name sans extension, or a fallback when empty. */
-function defaultStencilName(file: File, fallback: string): string {
-   const base = file.name.replace(/\.[^./]+$/, '').trim();
-   return base || fallback;
 }
 
 /** Bakes a preset shape onto the source, or null when the preset id is unknown (e.g. a removed preset). */
