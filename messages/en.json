@@ -596,7 +596,14 @@
       "maskHexagon": "Hexagon",
       "maskRoughRectangle": "Rough rectangle",
       "maskTornEdge": "Torn edge",
-      "maskOrganicBlob": "Organic blob"
+      "maskOrganicBlob": "Organic blob",
+      "library": "Library",
+      "searchLibrary": "Search stencils...",
+      "libraryNoMatches": "No stencils match your search.",
+      "untitledStencil": "Stencil",
+      "uploadCustom": "Upload custom...",
+      "maskNoTransparency": "That image has no transparency, so it would not mask anything. Use an SVG or an image with a transparent background.",
+      "maskUploadFailed": "Could not load that mask image."
    },
    "MobileEditPortrait": {
       "title": "Edit Portrait",

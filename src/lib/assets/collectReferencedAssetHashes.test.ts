@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 // -- Local Imports --
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
 import { saveCharacter } from '@/lib/character/characterRepository';
+import { addStencil, deleteStencil } from './stencilRepository';
 import { collectReferencedAssetHashes } from './collectReferencedAssetHashes';
 
 // -- Type Imports --
@@ -147,6 +148,7 @@ beforeEach(async () => {
    await drawerDatabase.items.clear();
    await drawerDatabase.boardItems.clear();
    await drawerDatabase.notes.clear();
+   await drawerDatabase.stencils.clear();
 });
 
 describe('collectReferencedAssetHashes', () => {
@@ -209,6 +211,51 @@ describe('collectReferencedAssetHashes', () => {
 
       expect(referenced.has('asset-baked')).toBe(true);
       expect(referenced.has('asset-source')).toBe(true);
+      expect(referenced.size).toBe(2);
+   });
+
+   it('keeps a library stencil\'s mask asset alive with NO board item referencing it (the library is the sole keeper)', async () => {
+      // A stencil owns its mask; without the fifth GC root the mask would be swept the moment no image
+      // baked from it - which, since an image only soft-references the stencil, is always.
+      await addStencil('Torn Edge', 'asset-mask');
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('asset-mask')).toBe(true);
+   });
+
+   it('lets a stencil\'s mask asset be collected once the stencil is deleted (nothing else holds it)', async () => {
+      const stencil = await addStencil('Torn Edge', 'asset-mask');
+      await deleteStencil(stencil.id);
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('asset-mask')).toBe(false);
+   });
+
+   it('keeps a mask shared by two stencils referenced until BOTH are gone', async () => {
+      const first = await addStencil('First', 'asset-shared');
+      const second = await addStencil('Second', 'asset-shared');
+
+      await deleteStencil(first.id);
+      expect((await collectReferencedAssetHashes()).has('asset-shared')).toBe(true);
+
+      await deleteStencil(second.id);
+      expect((await collectReferencedAssetHashes()).has('asset-shared')).toBe(false);
+   });
+
+   it('does NOT count a stenciled image\'s stencil (soft ref); only its baked + source assets', async () => {
+      // The image carries `stencilId` but never contributes a mask hash - the library owns that.
+      await drawerDatabase.boardItems.add({
+         id: 'lib-masked', boardId: 'board-1', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0,
+         content: { kind: 'image', assetId: 'asset-baked', sourceAssetId: 'asset-source', stencilId: 'stencil-1', fit: 'cover' },
+      });
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('asset-baked')).toBe(true);
+      expect(referenced.has('asset-source')).toBe(true);
+      expect(referenced.has('stencil-1')).toBe(false);
       expect(referenced.size).toBe(2);
    });
 

@@ -65,8 +65,9 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
    const removeImage = () => onContentChange({ kind: 'image', assetId: null, fit: content.fit });
 
    // A masked image is a shape: it drops the placeholder plate (which would show through the transparent
-   // corners) and fits the whole shape in the box (`contain`), so no aspect crops the shape off.
-   const isMasked = !!content.maskId;
+   // corners) and fits the whole shape in the box (`contain`), so no aspect crops the shape off. A preset
+   // (`maskId`) or a library (`stencilId`) mask both count.
+   const isMasked = !!content.maskId || !!content.stencilId;
 
    return (
       <div className={cn('relative h-full w-full', !isMasked && 'bg-muted')}>

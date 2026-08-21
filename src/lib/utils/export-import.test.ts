@@ -90,6 +90,17 @@ describe('collectAssetIdsFromContent', () => {
       expect(collectAssetIdsFromContent(board)).toEqual(new Set(['baked-h', 'source-h']));
    });
 
+   it('folds ONLY the baked + source of a library-stenciled board image (the stencil is global, not bundled)', () => {
+      const board: Board = {
+         id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
+         items: [
+            { id: 'img', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'image', assetId: 'baked-h', sourceAssetId: 'source-h', stencilId: 'lib-1', fit: 'cover' } },
+         ],
+      };
+
+      expect(collectAssetIdsFromContent(board)).toEqual(new Set(['baked-h', 'source-h']));
+   });
+
    it('folds only the assetId for an unmasked board image (no source)', () => {
       const board: Board = {
          id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
@@ -222,6 +233,29 @@ describe('exportToFile embedded entities', () => {
 
       expect(await drawerDatabase.assets.get('baked-h')).toBeDefined();
       expect(await drawerDatabase.assets.get('source-h')).toBeDefined();
+   });
+
+   it('does NOT bundle a library stencil\'s mask bytes (a board file carries the baked image, not the global stencil)', async () => {
+      const baked = new Uint8Array([1, 1, 2, 3, 5]);
+      const source = new Uint8Array([8, 13, 21, 34]);
+      const mask = new Uint8Array([2, 4, 6, 8, 10, 12]);
+      await storeAsset({ hash: 'baked-h', blob: new Blob([baked], { type: 'image/webp' }), mimeType: 'image/webp', width: 4, height: 4, byteSize: baked.length });
+      await storeAsset({ hash: 'source-h', blob: new Blob([source], { type: 'image/webp' }), mimeType: 'image/webp', width: 6, height: 6, byteSize: source.length });
+      await storeAsset({ hash: 'mask-h', blob: new Blob([mask], { type: 'image/webp' }), mimeType: 'image/webp', width: 8, height: 8, byteSize: mask.length });
+
+      const stenciled = (): Board => ({
+         id: 'b', name: 'Board', viewport: { x: 0, y: 0, zoom: 1 }, nextLayerSeq: 1,
+         items: [
+            { id: 'img', kind: 'image', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'image', assetId: 'baked-h', sourceAssetId: 'source-h', stencilId: 'lib-1', fit: 'cover' } },
+         ],
+      });
+
+      const file = await captureExport(() => exportToFile(stenciled(), 'FULL_BOARD', 'NEUTRAL', 'board'));
+
+      // The baked image + its source travel; the stencil's mask asset is the global library's, not bundled.
+      expect(file.assets?.['baked-h']).toMatchObject({ mimeType: 'image/webp', width: 4, height: 4 });
+      expect(file.assets?.['source-h']).toMatchObject({ mimeType: 'image/webp', width: 6, height: 6 });
+      expect(file.assets?.['mask-h']).toBeUndefined();
    });
 });
 

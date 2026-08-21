@@ -3,6 +3,7 @@ import { listCharacters } from '@/lib/character/characterRepository';
 import { listAllItemContents } from '@/lib/drawer/drawerRepository';
 import { listAllBoardItems } from '@/lib/board/boardRepository';
 import { listAllNotes } from '@/lib/notes/noteRepository';
+import { listStencils } from '@/lib/assets/stencilRepository';
 import { collectFromNote } from '@/lib/notes/noteAssets';
 
 // -- Type Imports --
@@ -10,6 +11,7 @@ import type { Card, Character } from '@/lib/types/character';
 import type { DrawerItemContent } from '@/lib/types/drawer';
 import type { Board, BoardItemContent, Note } from '@/lib/types/board';
 import type { BoardItemRecord } from '@/lib/board/boardRecords';
+import type { StencilRecord } from '@/lib/assets/stencilRecords';
 
 /*
  * The "mark" side of asset garbage collection: walks every place an asset id can
@@ -63,9 +65,10 @@ function collectFromItemContent(content: DrawerItemContent, into: Set<string>): 
  */
 function collectFromBoardItemContent(content: BoardItemContent, into: Set<string>): void {
    if (content.kind === 'image') {
-      // A stenciled image references TWO assets: the baked `assetId` AND the kept `sourceAssetId`
-      // (the pre-mask original re-mask/reset re-runs on). Both must count, or masking would strand
-      // the source for the sweep to reclaim.
+      // A stenciled image references the baked `assetId` and the kept `sourceAssetId` (the pre-mask
+      // original re-mask/reset re-runs on). Both must count, or masking would strand the original. The
+      // mask asset itself is owned by the stencil LIBRARY (counted via `collectFromStencil`), not the
+      // image, so `stencilId` is a soft reference and contributes nothing here.
       if (content.assetId) into.add(content.assetId);
       if (content.sourceAssetId) into.add(content.sourceAssetId);
       return;
@@ -86,10 +89,20 @@ function collectFromBoardItem(item: BoardItemRecord, into: Set<string>): void {
 }
 
 /**
+ * Adds a library stencil's owned `maskAssetId`. The library entry is the SOLE keeper of its mask asset:
+ * an image only soft-references a stencil (by `stencilId`) and never counts the mask, so without this
+ * root a mask no board item bakes from would be swept the moment nothing else held it.
+ */
+function collectFromStencil(stencil: StencilRecord, into: Set<string>): void {
+   if (stencil.maskAssetId) into.add(stencil.maskAssetId);
+}
+
+/**
  * Collects every asset hash currently referenced anywhere in stored data: every
  * character's cards, every drawer item whose content is a card / character / note, every
- * board's image items, and every WORKING note's inline images (the `notes` table - an
- * open note's images aren't in the drawer until it is saved).
+ * board's image items, every WORKING note's inline images (the `notes` table - an open
+ * note's images aren't in the drawer until it is saved), and every stencil library entry's
+ * owned mask asset.
  *
  * @returns The set of referenced hashes. Anything in the asset store NOT in this
  *   set is an orphan candidate for the sweep (subject to the grace window).
@@ -97,17 +110,19 @@ function collectFromBoardItem(item: BoardItemRecord, into: Set<string>): void {
 export async function collectReferencedAssetHashes(): Promise<Set<string>> {
    const referenced = new Set<string>();
 
-   const [characterRecords, itemContents, boardItems, notes] = await Promise.all([
+   const [characterRecords, itemContents, boardItems, notes, stencils] = await Promise.all([
       listCharacters(),
       listAllItemContents(),
       listAllBoardItems(),
       listAllNotes(),
+      listStencils(),
    ]);
 
    for (const record of characterRecords) collectFromCharacter(record.character, referenced);
    for (const content of itemContents) collectFromItemContent(content, referenced);
    for (const item of boardItems) collectFromBoardItem(item, referenced);
    for (const note of notes) collectFromNote(note, referenced);
+   for (const stencil of stencils) collectFromStencil(stencil, referenced);
 
    return referenced;
 }

@@ -24,6 +24,11 @@ describe('resolveStencilSourceHash', () => {
       expect(resolveStencilSourceHash(content)).toBe('orig');
    });
 
+   it('uses sourceAssetId for a library-masked image too', () => {
+      const content: ImageBoardContent = { kind: 'image', assetId: 'baked', fit: 'cover', sourceAssetId: 'orig', stencilId: 'lib-1' };
+      expect(resolveStencilSourceHash(content)).toBe('orig');
+   });
+
    it('is null for an empty image box', () => {
       const content: ImageBoardContent = { kind: 'image', assetId: null, fit: 'contain' };
       expect(resolveStencilSourceHash(content)).toBeNull();
@@ -31,8 +36,8 @@ describe('resolveStencilSourceHash', () => {
 });
 
 describe('stenciledImageContent', () => {
-   it('shows the baked asset, keeps the source, records the mask, and preserves fit', () => {
-      expect(stenciledImageContent('baked', 'orig', 'hexagon', 'contain')).toEqual({
+   it('shows the baked asset, keeps the source, records the preset, and preserves fit', () => {
+      expect(stenciledImageContent('baked', 'orig', { preset: 'hexagon' }, 'contain')).toEqual({
          kind: 'image',
          assetId: 'baked',
          fit: 'contain',
@@ -41,13 +46,34 @@ describe('stenciledImageContent', () => {
       });
    });
 
+   it('records a library stencil as stencilId, with no preset maskId', () => {
+      const next = stenciledImageContent('baked', 'orig', { library: 'lib-1' }, 'cover');
+      expect(next).toEqual({
+         kind: 'image',
+         assetId: 'baked',
+         fit: 'cover',
+         sourceAssetId: 'orig',
+         stencilId: 'lib-1',
+      });
+      expect(next.maskId).toBeUndefined();
+   });
+
    it('re-masking keeps the same source while swapping the baked asset and mask', () => {
       const masked: ImageBoardContent = { kind: 'image', assetId: 'baked1', fit: 'cover', sourceAssetId: 'orig', maskId: 'hexagon' };
       const source = resolveStencilSourceHash(masked)!;
-      const next = stenciledImageContent('baked2', source, 'torn-edge', masked.fit);
+      const next = stenciledImageContent('baked2', source, { preset: 'torn-edge' }, masked.fit);
       expect(next.sourceAssetId).toBe('orig');
       expect(next.assetId).toBe('baked2');
       expect(next.maskId).toBe('torn-edge');
+   });
+
+   it('re-masking a preset to a library stencil drops maskId in favor of stencilId', () => {
+      const masked: ImageBoardContent = { kind: 'image', assetId: 'baked1', fit: 'cover', sourceAssetId: 'orig', maskId: 'hexagon' };
+      const source = resolveStencilSourceHash(masked)!;
+      const next = stenciledImageContent('baked2', source, { library: 'lib-1' }, masked.fit);
+      expect(next.sourceAssetId).toBe('orig');
+      expect(next.stencilId).toBe('lib-1');
+      expect(next.maskId).toBeUndefined();
    });
 });
 
@@ -63,5 +89,13 @@ describe('resetImageContent', () => {
       expect(next).toEqual({ kind: 'image', assetId: 'orig', fit: 'contain' });
       expect(next.sourceAssetId).toBeUndefined();
       expect(next.maskId).toBeUndefined();
+   });
+
+   it('resetting a library-masked image drops the stencilId too', () => {
+      const masked: ImageBoardContent = { kind: 'image', assetId: 'baked', fit: 'cover', sourceAssetId: 'orig', stencilId: 'lib-1' };
+      const source = resolveStencilSourceHash(masked)!;
+      const next = resetImageContent(source, masked.fit);
+      expect(next).toEqual({ kind: 'image', assetId: 'orig', fit: 'cover' });
+      expect(next.stencilId).toBeUndefined();
    });
 });

@@ -253,9 +253,10 @@ function collectFromBoard(board: Board, into: Set<string>): void {
    for (const item of board.items) {
       const content: BoardItemContent = item.content;
       if (content.kind === 'image') {
-         // A stenciled image folds BOTH the baked `assetId` and the kept `sourceAssetId`, so a
-         // re-mask/reset still has its original after an import round trip. `maskId` is a bundled
-         // preset - portable, nothing to export.
+         // A stenciled image folds the baked `assetId` and the kept `sourceAssetId`, so a re-mask/reset
+         // still has its original after an import round trip. The mask asset is owned by the global stencil
+         // LIBRARY (not the image, and not bundled into a board file), so `stencilId` is not folded here;
+         // `maskId` is a bundled preset - portable, nothing to export.
          if (content.assetId) into.add(content.assetId);
          if (content.sourceAssetId) into.add(content.sourceAssetId);
       } else if (content.kind === 'card' && content.mode === 'copy' && content.data && typeof content.data === 'object' && 'details' in content.data) {

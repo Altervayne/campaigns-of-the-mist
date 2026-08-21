@@ -7,6 +7,7 @@ import type { CharacterRecord } from '@/lib/character/characterRecords';
 import type { AssetRecord } from '@/lib/assets/assetRecords';
 import type { BoardRecord, BoardItemRecord } from '@/lib/board/boardRecords';
 import type { NoteRecord } from '@/lib/notes/noteRecords';
+import type { StencilRecord } from '@/lib/assets/stencilRecords';
 
 /**
  * The Dexie database for the normalized drawer.
@@ -29,6 +30,9 @@ import type { NoteRecord } from '@/lib/notes/noteRecords';
  * - `boardItems`: flat board-item rows, keyed by `id`, indexed on `boardId` and
  *   the compound `[boardId+z]` (z-ordered load of a board's items); placement and
  *   `content` stored inline (added in `version(4)`).
+ * - `stencils`: one row per user stencil-library entry, keyed by `id`, indexed on
+ *   `order` (manual sort) and `createdAt`; name + owned `maskAssetId` stored inline
+ *   (added in `version(7)`).
  *
  * Despite the database name, it holds both the drawer and the character domains:
  * keeping them in one database lets a save-character-to-drawer update both the
@@ -56,6 +60,8 @@ export class DrawerDatabase extends Dexie {
    boardItems!: EntityTable<BoardItemRecord, 'id'>;
    /** One row per working Note, the whole flat document stored inline (version(6)). */
    notes!: EntityTable<NoteRecord, 'id'>;
+   /** One row per user stencil-library entry, name + owned mask asset stored inline (version(7)). */
+   stencils!: EntityTable<StencilRecord, 'id'>;
 
    constructor() {
       super('CharactersOfTheMistDrawerDatabase');
@@ -112,6 +118,14 @@ export class DrawerDatabase extends Dexie {
       // creating one empty store with no transform of existing data.
       this.version(6).stores({
          notes: 'id, updatedAt',
+      });
+
+      // version(7): purely additive - declares only the NEW `stencils` store. `id` (primary key),
+      // `order` (manual sort), and `createdAt` are indexed; the name and `maskAssetId` are stored
+      // unindexed. An existing database upgrades by creating one empty store with no transform of
+      // existing data.
+      this.version(7).stores({
+         stencils: 'id, order, createdAt',
       });
    }
 }

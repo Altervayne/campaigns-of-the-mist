@@ -40,3 +40,6 @@ export const ACCEPT_BACKUP_RESTORE = '.cotmbak';
 
 /** Images embedded into a portrait, card art, board tile or note. */
 export const ACCEPT_IMAGE = 'image/*';
+
+/** A custom stencil mask: an SVG or a transparent raster (the alpha is the shape). SVG listed explicitly so pickers offer it. */
+export const ACCEPT_MASK_IMAGE = '.svg,image/svg+xml,image/*';

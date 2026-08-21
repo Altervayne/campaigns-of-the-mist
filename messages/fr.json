@@ -596,7 +596,14 @@
       "maskHexagon": "[TO COMPLETE]",
       "maskRoughRectangle": "[TO COMPLETE]",
       "maskTornEdge": "[TO COMPLETE]",
-      "maskOrganicBlob": "[TO COMPLETE]"
+      "maskOrganicBlob": "[TO COMPLETE]",
+      "library": "[TO COMPLETE]",
+      "searchLibrary": "[TO COMPLETE]",
+      "libraryNoMatches": "[TO COMPLETE]",
+      "untitledStencil": "[TO COMPLETE]",
+      "uploadCustom": "[TO COMPLETE]",
+      "maskNoTransparency": "[TO COMPLETE]",
+      "maskUploadFailed": "[TO COMPLETE]"
    },
    "MobileEditPortrait": {
       "title": "Modifier le Portrait",

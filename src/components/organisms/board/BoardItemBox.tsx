@@ -362,8 +362,8 @@ export const BoardItemBox = memo(function BoardItemBox({
    // layer is the same - only its strokes paint (which freely overflow the loose box), no chrome.
    const isEmbed = item.kind === 'card' || item.kind === 'tracker' || item.kind === 'character' || item.kind === 'note' || item.kind === 'portal' || item.kind === 'text' || item.kind === 'drawing';
    // A stenciled image is a shape, not a rectangle: it drops the panel border + shadow (which would frame
-   // the transparent corners as a rectangle), keeping only the selection ring.
-   const isMaskedImage = item.content.kind === 'image' && !!item.content.maskId;
+   // the transparent corners as a rectangle), keeping only the selection ring. A preset or library mask counts.
+   const isMaskedImage = item.content.kind === 'image' && (!!item.content.maskId || !!item.content.stencilId);
    // A note tile is a WINDOWED embed: unlike the fixed card/tracker/character panels it is freely
    // 2D-resizable (internal scroll), so it keeps the resize grip the other embeds drop. A portal is
    // resizable in every style too (owner override of the auto-hug): its glyph + type scale with the box.

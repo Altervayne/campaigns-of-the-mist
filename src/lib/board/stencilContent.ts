@@ -9,6 +9,13 @@
 import type { ImageBoardContent } from '@/lib/types/board';
 
 /**
+ * A reference to the mask an applied stencil records: a `preset` shape (by its bundled id) or a `library`
+ * stencil (by its library entry id). Exactly one is applied at a time, so the content carries `maskId` XOR
+ * `stencilId`.
+ */
+export type StencilMaskRef = { preset: string } | { library: string };
+
+/**
  * The un-masked original a stencil always operates on, so masks never stack: an already-masked item
  * re-runs on its kept `sourceAssetId`, an unmasked one on its own `assetId`. Null when the box is empty.
  */
@@ -18,16 +25,18 @@ export function resolveStencilSourceHash(content: ImageBoardContent): string | n
 
 /**
  * Builds the content for applying a mask: `assetId` becomes the baked result, `sourceAssetId` keeps the
- * original for a later re-mask/reset, and `maskId` records the applied preset. Re-masking passes the same
- * `sourceHash`, so the source is preserved and only the baked asset changes.
+ * original for a later re-mask/reset, and the mask is recorded as EITHER `maskId` (preset) or `stencilId`
+ * (library) - never both. Re-masking passes the same `sourceHash`, so the source is preserved and only the
+ * baked asset (and the mask reference) changes.
  */
 export function stenciledImageContent(
    bakedHash: string,
    sourceHash: string,
-   maskId: string,
+   mask: StencilMaskRef,
    fit: ImageBoardContent['fit'],
 ): ImageBoardContent {
-   return { kind: 'image', assetId: bakedHash, fit, sourceAssetId: sourceHash, maskId };
+   const base: ImageBoardContent = { kind: 'image', assetId: bakedHash, fit, sourceAssetId: sourceHash };
+   return 'preset' in mask ? { ...base, maskId: mask.preset } : { ...base, stencilId: mask.library };
 }
 
 /**

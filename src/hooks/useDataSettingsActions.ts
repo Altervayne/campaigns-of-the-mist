@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { clearAllCharacterData } from '@/lib/character/characterRepository';
 import { clearAllAssets } from '@/lib/assets/assetRepository';
+import { clearAllStencils } from '@/lib/assets/stencilRepository';
 import { clearAllBoards } from '@/lib/board/boardRepository';
 import { clearAllNotes } from '@/lib/notes/noteRepository';
 import { runSweep, estimateStorageUsage } from '@/lib/assets/assetGarbageCollector';
@@ -43,6 +44,7 @@ export function useDataSettingsActions() {
    const handleAppReset = async () => {
       await clearAllCharacterData();
       await clearAllAssets();
+      await clearAllStencils();
       await clearAllBoards();
       await clearAllNotes();
       clearWorkspace();

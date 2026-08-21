@@ -41,10 +41,14 @@ export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' 
  * An image card on the board; reuses IMAGE_CARD semantics (references the shared asset store).
  *
  * A masked (stenciled) image bakes source x shape into a NEW asset: `assetId` is the baked result,
- * `sourceAssetId` is the kept original (so a re-mask/reset re-runs on the source), and `maskId` names
- * the applied preset (a bundled shape, so it is portable - nothing to export). Both are absent on an
- * unmasked image, so pre-stencil boards read unchanged. When both are set, the asset walkers (GC +
- * export) MUST count `sourceAssetId` alongside `assetId`, or masking would strand the original.
+ * `sourceAssetId` is the kept original (so a re-mask/reset re-runs on the source), and the mask is named
+ * by EITHER `maskId` (a bundled preset shape) OR `stencilId` (a user stencil-LIBRARY entry). At most one of
+ * the two is set. All three are absent on an unmasked image, so pre-stencil boards read unchanged.
+ *
+ * The mask asset itself is owned by the LIBRARY (a `stencils` entry keeps it alive), NOT the image:
+ * `stencilId` is a SOFT reference recording re-open intent - deleting the library entry leaves the baked
+ * image untouched, and re-mask just opens with nothing pre-selected. So the asset walkers (GC + export)
+ * count ONLY `assetId` + `sourceAssetId`; the stencil is never counted or bundled through the image.
  */
 export interface ImageBoardContent {
    kind: 'image';
@@ -52,8 +56,10 @@ export interface ImageBoardContent {
    fit: 'cover' | 'contain';
    /** The pre-mask original, kept for re-mask / reset. Absent on an unmasked image. */
    sourceAssetId?: string;
-   /** Which preset mask is applied (a bundled shape id). Absent on an unmasked image. */
+   /** Which preset mask is applied (a bundled shape id). Absent on an unmasked or library-masked image. */
    maskId?: string;
+   /** The applied stencil-LIBRARY entry id (a soft reference for re-open). Absent on an unmasked or preset-masked image. */
+   stencilId?: string;
 }
 
 /**
