@@ -80,7 +80,7 @@ export function NavigatorFilterStrip() {
                      aria-label={label}
                      onClick={() => toggleTypeFilter(kind)}
                      className={cn(
-                        'flex size-6 cursor-pointer items-center justify-center rounded',
+                        'flex size-6 coarse:size-11 cursor-pointer items-center justify-center rounded',
                         active
                            ? 'bg-primary/15 text-foreground ring-1 ring-primary/40'
                            : 'text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground',

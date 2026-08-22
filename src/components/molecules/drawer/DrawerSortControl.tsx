@@ -36,7 +36,7 @@ export function DrawerSortControl() {
       <div className="flex items-center justify-end gap-1.5">
          <span className="text-xs text-muted-foreground">{t('Drawer.filters.sortBy')}</span>
          <Select value={by} onValueChange={(value) => void updateSearchCriteria({ sort: { by: value as SortBy, direction } })}>
-            <SelectTrigger className="h-7 w-32 text-xs">
+            <SelectTrigger className="h-7 w-32 text-xs coarse:h-11">
                <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -48,7 +48,7 @@ export function DrawerSortControl() {
          <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 cursor-pointer"
+            className="h-7 w-7 shrink-0 cursor-pointer coarse:size-11"
             aria-label={t(direction === 'asc' ? 'Drawer.filters.sortAsc' : 'Drawer.filters.sortDesc')}
             title={t(direction === 'asc' ? 'Drawer.filters.sortAsc' : 'Drawer.filters.sortDesc')}
             onClick={() => void updateSearchCriteria({ sort: { by, direction: direction === 'asc' ? 'desc' : 'asc' } })}

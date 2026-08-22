@@ -173,10 +173,10 @@ export function ThemeManager({ onEnterEditor }: { onEnterEditor?: () => void } =
                   placeholder={t('SettingsDialog.themes.renamePlaceholder')}
                   className="h-9 flex-1"
                />
-               <Button variant="default" size="icon" onClick={() => commitRename(customId)} title={t('SettingsDialog.themes.save')} className="shrink-0 cursor-pointer">
+               <Button variant="default" size="icon" onClick={() => commitRename(customId)} title={t('SettingsDialog.themes.save')} className="coarse:size-11 shrink-0 cursor-pointer">
                   <Check className="h-4 w-4" />
                </Button>
-               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="shrink-0 cursor-pointer">
+               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="coarse:size-11 shrink-0 cursor-pointer">
                   <X className="h-4 w-4" />
                </Button>
             </div>
@@ -289,7 +289,7 @@ export function ThemeManager({ onEnterEditor }: { onEnterEditor?: () => void } =
                         onClick={() => importInputRef.current?.click()}
                         aria-label={t('SettingsDialog.themes.importTheme')}
                         title={t('SettingsDialog.themes.importTheme')}
-                        className="h-6 w-6 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                        className="h-6 w-6 coarse:size-11 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
                      >
                         <Download className="h-3.5 w-3.5" />
                      </Button>

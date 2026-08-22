@@ -128,7 +128,7 @@ export function ThemeEditor({ theme, headerLeft, headerRight }: { theme: CustomT
                step={RADIUS_STEP}
                value={radiusValue}
                onChange={(event) => patchThemeDraft({ radius: `${event.target.value}rem` })}
-               className="flex-1 cursor-pointer accent-primary"
+               className="flex-1 cursor-pointer accent-primary coarse:h-11"
             />
             <span className="w-14 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">{draft.radius}</span>
          </div>

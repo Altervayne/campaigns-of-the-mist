@@ -61,7 +61,7 @@ export function DrawerMoveItemNavigator({ action, onConfirm, onClose }: { action
                   <p className="text-sm text-muted-foreground">{`${t('Drawer.Actions.moveVerb')}:  ${itemToMove?.name ?? t('Drawer.movingUnknown')}`}</p>
                </div>
                {currentNavFolderId && (
-                  <div onClick={() => setCurrentNavFolderId(null)} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted cursor-pointer shrink-0" role="button" aria-label={t('Drawer.backToRoot')}>
+                  <div onClick={() => setCurrentNavFolderId(null)} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted cursor-pointer shrink-0 coarse:size-11" role="button" aria-label={t('Drawer.backToRoot')}>
                         <ArrowUpToLine className="h-5 w-5" />
                   </div>
                )}

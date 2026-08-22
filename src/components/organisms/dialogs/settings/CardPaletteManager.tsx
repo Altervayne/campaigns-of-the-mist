@@ -188,10 +188,10 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   placeholder={t('SettingsDialog.cardPalettes.renamePlaceholder')}
                   className="h-9 flex-1"
                />
-               <Button variant="default" size="icon" onClick={() => commitRename(row.id)} title={t('SettingsDialog.themes.save')} className="shrink-0 cursor-pointer">
+               <Button variant="default" size="icon" onClick={() => commitRename(row.id)} title={t('SettingsDialog.themes.save')} className="coarse:size-11 shrink-0 cursor-pointer">
                   <Check className="h-4 w-4" />
                </Button>
-               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="shrink-0 cursor-pointer">
+               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="coarse:size-11 shrink-0 cursor-pointer">
                   <X className="h-4 w-4" />
                </Button>
             </div>
@@ -303,7 +303,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                         onClick={() => importInputRef.current?.click()}
                         aria-label={t('SettingsDialog.cardPalettes.importPalette')}
                         title={t('SettingsDialog.cardPalettes.importPalette')}
-                        className="h-6 w-6 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                        className="h-6 w-6 coarse:size-11 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
                      >
                         <Download className="h-3.5 w-3.5" />
                      </Button>

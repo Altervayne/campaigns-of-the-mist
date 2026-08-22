@@ -49,7 +49,7 @@ export function DrawerSearchBar({ wide = false, isMobile = false }: { wide?: boo
                {isSearchActive && (
                   <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
                      <span className="text-[11px] tabular-nums text-muted-foreground">{t('Drawer.search.resultCount', { count: resultCount })}</span>
-                     <button type="button" onClick={clear} className="rounded p-1 hover:bg-muted cursor-pointer" aria-label={t('Drawer.search.clear')}>
+                     <button type="button" onClick={clear} className="rounded p-1 hover:bg-muted cursor-pointer coarse:p-2.5" aria-label={t('Drawer.search.clear')}>
                         <X className="h-4 w-4" />
                      </button>
                   </div>

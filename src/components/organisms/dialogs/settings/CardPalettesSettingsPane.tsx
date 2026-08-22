@@ -161,7 +161,7 @@ export function CardPalettesSettingsPane() {
                         // `min-w-0` lets the equal-width segments shrink so a long name truncates instead of
                         // overflowing the track.
                         className={cn(
-                           'flex min-w-0 flex-1 cursor-pointer items-center justify-center rounded-sm px-3 py-1.5 text-sm transition-colors',
+                           'flex min-w-0 flex-1 cursor-pointer items-center justify-center rounded-sm px-3 py-1.5 text-sm transition-colors coarse:py-2.5',
                            isActive ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
                         )}
                      >

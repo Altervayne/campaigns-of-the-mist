@@ -136,7 +136,7 @@ export function TabStrip({ forceDropHighlight = false }: { forceDropHighlight?: 
    // can scroll; on unmount it slides off its own edge (the strip's `overflow-x-clip`
    // clips it cleanly so it never pokes over the sidebar).
    const arrowClass =
-      'absolute top-0 bottom-0 z-20 my-auto flex size-8 items-center justify-center rounded-md shadow-[3px_3px_10px_3px_#00000075] bg-primary/70 backdrop-blur-sm text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer';
+      'absolute top-0 bottom-0 z-20 my-auto flex size-8 coarse:size-11 items-center justify-center rounded-md shadow-[3px_3px_10px_3px_#00000075] bg-primary/70 backdrop-blur-sm text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer';
 
    return (
       <div
@@ -199,7 +199,7 @@ export function TabStrip({ forceDropHighlight = false }: { forceDropHighlight?: 
                onClick={() => setIsNewTabDialogOpen(true)}
                aria-label={t('Tabs.newTab')}
                title={t('Tabs.newTab')}
-               className="shrink-0 mb-2 ml-1 mr-1.5 flex items-center justify-center rounded-md px-2 py-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+               className="shrink-0 mb-2 ml-1 mr-1.5 flex items-center justify-center rounded-md px-2 py-2 coarse:size-11 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
             >
                <Plus className="h-4 w-4" />
             </button>

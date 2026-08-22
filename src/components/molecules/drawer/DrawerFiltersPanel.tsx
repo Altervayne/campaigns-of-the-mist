@@ -133,7 +133,7 @@ export function DrawerFiltersPanel({ wide = false, isMobile = false }: { wide?: 
       <div className={cn('mt-2 flex flex-col gap-3 rounded-md border border-border bg-card p-3', !wide && 'max-h-72 overflow-y-auto')}>
          <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">{t('Drawer.filters.title')}</h3>
-            <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs" onClick={clearSearch}>{t('Drawer.filters.clearAll')}</Button>
+            <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs coarse:h-9" onClick={clearSearch}>{t('Drawer.filters.clearAll')}</Button>
          </div>
 
          {/* Type (multi). */}

@@ -18,7 +18,7 @@ export function SegmentedControl<T extends string | number>({ label, options, va
          {label && <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>}
          <div className="grid grid-cols-3 gap-1.5">
             {options.map((option) => (
-               <Button key={option.value} variant={value === option.value ? 'default' : 'outline'} size="sm" onClick={() => onChange(option.value)} className={cn('w-full cursor-pointer', isMobile && 'h-11 text-sm')}>
+               <Button key={option.value} variant={value === option.value ? 'default' : 'outline'} size="sm" onClick={() => onChange(option.value)} className={cn('w-full cursor-pointer', isMobile && 'h-11 text-sm', 'coarse:h-11')}>
                   {option.label}
                </Button>
             ))}

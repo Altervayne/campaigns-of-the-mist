@@ -179,7 +179,7 @@ export function AppearanceSettingsPane() {
                            type="button"
                            onClick={() => setMode(option.value)}
                            className={cn(
-                              'flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3 py-1.5 text-sm transition-colors',
+                              'flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3 py-1.5 text-sm transition-colors coarse:py-2.5',
                               isActive ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
                            )}
                         >

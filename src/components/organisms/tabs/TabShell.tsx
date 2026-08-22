@@ -109,6 +109,7 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
             aria-label={t('Tabs.closeTab')}
             className={cn(
                'shrink-0 rounded p-1 opacity-60 hover:bg-muted hover:text-foreground hover:opacity-100 cursor-pointer',
+               'coarse:flex coarse:size-11 coarse:items-center coarse:justify-center',
                isActive ? 'text-primary-foreground' : 'text-muted-foreground',
             )}
          >

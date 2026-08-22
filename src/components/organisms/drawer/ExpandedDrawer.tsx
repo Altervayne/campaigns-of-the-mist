@@ -198,7 +198,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
                 deep path has the whole Library width to breathe instead of the cramped folder side-nav. */}
             {breadcrumbPath.length > 0 && (
                <div className="mt-2 flex items-center gap-2">
-                  <div onClick={() => navigateToFolder(null)} className="shrink-0 cursor-pointer rounded p-1 hover:bg-muted" role="button" aria-label={t('Drawer.backToRoot')}>
+                  <div onClick={() => navigateToFolder(null)} className="shrink-0 cursor-pointer rounded p-1 hover:bg-muted coarse:p-2.5" role="button" aria-label={t('Drawer.backToRoot')}>
                      <ArrowUpToLine className="h-4 w-4" />
                   </div>
                   <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />

@@ -116,7 +116,7 @@ export const DrawerModificationWindow = React.forwardRef<HTMLInputElement, Drawe
          <div className={cn('bg-background p-4', variant === 'slideUp' && 'border-t')}>
             <div className="flex justify-between items-center mb-4">
                <h3 className="font-semibold">{title}</h3>
-               <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={onClose}>
+               <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer coarse:size-11" onClick={onClose}>
                   <X className="h-4 w-4" />
                </Button>
             </div>

@@ -110,7 +110,7 @@ export function NoteToolbar({
    const { toggleFormat, cycleHeading, toggleList, insertTable, insertHorizontalRule } = useNoteFormatActions(getEditor);
 
    return (
-      <div ref={rowRef} data-tutorial="note-toolbar" className="flex items-center gap-0.5 border-b border-border bg-popover px-2 py-1.5">
+      <div ref={rowRef} data-tutorial="note-toolbar" className="flex items-center gap-0.5 coarse:gap-1 border-b border-border bg-popover px-2 py-1.5">
          {/* Outline toggle: shown in ALL modes (the document outline works in Reading too), leftmost. */}
          <button
             type="button"
@@ -120,7 +120,7 @@ export function NoteToolbar({
             onMouseDown={(event) => event.preventDefault()}
             onClick={onToggleOutline}
             className={cn(
-               'grid h-7 w-7 place-items-center rounded cursor-pointer',
+               'grid h-7 w-7 coarse:size-11 place-items-center rounded cursor-pointer',
                isOutlineOpen ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted',
             )}
          >
@@ -209,7 +209,7 @@ function ToolbarButton({
          data-tutorial={dataTutorial}
          onMouseDown={(event) => event.preventDefault()}
          onClick={onClick}
-         className="grid h-7 w-7 place-items-center rounded text-foreground hover:bg-muted cursor-pointer disabled:cursor-default disabled:opacity-60"
+         className="grid h-7 w-7 coarse:size-11 place-items-center rounded text-foreground hover:bg-muted cursor-pointer disabled:cursor-default disabled:opacity-60"
       >
          {children}
       </button>
@@ -247,7 +247,7 @@ function ModeToggle({ mode, onChange, compact }: { mode: NoteMode; onChange: (mo
             onClick={next}
             title={t(current.label)}
             aria-label={t(current.label)}
-            className="flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-foreground hover:bg-muted cursor-pointer"
+            className="flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1 coarse:py-2.5 text-sm text-foreground hover:bg-muted cursor-pointer"
          >
             <Icon className="h-4 w-4" />
             <span>{t(current.label)}</span>
@@ -257,7 +257,7 @@ function ModeToggle({ mode, onChange, compact }: { mode: NoteMode; onChange: (mo
 
    const segment = (active: boolean) =>
       cn(
-         'flex items-center gap-1.5 rounded px-2.5 py-1 text-sm cursor-pointer',
+         'flex items-center gap-1.5 rounded px-2.5 py-1 coarse:py-2.5 text-sm cursor-pointer',
          active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted',
       );
    return (
@@ -332,7 +332,7 @@ function CoverMenuRow({ icon, label, onClick, destructive }: { icon: ReactNode; 
       <button
          type="button"
          onClick={onClick}
-         className={`flex items-center gap-2 rounded p-1 text-left cursor-pointer ${destructive ? 'text-destructive hover:bg-destructive/10' : 'text-popover-foreground hover:bg-muted'}`}
+         className={`flex items-center gap-2 rounded p-1 coarse:py-2 text-left cursor-pointer ${destructive ? 'text-destructive hover:bg-destructive/10' : 'text-popover-foreground hover:bg-muted'}`}
       >
          {icon}
          <span className="whitespace-nowrap text-sm">{label}</span>
@@ -367,7 +367,7 @@ function LinkButton({
                aria-label={t('NoteView.toolbar.insertLink')}
                data-tutorial="note-link-button"
                onMouseDown={(event) => event.preventDefault()}
-               className="grid h-7 w-7 place-items-center rounded text-foreground hover:bg-muted cursor-pointer"
+               className="grid h-7 w-7 coarse:size-11 place-items-center rounded text-foreground hover:bg-muted cursor-pointer"
             >
                <Link className="h-4 w-4" />
             </button>
@@ -403,7 +403,7 @@ function TableButton({ onInsert }: { onInsert: (rows: number, cols: number) => v
                title={t('NoteView.toolbar.insertTable')}
                aria-label={t('NoteView.toolbar.insertTable')}
                onMouseDown={(event) => event.preventDefault()}
-               className="grid h-7 w-7 place-items-center rounded text-foreground hover:bg-muted cursor-pointer"
+               className="grid h-7 w-7 coarse:size-11 place-items-center rounded text-foreground hover:bg-muted cursor-pointer"
             >
                <Table className="h-4 w-4" />
             </button>

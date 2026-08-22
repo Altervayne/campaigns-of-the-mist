@@ -38,16 +38,16 @@ export function DrawerHeader({ title, isCompactDrawer, onToggleView, modeIcon, m
       <header className="shrink-0 border-b-2 border-border px-4 py-2">
          <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 coarse:gap-2">
                <DrawerUndoRedoControls compact />
                <div className="mx-1 h-6 w-px shrink-0 bg-border" />
-               <div onClick={onToggleView} className="cursor-pointer rounded p-2 hover:bg-muted" role="button" aria-label={t('Drawer.toggleView')} title={t('Drawer.toggleView')} data-tutorial="drawer-rich-view-toggle">
+               <div onClick={onToggleView} className="cursor-pointer rounded p-2 hover:bg-muted coarse:p-3" role="button" aria-label={t('Drawer.toggleView')} title={t('Drawer.toggleView')} data-tutorial="drawer-rich-view-toggle">
                   {isCompactDrawer ? <LayoutGrid className="h-6 w-6" /> : <Rows className="h-6 w-6" />}
                </div>
-               <div onClick={onMode} className="cursor-pointer rounded p-2 hover:bg-muted" role="button" aria-label={modeLabel} title={modeLabel} data-tutorial="drawer-expand">
+               <div onClick={onMode} className="cursor-pointer rounded p-2 hover:bg-muted coarse:p-3" role="button" aria-label={modeLabel} title={modeLabel} data-tutorial="drawer-expand">
                   {modeIcon}
                </div>
-               <div onClick={onClose} className="cursor-pointer rounded p-2 hover:bg-muted" role="button" aria-label={t('Drawer.close')}>
+               <div onClick={onClose} className="cursor-pointer rounded p-2 hover:bg-muted coarse:p-3" role="button" aria-label={t('Drawer.close')}>
                   <PanelRightClose className="h-6 w-6" />
                </div>
             </div>

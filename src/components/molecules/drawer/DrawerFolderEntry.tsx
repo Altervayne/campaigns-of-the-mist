@@ -77,7 +77,7 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                         onClick={() => onNavigate(folder.id)}
                      >
                         <GripVertical
-                           className="h-5 w-5 shrink-0 text-muted-foreground cursor-grab"
+                           className="h-5 w-5 shrink-0 text-muted-foreground cursor-grab coarse:size-8"
                            {...dragAttributes}
                            {...dragListeners}
                         />

@@ -114,7 +114,7 @@ export function PortalTrailBar() {
             disabled={effectiveIndex <= 0}
             aria-label={t('Tabs.portalTrailBack')}
             title={t('Tabs.portalTrailBack')}
-            className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+            className="flex size-6 coarse:size-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
          >
             <ArrowLeft className="h-4 w-4" />
          </button>
@@ -154,7 +154,7 @@ export function PortalTrailBar() {
             onClick={actions.clearJourney}
             aria-label={t('Tabs.portalTrailDismiss')}
             title={t('Tabs.portalTrailDismiss')}
-            className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+            className="flex size-6 coarse:size-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
          >
             <X className="h-4 w-4" />
          </button>
