@@ -23,14 +23,12 @@ interface MobileSettingsToggleGroupProps {
 	label: string;
 	/** The mutually-exclusive options, rendered side by side in an even grid. */
 	options: MobileSettingsToggleOption[];
-	/** Optional helper line below the grid (e.g. the Interface control's resolved-value hint). */
-	hint?: string;
 	/** Optional `data-tutorial` anchor for the group root, so a tutorial can spotlight the whole toggle. */
 	dataTutorial?: string;
 }
 
 /** One grid column per option, kept as static classes so Tailwind emits them. */
-const GRID_COLS: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' };
+const GRID_COLS: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3' };
 
 /**
  * A labelled toggle row used across the mobile settings screen (appearance mode,
@@ -41,7 +39,7 @@ const GRID_COLS: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 
  * node, so each caller controls its own icon sizing/transform (e.g. the handedness
  * group's mirrored, margin-less hand) without this component needing to know about it.
  */
-export function MobileSettingsToggleGroup({ label, options, hint, dataTutorial }: MobileSettingsToggleGroupProps) {
+export function MobileSettingsToggleGroup({ label, options, dataTutorial }: MobileSettingsToggleGroupProps) {
 	return (
 		<div className="space-y-2" data-tutorial={dataTutorial}>
 			<Label className="text-sm font-semibold">{label}</Label>
@@ -58,7 +56,6 @@ export function MobileSettingsToggleGroup({ label, options, hint, dataTutorial }
 					</Button>
 				))}
 			</div>
-			{hint && <p className="text-xs text-muted-foreground">{hint}</p>}
 		</div>
 	);
 }

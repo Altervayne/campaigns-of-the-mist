@@ -62,11 +62,6 @@ interface AppSettingsState {
    /** Whether the Navigator slide-over is open. Persisted so it stays where the user left it (default closed). */
    navigatorOpen: boolean;
    contextualGame: GameSystem;
-   deviceTypeOverride?: DeviceType;
-   /** Manual layout-profile override; `undefined` = auto-detect. Orthogonal to `deviceTypeOverride` (the
-    * binary base regime): the Interface control sets both together so base and layout stay coherent, while
-    * pointer capability is always auto-detected regardless. */
-   formFactorOverride?: FormFactor;
    isMobileFABMode: boolean;
    mobileHandedness: MobileHandedness;
    areGestureHintsEnabled: boolean;
@@ -124,8 +119,6 @@ interface AppSettingsState {
       setNavigatorOpen: (isOpen: boolean) => void;
       toggleNavigator: () => void;
       setContextualGame: (game: GameSystem) => void;
-      setDeviceTypeOverride: (deviceType: DeviceType | undefined) => void;
-      setFormFactorOverride: (formFactor: FormFactor | undefined) => void;
       setMobileFABMode: (enabled: boolean) => void;
       setMobileHandedness: (handedness: MobileHandedness) => void;
       setGestureHintsEnabled: (enabled: boolean) => void;
@@ -177,8 +170,6 @@ export const useAppSettingsStore = create<AppSettingsState>()(
          layersPanelOpen: false,
          navigatorOpen: false,
          contextualGame: 'LEGENDS',
-         deviceTypeOverride: undefined,
-         formFactorOverride: undefined,
          isMobileFABMode: false,
          mobileHandedness: 'right',
          areGestureHintsEnabled: true,
@@ -284,8 +275,6 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             setNavigatorOpen: (isOpen) => set({ navigatorOpen: isOpen }),
             toggleNavigator: () => set((state) => ({ navigatorOpen: !state.navigatorOpen })),
             setContextualGame: (game) => set({ contextualGame: game }),
-            setDeviceTypeOverride: (deviceType) => set({ deviceTypeOverride: deviceType }),
-            setFormFactorOverride: (formFactor) => set({ formFactorOverride: formFactor }),
             setMobileFABMode: (enabled) => set({ isMobileFABMode: enabled }),
             setMobileHandedness: (handedness) => set({ mobileHandedness: handedness }),
             setGestureHintsEnabled: (enabled) => set({ areGestureHintsEnabled: enabled }),
@@ -335,8 +324,6 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             layersPanelOpen: state.layersPanelOpen,
             navigatorOpen: state.navigatorOpen,
             contextualGame: state.contextualGame,
-            deviceTypeOverride: state.deviceTypeOverride,
-            formFactorOverride: state.formFactorOverride,
             isMobileFABMode: state.isMobileFABMode,
             mobileHandedness: state.mobileHandedness,
             areGestureHintsEnabled: state.areGestureHintsEnabled,

@@ -24,7 +24,6 @@ import { MobileSettingsToggleGroup } from '@/components/mobile/menu/MobileSettin
 
 // -- Store and Hook Imports --
 import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { useInterfaceSetting, INTERFACE_CHOICES, INTERFACE_ICONS } from '@/hooks/useInterfaceSetting';
 
 // -- Localization Imports --
 import { LOCALES, resolveLocaleCode } from '@/i18n/locales';
@@ -40,7 +39,6 @@ export default function MobileSettingsGeneral({ onBack }: MobileSettingsGeneralP
 
 	const { isSideBySideView, isTrackersAlwaysEditable, isMobileFABMode, mobileHandedness, areGestureHintsEnabled } = useAppSettingsStore();
 	const { setSideBySideView, setTrackersAlwaysEditable, setMobileFABMode, setMobileHandedness, setGestureHintsEnabled } = useAppSettingsActions();
-	const { choice: interfaceChoice, resolvedFormFactor, selectInterface } = useInterfaceSetting();
 
 	const handleLocaleChange = (newLocale: string) => {
 		i18n.changeLanguage(newLocale);
@@ -64,25 +62,6 @@ export default function MobileSettingsGeneral({ onBack }: MobileSettingsGeneralP
 					</SelectContent>
 				</Select>
 			</div>
-
-			{/* Interface: layout profile override. Writes both axes; on Auto, shows the resolved layout. */}
-			<MobileSettingsToggleGroup
-				label={t('SettingsDialog.interface.title')}
-				options={INTERFACE_CHOICES.map((option) => {
-					const OptionIcon = INTERFACE_ICONS[option];
-					return {
-						icon: <OptionIcon className="mr-2 h-5 w-5 shrink-0" />,
-						label: t(`SettingsDialog.interface.${option}`),
-						isActive: interfaceChoice === option,
-						onSelect: () => selectInterface(option),
-					};
-				})}
-				hint={
-					interfaceChoice === 'auto'
-						? t('SettingsDialog.interface.autoResolved', { value: t(`SettingsDialog.interface.${resolvedFormFactor}`) })
-						: undefined
-				}
-			/>
 
 			{/* Card View Mode */}
 			<MobileSettingsToggleGroup

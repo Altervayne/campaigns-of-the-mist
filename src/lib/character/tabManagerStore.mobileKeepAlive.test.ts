@@ -33,7 +33,7 @@ import { detachPersistenceHandle } from './characterPersistence';
 import { saveCharacter, getCharacter } from './characterRepository';
 import { createNote, getNote } from '@/lib/notes/noteRepository';
 import { readWorkspace, writeWorkspace } from './workspaceSession';
-import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
+import * as deviceTypeModule from '@/hooks/useDeviceType';
 
 // -- Type Imports --
 import type { Character } from '@/lib/types/character';
@@ -100,7 +100,7 @@ afterEach(async () => {
    detachPersistenceHandle(SINGLE_ACTIVE_INSTANCE_ID);
    disposeInstance(SINGLE_ACTIVE_INSTANCE_ID);
    useTabManagerStore.setState({ openTabs: [], activeTabId: null });
-   useAppSettingsStore.setState({ deviceTypeOverride: undefined });
+   vi.restoreAllMocks();
    __resetMobileKeepAliveForTest();
    await tick();
 });
@@ -345,7 +345,7 @@ describe('bootMobile restores a note active-tab', () => {
    it('hydrates and activates a note intended-active (not a menu bounce)', async () => {
       const record = await createNote();
       writeWorkspace({ openTabs: [{ id: record.id, type: 'note' }], activeId: record.id });
-      useAppSettingsStore.setState({ deviceTypeOverride: 'mobile' });
+      vi.spyOn(deviceTypeModule, 'getEffectiveDeviceType').mockReturnValue('mobile');
 
       await runCharacterBoot();
 

@@ -7,6 +7,32 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.3.0',
+      content: `
+## ✨ Features
+
+* **Boards**:
+  * **Element Rotation**: The board now permits rotation for the following elements:
+    * Post-it note
+    * Image
+    * Text
+    * Drawing layer
+  * **Rich image styling**: Image elements on the board can now be styled with stencils, frames, filters, and you can even manually adjust saturation, contrast or brightness. The app features 8 default stencils, but any image with transparency, or SVG, can be uploaded to your stencil library and used on an image element.
+  * **Connections got upgraded**: Connections now have path types (Orthogonal, Straight, Curved, Bézier), and the toolbar was rebuilt to be more intuitive. You can now add a label to connections, and add an arrow not just in the middle but also at the start or end of the connection.
+  * **Colorable grid and background**: You can now color a board's background. I also experimented with two textures you can apply to the board, a fiber-y "linen" texture, and a grainy "paper" texture. Grids are now colorable too.
+
+* **First shot at 📱 tablet support**: I've added an interactivity layer for touch controls on a tablet. The desktop UI is preserved, but some buttons will be made bigger and easier to reach, and new touch controls have been added. I've definitely missed some stuff, so as usual, please report any issues ! So far, the app is meant to be used in Landscape mode for tablets.
+
+## 🐛 Bugfixes
+
+* Fixed changing a board element's color by dragging in the color picker accidentally **moving the
+  element** across the board (and the picker sliding away with it, so you couldn't finish choosing).
+* Fixed the board selection toolbar (single and multi-select) sliding off the bottom edge of the
+  viewport when the selection sat near the bottom.
+* Fixed workspace tabs ignoring a custom theme's corner roundness.
+`,
+   },
+   {
       version: '2.2.0',
       content: `
 ### ✨ Features

@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
+import { useState, useEffect } from 'react';
 import { BREAKPOINT_TABLET, BREAKPOINT_DESK, TABLET_PORTRAIT_FALLBACK } from '@/lib/breakpoints';
 
 export type DeviceType = 'mobile' | 'desktop';
@@ -14,7 +13,6 @@ interface UseDeviceTypeResult {
 	deviceType: DeviceType;
 	isMobile: boolean;
 	isDesktop: boolean;
-	toggleDeviceType: () => void;
 }
 
 // Mobile detection based on user agent
@@ -99,28 +97,22 @@ export function detectPointer(): PointerType {
 
 /**
  * Non-hook effective device type for code that runs outside React (e.g. the boot
- * step in `AppStartManager`/`tabManagerStore`). Respects a persisted user override
- * exactly like the hook does, falling back to auto-detection. Safe to call before
- * first paint: zustand-persist rehydrates synchronously on store creation, so the
- * override is already readable, and detection only touches `navigator`/`window`.
+ * step in `AppStartManager`/`tabManagerStore`). Pure auto-detection; only touches
+ * `navigator`/`window`, so it is safe to call before first paint.
  *
  * @returns The effective device type (`'mobile'` or `'desktop'`).
  */
 export function getEffectiveDeviceType(): DeviceType {
-	const override = useAppSettingsStore.getState().deviceTypeOverride;
-	return override || detectDeviceType();
+	return detectDeviceType();
 }
 
 /**
- * Non-hook effective form factor for code that runs outside React. Respects the
- * persisted `formFactorOverride` (the Interface control's layout pin), falling back
- * to auto-detection. Pointer capability is never overridden - see `detectPointer`.
+ * Non-hook effective form factor for code that runs outside React. Pure auto-detection.
  *
  * @returns The effective form factor (`'phone'`, `'tablet'`, or `'desktop'`).
  */
 export function getEffectiveFormFactor(): FormFactor {
-	const override = useAppSettingsStore.getState().formFactorOverride;
-	return override ?? detectFormFactor();
+	return detectFormFactor();
 }
 
 // A width-routed tablet is the Auto base case whose base regime is chosen by width
@@ -155,9 +147,6 @@ function detectDeviceType(): DeviceType {
 }
 
 export function useDeviceType(): UseDeviceTypeResult {
-	const deviceTypeOverride = useAppSettingsStore((state) => state.deviceTypeOverride);
-	const { setDeviceTypeOverride } = useAppSettingsStore((state) => state.actions);
-
 	const [detectedDeviceType, setDetectedDeviceType] = useState<DeviceType>(() => detectDeviceType());
 
 	// Re-detect on window resize (debounced). A width-routed tablet freezes its base
@@ -184,18 +173,11 @@ export function useDeviceType(): UseDeviceTypeResult {
 		};
 	}, []);
 
-	// Use override if set, otherwise use detected type
-	const deviceType = deviceTypeOverride || detectedDeviceType;
-
-	const toggleDeviceType = useCallback(() => {
-		const newType: DeviceType = deviceType === 'mobile' ? 'desktop' : 'mobile';
-		setDeviceTypeOverride(newType);
-	}, [deviceType, setDeviceTypeOverride]);
+	const deviceType = detectedDeviceType;
 
 	return {
 		deviceType,
 		isMobile: deviceType === 'mobile',
-		isDesktop: deviceType === 'desktop',
-		toggleDeviceType
+		isDesktop: deviceType === 'desktop'
 	};
 }

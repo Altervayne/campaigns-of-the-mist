@@ -12,7 +12,6 @@ import { BookOpen, FlipHorizontal, Lock, UnlockIcon, Navigation, Menu } from 'lu
 // -- Store and Hook Imports --
 import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { useInterfaceSetting, INTERFACE_CHOICES, INTERFACE_ICONS } from '@/hooks/useInterfaceSetting';
 
 // -- Localization Imports --
 import { LOCALES, resolveLocaleCode } from '@/i18n/locales';
@@ -25,7 +24,6 @@ export function GeneralSettingsPane() {
    const locale = resolveLocaleCode(i18n.language);
 
    const { isMobile } = useDeviceType();
-   const { choice: interfaceChoice, resolvedFormFactor, selectInterface } = useInterfaceSetting();
 
    const { isSideBySideView, isTrackersAlwaysEditable, isMobileFABMode } = useAppSettingsStore();
    const { setSideBySideView, setTrackersAlwaysEditable, setMobileFABMode } = useAppSettingsActions();
@@ -52,35 +50,6 @@ export function GeneralSettingsPane() {
                   ))}
                </SelectContent>
             </Select>
-         </div>
-
-         {/* Interface: layout profile override. Writes both axes; on Auto, shows the resolved layout. */}
-         <div className="grid grid-cols-3 items-center gap-4">
-            <Label className="text-left">{t('SettingsDialog.interface.title')}</Label>
-            <div className="col-span-2 space-y-1.5">
-               <div className="grid grid-cols-4 gap-2">
-                  {INTERFACE_CHOICES.map((option) => {
-                     const OptionIcon = INTERFACE_ICONS[option];
-                     return (
-                        <Button
-                           key={option}
-                           variant={interfaceChoice === option ? 'default' : 'outline'}
-                           onClick={() => selectInterface(option)}
-                           title={t(`SettingsDialog.interface.${option}`)}
-                           className="min-w-0 cursor-pointer px-2"
-                        >
-                           <OptionIcon className="mr-1.5 h-4 w-4 shrink-0" />
-                           <span className="truncate">{t(`SettingsDialog.interface.${option}`)}</span>
-                        </Button>
-                     );
-                  })}
-               </div>
-               {interfaceChoice === 'auto' && (
-                  <p className="text-xs text-muted-foreground">
-                     {t('SettingsDialog.interface.autoResolved', { value: t(`SettingsDialog.interface.${resolvedFormFactor}`) })}
-                  </p>
-               )}
-            </div>
          </div>
 
          <div className="grid grid-cols-3 items-center gap-4">
