@@ -103,24 +103,6 @@ export const paperTheme = EditorView.theme({
    // The controls layer fades in on hover over the cover box; absolute, so it never shifts the document.
    '.cm-note-cover-controls': { position: 'absolute', inset: '0', opacity: '0', transition: 'opacity 120ms ease' },
    '.cm-note-cover:hover .cm-note-cover-controls': { opacity: '1' },
-   // A coarse pointer has no hover, so the controls stay visible - a tablet can reach Change/Remove/aspect/resize.
-   // The resize handles also grow and gain a transparent hit-slop (::before) so a finger can grab the corner; the
-   // drag itself is already pointer-safe. Fine-pointer handles keep their pixel size (rules below don't apply).
-   '@media (pointer: coarse), (hover: none)': {
-      '.cm-note-cover-controls': { opacity: '1' },
-      '.cm-note-image-handle, .cm-note-cover-handle': { height: '1.5rem', width: '1.5rem' },
-      '.cm-note-image-handle-br, .cm-note-cover-handle': { bottom: '-0.75rem', right: '-0.75rem' },
-      '.cm-note-image-handle::before, .cm-note-cover-handle::before': { content: '""', position: 'absolute', inset: '-0.625rem' },
-      // Reveal the table exit buttons and give each a transparent finger-sized hit-slop past its visible box.
-      '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'inline-flex' },
-      '.cm-note-table-exit-below::before, .cm-note-table-exit-above::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
-      // No hover on touch, so the add-row / add-column edge bars can't ride the `:hover` reveal: keep them
-      // visible (the fine-pointer hover reveal above is untouched).
-      '.cm-note-table-add-row-bar, .cm-note-table-add-col-bar': { opacity: '0.9' },
-      // Reveal the desktop-tablet "table options" tap target with the same finger-sized hit-slop.
-      '.cm-note-table-options-btn': { display: 'inline-flex' },
-      '.cm-note-table-options-btn::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
-   },
    '.cm-note-cover-bar': { position: 'absolute', top: '0.5rem', left: '0.5rem', display: 'flex', gap: '0.125rem', padding: '0.25rem', borderRadius: '0.375rem', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
    '.cm-note-cover-btn': { display: 'grid', placeItems: 'center', height: '1.75rem', width: '1.75rem', borderRadius: '0.25rem', cursor: 'pointer', color: 'inherit', background: 'transparent', border: 'none' },
    '.cm-note-cover-btn:hover': { backgroundColor: 'var(--muted)' },
@@ -184,4 +166,24 @@ export const paperTheme = EditorView.theme({
    // bound to the last-focused cell. Hidden on a fine pointer, where right-click does this; the coarse block
    // above reveals it and adds a finger-sized hit-slop. Sits in the top-right corner, clear of the edge bars.
    '.cm-note-table-options-btn': { display: 'none', position: 'absolute', top: '-0.625rem', right: '0.75rem', alignItems: 'center', justifyContent: 'center', height: '1.75rem', width: '1.75rem', border: 'none', borderRadius: '0.375rem', backgroundColor: 'color-mix(in srgb, var(--paper-border) 32%, var(--paper-background))', color: 'var(--paper-foreground)', cursor: 'pointer', zIndex: '2' },
+
+   // The coarse-pointer overrides live LAST in this object on purpose: CM6 emits rules in source order and they
+   // carry no extra specificity, so a base rule declared AFTER its coarse override would win and silently
+   // re-hide it. Keeping the whole `@media` block at the end guarantees every coarse reveal / resize / hit-slop
+   // beats its base. Touch has no hover, so this covers the controls, edge bars, exit + options taps, and the
+   // grown resize handles; fine-pointer rendering is untouched (a mouse never matches the query).
+   '@media (pointer: coarse), (hover: none)': {
+      '.cm-note-cover-controls': { opacity: '1' },
+      '.cm-note-image-handle, .cm-note-cover-handle': { height: '1.5rem', width: '1.5rem' },
+      '.cm-note-image-handle-br, .cm-note-cover-handle': { bottom: '-0.75rem', right: '-0.75rem' },
+      '.cm-note-image-handle::before, .cm-note-cover-handle::before': { content: '""', position: 'absolute', inset: '-0.625rem' },
+      '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'inline-flex' },
+      '.cm-note-table-exit-below::before, .cm-note-table-exit-above::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
+      '.cm-note-table-add-row-bar, .cm-note-table-add-col-bar': { opacity: '0.9' },
+      // The centered exit pill overlaps the add-row bar's centered "+"; on touch (where both show) push the "+"
+      // to the left so the two never stack.
+      '.cm-note-table-add-row-bar': { justifyContent: 'flex-start', paddingLeft: '0.75rem' },
+      '.cm-note-table-options-btn': { display: 'inline-flex' },
+      '.cm-note-table-options-btn::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
+   },
 }, { dark: false });
