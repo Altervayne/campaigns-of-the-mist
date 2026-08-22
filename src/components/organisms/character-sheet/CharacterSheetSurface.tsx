@@ -88,6 +88,10 @@ export function CharacterSheetSurface({ scrollRef, character, namePlaceholder, o
                </SheetToolbarRevealProvider>
             </SheetMainDropZone>
          </div>
+
+         {/* Scroll runway below the content so the last cards can clear the floating zoom control
+             (bottom-right). Outside the zoom layer, so it keeps its size at any sheet zoom. */}
+         <div aria-hidden className="h-20 shrink-0" />
       </main>
    );
 }

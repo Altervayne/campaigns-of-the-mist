@@ -84,11 +84,12 @@ const variants: sideVariants = {
 /**
  * The shared class for a toolbar action button (`<Button variant="outline" size="icon">`). Exported so a
  * card that portals its own controls INTO this toolbar (the sheet journal) styles them identically to the
- * built-in grip/delete/flip buttons rather than copying the string. Uses the toolbar's own popover tokens
- * (not the card paper's) so the icons stay readable on the toolbar surface for any paper color; the dark
- * override stops the outline variant's `dark:bg-input` from clobbering the base fill.
+ * built-in grip/delete/flip buttons rather than copying the string. The buttons take the card PAPER surface
+ * plus a border so they read as raised chips against the toolbar's own popover surface (the two shared a
+ * token before, so the buttons vanished into the bar); paper-fg stays readable on paper-bg for any palette.
+ * The dark override stops the outline variant's `dark:bg-input` from clobbering the base fill.
  */
-export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 coarse:h-11 coarse:w-11 cursor-pointer bg-card-popover-bg text-card-popover-fg dark:bg-card-popover-bg";
+export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 coarse:h-11 coarse:w-11 cursor-pointer border border-card-border bg-card-paper-bg text-card-paper-fg dark:bg-card-paper-bg";
 
 export const ViewModeIcon = ({ mode }: { mode: CardViewMode | null | undefined }) => {
    if (mode === 'SIDE_BY_SIDE') return <BookOpen className="h-4 w-4 coarse:h-5 coarse:w-5" />;
