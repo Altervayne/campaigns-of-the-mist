@@ -412,7 +412,7 @@ function TableButton({ onInsert }: { onInsert: (rows: number, cols: number) => v
             <div className="mb-1.5 text-center text-xs text-muted-foreground">
                {hover.r > 0 ? `${hover.r} × ${hover.c}` : t('NoteView.toolbar.tableSize')}
             </div>
-            <div className="grid grid-cols-6 gap-0.5" onMouseLeave={() => setHover({ r: 0, c: 0 })}>
+            <div className="grid grid-cols-6 gap-0.5 coarse:gap-1" onMouseLeave={() => setHover({ r: 0, c: 0 })}>
                {Array.from({ length: MAX * MAX }, (_, i) => {
                   const r = Math.floor(i / MAX) + 1;
                   const c = (i % MAX) + 1;
@@ -425,7 +425,7 @@ function TableButton({ onInsert }: { onInsert: (rows: number, cols: number) => v
                         onMouseEnter={() => setHover({ r, c })}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => choose(r, c)}
-                        className={cn('h-4 w-4 rounded-[2px] border border-border cursor-pointer', active ? 'bg-primary' : 'bg-background')}
+                        className={cn('h-4 w-4 coarse:size-7 rounded-[2px] border border-border cursor-pointer', active ? 'bg-primary' : 'bg-background')}
                      />
                   );
                })}

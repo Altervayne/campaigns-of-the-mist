@@ -7,6 +7,7 @@ import { ArrowUpRight, ChevronDown, ChevronRight, CornerLeftUp, Link, Link2Off, 
 
 // -- Hook Imports --
 import { useLinkMetadata } from '@/hooks/useLinkMetadata';
+import { useBreakpoint } from '@/hooks/useAdaptive';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -76,6 +77,7 @@ export function NavigatorRow({
    onPulseCanonical,
 }: NavigatorRowProps) {
    const { t } = useTranslation();
+   const { isCoarse } = useBreakpoint();
    const rowRef = useRef<HTMLDivElement>(null);
    const metadata = useLinkMetadata(node.target, NO_HEADINGS);
 
@@ -102,7 +104,10 @@ export function NavigatorRow({
    // The row's hover title: the dead reason, the cycle hint, else the (possibly-truncated) name.
    const title = dead ? t('Notifications.link.targetNotFound') : seenAbove ? t('Navigator.seenAboveHint') : displayName;
 
+   // A coarse pointer has no reliable double-tap, so the primary tap jumps (the navigator's purpose);
+   // fine keeps single-click select / double-click jump. Back-edges still jump on coarse (activate handles them).
    const handleClick = () => {
+      if (isCoarse) { onActivate(node); return; }
       if (seenAbove) { onPulseCanonical(node); return; }
       onSelect(node);
    };

@@ -92,7 +92,9 @@ export function ChallengeTypeSelector({ types, onChange, variant, className }: C
                {customTypes.map((type) => (
                   <span key={type} className={cn('inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium', skin.chip)}>
                      {type}
-                     <button type="button" onClick={() => toggleType(type)} className="cursor-pointer" aria-label={t('ChallengeCard.editor.removeType')}><X className="h-3 w-3" /></button>
+                     {/* Touch: pad the bare X into a real target. Negative margin absorbs the growth back into
+                         the chip's own padding, so the chip barely widens (the editor dialog has the room anyway). */}
+                     <button type="button" onClick={() => toggleType(type)} className="cursor-pointer rounded-full coarse:-m-1 coarse:p-2" aria-label={t('ChallengeCard.editor.removeType')}><X className="h-3 w-3" /></button>
                   </span>
                ))}
             </div>
