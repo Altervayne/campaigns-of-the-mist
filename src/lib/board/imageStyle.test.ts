@@ -32,6 +32,13 @@ describe('imageFilterCss', () => {
       expect(imageFilterCss()).toBeUndefined();
       expect(imageFilterCss(undefined, 1)).toBeUndefined();
    });
+
+   it('appends non-unit contrast and saturation in order after brightness', () => {
+      expect(imageFilterCss(undefined, undefined, 1.3)).toBe('contrast(1.3)');
+      expect(imageFilterCss(undefined, undefined, undefined, 0)).toBe('saturate(0)');
+      expect(imageFilterCss('sepia', 1.2, 1.3, 0.5)).toBe('sepia(0.85) brightness(1.2) contrast(1.3) saturate(0.5)');
+      expect(imageFilterCss(undefined, 1, 1, 1)).toBeUndefined();
+   });
 });
 
 describe('image shadow css', () => {

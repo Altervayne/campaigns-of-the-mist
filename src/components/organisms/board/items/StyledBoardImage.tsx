@@ -1,27 +1,27 @@
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { framePlateSpec, imageBoxShadowCss, imageDropShadowCss, imageFilterCss, IMAGE_TAPE_COLOR } from '@/lib/board/imageStyle';
+import { framePlateSpec, imageDropShadowCss, imageFilterCss, IMAGE_TAPE_COLOR } from '@/lib/board/imageStyle';
 
 // -- Type Imports --
 import type { ImageBoardContent } from '@/lib/types/board';
 
 /*
- * The styled image body: wraps the `<img>` in a container that carries the frame matte, border, and shadow,
- * with opacity + the color-filter chain on the picture itself. A masked (shaped) image drops the rectangular
+ * The styled image body: wraps the `<img>` in a container that carries the frame matte and border, with
+ * opacity + the color-filter chain on the picture itself. A masked (shaped) image drops the rectangular
  * dressing (frame/border, hidden upstream too) and takes its shadow as a shape-following `drop-shadow` on the
- * `<img>` instead of a container box-shadow. Pure presentation; every value derives from `content`.
+ * `<img>`. An UNMASKED image's shadow is drawn one level up, by the item box (BoardItemBox), so it isn't
+ * clipped by the box's own `overflow-hidden`. Pure presentation; every value derives from `content`.
  */
 export function StyledBoardImage({ url, content, isMasked }: { url: string; content: ImageBoardContent; isMasked: boolean }) {
    const plate = isMasked ? null : framePlateSpec(content.frame);
    const isTape = !isMasked && content.frame === 'tape';
 
-   // The color look + brightness ride the `<img>`; a masked shape adds its drop-shadow to the same chain so
-   // the shadow tracks the alpha. An unmasked image takes its shadow as a container box-shadow instead.
-   const colorFilter = imageFilterCss(content.filter, content.brightness);
+   // The color look + tone adjustments ride the `<img>`; a masked shape adds its drop-shadow to the same
+   // chain so the shadow tracks the alpha (an unmasked shadow is the box's box-shadow, drawn upstream).
+   const colorFilter = imageFilterCss(content.filter, content.brightness, content.contrast, content.saturation);
    const imgFilter = isMasked
       ? [colorFilter, imageDropShadowCss(content.shadow)].filter(Boolean).join(' ') || undefined
       : colorFilter;
-   const boxShadow = isMasked ? undefined : imageBoxShadowCss(content.shadow);
 
    const border = content.border;
    const objectFit = isMasked || content.fit === 'contain' ? 'object-contain' : 'object-cover';
@@ -40,7 +40,6 @@ export function StyledBoardImage({ url, content, isMasked }: { url: string; cont
       <div
          className="relative h-full w-full"
          style={{
-            boxShadow,
             border: border ? `${border.width}px solid ${border.color}` : undefined,
             borderRadius: border?.radius,
          }}

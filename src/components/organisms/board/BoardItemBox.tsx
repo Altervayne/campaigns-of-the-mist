@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { screenDeltaToWorld } from '@/lib/board/boardCoordinates';
 import { MIN_ITEM_SIZE, computeResize, effectiveHeight, fitContentHeight, fitContentWidth, shouldSyncMeasuredHeight, shouldSyncMeasuredSize } from '@/lib/board/boardResize';
 import { isRotatableKind, rotatedResize, rotatedTopExtra } from '@/lib/board/boardRotation';
+import { imageBoxShadowCss } from '@/lib/board/imageStyle';
 import { COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_WIDTH } from '@/lib/board/zoneCollapse';
 import { EXPANDED_CARD_SIZE } from '@/lib/board/embedDrawerItem';
 import { isExpandedCardItem } from '@/lib/board/expandedCardItem';
@@ -374,6 +375,10 @@ export const BoardItemBox = memo(function BoardItemBox({
    // A tape frame's strips overhang onto the board, so its box must NOT clip; the `<img>` (object-cover)
    // still fills the box exactly, so only the absolutely-positioned tape spills past the edge.
    const isTapeFramed = item.content.kind === 'image' && item.content.frame === 'tape' && !isMaskedImage;
+   // An unmasked image's configured drop-shadow is drawn as THIS box's own box-shadow (an element's own
+   // shadow is not clipped by its own overflow, whereas one on the inner image body would be). A masked
+   // image instead uses a shape-following drop-shadow on the `<img>`, which the box must not clip.
+   const imageBoxShadow = item.content.kind === 'image' && !isMaskedImage ? imageBoxShadowCss(item.content.shadow) : undefined;
    // A note tile is a WINDOWED embed: unlike the fixed card/tracker/character panels it is freely
    // 2D-resizable (internal scroll), so it keeps the resize grip the other embeds drop. A portal is
    // resizable in every style too (owner override of the auto-hug): its glyph + type scale with the box.
@@ -474,6 +479,7 @@ export const BoardItemBox = memo(function BoardItemBox({
             style={{
                ...(isCollapsedZone && zoneColor ? { backgroundColor: `${zoneColor}1f`, borderColor: zoneColor } : {}),
                ...(isSelected || showHoverRing ? { outlineWidth, outlineOffset: outlineWidth } : {}),
+               boxShadow: imageBoxShadow,
             }}
             className={cn(
                // A plain arrow: the body cursor is the regular default (the hand is pan-only now), so it
@@ -482,8 +488,9 @@ export const BoardItemBox = memo(function BoardItemBox({
                showHoverRing && 'outline outline-primary/30',
                // An embed brings its own rounded border, so the box neither clips (which would
                // double-round and crop the flip's back face) nor draws chrome. A tape-framed image opts
-               // out too, so its strips overhang onto the board.
-               !isZone && !isEmbed && !isTapeFramed && 'overflow-hidden',
+               // out too, so its strips overhang onto the board; a masked image opts out so its
+               // shape-following drop-shadow (on the `<img>`) can spill past the box edge.
+               !isZone && !isEmbed && !isTapeFramed && !isMaskedImage && 'overflow-hidden',
                // A collapsed zone IS a solid, clickable bar (the frame is hidden). An expanded zone's
                // body is click-through - the tinted rect + header carry the visuals - with only the
                // selection ring outlining the rectangle. A pin is a round borderless dot; a card/tracker
@@ -506,7 +513,9 @@ export const BoardItemBox = memo(function BoardItemBox({
                            ? cn(item.kind === 'card' ? 'rounded-xl' : item.kind === 'portal' ? 'rounded-md' : item.kind === 'text' || item.kind === 'drawing' ? 'rounded-sm' : 'rounded-lg', isSelected && 'outline outline-primary')
                            : isMaskedImage || isFramedImage
                               ? cn('rounded-md', isSelected && 'outline outline-primary')
-                              : cn('rounded-md border shadow-sm', isSelected ? 'border-primary outline outline-primary' : 'border-border hover:border-primary/50'),
+                              // A plain image's shadow is opt-in via its style (imageBoxShadow), so no chrome
+                              // shadow here; it keeps the card border + rounding.
+                              : cn('rounded-md border', isSelected ? 'border-primary outline outline-primary' : 'border-border hover:border-primary/50'),
             )}
          >
             {/* A measured kind wraps the body so the box can measure it. A MIN-HEIGHT kind fills the

@@ -31,6 +31,7 @@ export function ImageStylePopover({
    toggleRef,
    content,
    onChange,
+   onPreview,
    isMasked,
    onOpenMask,
 }: {
@@ -40,6 +41,8 @@ export function ImageStylePopover({
    toggleRef: RefObject<HTMLButtonElement | null>;
    content: ImageBoardContent;
    onChange: (content: ImageBoardContent) => void;
+   /** Live (non-committing) content while a slider drags, so the picture updates without an undo write. */
+   onPreview: (content: ImageBoardContent) => void;
    isMasked: boolean;
    onOpenMask: () => void;
 }) {
@@ -85,7 +88,7 @@ export function ImageStylePopover({
                </section>
 
                {!isMasked && <ImageFrameSection content={content} onChange={onChange} />}
-               <ImageEffectsSection content={content} onChange={onChange} />
+               <ImageEffectsSection content={content} onChange={onChange} onPreview={onPreview} />
             </div>
          </PopoverContent>
       </Popover>

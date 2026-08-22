@@ -397,6 +397,8 @@
       "imageFilter_sepia": "Sepia",
       "imageFilter_noir": "Noir",
       "imageBrightness": "Brightness",
+      "imageContrast": "Contrast",
+      "imageSaturation": "Saturation",
       "embeddedUnavailable": "Preview unavailable",
       "mentionAdded": "Added {{name}}",
       "linkedBadge": "Linked to drawer item",

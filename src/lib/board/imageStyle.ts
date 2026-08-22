@@ -21,16 +21,20 @@ export const IMAGE_TAPE_COLOR = 'rgba(214, 199, 145, 0.5)';
 export const DEFAULT_IMAGE_BORDER: ImageBorder = { color: '#0f172a', width: 2, radius: 0 };
 
 /**
- * The color-filter chain for the `<img>`: the named look, then a brightness multiplier, either optional. A
- * unit brightness (or absent) contributes nothing, and no look plus unit brightness yields `undefined` (no
- * filter). A masked image joins its shape-following drop-shadow to this chain at the call site.
+ * The color-filter chain for the `<img>`: the named look, then brightness / contrast / saturation
+ * multipliers, all optional. A unit (or absent) multiplier contributes nothing, and no look plus all-unit
+ * multipliers yields `undefined` (no filter). A masked image joins its shape-following drop-shadow to this
+ * chain at the call site. Adjustments compose after the look, so noir's own contrast and a contrast slider
+ * stack as intended.
  */
-export function imageFilterCss(filter?: ImageFilter, brightness?: number): string | undefined {
+export function imageFilterCss(filter?: ImageFilter, brightness?: number, contrast?: number, saturation?: number): string | undefined {
    const parts: string[] = [];
    if (filter === 'grayscale') parts.push('grayscale(1)');
    else if (filter === 'sepia') parts.push('sepia(0.85)');
    else if (filter === 'noir') parts.push('grayscale(1) contrast(1.4)');
    if (brightness !== undefined && brightness !== 1) parts.push(`brightness(${brightness})`);
+   if (contrast !== undefined && contrast !== 1) parts.push(`contrast(${contrast})`);
+   if (saturation !== undefined && saturation !== 1) parts.push(`saturate(${saturation})`);
    return parts.length > 0 ? parts.join(' ') : undefined;
 }
 

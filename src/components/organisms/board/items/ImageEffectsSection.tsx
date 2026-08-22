@@ -15,26 +15,33 @@ const SHADOW_OPTIONS: ImageShadow[] = ['sm', 'md', 'lg'];
 /** Color-look options, in row order. */
 const FILTER_OPTIONS: ImageFilter[] = ['grayscale', 'sepia', 'noir'];
 
+/** The continuous-slider adjustments (all multipliers, 1 = neutral, absent from content = 1). */
+type AdjustKey = 'opacity' | 'brightness' | 'contrast' | 'saturation';
+const ADJUST_RANGE: Record<AdjustKey, { min: number; max: number; labelKey: string }> = {
+   opacity: { min: 0.1, max: 1, labelKey: 'imageOpacity' },
+   brightness: { min: 0.5, max: 1.5, labelKey: 'imageBrightness' },
+   contrast: { min: 0.5, max: 1.5, labelKey: 'imageContrast' },
+   saturation: { min: 0, max: 2, labelKey: 'imageSaturation' },
+};
+
 /*
- * The Effects section of the image-style popover: shadow depth, opacity, a color look, and brightness.
- * Applies to every image (masked or not). Shadow and the looks commit on click; the two sliders buffer a
- * draft that shows live and commit ONE undo step on release / popover-close / unmount (updateItemContent is
- * one command per call, so a live per-frame commit would flood the stack). Every commit spreads `content`
- * and sets one field, so the stencil/source fields survive.
+ * The Effects section of the image-style popover: shadow depth, opacity, a color look, and the tone sliders
+ * (brightness / contrast / saturation). Applies to every image (masked or not). Shadow and the looks commit
+ * on click; each slider buffers a draft that shows live and commits ONE undo step on release / popover-close
+ * / unmount (updateItemContent is one command per call, so a live per-frame commit would flood the stack).
+ * Every commit spreads `content` and sets one field, so the stencil/source fields survive.
  */
-export function ImageEffectsSection({ content, onChange }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void }) {
+export function ImageEffectsSection({ content, onChange, onPreview }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void; onPreview: (content: ImageBoardContent) => void }) {
    const { t } = useTranslation();
 
    // Commits read the latest content from a ref so a release firing after another edit is never stale.
    const contentRef = useRef(content);
    useEffect(() => { contentRef.current = content; });
 
-   // The sliders buffer their value; null = untouched (the committed value shows). A draft equal to the unit
-   // default drops the field.
-   const [opacityDraft, setOpacityDraft] = useState<number | null>(null);
-   const [brightnessDraft, setBrightnessDraft] = useState<number | null>(null);
-   const opacityValue = opacityDraft ?? content.opacity ?? 1;
-   const brightnessValue = brightnessDraft ?? content.brightness ?? 1;
+   // Each slider buffers its value here; absent key = untouched (the committed value shows). A draft equal
+   // to the unit default (1) drops the field on commit.
+   const [drafts, setDrafts] = useState<Partial<Record<AdjustKey, number>>>({});
+   const valueOf = (key: AdjustKey) => drafts[key] ?? content[key] ?? 1;
 
    const withField = (source: ImageBoardContent, key: keyof ImageBoardContent, value: number | undefined): ImageBoardContent => {
       const next: ImageBoardContent = { ...source };
@@ -43,43 +50,47 @@ export function ImageEffectsSection({ content, onChange }: { content: ImageBoard
       return next;
    };
 
-   // Folds any pending slider drafts into a content base (a unit value drops the field), so a click-commit
-   // never discards an unreleased slider edit.
-   const foldDrafts = (base: ImageBoardContent): ImageBoardContent => {
+   // Folds a set of slider drafts into a content base (a unit value drops the field), so a click-commit never
+   // discards an unreleased slider edit, and the live preview reflects every in-progress slider at once.
+   const foldDraftsInto = (base: ImageBoardContent, draftMap: Partial<Record<AdjustKey, number>>): ImageBoardContent => {
       let next = base;
-      if (opacityDraft !== null) next = withField(next, 'opacity', opacityDraft === 1 ? undefined : opacityDraft);
-      if (brightnessDraft !== null) next = withField(next, 'brightness', brightnessDraft === 1 ? undefined : brightnessDraft);
+      for (const [key, value] of Object.entries(draftMap) as [AdjustKey, number][]) {
+         next = withField(next, key, value === 1 ? undefined : value);
+      }
       return next;
    };
+   const foldDrafts = (base: ImageBoardContent): ImageBoardContent => foldDraftsInto(base, drafts);
 
-   const clearDrafts = () => { setOpacityDraft(null); setBrightnessDraft(null); };
+   // A slider drag: buffer the value (drives its own % readout) and push the folded content as a live,
+   // non-committing preview so the picture tracks the drag without a per-frame undo write.
+   const inputAdjust = (key: AdjustKey, value: number) => {
+      const nextDrafts = { ...drafts, [key]: value };
+      setDrafts(nextDrafts);
+      onPreview(foldDraftsInto(contentRef.current, nextDrafts));
+   };
 
    // A discrete (shadow / look) commit: fold pending slider drafts, then set-or-clear the one field.
    const commitField = <K extends keyof ImageBoardContent>(key: K, value: ImageBoardContent[K] | undefined) => {
       const next: ImageBoardContent = { ...foldDrafts(contentRef.current) };
       if (value === undefined) delete next[key];
       else next[key] = value;
-      clearDrafts();
+      setDrafts({});
       onChange(next);
    };
 
-   const commitOpacity = () => {
-      if (opacityDraft === null) return;
-      const value = opacityDraft;
-      setOpacityDraft(null);
-      onChange(withField(contentRef.current, 'opacity', value === 1 ? undefined : value));
+   // A slider release: commit that one field and drop its draft.
+   const commitAdjust = (key: AdjustKey) => {
+      const value = drafts[key];
+      if (value === undefined) return;
+      setDrafts((prev) => { const next = { ...prev }; delete next[key]; return next; });
+      onChange(withField(contentRef.current, key, value === 1 ? undefined : value));
    };
-   const commitBrightness = () => {
-      if (brightnessDraft === null) return;
-      const value = brightnessDraft;
-      setBrightnessDraft(null);
-      onChange(withField(contentRef.current, 'brightness', value === 1 ? undefined : value));
-   };
+
    // Flush any buffered slider edits when the popover closes or the image is deselected (unmount).
    const commitDrafts = () => {
-      if (opacityDraft === null && brightnessDraft === null) return;
+      if (Object.keys(drafts).length === 0) return;
       const next = foldDrafts(contentRef.current);
-      clearDrafts();
+      setDrafts({});
       onChange(next);
    };
    useCommitOnUnmount(commitDrafts);
@@ -96,22 +107,7 @@ export function ImageEffectsSection({ content, onChange }: { content: ImageBoard
             </div>
          </section>
 
-         <label className="flex flex-col gap-1">
-            <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-               {t('BoardView.imageOpacity')}
-               <span className="font-mono tabular-nums">{Math.round(opacityValue * 100)}%</span>
-            </span>
-            <input
-               type="range"
-               min={0.1}
-               max={1}
-               step={0.05}
-               value={opacityValue}
-               onChange={(event) => setOpacityDraft(Number(event.target.value))}
-               onPointerUp={commitOpacity}
-               className="w-full cursor-pointer accent-primary"
-            />
-         </label>
+         <AdjustSlider adjust="opacity" value={valueOf('opacity')} onInput={(v) => inputAdjust('opacity', v)} onCommit={() => commitAdjust('opacity')} />
 
          <section className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">{t('BoardView.imageFilter')}</span>
@@ -123,23 +119,34 @@ export function ImageEffectsSection({ content, onChange }: { content: ImageBoard
             </div>
          </section>
 
-         <label className="flex flex-col gap-1">
-            <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-               {t('BoardView.imageBrightness')}
-               <span className="font-mono tabular-nums">{Math.round(brightnessValue * 100)}%</span>
-            </span>
-            <input
-               type="range"
-               min={0.5}
-               max={1.5}
-               step={0.05}
-               value={brightnessValue}
-               onChange={(event) => setBrightnessDraft(Number(event.target.value))}
-               onPointerUp={commitBrightness}
-               className="w-full cursor-pointer accent-primary"
-            />
-         </label>
+         <AdjustSlider adjust="brightness" value={valueOf('brightness')} onInput={(v) => inputAdjust('brightness', v)} onCommit={() => commitAdjust('brightness')} />
+         <AdjustSlider adjust="contrast" value={valueOf('contrast')} onInput={(v) => inputAdjust('contrast', v)} onCommit={() => commitAdjust('contrast')} />
+         <AdjustSlider adjust="saturation" value={valueOf('saturation')} onInput={(v) => inputAdjust('saturation', v)} onCommit={() => commitAdjust('saturation')} />
       </>
+   );
+}
+
+/** A labeled 0..N multiplier slider (value shown as a percent); buffers via `onInput`, commits on release. */
+function AdjustSlider({ adjust, value, onInput, onCommit }: { adjust: AdjustKey; value: number; onInput: (value: number) => void; onCommit: () => void }) {
+   const { t } = useTranslation();
+   const { min, max, labelKey } = ADJUST_RANGE[adjust];
+   return (
+      <label className="flex flex-col gap-1">
+         <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            {t(`BoardView.${labelKey}`)}
+            <span className="font-mono tabular-nums">{Math.round(value * 100)}%</span>
+         </span>
+         <input
+            type="range"
+            min={min}
+            max={max}
+            step={0.05}
+            value={value}
+            onChange={(event) => onInput(Number(event.target.value))}
+            onPointerUp={onCommit}
+            className="w-full cursor-pointer accent-primary"
+         />
+      </label>
    );
 }
 

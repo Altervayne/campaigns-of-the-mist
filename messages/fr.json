@@ -397,6 +397,8 @@
       "imageFilter_sepia": "[TO COMPLETE]",
       "imageFilter_noir": "[TO COMPLETE]",
       "imageBrightness": "[TO COMPLETE]",
+      "imageContrast": "[TO COMPLETE]",
+      "imageSaturation": "[TO COMPLETE]",
       "embeddedUnavailable": "Prévisualisation indisponible",
       "mentionAdded": "{{name}} ajouté",
       "linkedBadge": "Lien vers un objet du tiroir créé",

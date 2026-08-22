@@ -63,9 +63,9 @@ export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' 
  * image untouched, and re-mask just opens with nothing pre-selected. So the asset walkers (GC + export)
  * count ONLY `assetId` + `sourceAssetId`; the stencil is never counted or bundled through the image.
  *
- * The styling fields (`frame`..`brightness`) are pure presentation, all optional - absent reads as a bare
+ * The styling fields (`frame`..`saturation`) are pure presentation, all optional - absent reads as a bare
  * image (no migration). `frame`/`border` are a rectangular-image dressing (the render hides them for a
- * masked shape); `shadow`/`opacity`/`filter`/`brightness` apply masked or not.
+ * masked shape); `shadow`/`opacity`/`filter`/`brightness`/`contrast`/`saturation` apply masked or not.
  */
 export interface ImageBoardContent {
    kind: 'image';
@@ -89,6 +89,10 @@ export interface ImageBoardContent {
    filter?: ImageFilter;
    /** Brightness multiplier (~0.5..1.5). Absent = 1. */
    brightness?: number;
+   /** Contrast multiplier (~0.5..1.5). Absent = 1. */
+   contrast?: number;
+   /** Saturation multiplier (0..2, 0 = grayscale). Absent = 1. */
+   saturation?: number;
 }
 
 /** An image's named container preset. */

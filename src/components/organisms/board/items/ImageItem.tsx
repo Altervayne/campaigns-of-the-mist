@@ -96,19 +96,30 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
       if (!isSelected) { setStyleOpen(false); setSizingOpen(false); }
    }
 
+   // A live slider preview: while a tone/opacity slider drags, the effects section pushes the folded content
+   // here so the picture updates every frame WITHOUT a store write (no undo-stack flood). The real commit
+   // (onContentChange, fired on release / close) clears it, so the committed content takes back over.
+   const [preview, setPreview] = useState<ImageBoardContent | null>(null);
+   const shownContent = preview ?? content;
+   const commitContent = (next: BoardItemContent) => { setPreview(null); onContentChange(next); };
+
    const hasStyle = !!content.frame || !!content.border || !!content.shadow || !!content.filter
       || (content.opacity !== undefined && content.opacity !== 1)
-      || (content.brightness !== undefined && content.brightness !== 1);
+      || (content.brightness !== undefined && content.brightness !== 1)
+      || (content.contrast !== undefined && content.contrast !== 1)
+      || (content.saturation !== undefined && content.saturation !== 1);
    const styleActive = styleOpen || isMasked || hasStyle;
 
    return (
-      <div className={cn('relative h-full w-full', !isMasked && !content.frame && 'bg-muted')}>
+      // No opaque backing behind a loaded image: opacity (and a transparent PNG's own alpha) must reveal the
+      // board through it, not a muted fill. The spinner and empty-upload states paint their own placeholder.
+      <div className="relative h-full w-full">
          {showSpinner ? (
             <div className="flex h-full w-full items-center justify-center bg-muted">
                <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
             </div>
          ) : url ? (
-            <StyledBoardImage url={url} content={content} isMasked={isMasked} />
+            <StyledBoardImage url={url} content={shownContent} isMasked={isMasked} />
          ) : (
             // A padding frame stays part of the draggable body so an empty image box can
             // still be moved (the upload button itself stops pointer propagation).
@@ -137,7 +148,8 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
                   onOpenChange={setStyleOpen}
                   toggleRef={styleBtnRef}
                   content={content}
-                  onChange={onContentChange}
+                  onChange={commitContent}
+                  onPreview={setPreview}
                   isMasked={isMasked}
                   onOpenMask={() => stencil.open(content)}
                />
@@ -146,7 +158,7 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
                   onOpenChange={setSizingOpen}
                   toggleRef={sizingBtnRef}
                   content={content}
-                  onChange={onContentChange}
+                  onChange={commitContent}
                   onAspect={(ratio) => onResize(aspectResize(item.width, ratio))}
                />
             </>
