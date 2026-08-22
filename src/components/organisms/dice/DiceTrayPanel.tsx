@@ -10,6 +10,9 @@ import { X } from 'lucide-react';
 // -- Component Imports --
 import { DiceTray } from '@/components/molecules/dice/DiceTray';
 
+// -- Hook Imports --
+import { useBreakpoint } from '@/hooks/useAdaptive';
+
 // -- Store Imports --
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 
@@ -27,6 +30,9 @@ export function DiceTrayPanel() {
    const isOpen = useAppSettingsStore((state) => state.diceTray.isOpen);
    const pendingRoll = useAppSettingsStore((state) => state.pendingDiceRoll);
    const { setDiceTrayContent, setDiceTrayOpen, clearPendingDiceRoll } = useAppSettingsActions();
+   // A tablet renders this desktop panel with a coarse pointer, where the per-die hover buttons never reveal.
+   // Coarse drives the tray's touch affordances (long-press die menu + larger targets); the layout is unchanged.
+   const { isCoarse } = useBreakpoint();
 
    return (
       <AnimatePresence>
@@ -54,7 +60,7 @@ export function DiceTrayPanel() {
                   {/* The core migrates content defensively on read; both writes go straight to the persisted
                       setting (no undo). growToFill off - the panel sizes to its content; showTitle off - the
                       app-wide tray is a generic "roll from anywhere" tray, not a named one. */}
-                  <DiceTray content={content} editable onChange={setDiceTrayContent} onCacheRoll={setDiceTrayContent} growToFill={false} showTitle={false} pendingRoll={pendingRoll} onPendingRollHandled={clearPendingDiceRoll} />
+                  <DiceTray content={content} editable onChange={setDiceTrayContent} onCacheRoll={setDiceTrayContent} growToFill={false} showTitle={false} isMobile={isCoarse} pendingRoll={pendingRoll} onPendingRollHandled={clearPendingDiceRoll} />
                </div>
             </motion.div>
          )}

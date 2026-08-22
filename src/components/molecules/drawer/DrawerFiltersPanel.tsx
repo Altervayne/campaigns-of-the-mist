@@ -12,6 +12,9 @@ import { cn } from '@/lib/utils';
 import { getItemTypeIcon } from '@/lib/utils/drawer-icons';
 import { getGameVisual, GAME_CARD_OPTIONS } from '@/lib/constants/gameVisuals';
 
+// -- Hook Imports --
+import { useBreakpoint } from '@/hooks/useAdaptive';
+
 // -- Store Imports --
 import { useDrawerActions, useDrawerStore } from '@/lib/stores/drawerStore';
 
@@ -104,6 +107,9 @@ export function DrawerFiltersPanel({ wide = false, isMobile = false }: { wide?: 
    const { t } = useTranslation();
    const criteria = useDrawerStore((state) => state.searchCriteria);
    const { updateSearchCriteria, clearSearch } = useDrawerActions();
+   // A tablet renders this desktop panel with a coarse pointer; give it the same touch sizing as mobile.
+   const { isCoarse } = useBreakpoint();
+   const touch = isMobile || isCoarse;
 
    const selectedTypes = criteria?.types ?? [];
    const selectedGames = criteria?.games ?? [];
@@ -135,7 +141,7 @@ export function DrawerFiltersPanel({ wide = false, isMobile = false }: { wide?: 
             <span className="text-xs font-medium text-muted-foreground">{t('Drawer.filters.type')}</span>
             <div className={typeListClass}>
                {FILTERABLE_ITEM_TYPES.map((type) => (
-                  <label key={type} className={cn('flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted', isMobile && 'py-2')}>
+                  <label key={type} className={cn('flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted', touch && 'py-2')}>
                      <Checkbox checked={selectedTypes.includes(type)} onCheckedChange={() => toggleType(type)} />
                      {getItemTypeIcon(type)}
                      <span className="text-sm">{t(`Drawer.filters.itemType.${type}`)}</span>
@@ -149,7 +155,7 @@ export function DrawerFiltersPanel({ wide = false, isMobile = false }: { wide?: 
             <span className="text-xs font-medium text-muted-foreground">{t('Drawer.filters.game')}</span>
             <div className={gameListClass}>
                {FILTERABLE_GAMES.map((game) => (
-                  <label key={game} className={cn('flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted', isMobile && 'py-2')}>
+                  <label key={game} className={cn('flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted', touch && 'py-2')}>
                      <Checkbox checked={selectedGames.includes(game)} onCheckedChange={() => toggleGame(game)} />
                      {gameGlyph(game)}
                      <span className="text-sm">{t(`Drawer.Types.${game}`)}</span>
@@ -159,8 +165,8 @@ export function DrawerFiltersPanel({ wide = false, isMobile = false }: { wide?: 
          </div>
 
          <div className={datesClass}>
-            <DateRangeRow label={t('Drawer.filters.created')} range={criteria?.createdBetween} onChange={(next) => void updateSearchCriteria({ createdBetween: next })} isMobile={isMobile} />
-            <DateRangeRow label={t('Drawer.filters.updated')} range={criteria?.updatedBetween} onChange={(next) => void updateSearchCriteria({ updatedBetween: next })} isMobile={isMobile} />
+            <DateRangeRow label={t('Drawer.filters.created')} range={criteria?.createdBetween} onChange={(next) => void updateSearchCriteria({ createdBetween: next })} isMobile={touch} />
+            <DateRangeRow label={t('Drawer.filters.updated')} range={criteria?.updatedBetween} onChange={(next) => void updateSearchCriteria({ updatedBetween: next })} isMobile={touch} />
          </div>
       </div>
    );

@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 
 // -- Hook Imports --
 import { useDrawerSearch } from '@/hooks/drawer/useDrawerSearch';
+import { useBreakpoint } from '@/hooks/useAdaptive';
 
 /*
  * The shared drawer search bar: the text field + result count + clear, a Filters toggle (with an
@@ -29,6 +30,9 @@ export function DrawerSearchBar({ wide = false, isMobile = false }: { wide?: boo
    const { t } = useTranslation();
    const { text, setText, clear, isSearchActive, resultCount, activeFilterCount } = useDrawerSearch();
    const [filtersOpen, setFiltersOpen] = useState(false);
+   // A tablet renders this desktop bar with a coarse pointer; give it the same touch sizing as mobile.
+   const { isCoarse } = useBreakpoint();
+   const touch = isMobile || isCoarse;
 
    return (
       <div>
@@ -39,7 +43,7 @@ export function DrawerSearchBar({ wide = false, isMobile = false }: { wide?: boo
                   value={text}
                   onChange={(event) => setText(event.target.value)}
                   placeholder={t('Drawer.search.placeholder')}
-                  className={cn('h-9 pl-8 pr-20', isMobile && 'h-11 text-base')}
+                  className={cn('h-9 pl-8 pr-20', touch && 'h-11 text-base')}
                   data-tutorial="drawer-search"
                />
                {isSearchActive && (
@@ -54,12 +58,12 @@ export function DrawerSearchBar({ wide = false, isMobile = false }: { wide?: boo
             <Button
                variant={filtersOpen ? 'secondary' : 'ghost'}
                size="icon"
-               className={cn('relative h-9 w-9 shrink-0 cursor-pointer', isMobile && 'h-11 w-11')}
+               className={cn('relative h-9 w-9 shrink-0 cursor-pointer', touch && 'h-11 w-11')}
                aria-label={t('Drawer.filters.title')}
                title={t('Drawer.filters.title')}
                onClick={() => setFiltersOpen((open) => !open)}
             >
-               <SlidersHorizontal className={isMobile ? 'h-5 w-5' : 'h-4 w-4'} />
+               <SlidersHorizontal className={touch ? 'h-5 w-5' : 'h-4 w-4'} />
                {activeFilterCount > 0 && (
                   <Badge className="absolute -right-1 -top-1 h-4 min-w-4 justify-center rounded-full px-1 text-[10px] tabular-nums">{activeFilterCount}</Badge>
                )}

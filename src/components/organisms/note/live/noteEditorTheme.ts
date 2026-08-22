@@ -103,6 +103,10 @@ export const paperTheme = EditorView.theme({
    // The controls layer fades in on hover over the cover box; absolute, so it never shifts the document.
    '.cm-note-cover-controls': { position: 'absolute', inset: '0', opacity: '0', transition: 'opacity 120ms ease' },
    '.cm-note-cover:hover .cm-note-cover-controls': { opacity: '1' },
+   // A coarse pointer has no hover, so the controls stay visible - a tablet can reach Change/Remove/aspect/resize.
+   '@media (pointer: coarse), (hover: none)': {
+      '.cm-note-cover-controls': { opacity: '1' },
+   },
    '.cm-note-cover-bar': { position: 'absolute', top: '0.5rem', left: '0.5rem', display: 'flex', gap: '0.125rem', padding: '0.25rem', borderRadius: '0.375rem', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
    '.cm-note-cover-btn': { display: 'grid', placeItems: 'center', height: '1.75rem', width: '1.75rem', borderRadius: '0.25rem', cursor: 'pointer', color: 'inherit', background: 'transparent', border: 'none' },
    '.cm-note-cover-btn:hover': { backgroundColor: 'var(--muted)' },

@@ -196,7 +196,7 @@ export function StencilLibraryManager() {
                   {...dragHandle.dragListeners}
                   title={t('SettingsDialog.themes.reorder')}
                   aria-label={t('SettingsDialog.themes.reorder')}
-                  className="ml-1 flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+                  className="ml-1 flex h-6 w-5 coarse:size-11 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
                >
                   <GripVertical className="h-4 w-4" />
                </button>

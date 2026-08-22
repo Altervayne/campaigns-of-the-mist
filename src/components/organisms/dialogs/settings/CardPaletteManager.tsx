@@ -217,7 +217,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   onClick={(event) => event.stopPropagation()}
                   title={t('SettingsDialog.themes.reorder')}
                   aria-label={t('SettingsDialog.themes.reorder')}
-                  className="ml-1 flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+                  className="ml-1 flex h-6 w-5 coarse:size-11 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
                >
                   <GripVertical className="h-4 w-4" />
                </button>
@@ -235,7 +235,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   onClick={(event) => { event.stopPropagation(); editCustom(row); }}
                   title={t('Common.edit')}
                   aria-label={t('Common.edit')}
-                  className={`absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
+                  className={`absolute right-8 coarse:right-13 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
                >
                   <Pencil className="h-4 w-4" />
                </Button>

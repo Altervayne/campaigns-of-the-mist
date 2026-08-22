@@ -39,7 +39,16 @@ export function ColorPickerPopover({ open, onOpenChange, trigger, activeColor, p
       // onOpenChange fires, dropping a pending custom color. The board is inert while it's open.
       <Popover open={open} modal onOpenChange={onOpenChange}>
          <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-         <PopoverContent align="center" sideOffset={6} className="w-62 overflow-hidden p-0">
+         <PopoverContent
+            align="center"
+            sideOffset={6}
+            // The picker's drag surface lives in a portaled popover that is still a REACT descendant of its
+            // host, so an SV/hue drag's pointerdown bubbles the component tree to the host's pointer handler.
+            // On the board that arms an element move (window pointermove then drives it), dragging the color
+            // away and sliding the anchored popover out from under the pointer. Stop the press at the popover.
+            onPointerDown={(event) => event.stopPropagation()}
+            className="w-62 overflow-hidden p-0"
+         >
             <ColorPopover
                activeColor={activeColor}
                palette={palette}
