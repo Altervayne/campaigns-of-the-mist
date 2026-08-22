@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
+import { BREAKPOINT_TABLET, BREAKPOINT_DESK } from '@/lib/breakpoints';
 
 export type DeviceType = 'mobile' | 'desktop';
+
+// Layout profile (width-driven); orthogonal to the binary base regime.
+export type FormFactor = 'phone' | 'tablet' | 'desktop';
+
+// Input profile (pointer-capability driven), independent of width.
+export type PointerType = 'coarse' | 'fine';
 
 interface UseDeviceTypeResult {
 	deviceType: DeviceType;
@@ -44,7 +51,50 @@ function hasTouchCapability(): boolean {
 // Screen width detection (fallback)
 function isMobileScreenWidth(): boolean {
 	if (typeof window === 'undefined') return false;
-	return window.innerWidth < 768; // md breakpoint
+	return window.innerWidth < BREAKPOINT_TABLET;
+}
+
+// Form factor from width, used only when UA gives no decisive signal.
+function formFactorForWidth(): FormFactor {
+	if (typeof window === 'undefined') return 'desktop';
+	const width = window.innerWidth;
+	if (width < BREAKPOINT_TABLET) return 'phone';
+	if (width < BREAKPOINT_DESK) return 'tablet';
+	return 'desktop';
+}
+
+/**
+ * Detect the layout profile. UA disambiguates the cases width alone can't:
+ * - iPad on iPadOS 13+ reports a `Macintosh` UA; a real Mac has `maxTouchPoints === 0`
+ *   while an iPad reports 5, so touch points separate them.
+ * - Android tablets omit `mobile` from the UA; phones include it.
+ * - `iphone`/`ipod` are phones; `ipad` (legacy UA) is a tablet.
+ * Everything else falls back to width bands.
+ */
+export function detectFormFactor(): FormFactor {
+	if (typeof navigator === 'undefined') return formFactorForWidth();
+
+	const userAgent = navigator.userAgent.toLowerCase();
+	const maxTouchPoints = navigator.maxTouchPoints ?? 0;
+
+	if (userAgent.includes('macintosh') && maxTouchPoints > 1) return 'tablet';
+	if (userAgent.includes('android')) return userAgent.includes('mobile') ? 'phone' : 'tablet';
+	if (userAgent.includes('iphone') || userAgent.includes('ipod')) return 'phone';
+	if (userAgent.includes('ipad')) return 'tablet';
+
+	return formFactorForWidth();
+}
+
+/**
+ * Detect the input profile from pointer capability, catching hybrids (iPad + trackpad,
+ * touchscreen laptop) that no UA rule gets right. Falls back to `hover` where
+ * `pointer` is unsupported.
+ */
+export function detectPointer(): PointerType {
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'fine';
+	if (window.matchMedia('(pointer: coarse)').matches) return 'coarse';
+	if (window.matchMedia('(hover: none)').matches) return 'coarse';
+	return 'fine';
 }
 
 /**
@@ -59,6 +109,16 @@ function isMobileScreenWidth(): boolean {
 export function getEffectiveDeviceType(): DeviceType {
 	const override = useAppSettingsStore.getState().deviceTypeOverride;
 	return override || detectDeviceType();
+}
+
+/**
+ * Non-hook effective form factor for code that runs outside React. Detection-only:
+ * the `formFactorOverride` field is P1, so there is nothing to respect yet.
+ *
+ * @returns The detected form factor (`'phone'`, `'tablet'`, or `'desktop'`).
+ */
+export function getEffectiveFormFactor(): FormFactor {
+	return detectFormFactor();
 }
 
 // Auto-detect device type

@@ -146,7 +146,9 @@ function BorderSlider({ label, value, max, disabled, onInput, onCommit }: {
    );
 }
 
-/** A small preview tile for a frame preset (or a bare photo for None), mirroring the real matte look. */
+/** A small preview tile for a frame preset (or a bare photo for None), mirroring the real matte look. The
+ * preview carries a soft shadow the real frame doesn't: a picker-only aid so the off-white matte stays
+ * legible against a light-theme popover, where plate and background are nearly the same tone. */
 function FrameTile({ frame, label, selected, onClick }: { frame?: ImageFrame; label: string; selected: boolean; onClick: () => void }) {
    const plate = framePlateSpec(frame);
    const isTape = frame === 'tape';
@@ -158,7 +160,7 @@ function FrameTile({ frame, label, selected, onClick }: { frame?: ImageFrame; la
          onClick={onClick}
          className={cn('flex h-12 w-full cursor-pointer items-center justify-center rounded hover:bg-muted', selected && 'bg-muted ring-1 ring-primary')}
       >
-         <span className="relative block h-9 w-9" style={plate ? { padding: plate.padding, background: plate.background, borderRadius: plate.radius } : undefined}>
+         <span className="relative block h-9 w-9 shadow-md" style={plate ? { padding: plate.padding, background: plate.background, borderRadius: plate.radius } : undefined}>
             <span className="block h-full w-full rounded-[1px] bg-gradient-to-br from-sky-400/70 to-indigo-500/70" />
             {isTape && (
                <>

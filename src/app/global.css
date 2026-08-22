@@ -5,6 +5,9 @@
    opt back into its light state under a dark app - used by the Themes-window light preview pane. */
 @custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
 
+/* Gate touch ergonomics (larger hit targets) on pointer capability, orthogonal to width. */
+@custom-variant coarse (@media (pointer: coarse));
+
 /* Self-hosted display faces for the board TEXT element (Latin subset, woff2, in public/fonts). All three
    are SIL Open Font License 1.1 - add them to THIRD_PARTY_LICENSES before the OSS release:
      Caveat             https://fonts.google.com/specimen/Caveat
@@ -80,6 +83,10 @@
    --color-paper-primary:           var(--paper-primary);
    --color-paper-primary-foreground: var(--paper-primary-foreground);
    --color-paper-accent:            var(--paper-accent);
+
+   /* Layout breakpoints. Registers first-class mobile-first `tablet:`/`desk:` variants. */
+   --breakpoint-tablet:             48rem;  /* 768; keep in sync with src/lib/breakpoints.ts */
+   --breakpoint-desk:               64rem;  /* 1024; keep in sync with src/lib/breakpoints.ts */
 }
 
 [class*="card-type-"] input::placeholder,
@@ -631,6 +638,21 @@ body {
    pt-[calc(<base>+env(safe-area-inset-top))]. */
 @utility pt-safe {
    padding-top: env(safe-area-inset-top);
+}
+
+/* Mirror of pt-safe/pb-safe for the sides: clears the rounded-corner / camera
+   insets a landscape tablet reports on left and right. Resolves to 0 unless the
+   document sets viewport-fit=cover.
+   Inset-only, same caveat: to keep a base gutter plus the inset use
+   pl-[calc(<base>+env(safe-area-inset-left))]. */
+@utility pl-safe {
+   padding-left: env(safe-area-inset-left);
+}
+
+/* Inset-only, same caveat: to keep a base gutter plus the inset use
+   pr-[calc(<base>+env(safe-area-inset-right))]. */
+@utility pr-safe {
+   padding-right: env(safe-area-inset-right);
 }
 
 /* ###################################### */
