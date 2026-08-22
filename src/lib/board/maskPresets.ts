@@ -52,6 +52,18 @@ export const MASK_PRESETS: readonly MaskPreset[] = [
       path: 'M98 50 C98.1 59.3 86.3 70.6 78.3 78.3 C70.3 86 59.2 96.2 50 96 C40.8 95.8 31.3 84.5 23.1 76.9 C15 69.2 1.4 59.3 1 50 C0.6 40.7 12.8 28.5 21 21 C29.2 13.5 40.6 4.8 50 5 C59.4 5.2 69.6 14.9 77.6 22.4 C85.6 29.9 97.9 40.7 98 50 Z',
       viewBox: BOX,
    },
+   {
+      id: 'circle',
+      labelKey: 'BoardStencil.maskCircle',
+      path: 'M2 50 A48 48 0 1 0 98 50 A48 48 0 1 0 2 50 Z',
+      viewBox: BOX,
+   },
+   {
+      id: 'ripped-rectangle',
+      labelKey: 'BoardStencil.maskRippedRectangle',
+      path: 'M4 4 L28 2 L55 6 L82 3 L96 5 L97 25 L96 47 L78 48 L60 49 L50 49 L46 50 L50 51 L60 51 L78 52 L96 53 L97 76 L95 96 L68 98 L40 95 L12 98 L4 96 L2 64 L6 34 Z',
+      viewBox: BOX,
+   },
 ] as const;
 
 /** Looks up a mask by its stored id, or `undefined` when the id is unknown (e.g. a removed preset). */

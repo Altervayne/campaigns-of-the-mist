@@ -609,6 +609,8 @@
       "maskRoughRectangle": "[TO COMPLETE]",
       "maskTornEdge": "[TO COMPLETE]",
       "maskOrganicBlob": "[TO COMPLETE]",
+      "maskCircle": "[TO COMPLETE]",
+      "maskRippedRectangle": "[TO COMPLETE]",
       "library": "[TO COMPLETE]",
       "searchLibrary": "[TO COMPLETE]",
       "libraryNoMatches": "[TO COMPLETE]",

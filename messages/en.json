@@ -609,6 +609,8 @@
       "maskRoughRectangle": "Rough rectangle",
       "maskTornEdge": "Torn edge",
       "maskOrganicBlob": "Organic blob",
+      "maskCircle": "Circle",
+      "maskRippedRectangle": "Ripped rectangle",
       "library": "Library",
       "searchLibrary": "Search stencils...",
       "libraryNoMatches": "No stencils match your search.",

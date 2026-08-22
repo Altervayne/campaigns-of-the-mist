@@ -3,10 +3,12 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, MoreHorizontal, Trash2, Upload } from 'lucide-react';
 
 // -- Basic UI Imports --
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -28,9 +30,9 @@ import type { StencilRecord } from '@/lib/assets/stencilRecords';
  * (rectangle)", the preset shapes, and the user's stencil LIBRARY (each entry a saved mask), with a text
  * filter over the library and an "Upload custom" tile that quick-adds an upload straight into the library.
  * No bake happens here - the preview is a cheap CSS clip/mask; Apply hands the choice back and the hook does
- * the canvas bake. A preset previews via an SVG clipPath; a library entry previews via CSS `mask-image`. Full
- * rename/delete/reorder live in the manager (Phase 3); here the library is pick + filter + quick-add. Board
- * is desktop-only, so there is no mobile branch. All chrome stays on theme tokens.
+ * the canvas bake. A preset previews via an SVG clipPath; a library entry previews via CSS `mask-image`. The
+ * library here is pick + filter + quick-add + a confirmed per-tile delete; rename / reorder / import-export
+ * live in the manager. Board is desktop-only, so there is no mobile branch. All chrome stays on theme tokens.
  */
 
 /** The mask the picker has selected: a preset shape (by id), a library entry (by id), or none. */
@@ -56,9 +58,11 @@ interface ImageStencilDialogProps {
 export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, onQuickAdd, onCancel, onApply }: ImageStencilDialogProps) {
    const { t } = useTranslation();
    const stencils = useStencilLibraryStore((state) => state.stencils);
+   const { remove } = useStencilLibraryStore((state) => state.actions);
    const [selection, setSelection] = useState<StencilSelection>(initialSelection);
    const [query, setQuery] = useState('');
    const [isUploading, setIsUploading] = useState(false);
+   const [pendingDelete, setPendingDelete] = useState<StencilRecord | null>(null);
    const fileInputRef = useRef<HTMLInputElement>(null);
    const clipId = useId();
 
@@ -161,6 +165,7 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
                         entry={entry}
                         active={selection?.kind === 'library' && selection.id === entry.id}
                         onClick={() => setSelection({ kind: 'library', id: entry.id })}
+                        onDelete={() => setPendingDelete(entry)}
                      />
                   ))}
                   <button
@@ -191,6 +196,35 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
             </DialogFooter>
 
             <input ref={fileInputRef} type="file" accept={ACCEPT_MASK_IMAGE} className="hidden" onChange={handleFileSelected} />
+
+            {/* Removing a library stencil here mirrors the manager's confirmed delete. Deletion is safe - a
+                baked image keeps its own asset - so a delete only drops re-apply-by-name; deselect it if it
+                is the current pick. */}
+            <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+               <AlertDialogContent>
+                  <AlertDialogHeader>
+                     <AlertDialogTitle>{t('SettingsDialog.stencils.deleteConfirmTitle')}</AlertDialogTitle>
+                     <AlertDialogDescription>
+                        {t('SettingsDialog.stencils.deleteConfirmDescription', { name: pendingDelete?.name ?? '' })}
+                     </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                     <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
+                     <AlertDialogAction
+                        onClick={() => {
+                           if (pendingDelete) {
+                              if (selection?.kind === 'library' && selection.id === pendingDelete.id) setSelection(null);
+                              void remove(pendingDelete.id);
+                           }
+                           setPendingDelete(null);
+                        }}
+                        className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                     >
+                        {t('SettingsDialog.stencils.deleteConfirmButton')}
+                     </AlertDialogAction>
+                  </AlertDialogFooter>
+               </AlertDialogContent>
+            </AlertDialog>
          </DialogContent>
       </Dialog>
    );
@@ -208,14 +242,39 @@ function maskImageStyle(url: string): React.CSSProperties {
    };
 }
 
-/** One library entry's picker tile: its mask painted as a glyph over its name, highlighted when active. */
-function LibraryMaskTile({ entry, active, onClick }: { entry: StencilRecord; active: boolean; onClick: () => void }) {
+/**
+ * One library entry's picker tile: its mask painted as a glyph over its name, highlighted when active, with
+ * a hover-revealed "..." menu (Delete for now). The menu sits BESIDE the select button (not nested), so it
+ * is valid markup and its own click never selects the tile; it mirrors the manager's row actions menu.
+ */
+function LibraryMaskTile({ entry, active, onClick, onDelete }: { entry: StencilRecord; active: boolean; onClick: () => void; onDelete: () => void }) {
+   const { t } = useTranslation();
    return (
-      <MaskOption label={entry.name} active={active} onClick={onClick}>
-         <foreignObject x="0" y="0" width="100" height="100">
-            <StencilMaskGlyph maskAssetId={entry.maskAssetId} />
-         </foreignObject>
-      </MaskOption>
+      <div className="group/tile relative">
+         <MaskOption label={entry.name} active={active} onClick={onClick}>
+            <foreignObject x="0" y="0" width="100" height="100">
+               <StencilMaskGlyph maskAssetId={entry.maskAssetId} />
+            </foreignObject>
+         </MaskOption>
+         <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+               <button
+                  type="button"
+                  title={t('SettingsDialog.stencils.actionsMenu')}
+                  aria-label={t('SettingsDialog.stencils.actionsMenu')}
+                  onClick={(event) => event.stopPropagation()}
+                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/tile:opacity-100 data-[state=open]:opacity-100"
+               >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+               </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+               <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" /><span>{t('SettingsDialog.stencils.delete')}</span>
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+         </DropdownMenu>
+      </div>
    );
 }
 
