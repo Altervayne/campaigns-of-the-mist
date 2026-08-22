@@ -326,6 +326,7 @@ function NoteSurface() {
          addColumn: t('NoteView.table.addColumn'),
          addLineBelow: t('NoteView.table.addLineBelow'),
          addLineAbove: t('NoteView.table.addLineAbove'),
+         options: t('NoteView.table.options'),
       },
    }), [t]);
 

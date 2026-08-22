@@ -83,7 +83,7 @@ export interface TableController {
    /** Reports the caret's table cell (or null when it leaves any cell) so a mobile chip can arm/disarm. Desktop
     *  omits it. */
    onCaretCell?: (ctx: { tablePos: number; row: number; col: number } | null) => void;
-   labels: { addRow: string; addColumn: string; addLineBelow: string; addLineAbove: string };
+   labels: { addRow: string; addColumn: string; addLineBelow: string; addLineAbove: string; options: string };
 }
 
 /**
@@ -174,6 +174,8 @@ export class NoteTableWidget extends WidgetType {
    readonly from: number;
    readonly to: number;
    private readonly controller: TableController;
+   /** The last cell to hold focus; the coarse "table options" button targets it (default: first body cell). */
+   private lastCell: { row: number; col: number } = { row: 0, col: 0 };
 
    constructor(markdown: string, from: number, to: number, controller: TableController) {
       super();
@@ -267,6 +269,11 @@ export class NoteTableWidget extends WidgetType {
       // Below is always present (tables usually end a note); above only when the table is the first block.
       wrap.appendChild(this.buildExitButton(view, 'below'));
       if (this.from <= 0) wrap.appendChild(this.buildExitButton(view, 'above'));
+
+      // Coarse-only "table options" button opens the SAME context menu as right-click, so structural ops are
+      // tap-reachable where there is no right-click. Only the desktop tree gets it: mobile reports the caret cell
+      // (`onCaretCell`) and drives the ops through its own sheet, so it needs no widget button.
+      if (!this.controller.onCaretCell) wrap.appendChild(this.buildOptionsButton(view));
    }
 
    /** A coarse-only button that places the caret on a usable line below (or above) the table via the same
@@ -287,6 +294,39 @@ export class NoteTableWidget extends WidgetType {
          else this.exitAbove(view);
       };
       return btn;
+   }
+
+   /** A coarse-only button that opens the context menu for the last-focused cell (right-click's touch stand-in).
+    *  Anchors the menu at its own box so it lands beside the table, not at a stale cell. */
+   private buildOptionsButton(view: EditorView): HTMLElement {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cm-note-table-options-btn';
+      btn.setAttribute('aria-label', this.labels.options);
+      btn.title = this.labels.options;
+      btn.innerHTML = OPTIONS_ICON;
+      // Keep the focused cell (the menu's target) from blurring when the button is pressed.
+      btn.onmousedown = (e) => { e.preventDefault(); e.stopPropagation(); };
+      btn.onclick = (e) => {
+         e.preventDefault();
+         e.stopPropagation();
+         const target = this.resolveOptionsTarget(view);
+         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+         this.openMenuFor(view, target.row, target.col, rect.left, rect.bottom);
+      };
+      return btn;
+   }
+
+   /** The options button's target cell: the last-focused cell, clamped to the live model (a delete may have shrunk
+    *  it), falling back to the header when the table has no body rows. */
+   private resolveOptionsTarget(view: EditorView): { row: number; col: number } {
+      const model = this.liveModel(view);
+      let { row, col } = this.lastCell;
+      if (model) {
+         row = Math.max(-1, Math.min(row, model.rows.length - 1));
+         col = Math.max(0, Math.min(col, model.header.length - 1));
+      }
+      return { row, col };
    }
 
    /** A full-edge "+" bar that adds a row (bottom, table-width) or a column (right, table-height) on click. */
@@ -324,6 +364,7 @@ export class NoteTableWidget extends WidgetType {
       // Report the caret's cell so a mobile chip can arm; clear on blur unless focus moved to another cell
       // (deferred + guarded so a cell-to-cell tap doesn't flicker through null).
       cell.onfocus = () => {
+         this.lastCell = { row, col };
          const range = this.liveRange(view);
          this.controller.onCaretCell?.(range ? { tablePos: range.from, row, col } : null);
       };
@@ -338,16 +379,23 @@ export class NoteTableWidget extends WidgetType {
       return cell;
    }
 
-   /** Right-click on a cell: commit any pending edit, then open the context menu bound to this table + cell. */
+   /** Right-click on a cell: open the context menu bound to this table + cell at the click point. */
    private onContextMenu(view: EditorView, event: MouseEvent, row: number, col: number): void {
       event.preventDefault();
       event.stopPropagation();
+      this.openMenuFor(view, row, col, event.clientX, event.clientY);
+   }
+
+   /** Opens the context menu/sheet for a target cell of this table at a screen point (right-click or the coarse
+    *  options button). Every action re-resolves against the block's stable position, so a sticky sheet stays on
+    *  the right table after each edit. */
+   private openMenuFor(view: EditorView, row: number, col: number, x: number, y: number): void {
       const range = this.liveRange(view);
       if (!range) return;
       const tablePos = range.from;
       this.controller.openContextMenu({
-         x: event.clientX,
-         y: event.clientY,
+         x,
+         y,
          row,
          col,
          tablePos,
@@ -645,6 +693,8 @@ export class NoteTableWidget extends WidgetType {
 /** Coarse-exit glyphs (lucide arrow-to-line): an arrow to a line below / above, distinct from the add-row "+". */
 const EXIT_BELOW_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14"/><path d="m6 11 6 6 6-6"/><path d="M5 21h14"/></svg>';
 const EXIT_ABOVE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="m6 13 6-6 6 6"/><path d="M5 3h14"/></svg>';
+/** Options glyph (lucide ellipsis-vertical): the "more actions" affordance that opens the table context menu. */
+const OPTIONS_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
 
 /** A `<br>` token in cell markdown, split-safe (case-insensitive, optional slash/space). */
 const CELL_BR_RE = /<br\s*\/?>/gi;

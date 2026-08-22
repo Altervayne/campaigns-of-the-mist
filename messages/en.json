@@ -109,7 +109,8 @@
          "addRow": "Add row",
          "addColumn": "Add column",
          "addLineBelow": "Add line below table",
-         "addLineAbove": "Add line above table"
+         "addLineAbove": "Add line above table",
+         "options": "Table options"
       },
       "cover": {
          "add": "Add cover",

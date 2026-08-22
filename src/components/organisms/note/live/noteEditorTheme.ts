@@ -114,6 +114,12 @@ export const paperTheme = EditorView.theme({
       // Reveal the table exit buttons and give each a transparent finger-sized hit-slop past its visible box.
       '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'inline-flex' },
       '.cm-note-table-exit-below::before, .cm-note-table-exit-above::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
+      // No hover on touch, so the add-row / add-column edge bars can't ride the `:hover` reveal: keep them
+      // visible (the fine-pointer hover reveal above is untouched).
+      '.cm-note-table-add-row-bar, .cm-note-table-add-col-bar': { opacity: '0.9' },
+      // Reveal the desktop-tablet "table options" tap target with the same finger-sized hit-slop.
+      '.cm-note-table-options-btn': { display: 'inline-flex' },
+      '.cm-note-table-options-btn::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
    },
    '.cm-note-cover-bar': { position: 'absolute', top: '0.5rem', left: '0.5rem', display: 'flex', gap: '0.125rem', padding: '0.25rem', borderRadius: '0.375rem', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
    '.cm-note-cover-btn': { display: 'grid', placeItems: 'center', height: '1.75rem', width: '1.75rem', borderRadius: '0.25rem', cursor: 'pointer', color: 'inherit', background: 'transparent', border: 'none' },
@@ -174,4 +180,8 @@ export const paperTheme = EditorView.theme({
    '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'none', position: 'absolute', left: '50%', transform: 'translateX(-50%)', alignItems: 'center', justifyContent: 'center', height: '1.75rem', minWidth: '2.75rem', padding: '0 0.5rem', border: 'none', borderRadius: '0.375rem', backgroundColor: 'color-mix(in srgb, var(--paper-border) 32%, var(--paper-background))', color: 'var(--paper-foreground)', cursor: 'pointer', zIndex: '2' },
    '.cm-note-table-exit-below': { bottom: '-0.625rem' },
    '.cm-note-table-exit-above': { top: '-0.625rem' },
+   // Coarse-only "table options" tap target (desktop tablet): opens the same context menu as a cell right-click,
+   // bound to the last-focused cell. Hidden on a fine pointer, where right-click does this; the coarse block
+   // above reveals it and adds a finger-sized hit-slop. Sits in the top-right corner, clear of the edge bars.
+   '.cm-note-table-options-btn': { display: 'none', position: 'absolute', top: '-0.625rem', right: '0.75rem', alignItems: 'center', justifyContent: 'center', height: '1.75rem', width: '1.75rem', border: 'none', borderRadius: '0.375rem', backgroundColor: 'color-mix(in srgb, var(--paper-border) 32%, var(--paper-background))', color: 'var(--paper-foreground)', cursor: 'pointer', zIndex: '2' },
 }, { dark: false });

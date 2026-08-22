@@ -27,9 +27,10 @@ interface StableNoteControllers {
 /*
  * Wraps each note controller prop in a STABLE delegate whose identity never changes, so the CM6 extensions
  * (built once per view) always call the CURRENT callbacks - a re-render swaps the closures behind a latest-ref
- * without rebuilding the view. Optional presence flags (`onTap`, `onCaretLinkChange`) are resolved ONCE at
- * first render (fixed per surface: desktop never taps, mobile always does), never per-call, so a static
- * delegate can't force taps everywhere or suppress the desktop bar.
+ * without rebuilding the view. Optional presence flags (`onTap`, `onCaretLinkChange`, `onCaretCell`) are resolved
+ * ONCE at first render (fixed per surface: desktop never taps, mobile always does), never per-call, so a static
+ * delegate can't force taps everywhere or suppress the desktop bar - and the table widget reads a truthful
+ * `onCaretCell` to tell the two surfaces apart.
  */
 export function useStableNoteControllers({ coverController, formatController, linkEditController, tableController, imageController }: NoteControllers): StableNoteControllers {
    const controllerRef = useRef(coverController);
@@ -66,7 +67,7 @@ export function useStableNoteControllers({ coverController, formatController, li
    tableControllerRef.current = tableController;
    const stableTableController = useRef<TableController>({
       openContextMenu: (request) => tableControllerRef.current.openContextMenu(request),
-      onCaretCell: (ctx) => tableControllerRef.current.onCaretCell?.(ctx),
+      onCaretCell: tableController.onCaretCell ? (ctx) => tableControllerRef.current.onCaretCell?.(ctx) : undefined,
       get labels() { return tableControllerRef.current.labels; },
    }).current;
 

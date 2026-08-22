@@ -309,6 +309,7 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, 
          addColumn: t('NoteView.table.addColumn'),
          addLineBelow: t('NoteView.table.addLineBelow'),
          addLineAbove: t('NoteView.table.addLineAbove'),
+         options: t('NoteView.table.options'),
       },
    }), [t]);
    // The image controller is LIVE on mobile: tapping an image builds its request and opens the options sheet.
