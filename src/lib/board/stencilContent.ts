@@ -47,3 +47,12 @@ export function stenciledImageContent(
 export function resetImageContent(sourceHash: string, fit: ImageBoardContent['fit']): ImageBoardContent {
    return { kind: 'image', assetId: sourceHash, fit };
 }
+
+/**
+ * Flips `fit` while preserving every other field. Critically keeps `sourceAssetId`/`maskId`/`stencilId` -
+ * rebuilding the content from scratch here would strand a stenciled image's original (GC-reclaimed) and
+ * make a re-mask bake on top of the already-baked asset.
+ */
+export function toggleImageFit(content: ImageBoardContent): ImageBoardContent {
+   return { ...content, fit: content.fit === 'cover' ? 'contain' : 'cover' };
+}

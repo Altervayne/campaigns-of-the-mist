@@ -9,6 +9,7 @@ import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Scaling, Shapes, Upload
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
+import { toggleImageFit } from '@/lib/board/stencilContent';
 
 // -- Store and Hook Imports --
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
@@ -61,7 +62,7 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
       setDrawerOpen,
    });
 
-   const toggleFit = () => onContentChange({ kind: 'image', assetId: content.assetId, fit: content.fit === 'cover' ? 'contain' : 'cover' });
+   const toggleFit = () => onContentChange(toggleImageFit(content));
    const removeImage = () => onContentChange({ kind: 'image', assetId: null, fit: content.fit });
 
    // A masked image is a shape: it drops the placeholder plate (which would show through the transparent

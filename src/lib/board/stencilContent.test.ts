@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { resolveStencilSourceHash, stenciledImageContent, resetImageContent } from './stencilContent';
+import { resolveStencilSourceHash, stenciledImageContent, resetImageContent, toggleImageFit } from './stencilContent';
 
 // -- Type Imports --
 import type { ImageBoardContent } from '@/lib/types/board';
@@ -97,5 +97,20 @@ describe('resetImageContent', () => {
       const next = resetImageContent(source, masked.fit);
       expect(next).toEqual({ kind: 'image', assetId: 'orig', fit: 'cover' });
       expect(next.stencilId).toBeUndefined();
+   });
+});
+
+describe('toggleImageFit', () => {
+   it('flips cover to contain and back', () => {
+      expect(toggleImageFit({ kind: 'image', assetId: 'a', fit: 'cover' }).fit).toBe('contain');
+      expect(toggleImageFit({ kind: 'image', assetId: 'a', fit: 'contain' }).fit).toBe('cover');
+   });
+
+   it('preserves the source + mask fields of a stenciled image (never strands the original)', () => {
+      const preset: ImageBoardContent = { kind: 'image', assetId: 'baked', fit: 'cover', sourceAssetId: 'orig', maskId: 'hexagon' };
+      expect(toggleImageFit(preset)).toEqual({ kind: 'image', assetId: 'baked', fit: 'contain', sourceAssetId: 'orig', maskId: 'hexagon' });
+
+      const library: ImageBoardContent = { kind: 'image', assetId: 'baked', fit: 'contain', sourceAssetId: 'orig', stencilId: 'lib-1' };
+      expect(toggleImageFit(library)).toEqual({ kind: 'image', assetId: 'baked', fit: 'cover', sourceAssetId: 'orig', stencilId: 'lib-1' });
    });
 });
