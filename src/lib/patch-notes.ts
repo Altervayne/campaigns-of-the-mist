@@ -25,10 +25,8 @@ export const patchNotes: PatchNote[] = [
 
 ## 🐛 Bugfixes
 
-* Fixed changing a board element's color by dragging in the color picker accidentally **moving the
-  element** across the board (and the picker sliding away with it, so you couldn't finish choosing).
-* Fixed the board selection toolbar (single and multi-select) sliding off the bottom edge of the
-  viewport when the selection sat near the bottom.
+* Fixed changing a board element's color by dragging in the color picker accidentally **moving the element** across the board (and the picker sliding away with it, so you couldn't finish choosing).
+* Fixed the board selection toolbar (single and multi-select) sliding off the bottom edge of the viewport when the selection sat near the bottom.
 * Fixed workspace tabs ignoring a custom theme's corner roundness.
 `,
    },
