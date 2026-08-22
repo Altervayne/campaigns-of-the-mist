@@ -1257,6 +1257,14 @@
       },
       "light": "Light Mode",
       "dark": "Dark Mode",
+      "interface": {
+         "title": "Interface",
+         "auto": "Auto",
+         "phone": "Phone",
+         "tablet": "Tablet",
+         "desktop": "Desktop",
+         "autoResolved": "Auto (currently {{value}})"
+      },
       "cardView": {
          "title": "Card flipping",
          "sideBySide": "Side by side",
@@ -1530,6 +1538,10 @@
          "rollDice": "Roll: Dice",
          "setThemeModeLight": "Set: Theme Mode: Light",
          "setThemeModeDark": "Set: Theme Mode: Dark",
+         "setInterfaceAuto": "Set: Interface: Auto",
+         "setInterfacePhone": "Set: Interface: Phone",
+         "setInterfaceTablet": "Set: Interface: Tablet",
+         "setInterfaceDesktop": "Set: Interface: Desktop",
          "setThemePalette": "Set: Theme Palette: [...]",
          "manageThemes": "Open: Themes Manager",
          "openCardPalettes": "Open: Card Palettes",

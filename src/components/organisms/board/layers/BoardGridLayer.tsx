@@ -33,10 +33,13 @@ export function BoardGridLayer({ grid, viewport, hexPatternId, itemCount }: { gr
              moves exactly like the CSS grids; the 1px stroke stays constant on screen. */}
          {grid.type === 'hex' && (() => {
             const tile = hexTile(gridSpacing(viewport.zoom));
-            // Full-strength ink + element opacity (not a translucent stroke): the tile double-draws shared
-            // edges, and element opacity flattens the overlaps to one uniform weight.
+            // A custom color paints at full strength (matching the CSS grids), where opaque coincident
+            // strokes need no flattening. The themed default uses full-strength ink + element opacity (not
+            // a translucent stroke): the tile double-draws shared edges, and element opacity flattens the
+            // overlaps to one uniform weight.
+            const custom = grid.color;
             return (
-               <svg className="pointer-events-none absolute inset-0 h-full w-full text-foreground opacity-[0.15]">
+               <svg className={`pointer-events-none absolute inset-0 h-full w-full ${custom ? '' : 'text-foreground opacity-[0.15]'}`}>
                   <defs>
                      <pattern
                         id={hexPatternId}
@@ -45,7 +48,7 @@ export function BoardGridLayer({ grid, viewport, hexPatternId, itemCount }: { gr
                         height={tile.height}
                         patternTransform={`translate(${viewport.x} ${viewport.y})`}
                      >
-                        <path d={tile.path} fill="none" stroke="currentColor" strokeWidth={1} />
+                        <path d={tile.path} fill="none" stroke={custom ?? 'currentColor'} strokeWidth={1} />
                      </pattern>
                   </defs>
                   <rect width="100%" height="100%" fill={`url(#${hexPatternId})`} />

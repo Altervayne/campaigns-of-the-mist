@@ -22,6 +22,7 @@ export type ThemeName = 'theme-neutral' | 'theme-legends' | 'theme-otherscape' |
 /** The active theme: a preset class, or a custom theme's `theme-custom-{id}` (its value IS its class). */
 export type ActiveTheme = ThemeName | `theme-custom-${string}`;
 export type DeviceType = 'mobile' | 'desktop';
+export type FormFactor = 'phone' | 'tablet' | 'desktop';
 export type MobileHandedness = 'left' | 'right';
 
 interface AppSettingsState {
@@ -62,6 +63,10 @@ interface AppSettingsState {
    navigatorOpen: boolean;
    contextualGame: GameSystem;
    deviceTypeOverride?: DeviceType;
+   /** Manual layout-profile override; `undefined` = auto-detect. Orthogonal to `deviceTypeOverride` (the
+    * binary base regime): the Interface control sets both together so base and layout stay coherent, while
+    * pointer capability is always auto-detected regardless. */
+   formFactorOverride?: FormFactor;
    isMobileFABMode: boolean;
    mobileHandedness: MobileHandedness;
    areGestureHintsEnabled: boolean;
@@ -120,6 +125,7 @@ interface AppSettingsState {
       toggleNavigator: () => void;
       setContextualGame: (game: GameSystem) => void;
       setDeviceTypeOverride: (deviceType: DeviceType | undefined) => void;
+      setFormFactorOverride: (formFactor: FormFactor | undefined) => void;
       setMobileFABMode: (enabled: boolean) => void;
       setMobileHandedness: (handedness: MobileHandedness) => void;
       setGestureHintsEnabled: (enabled: boolean) => void;
@@ -172,6 +178,7 @@ export const useAppSettingsStore = create<AppSettingsState>()(
          navigatorOpen: false,
          contextualGame: 'LEGENDS',
          deviceTypeOverride: undefined,
+         formFactorOverride: undefined,
          isMobileFABMode: false,
          mobileHandedness: 'right',
          areGestureHintsEnabled: true,
@@ -278,6 +285,7 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             toggleNavigator: () => set((state) => ({ navigatorOpen: !state.navigatorOpen })),
             setContextualGame: (game) => set({ contextualGame: game }),
             setDeviceTypeOverride: (deviceType) => set({ deviceTypeOverride: deviceType }),
+            setFormFactorOverride: (formFactor) => set({ formFactorOverride: formFactor }),
             setMobileFABMode: (enabled) => set({ isMobileFABMode: enabled }),
             setMobileHandedness: (handedness) => set({ mobileHandedness: handedness }),
             setGestureHintsEnabled: (enabled) => set({ areGestureHintsEnabled: enabled }),
@@ -328,6 +336,7 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             navigatorOpen: state.navigatorOpen,
             contextualGame: state.contextualGame,
             deviceTypeOverride: state.deviceTypeOverride,
+            formFactorOverride: state.formFactorOverride,
             isMobileFABMode: state.isMobileFABMode,
             mobileHandedness: state.mobileHandedness,
             areGestureHintsEnabled: state.areGestureHintsEnabled,

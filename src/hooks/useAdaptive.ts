@@ -8,6 +8,7 @@ import {
 	type PointerType,
 } from './useDeviceType';
 import { BREAKPOINT_TABLET, BREAKPOINT_DESK } from '@/lib/breakpoints';
+import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 /**
  * The two orthogonal adaptive axes plus the raw width, layered on top of the
@@ -41,9 +42,12 @@ function readAxes(): AdaptiveAxes {
  * behavior is identical to every existing consumer. The `formFactor`/`pointer`
  * axes recompute on `matchMedia` boundary crossings and `orientationchange` -
  * media-query events, not a resize debounce, so a rotate reflows without lag.
+ * `formFactor` honors the persisted `formFactorOverride`; `pointer` is always the
+ * detected value, so forcing a layout never strips touch affordances.
  */
 export function useAdaptive(): AdaptiveState {
 	const { deviceType: base } = useDeviceType();
+	const formFactorOverride = useAppSettingsStore((state) => state.formFactorOverride);
 	const [axes, setAxes] = useState<AdaptiveAxes>(() => readAxes());
 
 	useEffect(() => {
@@ -68,7 +72,7 @@ export function useAdaptive(): AdaptiveState {
 		};
 	}, []);
 
-	return { base, ...axes };
+	return { base, ...axes, formFactor: formFactorOverride ?? axes.formFactor };
 }
 
 export interface BreakpointState {

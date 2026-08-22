@@ -1257,6 +1257,14 @@
       },
       "light": "Mode Clair",
       "dark": "Mode Sombre",
+      "interface": {
+         "title": "[TO COMPLETE]",
+         "auto": "[TO COMPLETE]",
+         "phone": "[TO COMPLETE]",
+         "tablet": "[TO COMPLETE]",
+         "desktop": "[TO COMPLETE]",
+         "autoResolved": "[TO COMPLETE]"
+      },
       "cardView": {
          "title": "Verso de Cartes",
          "sideBySide": "Côte à Côte",
@@ -1530,6 +1538,10 @@
          "rollDice": "Lancer : Dés",
          "setThemeModeLight": "Définir : Mode de Couleur : Clair",
          "setThemeModeDark": "Définir : Mode de Couleur : Sombre",
+         "setInterfaceAuto": "[TO COMPLETE]",
+         "setInterfacePhone": "[TO COMPLETE]",
+         "setInterfaceTablet": "[TO COMPLETE]",
+         "setInterfaceDesktop": "[TO COMPLETE]",
          "setThemePalette": "Définir : Palette : [...]",
          "manageThemes": "Ouvrir : Gestionnaire de Thèmes",
          "openCardPalettes": "Ouvrir : Palettes de cartes",

@@ -112,13 +112,15 @@ export function getEffectiveDeviceType(): DeviceType {
 }
 
 /**
- * Non-hook effective form factor for code that runs outside React. Detection-only:
- * the `formFactorOverride` field is P1, so there is nothing to respect yet.
+ * Non-hook effective form factor for code that runs outside React. Respects the
+ * persisted `formFactorOverride` (the Interface control's layout pin), falling back
+ * to auto-detection. Pointer capability is never overridden - see `detectPointer`.
  *
- * @returns The detected form factor (`'phone'`, `'tablet'`, or `'desktop'`).
+ * @returns The effective form factor (`'phone'`, `'tablet'`, or `'desktop'`).
  */
 export function getEffectiveFormFactor(): FormFactor {
-	return detectFormFactor();
+	const override = useAppSettingsStore.getState().formFactorOverride;
+	return override ?? detectFormFactor();
 }
 
 // Auto-detect device type

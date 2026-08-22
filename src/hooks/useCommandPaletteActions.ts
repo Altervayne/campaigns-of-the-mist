@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useInterfaceSetting, INTERFACE_CHOICES, INTERFACE_ICONS } from '@/hooks/useInterfaceSetting';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
@@ -71,6 +72,14 @@ function boardCommandId(kind: string): string {
    return kind.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('');
 }
 
+/** English alias tokens cmdk narrows the Interface commands on, beyond the shared `interface`/`layout`/`device`. */
+const INTERFACE_KEYWORDS: Record<string, string[]> = {
+   auto: ['detect', 'automatic'],
+   phone: ['mobile', 'smartphone'],
+   tablet: ['ipad'],
+   desktop: ['computer'],
+};
+
 
 
 export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onOpenSettings, onImportFile, onExportNoteMarkdown, onCreateChallenge, onCreateJournal }: CommandActionArgs): CommandAction[] {
@@ -88,6 +97,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    };
    const { setMode } = useThemeMode();
    const { deviceType } = useDeviceType();
+   const { selectInterface } = useInterfaceSetting();
    // The jump-to-a-tutorial picker only earns a slot when there's something to start (empty until the real
    // tutorials are authored; the `dev.` scenarios surface it in dev). openTutorials -> hub@learn stays regardless.
    const hasTutorials = getTutorialsForPlatform(deviceType).length > 0;
@@ -217,6 +227,17 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // ##########################
       { id: 'setThemeModeLight', scope: 'global', label: t('CommandPalette.commands.setThemeModeLight'), keywords: ['light', 'mode', 'theme'], icon: Sun, group: t('CommandPalette.groups.settings'), action: () => setMode('light') },
       { id: 'setThemeModeDark', scope: 'global', label: t('CommandPalette.commands.setThemeModeDark'), keywords: ['dark', 'mode', 'theme'], icon: Moon, group: t('CommandPalette.groups.settings'), action: () => setMode('dark') },
+      // Interface (layout profile) override. Each choice pins BOTH axes via the shared mapping, mirroring the
+      // Settings control, so base and layout stay coherent.
+      ...INTERFACE_CHOICES.map((choice) => ({
+         id: `setInterface${choice.charAt(0).toUpperCase()}${choice.slice(1)}`,
+         scope: 'global' as const,
+         label: t(`CommandPalette.commands.setInterface${choice.charAt(0).toUpperCase()}${choice.slice(1)}`),
+         keywords: ['interface', 'layout', 'device', choice, ...INTERFACE_KEYWORDS[choice]],
+         icon: INTERFACE_ICONS[choice],
+         group: t('CommandPalette.groups.settings'),
+         action: () => selectInterface(choice),
+      })),
       { id: 'setThemePalette', scope: 'global', label: t('CommandPalette.commands.setThemePalette'), keywords: ['palette', 'theme', 'color'], icon: Palette, group: t('CommandPalette.groups.settings'), pageId: 'setThemePalette' },
       { id: 'manageThemes', scope: 'global', label: t('CommandPalette.commands.manageThemes'), keywords: ['theme', 'themes', 'editor', 'manage', 'custom', 'palette'], icon: SwatchBook, group: t('CommandPalette.groups.settings'), action: () => openSettingsSection('appearance') },
       { id: 'openCardPalettes', scope: 'global', label: t('CommandPalette.commands.openCardPalettes'), keywords: ['card', 'palette', 'palettes', 'game', 'color', 'theme'], icon: Layers, group: t('CommandPalette.groups.settings'), action: () => openSettingsSection('cardPalettes') },
