@@ -263,7 +263,7 @@ function LibraryMaskTile({ entry, active, onClick, onDelete }: { entry: StencilR
                   title={t('SettingsDialog.stencils.actionsMenu')}
                   aria-label={t('SettingsDialog.stencils.actionsMenu')}
                   onClick={(event) => event.stopPropagation()}
-                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/tile:opacity-100 data-[state=open]:opacity-100"
+                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-md border border-border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/tile:opacity-100 data-[state=open]:opacity-100"
                >
                   <MoreHorizontal className="h-3.5 w-3.5" />
                </button>

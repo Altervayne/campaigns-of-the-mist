@@ -11,8 +11,18 @@ import { ConnectionMarkersPopover } from './ConnectionMarkersPopover';
 import { ConnectionColorControl } from './ConnectionColorControl';
 import { ConnectionLabelPopover } from './ConnectionLabelPopover';
 
+// -- Utils Imports --
+import { CONNECTION_LABEL_SIZE_PX, DEFAULT_LABEL_SIZE } from '@/lib/board/boardConnections';
+
 // -- Type Imports --
 import type { ConnectionStyle } from '@/lib/types/board';
+
+/** Screen-px lift above the midpoint when the connection has no label. */
+const BASE_TOOLBAR_LIFT = 44;
+/** The label chip's world-px lift off the line (mirrors ConnectionLabelChip). */
+const LABEL_CHIP_LIFT = 22;
+/** Toolbar half-height plus the screen-px gap kept above the label's top edge. */
+const TOOLBAR_LABEL_GAP = 22;
 
 /*
  * The style control for the selected connection: a compact row of popover triggers (Path / Stroke /
@@ -38,10 +48,16 @@ export function ConnectionToolbar({ connectionId, style, x, y, zoom, zIndex, eff
    const commit = (next: ConnectionStyle) => onUpdateStyle(connectionId, next);
    const pathType = style.pathType ?? 'straight';
 
+   // Lift the toolbar above the line, higher when a label is present so the two never overlap. The label
+   // chip is world-scaled (it grows with zoom + its size preset) while the toolbar is screen-constant, so
+   // the label's clearance scales with zoom; floored at the no-label lift.
+   const labelReach = LABEL_CHIP_LIFT + (CONNECTION_LABEL_SIZE_PX[style.labelSize ?? DEFAULT_LABEL_SIZE] + 4) / 2;
+   const lift = style.label ? Math.max(BASE_TOOLBAR_LIFT, labelReach * zoom + TOOLBAR_LABEL_GAP) : BASE_TOOLBAR_LIFT;
+
    return (
       <div
          className="absolute"
-         style={{ left: x, top: y, zIndex, transform: `translate(-50%, -50%) scale(${1 / zoom}) translateY(-44px)` }}
+         style={{ left: x, top: y, zIndex, transform: `translate(-50%, -50%) scale(${1 / zoom}) translateY(-${lift}px)` }}
          onPointerDown={(event) => event.stopPropagation()}
       >
          <div className="flex items-center gap-1 rounded-lg border border-border bg-popover/90 p-1 shadow-md backdrop-blur-sm">
