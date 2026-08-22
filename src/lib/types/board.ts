@@ -49,6 +49,10 @@ export type BoardItemKind = 'image' | 'post-it' | 'journal' | 'note' | 'threat' 
  * `stencilId` is a SOFT reference recording re-open intent - deleting the library entry leaves the baked
  * image untouched, and re-mask just opens with nothing pre-selected. So the asset walkers (GC + export)
  * count ONLY `assetId` + `sourceAssetId`; the stencil is never counted or bundled through the image.
+ *
+ * The styling fields (`frame`..`brightness`) are pure presentation, all optional - absent reads as a bare
+ * image (no migration). `frame`/`border` are a rectangular-image dressing (the render hides them for a
+ * masked shape); `shadow`/`opacity`/`filter`/`brightness` apply masked or not.
  */
 export interface ImageBoardContent {
    kind: 'image';
@@ -60,7 +64,35 @@ export interface ImageBoardContent {
    maskId?: string;
    /** The applied stencil-LIBRARY entry id (a soft reference for re-open). Absent on an unmasked or preset-masked image. */
    stencilId?: string;
+   /** Named container preset (a matte/photo-stock dressing). Rectangular images only. Absent = no frame. */
+   frame?: ImageFrame;
+   /** A custom uniform outline on the container. Rectangular images only. Absent = no border. */
+   border?: ImageBorder;
+   /** Drop-shadow depth (container box-shadow, or a shape-following drop-shadow when masked). Absent = none. */
+   shadow?: ImageShadow;
+   /** Image opacity 0..1. Absent = 1 (opaque). */
+   opacity?: number;
+   /** Named color look. Absent = none. */
+   filter?: ImageFilter;
+   /** Brightness multiplier (~0.5..1.5). Absent = 1. */
+   brightness?: number;
 }
+
+/** An image's named container preset. */
+export type ImageFrame = 'polaroid' | 'matte' | 'tape' | 'slide';
+
+/** An image's custom uniform outline. */
+export interface ImageBorder {
+   color: string;
+   width: number;
+   radius: number;
+}
+
+/** An image's drop-shadow depth. */
+export type ImageShadow = 'sm' | 'md' | 'lg';
+
+/** An image's named color look. */
+export type ImageFilter = 'grayscale' | 'sepia' | 'noir';
 
 /**
  * A sticky note on the board, in the copy model: a self-contained snapshot of a {@link PostItNote} in

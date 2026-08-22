@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { MIN_ITEM_SIZE, computeResize, effectiveHeight, fitContentHeight, fitContentWidth, shouldSyncMeasuredHeight, shouldSyncMeasuredSize } from './boardResize';
+import { MIN_ITEM_SIZE, aspectResize, computeResize, effectiveHeight, fitContentHeight, fitContentWidth, shouldSyncMeasuredHeight, shouldSyncMeasuredSize } from './boardResize';
 
 /*
  * Resize math: the bottom-right grip grows width/height with x/y pinned, and a min-height item
@@ -65,6 +65,24 @@ describe('computeResize', () => {
       expect(result.width).toBe(56);
       expect(result.height).toBe(112);
       expect(result.width / result.height).toBeCloseTo(0.5);
+   });
+});
+
+describe('aspectResize', () => {
+   it('keeps the width and derives the height from the ratio', () => {
+      expect(aspectResize(400, 1)).toEqual({ width: 400, height: 400 });
+      expect(aspectResize(400, 4 / 3)).toEqual({ width: 400, height: 300 });
+      expect(aspectResize(320, 16 / 9)).toEqual({ width: 320, height: 180 });
+   });
+
+   it('rounds the derived height', () => {
+      expect(aspectResize(400, 3 / 2)).toEqual({ width: 400, height: 267 });
+   });
+
+   it('floors both axes at MIN_ITEM_SIZE', () => {
+      expect(aspectResize(10, 1)).toEqual({ width: MIN_ITEM_SIZE, height: MIN_ITEM_SIZE });
+      // A wide-but-short ratio at a small width clamps the height at the floor.
+      expect(aspectResize(60, 16 / 9)).toEqual({ width: 60, height: MIN_ITEM_SIZE });
    });
 });
 

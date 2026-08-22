@@ -368,6 +368,12 @@ export const BoardItemBox = memo(function BoardItemBox({
    // A stenciled image is a shape, not a rectangle: it drops the panel border + shadow (which would frame
    // the transparent corners as a rectangle), keeping only the selection ring. A preset or library mask counts.
    const isMaskedImage = item.content.kind === 'image' && (!!item.content.maskId || !!item.content.stencilId);
+   // A framed image draws its own matte / tape / slide dressing, so the box drops the same rectangular panel
+   // chrome as a masked one (the frame owns the border + shadow). Only when unmasked - a mask hides the frame.
+   const isFramedImage = item.content.kind === 'image' && !!item.content.frame && !isMaskedImage;
+   // A tape frame's strips overhang onto the board, so its box must NOT clip; the `<img>` (object-cover)
+   // still fills the box exactly, so only the absolutely-positioned tape spills past the edge.
+   const isTapeFramed = item.content.kind === 'image' && item.content.frame === 'tape' && !isMaskedImage;
    // A note tile is a WINDOWED embed: unlike the fixed card/tracker/character panels it is freely
    // 2D-resizable (internal scroll), so it keeps the resize grip the other embeds drop. A portal is
    // resizable in every style too (owner override of the auto-hug): its glyph + type scale with the box.
@@ -408,6 +414,7 @@ export const BoardItemBox = memo(function BoardItemBox({
          memberCount={memberCount}
          onPressStart={handleBodyPointerDown}
          onContentChange={(content) => onUpdateContent(item.id, content)}
+         onResize={(patch) => onResize(item.id, patch)}
          onCacheLastKnown={onCacheLastKnown}
          onAdoptSource={onAdoptSource}
          onDelete={onDelete}
@@ -474,8 +481,9 @@ export const BoardItemBox = memo(function BoardItemBox({
                'relative h-full w-full cursor-default select-none',
                showHoverRing && 'outline outline-primary/30',
                // An embed brings its own rounded border, so the box neither clips (which would
-               // double-round and crop the flip's back face) nor draws chrome.
-               !isZone && !isEmbed && 'overflow-hidden',
+               // double-round and crop the flip's back face) nor draws chrome. A tape-framed image opts
+               // out too, so its strips overhang onto the board.
+               !isZone && !isEmbed && !isTapeFramed && 'overflow-hidden',
                // A collapsed zone IS a solid, clickable bar (the frame is hidden). An expanded zone's
                // body is click-through - the tinted rect + header carry the visuals - with only the
                // selection ring outlining the rectangle. A pin is a round borderless dot; a card/tracker
@@ -496,7 +504,7 @@ export const BoardItemBox = memo(function BoardItemBox({
                            // is rounded-md; a bare text element or drawing layer hugs tight (rounded-sm); a
                            // tracker, character, or note tile is rounded-lg.
                            ? cn(item.kind === 'card' ? 'rounded-xl' : item.kind === 'portal' ? 'rounded-md' : item.kind === 'text' || item.kind === 'drawing' ? 'rounded-sm' : 'rounded-lg', isSelected && 'outline outline-primary')
-                           : isMaskedImage
+                           : isMaskedImage || isFramedImage
                               ? cn('rounded-md', isSelected && 'outline outline-primary')
                               : cn('rounded-md border shadow-sm', isSelected ? 'border-primary outline outline-primary' : 'border-border hover:border-primary/50'),
             )}

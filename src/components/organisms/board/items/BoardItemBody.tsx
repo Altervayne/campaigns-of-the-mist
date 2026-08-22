@@ -17,6 +17,7 @@ import { BoardDrawingItem } from './BoardDrawingItem';
 // -- Type Imports --
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { BoardItem, BoardItemContent } from '@/lib/types/board';
+import type { ResizePatch } from '@/lib/board/boardCommands';
 
 /*
  * Picks the per-kind body for a board item. The note copies (post-it, journal) render their real,
@@ -40,6 +41,8 @@ interface BoardItemBodyProps {
    memberCount?: number;
    /** Commits new content for this item (one undoable command per edit session). */
    onContentChange: (content: BoardItemContent) => void;
+   /** Resizes this item's box (undoable); the image body's aspect presets reshape it. Other kinds ignore it. */
+   onResize: (patch: ResizePatch) => void;
    /** Caches a reference's last-known snapshot via a direct (non-undoable) write. */
    onCacheLastKnown: (id: string, content: BoardItemContent) => void;
    /** Adopts a Save-As drawer id onto a copy's source link via a direct (non-undoable) write. */
@@ -58,7 +61,7 @@ interface BoardItemBodyProps {
    onCachePortalName: (itemId: string, name: string) => void;
 }
 
-export function BoardItemBody({ item, isSelected, isEditing, toolbarSlot, sideSlot, memberCount, onContentChange, onCacheLastKnown, onAdoptSource, onDelete, onRequestSelect, onPressStart, onRequestEditPortal, onRequestRelinkPortal, onCachePortalName }: BoardItemBodyProps) {
+export function BoardItemBody({ item, isSelected, isEditing, toolbarSlot, sideSlot, memberCount, onContentChange, onResize, onCacheLastKnown, onAdoptSource, onDelete, onRequestSelect, onPressStart, onRequestEditPortal, onRequestRelinkPortal, onCachePortalName }: BoardItemBodyProps) {
    const { content } = item;
 
    switch (content.kind) {
@@ -67,7 +70,7 @@ export function BoardItemBody({ item, isSelected, isEditing, toolbarSlot, sideSl
       case 'journal':
          return <BoardJournalItem item={item} content={content} isSelected={isSelected} isEditing={isEditing} toolbarSlot={toolbarSlot} sideSlot={sideSlot} onContentChange={onContentChange} onCacheLastKnown={onCacheLastKnown} onAdoptSource={onAdoptSource} onDelete={onDelete} onRequestSelect={onRequestSelect} />;
       case 'image':
-         return <ImageItem content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} onContentChange={onContentChange} onRequestSelect={onRequestSelect} />;
+         return <ImageItem item={item} content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} onContentChange={onContentChange} onResize={onResize} onRequestSelect={onRequestSelect} />;
       case 'pin':
          return <PinItem content={content} isSelected={isSelected} toolbarSlot={toolbarSlot} onContentChange={onContentChange} />;
       case 'zone':

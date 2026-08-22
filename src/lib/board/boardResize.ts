@@ -49,6 +49,16 @@ export function computeResize(orig: SizeRect, delta: { x: number; y: number }, m
    };
 }
 
+/**
+ * The box size for an aspect-ratio preset: keep the current width and set height = width / ratio, each
+ * floored at MIN_ITEM_SIZE. The presets are landscape-or-square (ratio >= 1), so only the height can reach
+ * the floor - it clamps there at a tiny width, dropping the exact ratio in that edge case.
+ */
+export function aspectResize(width: number, ratio: number): { width: number; height: number } {
+   const w = Math.max(MIN_ITEM_SIZE, Math.round(width));
+   return { width: w, height: Math.max(MIN_ITEM_SIZE, Math.round(w / ratio)) };
+}
+
 /** The height a min-height item actually renders at: never below its measured content. */
 export function effectiveHeight(storedHeight: number, contentHeight: number): number {
    return Math.max(storedHeight, contentHeight);

@@ -4,12 +4,18 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Scaling, Shapes, Upload } from 'lucide-react';
+import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Upload } from 'lucide-react';
+
+// -- Component Imports --
+import { StyledBoardImage } from './StyledBoardImage';
+import { ImageStylePopover } from './ImageStylePopover';
+import { ImageSizingPopover } from './ImageSizingPopover';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
-import { toggleImageFit } from '@/lib/board/stencilContent';
+import { aspectResize } from '@/lib/board/boardResize';
+import { IMAGE_TOOLBAR_BUTTON_CLASS } from './imageToolbarButton';
 
 // -- Store and Hook Imports --
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
@@ -22,7 +28,8 @@ import { useAppGeneralStateStore, useAppGeneralStateActions } from '@/lib/stores
 import { runSaveImageToDrawerAs } from '@/hooks/board/useBoardItemSaveBack';
 
 // -- Type Imports --
-import type { BoardItemContent, ImageBoardContent } from '@/lib/types/board';
+import type { BoardItem, BoardItemContent, ImageBoardContent } from '@/lib/types/board';
+import type { ResizePatch } from '@/lib/board/boardCommands';
 
 /*
  * An image board item. It reuses the asset MACHINERY (processImage -> storeAsset ->
@@ -32,15 +39,18 @@ import type { BoardItemContent, ImageBoardContent } from '@/lib/types/board';
  */
 
 interface ImageItemProps {
+   item: BoardItem;
    content: ImageBoardContent;
    isSelected: boolean;
-   /** The selection toolbar's action slot; the fit/change/remove controls portal here. */
+   /** The selection toolbar's action slot; the change/style/sizing/remove controls portal here. */
    toolbarSlot: HTMLElement | null;
    onContentChange: (content: BoardItemContent) => void;
+   /** Resizes the item's box (undoable); the aspect-ratio presets reshape it. */
+   onResize: (patch: ResizePatch) => void;
    onRequestSelect: () => void;
 }
 
-export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, onRequestSelect }: ImageItemProps) {
+export function ImageItem({ item, content, isSelected, toolbarSlot, onContentChange, onResize, onRequestSelect }: ImageItemProps) {
    const { t } = useTranslation();
    const { url, isLoading } = useAssetObjectUrl(content.assetId);
    const { setDrawerOpen } = useAppGeneralStateActions();
@@ -62,7 +72,6 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
       setDrawerOpen,
    });
 
-   const toggleFit = () => onContentChange(toggleImageFit(content));
    const removeImage = () => onContentChange({ kind: 'image', assetId: null, fit: content.fit });
 
    // A masked image is a shape: it drops the placeholder plate (which would show through the transparent
@@ -71,13 +80,13 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
    const isMasked = !!content.maskId || !!content.stencilId;
 
    return (
-      <div className={cn('relative h-full w-full', !isMasked && 'bg-muted')}>
+      <div className={cn('relative h-full w-full', !isMasked && !content.frame && 'bg-muted')}>
          {showSpinner ? (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center bg-muted">
                <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
             </div>
          ) : url ? (
-            <img src={url} alt="" draggable={false} className={cn('h-full w-full', isMasked || content.fit === 'contain' ? 'object-contain' : 'object-cover')} />
+            <StyledBoardImage url={url} content={content} isMasked={isMasked} />
          ) : (
             // A padding frame stays part of the draggable body so an empty image box can
             // still be moved (the upload button itself stops pointer propagation).
@@ -101,15 +110,11 @@ export function ImageItem({ content, isSelected, toolbarSlot, onContentChange, o
              portal into the bar's slot so their logic stays co-located with this item. */}
          {url && !showSpinner && isSelected && toolbarSlot && createPortal(
             <>
-               <ImageControl title={t('BoardView.imageToggleFit')} onClick={toggleFit}>
-                  <Scaling className="h-4 w-4" />
-               </ImageControl>
                <ImageControl title={t('BoardView.imageChange')} onClick={openPicker}>
                   <ImageIcon className="h-4 w-4" />
                </ImageControl>
-               <ImageControl title={t('BoardView.imageMask')} onClick={() => stencil.open(content)}>
-                  <Shapes className="h-4 w-4" />
-               </ImageControl>
+               <ImageStylePopover content={content} onChange={onContentChange} isMasked={isMasked} onOpenMask={() => stencil.open(content)} />
+               <ImageSizingPopover content={content} onChange={onContentChange} onAspect={(ratio) => onResize(aspectResize(item.width, ratio))} />
                <ImageControl title={t('BoardView.saveItemToDrawerAs')} onClick={saveImageToDrawer}>
                   <SaveAll className="h-4 w-4" />
                </ImageControl>
@@ -146,10 +151,7 @@ function ImageControl({
          aria-label={title}
          onPointerDown={(event: ReactPointerEvent) => event.stopPropagation()}
          onClick={onClick}
-         className={cn(
-            'flex cursor-pointer items-center justify-center rounded p-1',
-            destructive ? 'text-destructive hover:bg-destructive/15' : 'text-popover-foreground hover:bg-muted',
-         )}
+         className={cn(destructive ? 'flex cursor-pointer items-center justify-center rounded p-1 text-destructive hover:bg-destructive/15' : IMAGE_TOOLBAR_BUTTON_CLASS)}
       >
          {children}
       </button>
