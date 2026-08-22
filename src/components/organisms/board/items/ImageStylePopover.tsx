@@ -1,34 +1,43 @@
 // -- React Imports --
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Palette, Shapes } from 'lucide-react';
+import { Shapes } from 'lucide-react';
 
 // -- Component Imports --
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { ImageFrameSection } from './ImageFrameSection';
 import { ImageEffectsSection } from './ImageEffectsSection';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { IMAGE_TOOLBAR_BUTTON_CLASS } from './imageToolbarButton';
 
 // -- Type Imports --
 import type { ImageBoardContent } from '@/lib/types/board';
 
 /*
- * The "Image style" menu: one popover folding the shape/mask entry, the frame + border controls, and the
- * effects (shadow / opacity / filter / brightness) into clear sections. The Frame section is dropped when the
- * image is masked (a matte or straight outline around a shape reads wrong); the Mask entry and Effects always
- * show. The commit-on-close slider discipline lives in the section components, so closing this popover (which
- * unmounts them) flushes any buffered slider edit.
+ * The "Image style" popover: the shape/mask entry, the frame + border controls, and the effects (shadow /
+ * opacity / filter / brightness). It anchors to the image BOX (a real inset overlay) so it opens to the
+ * image's SIDE - not the toolbar button centered above it - keeping the image visible while styling. It is
+ * CONTROLLED by the toolbar toggle (in ImageItem): the toggle sits outside the popover, so an interact-
+ * outside on it is ignored (else Radix would close and the toggle's click reopen). The Frame section drops
+ * when the image is masked. The commit-on-close slider discipline lives in the sections (this popover
+ * closing unmounts them, flushing any buffered slider edit).
  */
 export function ImageStylePopover({
+   open,
+   onOpenChange,
+   toggleRef,
    content,
    onChange,
    isMasked,
    onOpenMask,
 }: {
+   open: boolean;
+   onOpenChange: (open: boolean) => void;
+   /** The toolbar toggle button; an interact-outside on it is ignored so its own click cleanly toggles. */
+   toggleRef: RefObject<HTMLButtonElement | null>;
    content: ImageBoardContent;
    onChange: (content: ImageBoardContent) => void;
    isMasked: boolean;
@@ -36,29 +45,29 @@ export function ImageStylePopover({
 }) {
    const { t } = useTranslation();
 
-   const active = isMasked
-      || !!content.frame
-      || !!content.border
-      || !!content.shadow
-      || !!content.filter
-      || (content.opacity !== undefined && content.opacity !== 1)
-      || (content.brightness !== undefined && content.brightness !== 1);
-
    return (
-      <Popover>
-         <PopoverTrigger asChild>
-            <button
-               type="button"
-               title={t('BoardView.imageStyle')}
-               aria-label={t('BoardView.imageStyle')}
-               onPointerDown={(event) => event.stopPropagation()}
-               className={cn(IMAGE_TOOLBAR_BUTTON_CLASS, active && 'ring-1 ring-primary')}
-            >
-               <Palette className="h-4 w-4" />
-            </button>
-         </PopoverTrigger>
-         {/* Stop the pointer or the canvas background handler reads it as a click-away and drops the selection. */}
-         <PopoverContent align="center" className="w-72 p-2" onPointerDown={(event) => event.stopPropagation()}>
+      <Popover open={open} onOpenChange={onOpenChange}>
+         {/* The real anchor: an inert overlay of the image box, so the content opens beside the IMAGE. */}
+         <PopoverAnchor asChild>
+            <div aria-hidden className="pointer-events-none absolute inset-0" />
+         </PopoverAnchor>
+         <PopoverContent
+            side="right"
+            align="center"
+            sideOffset={8}
+            collisionPadding={8}
+            // The anchor (the image box) moves by CSS transform on pan/zoom/drag, which the default
+            // scroll/resize tracking misses (it lags, then sticks); re-measure every frame instead.
+            updatePositionStrategy="always"
+            onOpenAutoFocus={(event) => event.preventDefault()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onContextMenu={(event) => event.preventDefault()}
+            onInteractOutside={(event) => {
+               const target = event.target;
+               if (toggleRef.current && target instanceof Node && toggleRef.current.contains(target)) event.preventDefault();
+            }}
+            className="w-72 p-2"
+         >
             <div className="flex flex-col gap-3">
                <section className="flex flex-col gap-1.5">
                   <span className="text-xs font-medium text-muted-foreground">{t('BoardView.imageShape')}</span>

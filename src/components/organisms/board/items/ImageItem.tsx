@@ -1,10 +1,10 @@
 // -- React Imports --
-import { type PointerEvent as ReactPointerEvent } from 'react';
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Image as ImageIcon, ImageOff, Loader2, SaveAll, Upload } from 'lucide-react';
+import { Image as ImageIcon, ImageOff, Loader2, Palette, Proportions, SaveAll, Upload } from 'lucide-react';
 
 // -- Component Imports --
 import { StyledBoardImage } from './StyledBoardImage';
@@ -79,6 +79,28 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
    // (`maskId`) or a library (`stencilId`) mask both count.
    const isMasked = !!content.maskId || !!content.stencilId;
 
+   // The style/sizing popovers anchor to the IMAGE box (a real overlay element inside this box) so they open
+   // to its SIDE, image fully visible - not to the toolbar button centered above it. They are CONTROLLED by
+   // the toolbar toggles here; a toolbar toggle that lives outside the popover would otherwise let Radix's
+   // click-away close it and the toggle immediately reopen, so the popovers ignore an interact-outside on
+   // their toggle. Reset both when the item is deselected so a re-select never reopens a stale menu.
+   const [styleOpen, setStyleOpen] = useState(false);
+   const [sizingOpen, setSizingOpen] = useState(false);
+   const styleBtnRef = useRef<HTMLButtonElement>(null);
+   const sizingBtnRef = useRef<HTMLButtonElement>(null);
+   // Reset the open menus when the item deselects (its toolbar toggles vanish) so a re-select never reopens
+   // a stale one. Adjusting state during render, not in an effect (avoids a cascading-render lint).
+   const [wasSelected, setWasSelected] = useState(isSelected);
+   if (wasSelected !== isSelected) {
+      setWasSelected(isSelected);
+      if (!isSelected) { setStyleOpen(false); setSizingOpen(false); }
+   }
+
+   const hasStyle = !!content.frame || !!content.border || !!content.shadow || !!content.filter
+      || (content.opacity !== undefined && content.opacity !== 1)
+      || (content.brightness !== undefined && content.brightness !== 1);
+   const styleActive = styleOpen || isMasked || hasStyle;
+
    return (
       <div className={cn('relative h-full w-full', !isMasked && !content.frame && 'bg-muted')}>
          {showSpinner ? (
@@ -106,6 +128,30 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
             </div>
          )}
 
+         {/* Style + sizing popovers anchor to THIS box (an inset overlay) so they open beside the image; the
+             toolbar toggles control them. Only while selected + loaded. */}
+         {url && !showSpinner && isSelected && (
+            <>
+               <ImageStylePopover
+                  open={styleOpen}
+                  onOpenChange={setStyleOpen}
+                  toggleRef={styleBtnRef}
+                  content={content}
+                  onChange={onContentChange}
+                  isMasked={isMasked}
+                  onOpenMask={() => stencil.open(content)}
+               />
+               <ImageSizingPopover
+                  open={sizingOpen}
+                  onOpenChange={setSizingOpen}
+                  toggleRef={sizingBtnRef}
+                  content={content}
+                  onChange={onContentChange}
+                  onAspect={(ratio) => onResize(aspectResize(item.width, ratio))}
+               />
+            </>
+         )}
+
          {/* Image actions live in the selection toolbar (the body is content only). They
              portal into the bar's slot so their logic stays co-located with this item. */}
          {url && !showSpinner && isSelected && toolbarSlot && createPortal(
@@ -113,8 +159,28 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
                <ImageControl title={t('BoardView.imageChange')} onClick={openPicker}>
                   <ImageIcon className="h-4 w-4" />
                </ImageControl>
-               <ImageStylePopover content={content} onChange={onContentChange} isMasked={isMasked} onOpenMask={() => stencil.open(content)} />
-               <ImageSizingPopover content={content} onChange={onContentChange} onAspect={(ratio) => onResize(aspectResize(item.width, ratio))} />
+               <button
+                  ref={styleBtnRef}
+                  type="button"
+                  title={t('BoardView.imageStyle')}
+                  aria-label={t('BoardView.imageStyle')}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => setStyleOpen((open) => !open)}
+                  className={cn(IMAGE_TOOLBAR_BUTTON_CLASS, styleActive && 'ring-1 ring-primary')}
+               >
+                  <Palette className="h-4 w-4" />
+               </button>
+               <button
+                  ref={sizingBtnRef}
+                  type="button"
+                  title={t('BoardView.imageSizing')}
+                  aria-label={t('BoardView.imageSizing')}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => setSizingOpen((open) => !open)}
+                  className={cn(IMAGE_TOOLBAR_BUTTON_CLASS, sizingOpen && 'ring-1 ring-primary')}
+               >
+                  <Proportions className="h-4 w-4" />
+               </button>
                <ImageControl title={t('BoardView.saveItemToDrawerAs')} onClick={saveImageToDrawer}>
                   <SaveAll className="h-4 w-4" />
                </ImageControl>
