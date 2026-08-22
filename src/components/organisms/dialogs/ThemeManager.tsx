@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 // -- Library Imports --
 import toast from 'react-hot-toast';
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { useDesktopDragSensors } from '@/hooks/useDesktopDragSensors';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Basic UI Imports --
@@ -80,10 +81,7 @@ export function ThemeManager({ onEnterEditor }: { onEnterEditor?: () => void } =
 
    // A LOCAL drag context, scoped to this window's customs list - never the app-wide character/board DnD.
    // The small activation distance lets a click (select) or a grip tap fire without starting a drag.
-   const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-      useSensor(KeyboardSensor),
-   );
+   const sensors = useDesktopDragSensors();
    const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
       if (over && active.id !== over.id) reorderCustomThemes(String(active.id), String(over.id));

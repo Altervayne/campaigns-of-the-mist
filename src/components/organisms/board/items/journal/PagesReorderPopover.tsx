@@ -2,7 +2,8 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
 // -- Library Imports --
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { useDesktopDragSensors } from '@/hooks/useDesktopDragSensors';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // -- Icon Imports --
@@ -51,10 +52,7 @@ export function PagesReorderPopover({
    onJump: (pageId: string) => void;
 }) {
    // A small activation distance lets a plain click (jump) fire without starting a drag on the grip.
-   const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-      useSensor(KeyboardSensor),
-   );
+   const sensors = useDesktopDragSensors();
    const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
       if (over && active.id !== over.id) onReorder(String(active.id), String(over.id));

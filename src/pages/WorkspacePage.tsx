@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Custom Hooks --
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useDesktopDragSensors } from '@/hooks/useDesktopDragSensors';
 import { useCharacterSheetDnD } from '@/hooks/character-sheet/useCharacterSheetDnD';
 import { useSheetZoomShortcuts } from '@/hooks/character-sheet/useSheetZoomShortcuts';
 import { useCharacterSheetFileImport } from '@/hooks/character-sheet/useCharacterSheetFileImport';
@@ -15,7 +16,7 @@ import { useNavigatorShortcut } from '@/hooks/character-sheet/useNavigatorShortc
 import { useSheetChromeState } from '@/hooks/character-sheet/useSheetChromeState';
 
 // -- Other Library Imports --
-import { DndContext, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, MeasuringStrategy } from '@dnd-kit/core';
 import { AnimatePresence } from 'framer-motion';
 
 // -- Utils Imports --
@@ -127,13 +128,11 @@ function DesktopWorkspacePage() {
       renderCluster,
    } = useCharacterSheetDnD();
 
-   // One sensor config for every sheet drag (tabs, cards, trackers, drawer). The 5px
-   // activation distance lets a tab single-click still activate/close while a drag
-   // past the threshold reorders; the KeyboardSensor preserves the default a11y drag.
-   const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-      useSensor(KeyboardSensor),
-   );
+   // One sensor config for every sheet drag (tabs, cards, trackers, drawer). Fine pointer: a 5px
+   // activation distance lets a tab single-click still activate/close while a drag past the threshold
+   // reorders. Coarse pointer (touch tablet): a press-and-hold arms the drag so a quick touch-move
+   // scrolls the drawer/list instead of dragging a row. KeyboardSensor preserves the a11y drag.
+   const sensors = useDesktopDragSensors();
 
 
    // #########################################
