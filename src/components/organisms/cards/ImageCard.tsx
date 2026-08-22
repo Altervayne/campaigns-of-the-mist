@@ -23,7 +23,7 @@ import { ToolbarHandle } from '@/components/molecules/ToolbarHandle';
 // -- Store and Hook Imports --
 import { useCharacterActions } from '@/lib/stores/characterStore';
 import { getActiveSheetZoom } from '@/lib/character/tabManagerStore';
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
 import { useImageUpload } from '@/hooks/useImageUpload';
 
@@ -60,7 +60,7 @@ const ImageCardContent = React.memo(
          const actions = useCharacterActions();
          const details = card.details as ImageCardDetails;
 
-         const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
+         const { isRevealed, revealHandlers } = useToolbarReveal(card.id, isDrawerPreview);
          const { url, isLoading } = useAssetObjectUrl(details.assetId);
          const { fileInputRef, open: openPicker, isProcessing, handleFileSelected, cropperDialog } = useImageUpload(
             (hash) => actions.setCardImage(card.id, hash),
@@ -206,7 +206,7 @@ const ImageCardContent = React.memo(
                {/* On-image controls. Resize/change/remove are edit-only; the raw-image
                    download is available in play mode too, revealed on hover so it never
                    covers the art (edit mode keeps them all visible). */}
-               {!isSnapshot && !isDrawerPreview && !showSpinner && (interactive || (url && isHovered)) && (
+               {!isSnapshot && !isDrawerPreview && !showSpinner && (interactive || (url && isRevealed)) && (
                   <div className="absolute right-2 top-2 flex gap-1">
                      {canResize && (
                         <DropdownMenu>
@@ -293,11 +293,11 @@ const ImageCardContent = React.memo(
          );
 
          return (
-            <motion.div ref={ref} {...hoverHandlers} className="relative">
+            <motion.div ref={ref} {...revealHandlers} className="relative">
                {!isDrawerPreview && !isSnapshot && !isBoardEmbed && (
                   <ToolbarHandle
                      isEditing={isEditing}
-                     isHovered={isHovered}
+                     isHovered={isRevealed}
                      dragAttributes={dragAttributes}
                      dragListeners={dragListeners}
                      onDelete={() => actions.deleteCard(card.id)}

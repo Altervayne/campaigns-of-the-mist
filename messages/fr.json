@@ -240,6 +240,8 @@
       "rollTableDisplayModeLabel": "Mode d'affichage",
       "emptyTitle": "Ce tableau est vide",
       "emptyHint": "Ajoutez des éléments depuis la palette, ou glissez en un depuis votre tiroir",
+      "touchNoticeTitle": "[TO COMPLETE]",
+      "touchNoticeBody": "[TO COMPLETE]",
       "returnToOrigin": "Recentrer la vue",
       "fitToContent": "Ajuster au contenu",
       "scrollLeft": "Défiler à gauche",

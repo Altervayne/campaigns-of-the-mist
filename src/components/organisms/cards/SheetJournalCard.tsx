@@ -9,7 +9,7 @@ import { JournalItem } from '@/components/organisms/board/items/JournalItem';
 import { ToolbarHandle, TOOLBAR_ACTION_BUTTON_CLASS } from '@/components/molecules/ToolbarHandle';
 
 // -- Hook Imports --
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useSheetMentionCreate } from '@/hooks/character-sheet/useSheetMentionCreate';
 
 // -- Store Imports --
@@ -55,7 +55,7 @@ const SHEET_HOST_RECT: BoardItem = { id: '', kind: 'journal', z: 0, x: 0, y: 0, 
 
 export function SheetJournalCard({ journal, isEditing, onExport, dragAttributes, dragListeners }: SheetJournalCardProps) {
    const { updateJournal, removeJournal } = useCharacterActions();
-   const { isHovered, hoverHandlers } = useToolbarHover();
+   const { isRevealed, revealHandlers } = useToolbarReveal(journal.id);
    // A tapped mention in the page create-or-raises a status / de-dupes a tag on the active character.
    const handleMentionClick = useSheetMentionCreate();
 
@@ -69,10 +69,10 @@ export function SheetJournalCard({ journal, isEditing, onExport, dragAttributes,
    };
 
    return (
-      <motion.div {...hoverHandlers} className="relative">
+      <motion.div {...revealHandlers} className="relative">
          <ToolbarHandle
             isEditing={isEditing}
-            isHovered={isHovered}
+            isHovered={isRevealed}
             dragAttributes={dragAttributes}
             dragListeners={dragListeners}
             onDelete={() => removeJournal(journal.id)}

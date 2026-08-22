@@ -24,7 +24,7 @@ import { TagItem } from '@/components/molecules/TagItem';
 // -- Store and Hook Imports --
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useManualScroll } from '@/hooks/useManualScroll';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 
@@ -49,7 +49,7 @@ interface StoryThemeTrackerCardProps {
 export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPreview = false, isBoardEmbed = false, dragAttributes, dragListeners, onExport }: StoryThemeTrackerCardProps) {
    const { t: tThemeCard } = useTranslation();
    const actions = useCharacterActions();
-   const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
+   const { isRevealed, revealHandlers } = useToolbarReveal(tracker.id, isDrawerPreview);
    const scrollRef = useRef<HTMLDivElement>(null);
    useManualScroll(scrollRef);
 
@@ -87,13 +87,13 @@ export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPrev
 
    return (
       <motion.div
-         {...hoverHandlers}
+         {...revealHandlers}
          className="relative"
       >
          { !isDrawerPreview && !isBoardEmbed &&
             <ToolbarHandle
                isEditing={isEffectivelyEditing}
-               isHovered={isHovered}
+               isHovered={isRevealed}
                dragAttributes={dragAttributes}
                dragListeners={dragListeners}
                onDelete={() => actions.removeStoryTheme(tracker.id)}
@@ -105,7 +105,7 @@ export function StoryThemeTrackerCard({ tracker, isEditing = false, isDrawerPrev
          }
 
          <div className={cn(
-            isHovered ? "z-1" : "z-0",
+            isRevealed ? "z-1" : "z-0",
             "relative z-0 flex flex-col h-55 w-62.5 border-2 rounded-lg overflow-hidden",
             cardTheme,
             "border-card-border bg-card-paper-bg text-card-paper-fg",

@@ -240,6 +240,8 @@
       "rollTableDisplayModeLabel": "Display mode",
       "emptyTitle": "This board is empty",
       "emptyHint": "Add items from the palette, or drag an item from the drawer",
+      "touchNoticeTitle": "Boards aren't ready for touch yet",
+      "touchNoticeBody": "Open this board on a computer, or use a mouse or trackpad.",
       "returnToOrigin": "Reset view",
       "fitToContent": "Fit to content",
       "scrollLeft": "Scroll left",

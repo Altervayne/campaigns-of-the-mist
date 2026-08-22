@@ -24,7 +24,7 @@ import { ExpandedChallengeSheet } from '@/components/organisms/cards/ExpandedCha
 // -- Store and Hook Imports --
 import { useCharacterActions } from '@/lib/stores/characterStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
 import { useAssetObjectUrl } from '@/hooks/useAssetObjectUrl';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
@@ -56,7 +56,7 @@ export const ChallengeCard = React.memo(
          const details = card.details as SharedChallengeDetails;
          const cardThemeClass = challengePaletteClass(details.game);
 
-         const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
+         const { isRevealed, revealHandlers } = useToolbarReveal(card.id, isDrawerPreview);
          const { url } = useAssetObjectUrl(details.assetId);
 
          const globalCardViewMode = useAppSettingsStore((state) => state.isSideBySideView ? 'SIDE_BY_SIDE' : 'FLIP');
@@ -469,8 +469,8 @@ export const ChallengeCard = React.memo(
                isSnapshot={isSnapshot}
                useVerticalStack={useVerticalStack}
                card={card}
-               isHovered={isHovered}
-               hoverHandlers={hoverHandlers}
+               isRevealed={isRevealed}
+               revealHandlers={revealHandlers}
                isEditing={isEditing}
                dragAttributes={dragAttributes}
                dragListeners={dragListeners}

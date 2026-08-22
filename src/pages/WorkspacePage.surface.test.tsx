@@ -81,7 +81,11 @@ vi.mock('@/lib/character/tabManagerStore', () => ({
 }));
 
 // The desktop fork; the mobile shell is its own page.
-vi.mock('@/hooks/useDeviceType', () => ({ useDeviceType: () => ({ isMobile: false, deviceType: 'desktop' }) }));
+vi.mock('@/hooks/useDeviceType', () => ({
+   useDeviceType: () => ({ isMobile: false, deviceType: 'desktop' }),
+   detectFormFactor: () => 'desktop',
+   detectPointer: () => 'fine',
+}));
 // Echo the i18n key instead of standing up a provider - the shell only reads a placeholder here.
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 

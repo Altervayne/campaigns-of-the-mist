@@ -22,7 +22,7 @@ import { ToolbarHandle } from '@/components/molecules/ToolbarHandle';
 // -- Store and Hook Imports --
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 
 // -- Type Imports --
@@ -46,7 +46,7 @@ interface StatusTrackerCardProps {
 export function StatusTrackerCard({ tracker, isEditing=false, isDrawerPreview, isBoardEmbed=false, dragAttributes, dragListeners, onExport }: StatusTrackerCardProps) {
    const { t: t } = useTranslation();
    const { updateStatus, removeStatus } = useCharacterActions();
-   const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
+   const { isRevealed, revealHandlers } = useToolbarReveal(tracker.id, isDrawerPreview);
 
    const isTrackersAlwaysEditable = useAppSettingsStore((s) => s.isTrackersAlwaysEditable);
    const isEffectivelyEditing = isEditing || isTrackersAlwaysEditable;
@@ -87,13 +87,13 @@ export function StatusTrackerCard({ tracker, isEditing=false, isDrawerPreview, i
    
    return (
       <motion.div
-         {...hoverHandlers}
+         {...revealHandlers}
          className="relative"
       >
          {!isDrawerPreview && !isBoardEmbed && (
             <ToolbarHandle
                isEditing={isEffectivelyEditing}
-               isHovered={isHovered}
+               isHovered={isRevealed}
                dragAttributes={dragAttributes}
                dragListeners={dragListeners}
                onExport={onExport}
@@ -103,7 +103,7 @@ export function StatusTrackerCard({ tracker, isEditing=false, isDrawerPreview, i
          )}
 
          <div className={cn(
-            isHovered ? "z-1" : "z-0",
+            isRevealed ? "z-1" : "z-0",
             "relative z-0 flex flex-col h-25 w-55 border-2 rounded-lg overflow-hidden",
             {"pointer-events-none shadow-none border-2 border-border": isDrawerPreview},
             cardTheme,

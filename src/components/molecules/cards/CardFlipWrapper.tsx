@@ -11,7 +11,7 @@ import { ToolbarHandle } from '@/components/molecules/ToolbarHandle';
 
 // -- Type Imports --
 import type { Card as CardData } from '@/lib/types/character';
-import type { ToolbarHoverHandlers } from '@/hooks/useToolbarHover';
+import type { ToolbarRevealHandlers } from '@/hooks/toolbarReveal';
 
 interface CardFlipWrapperProps {
   effectiveViewMode: 'FLIP' | 'SIDE_BY_SIDE';
@@ -23,9 +23,9 @@ interface CardFlipWrapperProps {
   useVerticalStack?: boolean;
   card: CardData;
 
-  // Hover
-  isHovered: boolean;
-  hoverHandlers: ToolbarHoverHandlers;
+  // Reveal (hover on a fine pointer, tap-to-select on a coarse one)
+  isRevealed: boolean;
+  revealHandlers: ToolbarRevealHandlers;
 
   // Toolbar
   isEditing: boolean;
@@ -58,8 +58,8 @@ interface CardFlipWrapperProps {
  *     effectiveViewMode={effectiveViewMode}
  *     isDrawerPreview={isDrawerPreview}
  *     card={card}
- *     isHovered={isHovered}
- *     hoverHandlers={hoverHandlers}
+ *     isRevealed={isRevealed}
+ *     revealHandlers={revealHandlers}
  *     isEditing={isEditing}
  *     cardTheme="card-type-hero"
  *     onFlip={() => actions.flipCard(card.id)}
@@ -71,7 +71,7 @@ interface CardFlipWrapperProps {
  * ```
  */
 export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperProps>(
-  ({ effectiveViewMode, isDrawerPreview, isBoardEmbed = false, useVerticalStack, card, isHovered, hoverHandlers,
+  ({ effectiveViewMode, isDrawerPreview, isBoardEmbed = false, useVerticalStack, card, isRevealed, revealHandlers,
      isEditing, dragAttributes, dragListeners, cardTheme, onExport, onCycleViewMode,
      onFlip, onDelete, onEditCard, cardFront, cardBack }, ref) => {
 
@@ -81,11 +81,11 @@ export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperP
 
     if (viewMode === 'SIDE_BY_SIDE' && !isDrawerPreview) {
       return (
-        <motion.div ref={ref} {...hoverHandlers} className="relative">
+        <motion.div ref={ref} {...revealHandlers} className="relative">
           {!isBoardEmbed && (
             <ToolbarHandle
               isEditing={isEditing}
-              isHovered={isHovered}
+              isHovered={isRevealed}
               dragAttributes={dragAttributes}
               dragListeners={dragListeners}
               onDelete={onDelete}
@@ -105,7 +105,7 @@ export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperP
     }
 
     return (
-      <motion.div ref={ref} {...hoverHandlers} className="relative">
+      <motion.div ref={ref} {...revealHandlers} className="relative">
         <motion.div
           className="w-full h-full"
           style={{ transformStyle: 'preserve-3d' }}
@@ -121,7 +121,7 @@ export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperP
           {!isDrawerPreview && !isBoardEmbed && (
             <ToolbarHandle
               isEditing={isEditing}
-              isHovered={isHovered}
+              isHovered={isRevealed}
               onFlip={onFlip}
               onDelete={onDelete}
               onEditCard={onEditCard}

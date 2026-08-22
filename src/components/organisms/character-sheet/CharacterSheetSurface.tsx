@@ -6,6 +6,7 @@ import { CharacterNameHeader } from '@/components/molecules/CharacterNameHeader'
 import { SheetMainDropZone } from '@/components/organisms/SheetMainDropZone';
 import { TrackersSection } from '@/components/organisms/TrackersSection';
 import { CardsSection } from '@/components/organisms/CardsSection';
+import { SheetToolbarRevealProvider } from '@/components/providers/SheetToolbarRevealProvider';
 
 // -- Type Imports --
 import type { Card as CardData, Character, Tracker } from '@/lib/types/character';
@@ -57,32 +58,34 @@ export function CharacterSheetSurface({ scrollRef, character, namePlaceholder, o
              them (a transform would clip the bottom). The name header above stays unscaled. */}
          <div className="flex-1 p-4 md:p-8" style={sheetZoom === 1 ? undefined : { zoom: sheetZoom }}>
             <SheetMainDropZone>
-               <TrackersSection
-                  character={character}
-                  isEditing={isEditing}
-                  areTrackersEditable={areTrackersEditable}
-                  onExport={onExportComponent}
-                  onAddStatus={onAddStatus}
-                  onAddStoryTag={onAddStoryTag}
-                  statusIds={statusIds}
-                  storyTagIds={storyTagIds}
-                  storyThemeIds={storyThemeIds}
-                  isDropTarget={sheetHighlight === 'trackers'}
-                  scale={sheetZoom}
-               />
+               <SheetToolbarRevealProvider>
+                  <TrackersSection
+                     character={character}
+                     isEditing={isEditing}
+                     areTrackersEditable={areTrackersEditable}
+                     onExport={onExportComponent}
+                     onAddStatus={onAddStatus}
+                     onAddStoryTag={onAddStoryTag}
+                     statusIds={statusIds}
+                     storyTagIds={storyTagIds}
+                     storyThemeIds={storyThemeIds}
+                     isDropTarget={sheetHighlight === 'trackers'}
+                     scale={sheetZoom}
+                  />
 
-               <CardsSection
-                  character={character}
-                  isEditing={isEditing}
-                  onExport={onExportComponent}
-                  onEditCard={onEditCard}
-                  onAddCard={onAddCard}
-                  onAddPortrait={onAddPortrait}
-                  onAddChallenge={onAddChallenge}
-                  onAddJournal={onAddJournal}
-                  isDropTarget={sheetHighlight === 'cards'}
-                  scale={sheetZoom}
-               />
+                  <CardsSection
+                     character={character}
+                     isEditing={isEditing}
+                     onExport={onExportComponent}
+                     onEditCard={onEditCard}
+                     onAddCard={onAddCard}
+                     onAddPortrait={onAddPortrait}
+                     onAddChallenge={onAddChallenge}
+                     onAddJournal={onAddJournal}
+                     isDropTarget={sheetHighlight === 'cards'}
+                     scale={sheetZoom}
+                  />
+               </SheetToolbarRevealProvider>
             </SheetMainDropZone>
          </div>
       </main>

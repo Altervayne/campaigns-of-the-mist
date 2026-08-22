@@ -24,7 +24,7 @@ import { CardFlipWrapper } from '@/components/molecules/cards/CardFlipWrapper';
 import { useCharacterActions } from '@/lib/stores/characterStore';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useManualScroll } from '@/hooks/useManualScroll';
-import { useToolbarHover } from '@/hooks/useToolbarHover';
+import { useToolbarReveal } from '@/hooks/toolbarReveal';
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
 import { useCardViewMode } from '@/hooks/useCardViewMode';
 
@@ -58,7 +58,7 @@ const OtherscapeCharacterCardContent = React.memo(
       const actions = useCharacterActions();
       const details = card.details as OtherscapeCharacterDetails;
 
-      const { isHovered, hoverHandlers } = useToolbarHover(isDrawerPreview);
+      const { isRevealed, revealHandlers } = useToolbarReveal(card.id, isDrawerPreview);
 
       const globalCardViewMode = useAppSettingsStore((state) => state.isSideBySideView ? 'SIDE_BY_SIDE' : 'FLIP');
       const effectiveViewMode = useMemo(() => card.viewMode || globalCardViewMode, [card.viewMode, globalCardViewMode]);
@@ -443,8 +443,8 @@ const OtherscapeCharacterCardContent = React.memo(
             isSnapshot={isSnapshot}
             useVerticalStack={useVerticalStack}
             card={card}
-            isHovered={isHovered}
-            hoverHandlers={hoverHandlers}
+            isRevealed={isRevealed}
+            revealHandlers={revealHandlers}
             isEditing={isEditing}
             dragAttributes={dragAttributes}
             dragListeners={dragListeners}
