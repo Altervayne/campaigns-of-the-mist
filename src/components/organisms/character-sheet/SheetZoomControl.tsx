@@ -37,18 +37,18 @@ export function SheetZoomControl() {
             title={t('SheetZoom.zoomOut')}
             aria-label={t('SheetZoom.zoomOut')}
             className={cn(
-               'flex size-6 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',
+               'flex size-6 coarse:size-11 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',
                'disabled:pointer-events-none disabled:opacity-40',
             )}
          >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-4 w-4 coarse:h-5 coarse:w-5" />
          </button>
          <button
             type="button"
             onClick={() => setTabZoom(activeTabId, DEFAULT_SHEET_ZOOM)}
             title={t('SheetZoom.reset')}
             aria-label={t('SheetZoom.reset')}
-            className="min-w-12 shrink-0 rounded px-1 py-0.5 text-xs tabular-nums text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+            className="min-w-12 coarse:min-h-11 coarse:px-3 coarse:text-sm shrink-0 rounded px-1 py-0.5 text-xs tabular-nums text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
          >
             {Math.round(zoom * 100)}%
          </button>
@@ -59,11 +59,11 @@ export function SheetZoomControl() {
             title={t('SheetZoom.zoomIn')}
             aria-label={t('SheetZoom.zoomIn')}
             className={cn(
-               'flex size-6 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',
+               'flex size-6 coarse:size-11 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',
                'disabled:pointer-events-none disabled:opacity-40',
             )}
          >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 coarse:h-5 coarse:w-5" />
          </button>
       </div>
    );

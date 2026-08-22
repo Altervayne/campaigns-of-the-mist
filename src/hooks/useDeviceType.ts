@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { BREAKPOINT_TABLET, BREAKPOINT_DESK } from '@/lib/breakpoints';
+import { BREAKPOINT_TABLET, BREAKPOINT_DESK, TABLET_PORTRAIT_FALLBACK } from '@/lib/breakpoints';
 
 export type DeviceType = 'mobile' | 'desktop';
 
@@ -123,8 +123,23 @@ export function getEffectiveFormFactor(): FormFactor {
 	return override ?? detectFormFactor();
 }
 
-// Auto-detect device type
+// A width-routed tablet is the Auto base case whose base regime is chosen by width
+// rather than by UA: a genuine touch tablet. Gated on a coarse primary pointer so a
+// fine-pointer desktop windowed into the tablet width band (or a touchscreen laptop)
+// keeps its unchanged desktop-vs-mobile base.
+function isWidthRoutedTablet(): boolean {
+	return detectFormFactor() === 'tablet' && detectPointer() === 'coarse';
+}
+
+// Auto-detect device type. A detected tablet routes by width: wide/landscape gets the
+// adapted desktop tree, narrow portrait falls to the phone tree. Every other device
+// keeps the original UA + touch + width detection unchanged.
 function detectDeviceType(): DeviceType {
+	if (isWidthRoutedTablet()) {
+		const width = typeof window === 'undefined' ? 0 : window.innerWidth;
+		return width >= TABLET_PORTRAIT_FALLBACK ? 'desktop' : 'mobile';
+	}
+
 	const isUserAgentMobile = isMobileUserAgent();
 	const hasTouch = hasTouchCapability();
 	const isSmallScreen = isMobileScreenWidth();
@@ -145,13 +160,18 @@ export function useDeviceType(): UseDeviceTypeResult {
 
 	const [detectedDeviceType, setDetectedDeviceType] = useState<DeviceType>(() => detectDeviceType());
 
-	// Re-detect on window resize (debounced)
+	// Re-detect on window resize (debounced). A width-routed tablet freezes its base
+	// here: rotating across the portrait boundary must reflow the mounted tree, not
+	// remount it (board/note edit buffers flush on unmount with no onBlur). Boot picks
+	// the tablet base once; a reload re-decides by current width. Non-tablet devices
+	// re-detect as before, preserving the desktop<->mobile flip + its safety net.
 	useEffect(() => {
 		let timeoutId: ReturnType<typeof setTimeout>;
 
 		const handleResize = () => {
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(() => {
+				if (isWidthRoutedTablet()) return;
 				setDetectedDeviceType(detectDeviceType());
 			}, 200);
 		};

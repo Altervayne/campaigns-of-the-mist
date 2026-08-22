@@ -88,12 +88,12 @@ const variants: sideVariants = {
  * (not the card paper's) so the icons stay readable on the toolbar surface for any paper color; the dark
  * override stops the outline variant's `dark:bg-input` from clobbering the base fill.
  */
-export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 cursor-pointer bg-card-popover-bg text-card-popover-fg dark:bg-card-popover-bg";
+export const TOOLBAR_ACTION_BUTTON_CLASS = "h-7 w-7 coarse:h-11 coarse:w-11 cursor-pointer bg-card-popover-bg text-card-popover-fg dark:bg-card-popover-bg";
 
 export const ViewModeIcon = ({ mode }: { mode: CardViewMode | null | undefined }) => {
-   if (mode === 'SIDE_BY_SIDE') return <BookOpen className="h-4 w-4" />;
-   if (mode === 'FLIP') return <FlipHorizontal className="h-4 w-4" />;
-   return <Globe className="h-4 w-4" />;
+   if (mode === 'SIDE_BY_SIDE') return <BookOpen className="h-4 w-4 coarse:h-5 coarse:w-5" />;
+   if (mode === 'FLIP') return <FlipHorizontal className="h-4 w-4 coarse:h-5 coarse:w-5" />;
+   return <Globe className="h-4 w-4 coarse:h-5 coarse:w-5" />;
 };
 
 const ViewModeTooltip = ({ mode }: { mode: CardViewMode | null | undefined }) => {
@@ -125,10 +125,12 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                   "absolute flex items-center justify-center",
                   (side === 'left' || side === 'right') && "top-0 h-full flex-col",
                   (side === 'top' || side === 'bottom') && "left-1/2 -translate-x-1/2 w-auto flex-row",
-                  side === 'left' && "-left-9.5",
-                  side === 'right' && "-right-9.5",
-                  side === 'top' && "-top-9.5",
-                  side === 'bottom' && "-bottom-9.5",
+                  // Off-card offset equals the toolbar's cross-axis size so its inner edge sits flush to
+                  // the card: fine 38px (28 button + 8 padding + 2 border), coarse 54px (44 + 8 + 2).
+                  side === 'left' && "-left-9.5 coarse:-left-13.5",
+                  side === 'right' && "-right-9.5 coarse:-right-13.5",
+                  side === 'top' && "-top-9.5 coarse:-top-13.5",
+                  side === 'bottom' && "-bottom-9.5 coarse:-bottom-13.5",
                   cardTheme
                )}
             >
@@ -148,7 +150,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onFlip}
                      >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="h-4 w-4 coarse:h-5 coarse:w-5" />
                      </Button>
                   )}
 
@@ -159,7 +161,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onEditCard}
                      >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className="h-4 w-4 coarse:h-5 coarse:w-5" />
                      </Button>
                   )}
 
@@ -170,11 +172,11 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onExport}
                      >
-                        <Upload className="h-4 w-4" />
+                        <Upload className="h-4 w-4 coarse:h-5 coarse:w-5" />
                      </Button>
                   )}
 
-                  <div className="flex items-center justify-center cursor-grab text-card-popover-fg h-7 w-7" {...dragAttributes} {...dragListeners}>
+                  <div className="flex items-center justify-center cursor-grab text-card-popover-fg h-7 w-7 coarse:h-11 coarse:w-11" {...dragAttributes} {...dragListeners}>
                      { side === "left" || side === "right" ? <GripVertical /> : <GripHorizontal /> }
                   </div>
 
@@ -191,7 +193,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         onClick={onStoryTagNegative}
                      >
                         {
-                           isStoryTagNegative ? <ThumbsDown className="h-4 w-4" /> : <ThumbsUp className="h-4 w-4" />
+                           isStoryTagNegative ? <ThumbsDown className="h-4 w-4 coarse:h-5 coarse:w-5" /> : <ThumbsUp className="h-4 w-4 coarse:h-5 coarse:w-5" />
                         }
                      </Button>
                   )}
@@ -203,7 +205,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onUpgradeStoryTag}
                      >
-                        <BookPlus className="h-4 w-4"/>
+                        <BookPlus className="h-4 w-4 coarse:h-5 coarse:w-5"/>
                      </Button>
                   )}
 
@@ -214,7 +216,7 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                         className={TOOLBAR_ACTION_BUTTON_CLASS}
                         onClick={onDowngradeStoryTheme}
                      >
-                        <BookMinus className="h-4 w-4"/>
+                        <BookMinus className="h-4 w-4 coarse:h-5 coarse:w-5"/>
                      </Button>
                   )}
 
@@ -238,10 +240,10 @@ export function ToolbarHandle({ isEditing, isHovered, cardTheme, onDelete,
                      <Button 
                         variant="destructive" 
                         size="icon" 
-                        className="h-7 w-7 cursor-pointer border border-card-border hover:bg-destructive/60"
+                        className="h-7 w-7 coarse:h-11 coarse:w-11 cursor-pointer border border-card-border hover:bg-destructive/60"
                         onClick={onDelete}
                      >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 coarse:h-5 coarse:w-5" />
                      </Button>
                   }
                </div>

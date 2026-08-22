@@ -2,9 +2,10 @@
 
 // -- Library Imports --
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, renderHook } from '@testing-library/react';
 
 // -- Local Imports --
-import { detectFormFactor, detectPointer } from './useDeviceType';
+import { detectFormFactor, detectPointer, getEffectiveDeviceType, useDeviceType } from './useDeviceType';
 import { BREAKPOINT_TABLET, BREAKPOINT_DESK, TABLET_PORTRAIT_FALLBACK } from '@/lib/breakpoints';
 
 /*
@@ -31,8 +32,11 @@ function stubMatchMedia(matching: Record<string, boolean>): void {
 }
 
 const GENERIC_DESKTOP_UA = 'mozilla/5.0 (windows nt 10.0; win64; x64)';
+const ANDROID_TABLET_UA = 'mozilla/5.0 (linux; android 13; sm-x700)';
 
 afterEach(() => {
+	cleanup();
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 });
 
@@ -103,5 +107,97 @@ describe('breakpoint constants', () => {
 		expect(BREAKPOINT_TABLET).toBe(768);
 		expect(BREAKPOINT_DESK).toBe(1024);
 		expect(TABLET_PORTRAIT_FALLBACK).toBe(820);
+	});
+});
+
+// Auto base routing (no override): a detected coarse tablet routes by width around the
+// portrait fallback; every non-tablet device keeps the original 2.0 detection.
+describe('base routing for a detected tablet', () => {
+	function coarseTablet(userAgent: string, width: number): void {
+		stubNavigator(userAgent, 5);
+		stubMatchMedia({ '(pointer: coarse)': true });
+		setWidth(width);
+	}
+
+	it('routes a wide coarse tablet to the desktop base', () => {
+		coarseTablet(ANDROID_TABLET_UA, TABLET_PORTRAIT_FALLBACK);
+		expect(getEffectiveDeviceType()).toBe('desktop');
+	});
+
+	it('routes a narrow-portrait coarse tablet to the mobile base', () => {
+		coarseTablet(ANDROID_TABLET_UA, TABLET_PORTRAIT_FALLBACK - 1);
+		expect(getEffectiveDeviceType()).toBe('mobile');
+	});
+
+	it('routes an iPad (Macintosh UA) by width on both sides of the fallback', () => {
+		const iPadUA = 'mozilla/5.0 (macintosh; intel mac os x 10_15_7)';
+		coarseTablet(iPadUA, 1024);
+		expect(getEffectiveDeviceType()).toBe('desktop');
+
+		coarseTablet(iPadUA, 800);
+		expect(getEffectiveDeviceType()).toBe('mobile');
+	});
+
+	it('leaves a fine-pointer desktop windowed into the tablet band on the desktop base', () => {
+		// Width alone reads as the tablet band, but a fine pointer means this is a real
+		// desktop, not a tablet: the base must stay desktop, unchanged from 2.0.
+		stubNavigator(GENERIC_DESKTOP_UA, 0);
+		stubMatchMedia({ '(pointer: coarse)': false, '(hover: none)': false });
+		setWidth(800);
+		expect(getEffectiveDeviceType()).toBe('desktop');
+	});
+
+	it('keeps phones on the mobile base regardless of width', () => {
+		stubNavigator('mozilla/5.0 (iphone; cpu iphone os 17_0)', 5);
+		stubMatchMedia({ '(pointer: coarse)': true });
+		setWidth(900);
+		expect(getEffectiveDeviceType()).toBe('mobile');
+
+		stubNavigator('mozilla/5.0 (linux; android 13; pixel 7 mobile)', 5);
+		expect(getEffectiveDeviceType()).toBe('mobile');
+	});
+});
+
+// The live hook freezes a tablet's base so a rotation across the portrait fallback
+// reflows the mounted tree instead of remounting it; non-tablet devices still re-detect.
+describe('useDeviceType tablet base freeze', () => {
+	function resizeTo(width: number): void {
+		act(() => {
+			setWidth(width);
+			window.dispatchEvent(new Event('resize'));
+		});
+		act(() => {
+			vi.advanceTimersByTime(200);
+		});
+	}
+
+	it('does not re-flip a coarse tablet rotated below the fallback', () => {
+		vi.useFakeTimers();
+		stubNavigator(ANDROID_TABLET_UA, 5);
+		stubMatchMedia({ '(pointer: coarse)': true });
+		setWidth(1000);
+
+		const { result } = renderHook(() => useDeviceType());
+		expect(result.current.isDesktop).toBe(true);
+
+		resizeTo(800);
+
+		// The pure decision would flip to mobile at this width; the live hook stays frozen.
+		expect(getEffectiveDeviceType()).toBe('mobile');
+		expect(result.current.isDesktop).toBe(true);
+		expect(result.current.isMobile).toBe(false);
+	});
+
+	it('still re-detects a non-tablet device across the 768 boundary', () => {
+		vi.useFakeTimers();
+		stubNavigator(GENERIC_DESKTOP_UA, 1);
+		stubMatchMedia({ '(pointer: coarse)': false, '(hover: none)': false });
+		setWidth(700);
+
+		const { result } = renderHook(() => useDeviceType());
+		expect(result.current.isMobile).toBe(true);
+
+		resizeTo(900);
+		expect(result.current.isDesktop).toBe(true);
 	});
 });
