@@ -188,10 +188,10 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   placeholder={t('SettingsDialog.cardPalettes.renamePlaceholder')}
                   className="h-9 flex-1"
                />
-               <Button variant="default" size="icon" onClick={() => commitRename(row.id)} title={t('SettingsDialog.themes.save')} className="coarse:size-11 shrink-0 cursor-pointer">
+               <Button variant="default" size="icon" onClick={() => commitRename(row.id)} title={t('SettingsDialog.themes.save')} className="shrink-0 cursor-pointer">
                   <Check className="h-4 w-4" />
                </Button>
-               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="coarse:size-11 shrink-0 cursor-pointer">
+               <Button variant="outline" size="icon" onClick={() => setRenamingId(null)} title={t('SettingsDialog.dangerZone.resetDialog.cancel')} className="shrink-0 cursor-pointer">
                   <X className="h-4 w-4" />
                </Button>
             </div>
@@ -217,7 +217,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   onClick={(event) => event.stopPropagation()}
                   title={t('SettingsDialog.themes.reorder')}
                   aria-label={t('SettingsDialog.themes.reorder')}
-                  className="ml-1 flex h-6 w-5 coarse:size-11 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+                  className="touch-target ml-1 flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
                >
                   <GripVertical className="h-4 w-4" />
                </button>
@@ -235,7 +235,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                   onClick={(event) => { event.stopPropagation(); editCustom(row); }}
                   title={t('Common.edit')}
                   aria-label={t('Common.edit')}
-                  className={`absolute right-8 coarse:right-13 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
+                  className={`absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 shrink-0 cursor-pointer opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}
                >
                   <Pencil className="h-4 w-4" />
                </Button>
@@ -303,7 +303,7 @@ export function CardPaletteManager({ game, onEnterEditor, guardedSwitch = (proce
                         onClick={() => importInputRef.current?.click()}
                         aria-label={t('SettingsDialog.cardPalettes.importPalette')}
                         title={t('SettingsDialog.cardPalettes.importPalette')}
-                        className="h-6 w-6 coarse:size-11 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                        className="touch-target h-6 w-6 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
                      >
                         <Download className="h-3.5 w-3.5" />
                      </Button>

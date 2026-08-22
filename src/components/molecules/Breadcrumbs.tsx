@@ -30,7 +30,7 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
    const renderPart = (part: BreadcrumbEntry, isLast: boolean) => (
       <span 
          className={cn(
-            'cursor-pointer hover:text-foreground truncate coarse:flex coarse:items-center coarse:min-h-11',
+            'cursor-pointer hover:text-foreground truncate',
             isLast ? 'font-semibold text-foreground shrink-0' : 'min-w-0'
          )}
          onClick={(e) => {
@@ -44,7 +44,7 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
    );
 
    return (
-      <div className="flex items-center text-sm text-muted-foreground min-w-0 h-6 coarse:h-11">
+      <div className="flex items-center text-sm text-muted-foreground min-w-0 h-6">
          {path.length <= MAX_VISIBLE ? (
             path.map((part, index) => (
                <React.Fragment key={part.id}>
@@ -59,7 +59,7 @@ export function Breadcrumb({ path, onNavigate }: BreadcrumbProps) {
                
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                     <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer shrink-0 coarse:size-11">
+                     <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer shrink-0 touch-target">
                         <MoreHorizontal className="h-4 w-4" />
                      </Button>
                   </DropdownMenuTrigger>

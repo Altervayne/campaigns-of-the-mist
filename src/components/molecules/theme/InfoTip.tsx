@@ -31,7 +31,7 @@ export function InfoTip({ text, isMobile = false }: { text: string; isMobile?: b
    return (
       <Tooltip>
          <TooltipTrigger asChild>
-            <button type="button" tabIndex={-1} aria-label={text} className="shrink-0 cursor-help text-muted-foreground/60 hover:text-foreground coarse:flex coarse:size-9 coarse:items-center coarse:justify-center">
+            <button type="button" tabIndex={-1} aria-label={text} className="touch-target shrink-0 cursor-help text-muted-foreground/60 hover:text-foreground">
                <Info className="h-3.5 w-3.5" />
             </button>
          </TooltipTrigger>

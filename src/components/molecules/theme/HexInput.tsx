@@ -28,7 +28,7 @@ export function HexInput({ value, label, onCommit, className, isMobile = false }
          onChange={(event) => setDraft(event.target.value)}
          onBlur={commit}
          onKeyDown={(event) => { if (event.key === 'Enter') commit(); if (event.key === 'Escape') setDraft(hex); }}
-         className={cn('h-7 rounded-md border border-input bg-transparent px-1.5 font-mono text-xs tabular-nums outline-none focus:border-ring', isMobile && 'h-9 px-2 text-sm', 'coarse:h-11', className)}
+         className={cn('h-7 rounded-md border border-input bg-transparent px-1.5 font-mono text-xs tabular-nums outline-none focus:border-ring', isMobile && 'h-9 px-2 text-sm', className)}
       />
    );
 }

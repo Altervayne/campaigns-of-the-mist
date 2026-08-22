@@ -23,7 +23,7 @@ import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 /** A small square ghost button for row controls. */
 export function IconButton({ onClick, label, children }: { onClick: () => void; label: string; children: ReactNode }) {
    return (
-      <button type="button" onClick={onClick} title={label} aria-label={label} className="flex h-8 w-8 coarse:size-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
+      <button type="button" onClick={onClick} title={label} aria-label={label} className="touch-target flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
          {children}
       </button>
    );
@@ -66,7 +66,7 @@ export function MentionPreview({ text }: { text: string }) {
 export function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (value: number) => void }) {
    const set = (next: number) => onChange(Math.max(min, Math.min(max, next)));
    return (
-      <div className="flex shrink-0 items-center justify-between gap-1 coarse:gap-2 rounded-md border border-border px-1 py-0.5">
+      <div className="flex shrink-0 items-center justify-between gap-1 rounded-md border border-border px-1 py-0.5">
          <IconButton onClick={() => set(value - 1)} label="-"><Minus className="h-4 w-4" /></IconButton>
          <span className="w-7 text-center font-mono text-sm tabular-nums">{value}</span>
          <IconButton onClick={() => set(value + 1)} label="+"><Plus className="h-4 w-4" /></IconButton>

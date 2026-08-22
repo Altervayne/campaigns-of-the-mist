@@ -91,7 +91,7 @@ export function CardPaletteEditor({ palette, headerLeft, headerRight }: { palett
                            type="button"
                            onClick={() => setSlug(def.slug)}
                            className={cn(
-                              'cursor-pointer rounded-md border px-2.5 py-1 text-xs transition-colors coarse:min-h-11 coarse:py-2',
+                              'touch-target cursor-pointer rounded-md border px-2.5 py-1 text-xs transition-colors',
                               isActive
                                  ? 'border-primary bg-primary text-primary-foreground'
                                  : 'border-border bg-muted text-muted-foreground hover:text-foreground',

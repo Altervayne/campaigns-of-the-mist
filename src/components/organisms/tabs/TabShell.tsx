@@ -87,7 +87,9 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
          )}
       >
          {/* Icon + label are ONE activate/drag surface so the icon is not a dead zone:
-             the whole tab (except the X) clicks to activate and drags to reorder. */}
+             the whole tab (except the X) clicks to activate and drags to reorder. No `touch-none`:
+             it would block the strip's horizontal touch-scroll. The dnd sensor is press-and-hold on a
+             coarse pointer (a quick swipe scrolls; a hold reorders), so the browser keeps the pan. */}
          <button
             type="button"
             onClick={onActivate}
@@ -95,7 +97,7 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
             {...attributes}
             {...listeners}
             className={cn(
-               'flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pl-2 text-sm cursor-pointer text-left touch-none select-none',
+               'flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pl-2 text-sm cursor-pointer text-left select-none',
                isActive ? 'text-primary-foreground font-medium' : 'text-muted-foreground',
             )}
          >
@@ -108,8 +110,7 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
             onClick={onRequestClose}
             aria-label={t('Tabs.closeTab')}
             className={cn(
-               'shrink-0 rounded p-1 opacity-60 hover:bg-muted hover:text-foreground hover:opacity-100 cursor-pointer',
-               'coarse:flex coarse:size-11 coarse:items-center coarse:justify-center',
+               'shrink-0 rounded p-1 touch-target opacity-60 hover:bg-muted hover:text-foreground hover:opacity-100 cursor-pointer',
                isActive ? 'text-primary-foreground' : 'text-muted-foreground',
             )}
          >

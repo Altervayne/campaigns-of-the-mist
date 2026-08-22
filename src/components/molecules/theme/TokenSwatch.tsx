@@ -35,7 +35,7 @@ export function TokenSwatch({ value, label, onPick, warning, isMobile = false }:
                   type="button"
                   aria-label={label}
                   title={label}
-                  className={cn('shrink-0 rounded-md border border-border cursor-pointer', isMobile ? 'h-9 w-9' : 'h-7 w-7', 'coarse:size-11')}
+                  className={cn('shrink-0 rounded-md border border-border cursor-pointer', isMobile ? 'h-9 w-9' : 'h-7 w-7')}
                   style={{ backgroundColor: value }}
                />
             }

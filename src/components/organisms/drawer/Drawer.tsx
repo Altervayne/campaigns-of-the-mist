@@ -171,7 +171,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
                         {/* The breadcrumb is browse-only - hidden while searching (you are not in a folder). */}
                         {!isSearchActive && breadcrumbPath.length > 0 && (
                            <div className="flex items-center gap-2 mt-2">
-                              <div onClick={() => navigateToFolder(null)} className="rounded p-1 hover:bg-muted cursor-pointer shrink-0 coarse:p-2.5" role="button" aria-label={t('Drawer.backToRoot')}>
+                              <div onClick={() => navigateToFolder(null)} className="rounded p-1 hover:bg-muted cursor-pointer shrink-0 touch-target" role="button" aria-label={t('Drawer.backToRoot')}>
                                  <ArrowUpToLine className="h-4 w-4" />
                               </div>
                               <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />

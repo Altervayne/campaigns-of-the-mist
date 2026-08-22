@@ -114,7 +114,7 @@ function OutlineRows({
                   type="button"
                   onClick={() => onToggle(node.slug)}
                   aria-label={isCollapsed ? t('NoteView.outline.expand') : t('NoteView.outline.collapse')}
-                  className="relative z-10 grid h-6 w-6 coarse:size-10 shrink-0 place-items-center rounded text-muted-foreground hover:bg-foreground/10 hover:text-foreground cursor-pointer"
+                  className="relative z-10 grid h-6 w-6 touch-target shrink-0 place-items-center rounded text-muted-foreground hover:bg-foreground/10 hover:text-foreground cursor-pointer"
                >
                   <ChevronRight className={cn('h-4 w-4 transition-transform duration-150', !isCollapsed && 'rotate-90')} />
                </button>
@@ -127,7 +127,7 @@ function OutlineRows({
                type="button"
                onClick={() => onJump(node)}
                title={node.text}
-               className="min-w-0 flex-1 truncate py-1 coarse:py-2.5 text-left text-sm leading-tight text-foreground cursor-pointer"
+               className="min-w-0 flex-1 truncate py-1 text-left text-sm leading-tight text-foreground cursor-pointer"
             >
                {node.text}
             </button>

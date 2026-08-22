@@ -131,13 +131,13 @@ export function NavigatorRow({
              down through the parent's chevron and reads as a connector. Clamped so a deep branch never scrolls
              the name sideways. */}
          {Array.from({ length: Math.min(depth, MAX_GUIDES) }).map((_, i) => (
-            <span key={i} aria-hidden className="flex h-8 coarse:h-11 w-5 shrink-0 justify-center">
+            <span key={i} aria-hidden className="flex h-8 w-5 shrink-0 justify-center">
                <span className="h-full border-l border-border/60" />
             </span>
          ))}
 
          {/* Twisty slot (a separate hit target): the crawl caret, the cycle marker, or an empty aligner. */}
-         <span className="flex size-5 coarse:size-11 shrink-0 items-center justify-center">
+         <span className="flex size-5 shrink-0 items-center justify-center">
             {seenAbove ? (
                <CornerLeftUp className="size-3.5 text-muted-foreground" aria-hidden />
             ) : showTwisty ? (
@@ -145,7 +145,7 @@ export function NavigatorRow({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onToggleExpand(node); }}
                   aria-label={isExpanded ? t('Navigator.collapse') : t('Navigator.expand')}
-                  className="flex size-5 coarse:size-11 cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="flex size-5 touch-target cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                >
                   {isLoading ? (
                      <Loader2 className="size-3.5 animate-spin" aria-hidden />

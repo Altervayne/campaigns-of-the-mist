@@ -202,7 +202,7 @@ export function NavigatorPanel() {
                onClick={handleRefresh}
                title={t('Navigator.refresh')}
                aria-label={t('Navigator.refresh')}
-               className="flex shrink-0 cursor-pointer items-center justify-center rounded p-1 coarse:size-11 text-muted-foreground hover:bg-muted hover:text-foreground"
+               className="flex shrink-0 cursor-pointer items-center justify-center rounded p-1 touch-target text-muted-foreground hover:bg-muted hover:text-foreground"
             >
                <RefreshCw className="size-4" />
             </button>
@@ -211,7 +211,7 @@ export function NavigatorPanel() {
                onClick={() => setNavigatorOpen(false)}
                title={t('Navigator.close')}
                aria-label={t('Navigator.close')}
-               className="flex shrink-0 cursor-pointer items-center justify-center rounded p-1 coarse:size-11 text-muted-foreground hover:bg-muted hover:text-foreground"
+               className="flex shrink-0 cursor-pointer items-center justify-center rounded p-1 touch-target text-muted-foreground hover:bg-muted hover:text-foreground"
             >
                <X className="size-4" />
             </button>

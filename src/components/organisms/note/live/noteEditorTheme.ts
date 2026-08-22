@@ -185,9 +185,5 @@ export const paperTheme = EditorView.theme({
       '.cm-note-table-add-row-bar': { justifyContent: 'flex-start', paddingLeft: '0.75rem' },
       '.cm-note-table-options-btn': { display: 'inline-flex' },
       '.cm-note-table-options-btn::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
-      // Finger-sized floating-bar buttons (selection format bar, link-edit bar, image-align bar, cover bar) with a
-      // touch on their inter-button gap. The bars share these classes, so growing each class covers every bar.
-      '.cm-note-format-bar, .cm-note-image-bar, .cm-note-cover-bar': { gap: '0.25rem' },
-      '.cm-note-format-btn, .cm-note-image-align, .cm-note-cover-btn': { height: '2.75rem', width: '2.75rem' },
    },
 }, { dark: false });

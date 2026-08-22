@@ -655,6 +655,24 @@ body {
    padding-right: env(safe-area-inset-right);
 }
 
+/* Invisible finger-sized tap area for a small control on a COARSE pointer, without changing its visible
+   size or the layout around it (the fix for touch density that does NOT bloat / overflow the container).
+   A transparent `::before` extends the hittable region ~6px past every edge; a fine pointer gets nothing.
+   The element must establish a positioning context - this sets `position: relative`, which is layout-inert
+   for a static (in-flow) control. Do NOT apply it to an already-`absolute`/`fixed` control (it would drop
+   the positioning); those spread `coarse:before:absolute coarse:before:-inset-2 coarse:before:content-['']`
+   inline instead, since they already own a positioning context. */
+@utility touch-target {
+   @media (pointer: coarse) {
+      position: relative;
+      &::before {
+         content: "";
+         position: absolute;
+         inset: -0.375rem;
+      }
+   }
+}
+
 /* ###################################### */
 /* ###   MOBILE STACKING LADDER (C3)  ### */
 /* ###################################### */
