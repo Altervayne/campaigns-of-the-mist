@@ -214,6 +214,7 @@ describe('importBoard / loadBoard round-trip', () => {
          viewport: { x: 12, y: 34, zoom: 2 },
          drawerItemId: 'drawer-1',
          grid: { type: 'lines' },
+         background: { color: '#402010', texture: 'paper' },
          nextLayerSeq: 1,
          items: [
             { id: 'a', kind: 'post-it', x: 0, y: 0, width: 100, height: 100, z: 0, content: { kind: 'post-it', mode: 'copy', data: { id: 'n22', text: 'a' } } },
@@ -249,6 +250,8 @@ describe('importBoard / loadBoard round-trip', () => {
       const reloaded = await repository.loadBoard('board-legacy');
       const connection = reloaded!.items.find((i) => i.kind === 'connection')!;
       expect(connection.content).toMatchObject({ kind: 'connection', style: { pathType: 'straight' } });
+      // A board saved before surface backgrounds existed loads with no backdrop (the plain theme canvas).
+      expect(reloaded!.background).toBeUndefined();
    });
 
    it('replaces any existing rows for the same board id on import', async () => {

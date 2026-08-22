@@ -27,11 +27,24 @@ export type BoardGridType = 'none' | 'dots' | 'lines' | 'h-lines' | 'v-lines' | 
 
 /**
  * A board's background grid. `color` is optional - absent means a subtle theme default;
- * full color customization rides the ported color picker later.
+ * a stored hex renders full-strength.
  */
 export interface BoardGrid {
    type: BoardGridType;
    color?: string;
+}
+
+/** A color-agnostic CSS texture overlaid on the board surface fill. */
+export type BoardTexture = 'paper' | 'linen';
+
+/**
+ * A board's surface backdrop, painted behind the grid. `color` is a fill; `texture` is a
+ * semi-transparent CSS overlay layered over it. Both optional - an absent or fully-empty
+ * background renders nothing, so the theme canvas shows (today's look, no migration).
+ */
+export interface BoardBackground {
+   color?: string;
+   texture?: BoardTexture;
 }
 
 /** The kinds of item a board can hold. `connection` is a non-spatial line between two items. */
@@ -565,6 +578,8 @@ export interface Board {
    drawerItemId?: string | null;
    /** Background grid style. Absent on boards created before grids existed - defaulted on read. */
    grid?: BoardGrid;
+   /** Surface backdrop (fill + texture) painted behind the grid. Absent means the plain theme canvas. */
+   background?: BoardBackground;
    /**
     * A monotonic counter sourcing each drawing layer's default-name ordinal ({@link DrawingBoardContent.seq}),
     * incremented at every drawing mint. Monotonic-never-reused, so deleting a layer never lets a later one

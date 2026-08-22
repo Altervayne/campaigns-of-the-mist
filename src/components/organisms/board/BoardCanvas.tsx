@@ -12,6 +12,7 @@ import { fitViewport } from '@/lib/board/boardCoordinates';
 import { flattenBoardOrder } from '@/lib/board/boardTree';
 import { alignPositions, distributePositions, type AlignEdge, type DistributeAxis, type Rect } from '@/lib/board/boardAlign';
 import { isRotatableKind } from '@/lib/board/boardRotation';
+import { withBackgroundTexture } from '@/lib/board/boardBackgroundStyle';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { PendingEraseContext } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
@@ -33,6 +34,7 @@ import { LinkTargetList } from '@/components/molecules/links/LinkTargetList';
 import { BoardPortalEditor } from './items/BoardPortalEditor';
 import { BoardFloatingWindow, PORTAL_WINDOW_WIDTH, PORTAL_EDITOR_WIDTH } from './windows/BoardFloatingWindow';
 import { BoardCardCreationWindow } from './windows/BoardCardCreationWindow';
+import { BoardBackgroundLayer } from './layers/BoardBackgroundLayer';
 import { BoardGridLayer } from './layers/BoardGridLayer';
 import { BoardItemsLayer } from './layers/BoardItemsLayer';
 import { BoardToolbar } from './toolbar/BoardToolbar';
@@ -46,7 +48,7 @@ import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSett
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
-import type { BoardGridType, BoardItem, BrushKind, PortalBoardContent } from '@/lib/types/board';
+import type { BoardGridType, BoardItem, BoardTexture, BrushKind, PortalBoardContent } from '@/lib/types/board';
 import type { ChallengeGame } from '@/lib/types/common';
 
 /*
@@ -84,6 +86,7 @@ function withZoneMembers(items: Record<string, BoardItem>, selectedIds: Set<stri
 export function BoardCanvas({ store }: { store: BoardStore }) {
    const { t } = useTranslation();
    const grid = useStore(store, (state) => state.grid);
+   const background = useStore(store, (state) => state.background);
    const hexPatternId = useId();
    const name = useStore(store, (state) => state.name);
    const items = useStore(store, (state) => state.items);
@@ -477,6 +480,10 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       else if (pendingBoardAction === 'saveItemToDrawer') saveSelectedItemToDrawer(false);
       else if (pendingBoardAction === 'saveItemToDrawerAs') saveSelectedItemToDrawer(true);
       else if (pendingBoardAction.startsWith('setGrid:')) void actions.setGrid({ ...grid, type: pendingBoardAction.slice('setGrid:'.length) as BoardGridType });
+      else if (pendingBoardAction.startsWith('setTexture:')) {
+         const value = pendingBoardAction.slice('setTexture:'.length);
+         void actions.setBackground(withBackgroundTexture(background, value === 'none' ? undefined : (value as BoardTexture)));
+      }
       else if (pendingBoardAction === 'focusJumpToCoordinate') {
          // Reveal the X input if the bar has scrolled it out of view, then focus + select it to type over.
          jumpXRef.current?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
@@ -578,6 +585,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
          // now, so it no longer signals "grab an element"); eraser keeps its cell, every other draw its crosshair.
          className={cn('absolute inset-0 overflow-hidden bg-muted/10', isPanning ? 'cursor-grabbing' : marquee ? 'cursor-crosshair' : spaceHeld || altHeld ? 'cursor-grab' : activeTool === 'select' ? 'cursor-default' : activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair')}
       >
+         <BoardBackgroundLayer background={background} />
+
          <BoardGridLayer grid={grid} viewport={viewport} hexPatternId={hexPatternId} itemCount={Object.keys(items).length} />
 
          <BoardItemsLayer
@@ -690,6 +699,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             setShapeBase={setShapeBase}
             setShapeFilled={setShapeFilled}
             grid={grid}
+            background={background}
             actions={actions}
             toggleLayersPanel={toggleLayersPanel}
             layersPanelOpen={layersPanelOpen}

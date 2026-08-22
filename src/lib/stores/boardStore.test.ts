@@ -855,6 +855,32 @@ describe('grid + rename (immediate persist, dirty, not undoable)', () => {
       expect(store.getState().canUndo).toBe(false); // a discrete choice, never undoable
    });
 
+   it('setBackground updates state, persists to the record, dirties the board, and stays off the undo stack', async () => {
+      const board = await repository.createBoard('Board');
+      const store = createBoardStore();
+      await store.getState().actions.hydrate(board.id);
+      expect(store.getState().background).toBeUndefined(); // absent by default
+
+      await store.getState().actions.setBackground({ color: '#402010', texture: 'paper' });
+
+      expect(store.getState().background).toEqual({ color: '#402010', texture: 'paper' });
+      expect(store.getState().hasUnsavedChanges).toBe(true);
+      expect((await repository.getBoard(board.id))?.background).toEqual({ color: '#402010', texture: 'paper' });
+      expect(store.getState().canUndo).toBe(false);
+   });
+
+   it('setBackground(undefined) clears the backdrop back to the theme canvas', async () => {
+      const board = await repository.createBoard('Board');
+      const store = createBoardStore();
+      await store.getState().actions.hydrate(board.id);
+      await store.getState().actions.setBackground({ texture: 'linen' });
+
+      await store.getState().actions.setBackground(undefined);
+
+      expect(store.getState().background).toBeUndefined();
+      expect((await repository.getBoard(board.id))?.background).toBeUndefined();
+   });
+
    it('renameBoard updates state + record, dirties the board, and is not undoable', async () => {
       const board = await repository.createBoard('Old name');
       const store = createBoardStore();

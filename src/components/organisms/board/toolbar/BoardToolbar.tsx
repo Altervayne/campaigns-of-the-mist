@@ -14,14 +14,14 @@ import { cn } from '@/lib/utils';
 // -- Component Imports --
 import { BoardToolSettingsBar } from '../BoardToolSettingsBar';
 import { BoardAddMenu } from '../BoardAddMenu';
-import { BoardGridMenu } from '../BoardGridMenu';
+import { BoardSurfaceMenu } from '../BoardSurfaceMenu';
 import { BoardCoordinateField } from '../fields/BoardCoordinateField';
 import { ToolbarButton } from './ToolbarButton';
 import { ToolToggleButton } from './ToolToggleButton';
 
 // -- Type Imports --
 import type { BoardState } from '@/lib/stores/boardStore';
-import type { ActiveTool, BoardGrid, BrushKind, Viewport } from '@/lib/types/board';
+import type { ActiveTool, BoardBackground, BoardGrid, BrushKind, Viewport } from '@/lib/types/board';
 import type { Point } from '@/lib/board/boardConnections';
 import type { CreatableKind } from '@/lib/creation/creatableRegistry';
 import type { TrackerType } from '@/lib/trackers/emptyTracker';
@@ -61,6 +61,7 @@ interface BoardToolbarProps {
    setShapeBase: (base: 'circle' | 'square') => void;
    setShapeFilled: (filled: boolean) => void;
    grid: BoardGrid;
+   background: BoardBackground | undefined;
    actions: BoardState['actions'];
    toggleLayersPanel: () => void;
    layersPanelOpen: boolean;
@@ -105,6 +106,7 @@ export function BoardToolbar({
    setShapeBase,
    setShapeFilled,
    grid,
+   background,
    actions,
    toggleLayersPanel,
    layersPanelOpen,
@@ -209,7 +211,14 @@ export function BoardToolbar({
                   />
                )}
                <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
-               <BoardGridMenu grid={grid} onSelect={(type) => void actions.setGrid({ ...grid, type })} />
+               <BoardSurfaceMenu
+                  grid={grid}
+                  background={background}
+                  onSetGrid={(next) => void actions.setGrid(next)}
+                  onSetBackground={(next) => void actions.setBackground(next)}
+                  onPreviewGrid={(next) => actions.previewGrid(next)}
+                  onPreviewBackground={(next) => actions.previewBackground(next)}
+               />
                <ToolbarButton title={t('LayersPanel.toggle')} active={layersPanelOpen} onClick={toggleLayersPanel} dataTutorial="board-layers-toggle">
                   <Layers className="h-4 w-4" />
                </ToolbarButton>

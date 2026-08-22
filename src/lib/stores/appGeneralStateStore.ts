@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 // -- Type Imports --
 import type { CreatableKind } from '@/lib/creation/creatableRegistry';
-import type { BoardGridType, BrushKind } from '@/lib/types/board';
+import type { BoardGridType, BoardTexture, BrushKind } from '@/lib/types/board';
 import type { ChallengeGame } from '@/lib/types/common';
 import type { MobileNavAction, MobileNavSnapshot } from '@/lib/mobile/mobileNavTypes';
 
@@ -20,7 +20,8 @@ export type MobileDrawerSnapPoint = 'closed' | 'half' | 'full';
  * selected copy card/tracker back to the drawer / as a new drawer item, or embed a saved note as a live
  * reference tile. The canvas consumes it against its own state and clears it. The `create:<kind>` members
  * mirror the toolbar/radial's `CreatableKind` set (explicit per-kind, not a free-form parameter), so a
- * palette create can't drift from the registry; `setGrid:<type>` swaps the background grid;
+ * palette create can't drift from the registry; `setGrid:<type>` swaps the background grid and
+ * `setTexture:<texture|none>` swaps the surface texture (keeping any fill);
  * `align:<edge>` / `distribute:<axis>` align or spread the current selection; `embedNote:<drawerItemId>`
  * carries the picked note's id.
  */
@@ -38,6 +39,7 @@ export type BoardAction =
    | 'saveItemToDrawerAs'
    | `create:${CreatableKind}`
    | `setGrid:${BoardGridType}`
+   | `setTexture:${'none' | BoardTexture}`
    | 'focusJumpToCoordinate'
    | 'mergeSelectedLayers'
    | 'resetRotation'

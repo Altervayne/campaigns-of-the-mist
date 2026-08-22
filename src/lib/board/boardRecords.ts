@@ -1,5 +1,5 @@
 // -- Type Imports --
-import type { BoardGrid, BoardItemContent, BoardItemKind, Viewport } from '@/lib/types/board';
+import type { BoardBackground, BoardGrid, BoardItemContent, BoardItemKind, Viewport } from '@/lib/types/board';
 
 /**
  * The per-record schema version for board rows, written to
@@ -31,6 +31,8 @@ export interface BoardRecord {
    drawerItemId?: string | null;
    /** Background grid style. Absent on pre-grid boards - defaulted to dots on read. */
    grid?: BoardGrid;
+   /** Surface backdrop (fill + texture). Absent means the plain theme canvas; not defaulted. */
+   background?: BoardBackground;
    /** Monotonic source of drawing-layer name ordinals; set at creation, carried through fork/import. */
    nextLayerSeq: number;
    /** Per-record schema marker for future record-shape migrations. */

@@ -270,6 +270,7 @@ export function loadBoard(id: string): Promise<Board | undefined> {
          viewport: record.viewport,
          drawerItemId: record.drawerItemId ?? null,
          grid: record.grid ?? { ...DEFAULT_BOARD_GRID },
+         background: record.background,
          nextLayerSeq: record.nextLayerSeq,
          items: items.map(toBoardItem),
       };
@@ -284,6 +285,7 @@ function assembleBoard(record: BoardRecord, items: BoardItemRecord[]): Board {
       viewport: record.viewport,
       drawerItemId: record.drawerItemId ?? null,
       grid: record.grid ?? { ...DEFAULT_BOARD_GRID },
+      background: record.background,
       nextLayerSeq: record.nextLayerSeq,
       items: items.map(toBoardItem),
    };
@@ -305,6 +307,7 @@ export function importBoard(board: Board): Promise<void> {
          viewport: board.viewport,
          drawerItemId: board.drawerItemId ?? null,
          grid: board.grid ?? { ...DEFAULT_BOARD_GRID },
+         background: board.background,
          nextLayerSeq: board.nextLayerSeq,
          schemaVersion: BOARD_SCHEMA_VERSION,
       };

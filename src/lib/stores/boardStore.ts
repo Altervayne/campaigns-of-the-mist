@@ -34,7 +34,7 @@ import { useAppGeneralStateStore } from './appGeneralStateStore';
 // -- Type Imports --
 import type { BoardCommand, ResizePatch } from '@/lib/board/boardCommands';
 import type { BoardItemRecord } from '@/lib/board/boardRecords';
-import type { Board, BoardGrid, BoardItem, BoardItemContent, DrawingBoardContent, Stroke, Viewport } from '@/lib/types/board';
+import type { Board, BoardBackground, BoardGrid, BoardItem, BoardItemContent, DrawingBoardContent, Stroke, Viewport } from '@/lib/types/board';
 
 /*
  * Board store - the React-facing, in-memory view of one open board, backed by the
@@ -62,6 +62,8 @@ export interface BoardState {
    viewport: Viewport;
    /** The background grid style for this board (persisted on the board record). */
    grid: BoardGrid;
+   /** The surface backdrop (fill + texture), or `undefined` for the plain theme canvas (persisted on the board record). */
+   background: BoardBackground | undefined;
    /** The linked drawer `FULL_BOARD` item, or `null` when this board was never saved. */
    drawerItemId: string | null;
    /** True when the board differs from its saved drawer copy, or was never saved. */
@@ -186,6 +188,12 @@ export interface BoardState {
       setViewport: (viewport: Viewport) => void;
       /** Sets the background grid, persisting it immediately. Marks the board dirty; not undoable. */
       setGrid: (grid: BoardGrid) => Promise<void>;
+      /** Live preview of the grid (a color drag): applies to the render without persisting or dirtying. Commit via setGrid. */
+      previewGrid: (grid: BoardGrid) => void;
+      /** Sets (or clears with `undefined`) the surface backdrop, persisting immediately. Marks the board dirty; not undoable. */
+      setBackground: (background: BoardBackground | undefined) => Promise<void>;
+      /** Live preview of the backdrop (a color drag): applies to the render without persisting or dirtying. Commit via setBackground. */
+      previewBackground: (background: BoardBackground | undefined) => void;
       /** Renames the board, persisting immediately. Marks the board dirty; not undoable (the tab label is bound to `name`). */
       renameBoard: (name: string) => Promise<void>;
       /** Sets the unsaved-changes flag directly (e.g. a save site marks the board clean). */
@@ -236,12 +244,13 @@ function seedNextLayerSeq(stored: number | undefined, items: Record<string, Boar
 
 const initialState: Pick<
    BoardState,
-   'boardId' | 'name' | 'viewport' | 'grid' | 'drawerItemId' | 'hasUnsavedChanges' | 'items' | 'selectedIds' | 'hoveredId' | 'nextLayerSeq' | 'canUndo' | 'canRedo' | 'isLoading' | 'error'
+   'boardId' | 'name' | 'viewport' | 'grid' | 'background' | 'drawerItemId' | 'hasUnsavedChanges' | 'items' | 'selectedIds' | 'hoveredId' | 'nextLayerSeq' | 'canUndo' | 'canRedo' | 'isLoading' | 'error'
 > = {
    boardId: null,
    name: '',
    viewport: { ...DEFAULT_VIEWPORT },
    grid: { ...DEFAULT_BOARD_GRID },
+   background: undefined,
    drawerItemId: null,
    hasUnsavedChanges: false,
    items: {},
@@ -389,7 +398,7 @@ export function createBoardStore(options: { viewportSaveDebounceMs?: number } = 
                   const { items, changed } = repairBoardZ(loaded);
                   // Opened from its records: it matches its saved copy (if any), so it
                   // starts clean. The first mutation dirties it.
-                  set({ boardId, name: board.name, viewport: board.viewport, grid: board.grid ?? { ...DEFAULT_BOARD_GRID }, drawerItemId: board.drawerItemId ?? null, hasUnsavedChanges: false, items, nextLayerSeq: seedNextLayerSeq(board.nextLayerSeq, items), isLoading: false, error: null });
+                  set({ boardId, name: board.name, viewport: board.viewport, grid: board.grid ?? { ...DEFAULT_BOARD_GRID }, background: board.background, drawerItemId: board.drawerItemId ?? null, hasUnsavedChanges: false, items, nextLayerSeq: seedNextLayerSeq(board.nextLayerSeq, items), isLoading: false, error: null });
                   if (changed.length > 0) {
                      void Promise.all(changed.map((change) => updateItem(change.id, { z: change.z }))).catch((error) => console.error('Board z repair persist failed:', error));
                   }
@@ -931,6 +940,21 @@ export function createBoardStore(options: { viewportSaveDebounceMs?: number } = 
                const record = await getBoard(boardId);
                if (record) await saveBoard({ ...record, grid, viewport: get().viewport });
             },
+
+            previewGrid: (grid) => { set({ grid }); },
+
+            setBackground: async (background) => {
+               const boardId = get().boardId;
+               if (!boardId) return;
+               // Same discipline as setGrid: apply, persist immediately (with the live camera so an
+               // in-flight viewport debounce isn't clobbered), and dirty the board. Not undoable.
+               set({ background });
+               markDirty();
+               const record = await getBoard(boardId);
+               if (record) await saveBoard({ ...record, background, viewport: get().viewport });
+            },
+
+            previewBackground: (background) => { set({ background }); },
 
             renameBoard: async (name) => {
                const boardId = get().boardId;
