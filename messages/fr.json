@@ -107,7 +107,9 @@
       },
       "table": {
          "addRow": "Ajouter une ligne",
-         "addColumn": "Ajouter une colonne"
+         "addColumn": "Ajouter une colonne",
+         "addLineBelow": "[TO COMPLETE]",
+         "addLineAbove": "[TO COMPLETE]"
       },
       "cover": {
          "add": "Ajouter une couverture",

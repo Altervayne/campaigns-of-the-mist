@@ -111,6 +111,9 @@ export const paperTheme = EditorView.theme({
       '.cm-note-image-handle, .cm-note-cover-handle': { height: '1.5rem', width: '1.5rem' },
       '.cm-note-image-handle-br, .cm-note-cover-handle': { bottom: '-0.75rem', right: '-0.75rem' },
       '.cm-note-image-handle::before, .cm-note-cover-handle::before': { content: '""', position: 'absolute', inset: '-0.625rem' },
+      // Reveal the table exit buttons and give each a transparent finger-sized hit-slop past its visible box.
+      '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'inline-flex' },
+      '.cm-note-table-exit-below::before, .cm-note-table-exit-above::before': { content: '""', position: 'absolute', inset: '-0.5rem' },
    },
    '.cm-note-cover-bar': { position: 'absolute', top: '0.5rem', left: '0.5rem', display: 'flex', gap: '0.125rem', padding: '0.25rem', borderRadius: '0.375rem', backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
    '.cm-note-cover-btn': { display: 'grid', placeItems: 'center', height: '1.75rem', width: '1.75rem', borderRadius: '0.25rem', cursor: 'pointer', color: 'inherit', background: 'transparent', border: 'none' },
@@ -165,4 +168,10 @@ export const paperTheme = EditorView.theme({
    '.cm-note-table:hover .cm-note-table-add-row-bar, .cm-note-table:hover .cm-note-table-add-col-bar': { opacity: '0.9' },
    '.cm-note-table-add-row-bar:hover, .cm-note-table-add-col-bar:hover': { opacity: '1', backgroundColor: 'color-mix(in srgb, var(--paper-border) 44%, var(--paper-background))', color: 'var(--paper-foreground)' },
    '.cm-note-table-add-plus': { display: 'block', fontSize: '0.8rem', fontWeight: '700', lineHeight: '1', textAlign: 'center' },
+   // Coarse-only exit affordances: a tappable path to a line below (and, for a first-block table, above) so a
+   // table never traps the caret on touch. Hidden on a fine pointer, where ArrowDown/ArrowUp/Escape do this; the
+   // coarse block below reveals them and adds a finger-sized hit-slop. Arrow-to-line glyph, NOT the add-row "+".
+   '.cm-note-table-exit-below, .cm-note-table-exit-above': { display: 'none', position: 'absolute', left: '50%', transform: 'translateX(-50%)', alignItems: 'center', justifyContent: 'center', height: '1.75rem', minWidth: '2.75rem', padding: '0 0.5rem', border: 'none', borderRadius: '0.375rem', backgroundColor: 'color-mix(in srgb, var(--paper-border) 32%, var(--paper-background))', color: 'var(--paper-foreground)', cursor: 'pointer', zIndex: '2' },
+   '.cm-note-table-exit-below': { bottom: '-0.625rem' },
+   '.cm-note-table-exit-above': { top: '-0.625rem' },
 }, { dark: false });

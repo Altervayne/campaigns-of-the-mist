@@ -107,7 +107,9 @@
       },
       "table": {
          "addRow": "Add row",
-         "addColumn": "Add column"
+         "addColumn": "Add column",
+         "addLineBelow": "Add line below table",
+         "addLineAbove": "Add line above table"
       },
       "cover": {
          "add": "Add cover",

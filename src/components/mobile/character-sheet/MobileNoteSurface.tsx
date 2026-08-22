@@ -304,7 +304,12 @@ function MobileNoteSurfaceInner({ store, onOpenSwitcher, onEditingActiveChange, 
    const tableController = useMemo<TableController>(() => ({
       openContextMenu: setTableRequest,
       onCaretCell: setTableCaret,
-      labels: { addRow: t('NoteView.table.addRow'), addColumn: t('NoteView.table.addColumn') },
+      labels: {
+         addRow: t('NoteView.table.addRow'),
+         addColumn: t('NoteView.table.addColumn'),
+         addLineBelow: t('NoteView.table.addLineBelow'),
+         addLineAbove: t('NoteView.table.addLineAbove'),
+      },
    }), [t]);
    // The image controller is LIVE on mobile: tapping an image builds its request and opens the options sheet.
    // Opening blurs to drop the keyboard so the sheet takes its place, matching the table + cover sheets.

@@ -321,7 +321,12 @@ function NoteSurface() {
    const tableMenuRef = useRef<NoteTableContextMenuHandle>(null);
    const tableController = useMemo<TableController>(() => ({
       openContextMenu: (request) => tableMenuRef.current?.open(request),
-      labels: { addRow: t('NoteView.table.addRow'), addColumn: t('NoteView.table.addColumn') },
+      labels: {
+         addRow: t('NoteView.table.addRow'),
+         addColumn: t('NoteView.table.addColumn'),
+         addLineBelow: t('NoteView.table.addLineBelow'),
+         addLineAbove: t('NoteView.table.addLineAbove'),
+      },
    }), [t]);
 
    if (!note) return null;

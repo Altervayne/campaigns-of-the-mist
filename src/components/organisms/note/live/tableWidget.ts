@@ -83,7 +83,7 @@ export interface TableController {
    /** Reports the caret's table cell (or null when it leaves any cell) so a mobile chip can arm/disarm. Desktop
     *  omits it. */
    onCaretCell?: (ctx: { tablePos: number; row: number; col: number } | null) => void;
-   labels: { addRow: string; addColumn: string };
+   labels: { addRow: string; addColumn: string; addLineBelow: string; addLineAbove: string };
 }
 
 /**
@@ -262,6 +262,31 @@ export class NoteTableWidget extends WidgetType {
       // Full-edge add affordances: bottom bar (add a row), right bar (add a column). Subtle until hover.
       wrap.appendChild(this.buildEdgeBar(view, 'row'));
       wrap.appendChild(this.buildEdgeBar(view, 'col'));
+
+      // Coarse-only tap exits so a table never traps the caret on touch (a fine pointer uses ArrowDown/Up/Escape).
+      // Below is always present (tables usually end a note); above only when the table is the first block.
+      wrap.appendChild(this.buildExitButton(view, 'below'));
+      if (this.from <= 0) wrap.appendChild(this.buildExitButton(view, 'above'));
+   }
+
+   /** A coarse-only button that places the caret on a usable line below (or above) the table via the same
+    *  `exitBelow`/`exitAbove` the keymap uses. Hidden on a fine pointer; revealed under a coarse-pointer query. */
+   private buildExitButton(view: EditorView, dir: 'below' | 'above'): HTMLElement {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = dir === 'below' ? 'cm-note-table-exit-below' : 'cm-note-table-exit-above';
+      const label = dir === 'below' ? this.labels.addLineBelow : this.labels.addLineAbove;
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+      btn.innerHTML = dir === 'below' ? EXIT_BELOW_ICON : EXIT_ABOVE_ICON;
+      btn.onmousedown = (e) => { e.preventDefault(); e.stopPropagation(); };
+      btn.onclick = (e) => {
+         e.preventDefault();
+         e.stopPropagation();
+         if (dir === 'below') this.exitBelow(view);
+         else this.exitAbove(view);
+      };
+      return btn;
    }
 
    /** A full-edge "+" bar that adds a row (bottom, table-width) or a column (right, table-height) on click. */
@@ -616,6 +641,10 @@ export class NoteTableWidget extends WidgetType {
       return true;
    }
 }
+
+/** Coarse-exit glyphs (lucide arrow-to-line): an arrow to a line below / above, distinct from the add-row "+". */
+const EXIT_BELOW_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14"/><path d="m6 11 6 6 6-6"/><path d="M5 21h14"/></svg>';
+const EXIT_ABOVE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="m6 13 6-6 6 6"/><path d="M5 3h14"/></svg>';
 
 /** A `<br>` token in cell markdown, split-safe (case-insensitive, optional slash/space). */
 const CELL_BR_RE = /<br\s*\/?>/gi;
