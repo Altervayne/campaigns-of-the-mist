@@ -64,7 +64,7 @@ export function BlandTagItem({ cardId, tag, listName, isEditing, index }: BlandT
                <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0 text-destructive"
+                  className="h-7 w-7 shrink-0 text-destructive touch-target"
                   onClick={() => removeBlandTag(cardId, listName, tag.id)}
                >
                   <Trash2 className="h-4 w-4" />

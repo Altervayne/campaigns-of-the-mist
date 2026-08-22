@@ -225,7 +225,7 @@ const RiftCardContent = React.memo(
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => handleRemoveCrewMember(member.id)}
-                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive touch-target"
                                  >
                                     <Trash2 className="h-3 w-3" />
                                  </Button>

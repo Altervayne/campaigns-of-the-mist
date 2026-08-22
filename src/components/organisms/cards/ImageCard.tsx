@@ -284,6 +284,9 @@ const ImageCardContent = React.memo(
                      className={cn(
                         'absolute bottom-1 right-1 z-10 flex h-5 w-5 items-center justify-center',
                         'cursor-nwse-resize touch-none rounded-sm bg-background/70 ring-1 ring-border hover:bg-background',
+                        // Coarse-pointer hit-slop: the grip already owns a positioning context, so slop via
+                        // an inline `::before` rather than `touch-target` (which would drop its absolute placement).
+                        "coarse:before:absolute coarse:before:-inset-2 coarse:before:content-['']",
                      )}
                   >
                      <div className="h-2.5 w-2.5 border-b-2 border-r-2 border-foreground/60" />

@@ -126,7 +126,7 @@ export function TagItem({ tag, tagType, isEditing, index, cardId, trackerId, isT
       >
          <div className="flex shrink-0 items-center justify-center w-6">
             {tagType === 'power' && !isEditing && (
-               <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleUpdate({ isActive: !tag.isActive })}>
+               <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer touch-target" onClick={() => handleUpdate({ isActive: !tag.isActive })}>
                   {tag.isActive ? <Disc2 className="h-5 w-5 text-card-paper" /> : <Circle className="h-4 w-4" />}
                </Button>
             )}
@@ -158,12 +158,12 @@ export function TagItem({ tag, tagType, isEditing, index, cardId, trackerId, isT
 
          <div className="flex shrink-0 items-center justify-center w-6">
             {isEditing ? (
-               <Button variant="ghost" size="icon" className={cn('h-6 w-6 text-destructive cursor-pointer', weaknessForeground)} onClick={handleRemove}>
+               <Button variant="ghost" size="icon" className={cn('h-6 w-6 text-destructive cursor-pointer touch-target', weaknessForeground)} onClick={handleRemove}>
                   <Trash2 className="h-4 w-4" />
                </Button>
             ) : (
                tagType === 'power' && (
-                  <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => handleUpdate({ isScratched: !tag.isScratched })}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer touch-target" onClick={() => handleUpdate({ isScratched: !tag.isScratched })}>
                      <Flame className={cn('h-4 w-4', tag.isScratched && 'text-destructive fill-destructive')} />
                   </Button>
                )

@@ -161,7 +161,7 @@ export const LegendsThemeCard = React.memo(
                <div className="w-full text-center px-1 py-2.5 shrink-0 flex justify-between items-center gap-2 border-y border-card-accent/30">
                   <div className="w-6">
                      {!isEditing && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isActive: !details.mainTag.isActive })}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer touch-target" onClick={() => commitMainTag({ isActive: !details.mainTag.isActive })}>
                            {details.mainTag.isActive ? <Disc2 className="h-5 w-5 text-card-paper" /> : <Circle className="h-4 w-4" />}
                         </Button>
                      )}
@@ -180,7 +180,7 @@ export const LegendsThemeCard = React.memo(
                   )}
                   <div className="w-6">
                      {!isEditing && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => commitMainTag({ isScratched: !details.mainTag.isScratched })}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer touch-target" onClick={() => commitMainTag({ isScratched: !details.mainTag.isScratched })}>
                            <Flame className={cn('h-4 w-4', details.mainTag.isScratched && 'text-destructive fill-destructive')} />
                         </Button>
                      )}

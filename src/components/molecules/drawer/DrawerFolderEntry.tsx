@@ -76,11 +76,12 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                         className="flex min-h-8 min-w-0 items-center gap-2"
                         onClick={() => onNavigate(folder.id)}
                      >
-                        <GripVertical
-                           className="h-5 w-5 shrink-0 text-muted-foreground cursor-grab"
-                           {...dragAttributes}
-                           {...dragListeners}
-                        />
+                        {/* The grip carries the drag listeners on a wrapper span (not the bare SVG) so a
+                            coarse-pointer `touch-target` slop can extend the hold-to-drag area past the 20px
+                            glyph; a `::before` never renders on an `<svg>`. Layout + visual are unchanged. */}
+                        <span className="touch-target flex shrink-0 cursor-grab" {...dragAttributes} {...dragListeners}>
+                           <GripVertical className="h-5 w-5 text-muted-foreground" />
+                        </span>
                         <Folder className="h-6 w-6 shrink-0 text-muted-foreground"/>
                         {/* A long name wraps to two lines (then ellipsis) rather than truncating on one; the
                             row grows to fit. Full name on hover. Short names are unaffected. */}

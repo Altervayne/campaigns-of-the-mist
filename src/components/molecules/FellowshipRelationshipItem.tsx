@@ -87,7 +87,7 @@ export function FellowshipRelationshipItem({ cardId, relationship, isEditing, in
             <Button
                variant="ghost"
                size="icon"
-               className="h-7 w-7 text-destructive cursor-pointer"
+               className="h-7 w-7 text-destructive cursor-pointer touch-target"
                onClick={() => removeRelationship(cardId, relationship.id)}
             >
                <Trash2 className="h-4 w-4" />

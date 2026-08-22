@@ -153,7 +153,7 @@ export function TierStepperPill({ tier, onChange }: { tier: number; onChange: (n
          <button
             type="button"
             onClick={() => onChange(Math.max(0, tier - 1))}
-            className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-card-paper-fg/10 cursor-pointer"
+            className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-card-paper-fg/10 cursor-pointer touch-target"
          >
             <Minus className="h-3 w-3" />
          </button>
@@ -161,7 +161,7 @@ export function TierStepperPill({ tier, onChange }: { tier: number; onChange: (n
          <button
             type="button"
             onClick={() => onChange(tier + 1)}
-            className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-card-paper-fg/10 cursor-pointer"
+            className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-card-paper-fg/10 cursor-pointer touch-target"
          >
             <Plus className="h-3 w-3" />
          </button>
