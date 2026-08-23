@@ -25,6 +25,7 @@ import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyl
 import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
 import type { WorldRect } from '@/lib/board/drawingStyle';
+import type { Mat } from '@/lib/board/strokeTransform';
 import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
@@ -68,8 +69,8 @@ interface BoardItemsLayerProps {
    penPreview: number[] | null;
    polygonPreview: number[] | null;
    /** The Transform tool's live selection + previews (null off the tool): the selected layer, its selected
-    *  stroke ids, the in-flight local move delta, and the world-space marquee rect. */
-   transform: { layer: BoardItem | null; strokeIds: ReadonlySet<string>; moveDelta: Point | null; marquee: WorldRect | null } | null;
+    *  stroke ids, the in-flight local transform matrix, and the world-space marquee rect. */
+   transform: { layer: BoardItem | null; strokeIds: ReadonlySet<string>; preview: Mat | null; marquee: WorldRect | null } | null;
    penSettings: { brush: BrushKind; color: string | null; width: number; shapeBase: 'circle' | 'square'; shapeFilled: boolean };
    activeTool: ActiveTool;
    focusLayer: BoardItem | undefined;
@@ -321,7 +322,7 @@ export function BoardItemsLayer({
             <BoardTransformOverlay
                layer={transform.layer}
                strokeIds={transform.strokeIds}
-               moveDelta={transform.moveDelta}
+               preview={transform.preview}
                marquee={transform.marquee}
                zoom={viewport.zoom}
                layerCount={layerCount}

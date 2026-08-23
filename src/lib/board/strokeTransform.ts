@@ -3,10 +3,14 @@
  * matrix in SVG order - `[a, b, c, d, e, f]` maps a point to `(a*x + c*y + e, b*x + d*y + f)`. Points are the
  * flat `[x0,y0,x1,y1,...]` list the strokes store, so a matrix applies to a whole stroke in one pass.
  *
- * Phase 1 needs only translate (move), so that constructor plus `applyMatrixToPoints` and `multiply` (matrix
- * compose, for chaining transforms about a pivot later) live here. Scale/rotate/skew/flip join in a later phase.
+ * The free-transform box builds its move/scale/rotate/skew/flip from these constructors: each takes an
+ * optional pivot and composes `T(p) · core · T(-p)` so the transform runs about that point (an opposite
+ * corner, a box center). The rotate core reuses `rotateVec` so its convention matches the item rotation.
  * Framework-free and unit-tested.
  */
+
+// -- Utils Imports --
+import { rotateVec, type Vec2 } from './boardRotation';
 
 /** A 2D affine matrix's six live cells, SVG order: `matrix(a, b, c, d, e, f)`. */
 export type Mat = [number, number, number, number, number, number];
@@ -17,6 +21,35 @@ export const IDENTITY: Mat = [1, 0, 0, 1, 0, 0];
 /** A pure translation by `(dx, dy)`. */
 export function translate(dx: number, dy: number): Mat {
    return [1, 0, 0, 1, dx, dy];
+}
+
+/** Wraps a core transform to run about a pivot: `T(p) · core · T(-p)`. No pivot leaves the core unchanged. */
+function aboutPivot(core: Mat, about?: Vec2): Mat {
+   if (!about) return core;
+   return multiply(multiply(translate(about.x, about.y), core), translate(-about.x, -about.y));
+}
+
+/** A scale by `(sx, sy)`, optionally about a pivot. A negative factor mirrors that axis (a flip). */
+export function scale(sx: number, sy: number, about?: Vec2): Mat {
+   return aboutPivot([sx, 0, 0, sy, 0, 0], about);
+}
+
+/** A rotation by `deg` degrees (CSS convention, via `rotateVec`), optionally about a pivot. */
+export function rotate(deg: number, about?: Vec2): Mat {
+   // The core's columns are the images of the basis vectors, so it matches the item-rotation convention.
+   const ex = rotateVec({ x: 1, y: 0 }, deg);
+   const ey = rotateVec({ x: 0, y: 1 }, deg);
+   return aboutPivot([ex.x, ex.y, ey.x, ey.y, 0, 0], about);
+}
+
+/** A skew mapping `(x, y) -> (x + kx*y, y + ky*x)`, optionally about a pivot. */
+export function skew(kx: number, ky: number, about?: Vec2): Mat {
+   return aboutPivot([1, ky, kx, 1, 0, 0], about);
+}
+
+/** A mirror across the pivot's `'x'` (negate x, a horizontal flip) or `'y'` (negate y, a vertical flip) axis. */
+export function flip(axis: 'x' | 'y', about?: Vec2): Mat {
+   return axis === 'x' ? scale(-1, 1, about) : scale(1, -1, about);
 }
 
 /**

@@ -2,10 +2,16 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { IDENTITY, applyMatrixToPoints, multiply, translate } from './strokeTransform';
+import { IDENTITY, applyMatrixToPoints, flip, multiply, rotate, scale, skew, translate } from './strokeTransform';
 
 // -- Type Imports --
 import type { Mat } from './strokeTransform';
+
+/** Applies a matrix to a single point, for the constructor assertions. */
+const apply = (x: number, y: number, m: Mat): [number, number] => {
+   const out = applyMatrixToPoints([x, y], m);
+   return [out[0], out[1]];
+};
 
 /*
  * The pure affine math behind the stroke transform tool: the translate constructor, the point-list apply, and
@@ -64,5 +70,76 @@ describe('multiply', () => {
       // Order matters: scale first, then translate leaves (0,0) at (1,0).
       const other = multiply(translate(1, 0), scale2);
       expect(applyMatrixToPoints([0, 0], other)).toEqual([1, 0]);
+   });
+});
+
+describe('scale', () => {
+   it('builds a per-axis scale about the origin', () => {
+      expect(scale(2, 3)).toEqual([2, 0, 0, 3, 0, 0]);
+      expect(apply(1, 1, scale(2, 3))).toEqual([2, 3]);
+   });
+
+   it('holds the pivot fixed and scales the rest about it', () => {
+      const m = scale(2, 2, { x: 10, y: 10 });
+      expect(apply(10, 10, m)).toEqual([10, 10]);
+      expect(apply(11, 11, m)).toEqual([12, 12]);
+   });
+
+   it('mirrors an axis with a negative factor (a flip falls out of scale)', () => {
+      expect(apply(2, 3, scale(-1, 1))).toEqual([-2, 3]);
+      // About a pivot: negating x mirrors across the pivot's vertical line.
+      expect(apply(12, 5, scale(-1, 1, { x: 10, y: 0 }))).toEqual([8, 5]);
+   });
+});
+
+describe('rotate', () => {
+   it('rotates about the origin by the CSS convention (y-down)', () => {
+      const [x, y] = apply(1, 0, rotate(90));
+      expect(x).toBeCloseTo(0);
+      expect(y).toBeCloseTo(1);
+   });
+
+   it('holds the pivot fixed', () => {
+      const m = rotate(180, { x: 1, y: 1 });
+      const [px, py] = apply(1, 1, m);
+      expect(px).toBeCloseTo(1);
+      expect(py).toBeCloseTo(1);
+      const [x, y] = apply(2, 1, m);
+      expect(x).toBeCloseTo(0);
+      expect(y).toBeCloseTo(1);
+   });
+
+   it('is the identity at zero degrees', () => {
+      expect(apply(3, 7, rotate(0))).toEqual([3, 7]);
+   });
+});
+
+describe('skew', () => {
+   it('shears x proportional to y', () => {
+      expect(apply(0, 1, skew(1, 0))).toEqual([1, 1]);
+      expect(apply(2, 0, skew(1, 0))).toEqual([2, 0]);
+   });
+
+   it('shears y proportional to x', () => {
+      expect(apply(1, 0, skew(0, 1))).toEqual([1, 1]);
+   });
+
+   it('shears about a pivot (a point on the pivot row does not move)', () => {
+      // kx about pivot y=5: a point at y=5 has zero relative y, so it stays put.
+      const m = skew(1, 0, { x: 0, y: 5 });
+      expect(apply(3, 5, m)).toEqual([3, 5]);
+      expect(apply(3, 6, m)).toEqual([4, 6]);
+   });
+});
+
+describe('flip', () => {
+   it("'x' negates x (a horizontal mirror), 'y' negates y", () => {
+      expect(apply(2, 3, flip('x'))).toEqual([-2, 3]);
+      expect(apply(2, 3, flip('y'))).toEqual([2, -3]);
+   });
+
+   it('mirrors across the pivot', () => {
+      expect(apply(12, 3, flip('x', { x: 10, y: 0 }))).toEqual([8, 3]);
+      expect(apply(2, 12, flip('y', { x: 0, y: 10 }))).toEqual([2, 8]);
    });
 });

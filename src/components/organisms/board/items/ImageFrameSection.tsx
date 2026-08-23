@@ -29,7 +29,7 @@ const BORDER_RADIUS_MAX = 24;
  * is masked. The sliders buffer a draft and commit ONE undo step on release / popover-close / unmount; every
  * write spreads `content` and sets one field, so the stencil/source fields survive.
  */
-export function ImageFrameSection({ content, onChange }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void }) {
+export function ImageFrameSection({ content, onChange, onPreview }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void; onPreview: (content: ImageBoardContent) => void }) {
    const { t } = useTranslation();
    const border = content.border;
 
@@ -51,20 +51,26 @@ export function ImageFrameSection({ content, onChange }: { content: ImageBoardCo
       onChange(next);
    };
 
-   // Folds pending width/radius drafts onto a base: width 0 drops the whole border, else builds it from the
-   // current color (the default when the border was off).
-   const foldBorderDrafts = (base: ImageBoardContent): ImageBoardContent => {
-      if (widthDraft === null && radiusDraft === null) return base;
-      const width = widthDraft ?? base.border?.width ?? 0;
+   // Folds width/radius drafts onto a base: width 0 drops the whole border, else builds it from the current
+   // color (the default when the border was off). Takes explicit drafts so an input handler can fold with its
+   // just-set value before the state settles.
+   const foldBorderDraftsWith = (base: ImageBoardContent, wDraft: number | null, rDraft: number | null): ImageBoardContent => {
+      if (wDraft === null && rDraft === null) return base;
+      const width = wDraft ?? base.border?.width ?? 0;
       if (width <= 0) { const next = { ...base }; delete next.border; return next; }
-      const radius = radiusDraft ?? base.border?.radius ?? DEFAULT_IMAGE_BORDER.radius;
+      const radius = rDraft ?? base.border?.radius ?? DEFAULT_IMAGE_BORDER.radius;
       const color = base.border?.color ?? DEFAULT_IMAGE_BORDER.color;
       return { ...base, border: { color, width, radius } };
    };
 
+   // A slider drag: buffer the value (drives its % readout) and push a non-committing preview so the border
+   // tracks the drag; the store write (one undo step) waits for release / close.
+   const inputWidth = (value: number) => { setWidthDraft(value); onPreview(foldBorderDraftsWith(contentRef.current, value, radiusDraft)); };
+   const inputRadius = (value: number) => { setRadiusDraft(value); onPreview(foldBorderDraftsWith(contentRef.current, widthDraft, value)); };
+
    const commitBorder = () => {
       if (widthDraft === null && radiusDraft === null) return;
-      const next = foldBorderDrafts(contentRef.current);
+      const next = foldBorderDraftsWith(contentRef.current, widthDraft, radiusDraft);
       setWidthDraft(null);
       setRadiusDraft(null);
       onChange(next);
@@ -93,13 +99,13 @@ export function ImageFrameSection({ content, onChange }: { content: ImageBoardCo
          <section className="flex flex-col gap-1.5">
             <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                {t('BoardView.imageBorder')}
-               <BorderColorControl content={content} onChange={onChange} />
+               <BorderColorControl content={content} onChange={onChange} onPreview={onPreview} />
             </span>
             <BorderSlider
                label={t('BoardView.imageBorderWidth')}
                value={widthValue}
                max={BORDER_WIDTH_MAX}
-               onInput={setWidthDraft}
+               onInput={inputWidth}
                onCommit={commitBorder}
             />
             <BorderSlider
@@ -107,7 +113,7 @@ export function ImageFrameSection({ content, onChange }: { content: ImageBoardCo
                value={radiusValue}
                max={BORDER_RADIUS_MAX}
                disabled={widthValue <= 0}
-               onInput={setRadiusDraft}
+               onInput={inputRadius}
                onCommit={commitBorder}
             />
          </section>
@@ -174,10 +180,11 @@ function FrameTile({ frame, label, selected, onClick }: { frame?: ImageFrame; la
 }
 
 /**
- * The border color swatch: the shared color popover, committing one update on close (a full-picker drag would
- * otherwise flood the undo stack). Picking a color on an off border initializes it from the default width/radius.
+ * The border color swatch: the shared color popover. A picker drag previews live (so the border tracks the SV
+ * square) but commits ONE update on close (a per-sample commit would flood the undo stack). Picking a color on
+ * an off border initializes it from the default width/radius.
  */
-function BorderColorControl({ content, onChange }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void }) {
+function BorderColorControl({ content, onChange, onPreview }: { content: ImageBoardContent; onChange: (content: ImageBoardContent) => void; onPreview: (content: ImageBoardContent) => void }) {
    const { t } = useTranslation();
    const [open, setOpen] = useState(false);
    const swatch = content.border?.color ?? DEFAULT_IMAGE_BORDER.color;
@@ -190,10 +197,11 @@ function BorderColorControl({ content, onChange }: { content: ImageBoardContent;
    const commit = useCallback(() => {
       const next = pendingRef.current;
       pendingRef.current = null;
-      if (next === null) return;
+      if (next === null) return; // never applied -> nothing previewed, nothing to commit
+      // Always commit when a color was applied (even if unchanged), so the close clears the live preview -
+      // an early return here would strand the preview override on the image.
       const current = contentRef.current;
       const base = current.border ?? DEFAULT_IMAGE_BORDER;
-      if (current.border && next === base.color) return;
       onChange({ ...current, border: { ...base, color: next } });
       if (!(CONNECTION_PALETTE as readonly string[]).includes(next)) pushRecentColor(next);
    }, [onChange]);
@@ -211,7 +219,14 @@ function BorderColorControl({ content, onChange }: { content: ImageBoardContent;
          palette={CONNECTION_PALETTE}
          recent={readRecentColors()}
          recentLabel={t('BoardView.recentColors')}
-         onApply={(color) => { pendingRef.current = color ?? DEFAULT_IMAGE_BORDER.color; }}
+         onApply={(color) => {
+            const next = color ?? DEFAULT_IMAGE_BORDER.color;
+            pendingRef.current = next;
+            // Preview live so the border tracks the SV drag; the store write (one undo step) waits for close.
+            const current = contentRef.current;
+            const base = current.border ?? DEFAULT_IMAGE_BORDER;
+            onPreview({ ...current, border: { ...base, color: next } });
+         }}
          trigger={
             <button
                type="button"

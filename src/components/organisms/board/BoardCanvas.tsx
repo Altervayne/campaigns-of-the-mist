@@ -235,7 +235,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    // unmount, so a mid-drag tab switch discards the preview; `resetForBoard` clears the selection on a board switch.
    const {
       selection: transformSelection,
-      moveDelta: transformMoveDelta,
+      preview: transformPreview,
       marquee: transformMarquee,
       handleTransformPointerDown,
       resetForBoard: resetTransformForBoard,
@@ -656,7 +656,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             connectPreview={connectPreview}
             penPreview={penPreview}
             polygonPreview={polygonPreview}
-            transform={activeTool === 'transform' ? { layer: transformSelection ? items[transformSelection.layerId] ?? null : null, strokeIds: transformSelection?.strokeIds ?? EMPTY_STROKE_IDS, moveDelta: transformMoveDelta, marquee: transformMarquee } : null}
+            transform={activeTool === 'transform' ? { layer: transformSelection ? items[transformSelection.layerId] ?? null : null, strokeIds: transformSelection?.strokeIds ?? EMPTY_STROKE_IDS, preview: transformPreview, marquee: transformMarquee } : null}
             penSettings={penSettings}
             activeTool={activeTool}
             focusLayer={focusLayer}

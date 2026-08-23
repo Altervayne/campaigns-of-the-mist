@@ -87,7 +87,7 @@ export function ImageStylePopover({
                   </button>
                </section>
 
-               {!isMasked && <ImageFrameSection content={content} onChange={onChange} />}
+               {!isMasked && <ImageFrameSection content={content} onChange={onChange} onPreview={onPreview} />}
                <ImageEffectsSection content={content} onChange={onChange} onPreview={onPreview} />
             </div>
          </PopoverContent>
