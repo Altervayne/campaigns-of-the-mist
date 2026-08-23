@@ -2,6 +2,7 @@ import type { Card, Tracker, Character, LegendsThemeDetails, LegendsHeroDetails 
 import type { Drawer, DrawerItem, Folder, GameSystem, GeneralItemType } from '../types/drawer';
 import type { Board, BoardItemContent, PostItNote, Journal, Note } from '@/lib/types/board';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
+import { CARD_PALETTE_GAMES } from '@/lib/theme/cardPalettes';
 import type { CardPalette } from '@/lib/theme/cardPalettes';
 import type { RollTableContent } from '@/lib/rolltable/types';
 import { APP_VERSION } from '../config';
@@ -528,7 +529,7 @@ export async function exportCardPalette(palette: CardPalette) {
 export function isExportedCardPalette(file: ExportFile): boolean {
    const content = file.content as Partial<CardPalette>;
    return file.fileType === 'CARD_PALETTE'
-      && (content.game === 'LEGENDS' || content.game === 'CITY_OF_MIST' || content.game === 'OTHERSCAPE')
+      && !!content.game && CARD_PALETTE_GAMES.includes(content.game)
       && typeof content.name === 'string'
       && !!content.cardTypes && typeof content.cardTypes === 'object';
 }

@@ -28,7 +28,7 @@ import type { PaperTokenKey } from '@/lib/theme/themeTokens';
 import type { CardPalette } from '@/lib/theme/cardPalettes';
 
 /*
- * The per-card-type palette editor: one card-type of the palette's game is selected at a time, and its 10 paper
+ * The per-card-type palette editor: one card-type of the palette's game is selected at a time, and its 11 paper
  * tokens are edited exactly like the chrome theme's paper editor (the tokens ARE a PaperSet). Each pick commits
  * immediately into `cardPaletteDraft`, so the live preview - and the whole app, if this palette is active for
  * its game - updates as you edit. Edits reach the saved palette only on Save (enabled only when dirty). Reuses

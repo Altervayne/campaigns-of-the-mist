@@ -59,7 +59,7 @@ describe('CARD_TYPES_BY_GAME', () => {
 });
 
 describe('cardTypeCss', () => {
-   it('emits all 10 card vars with the bridged names', () => {
+   it('emits all 11 card vars with the bridged names', () => {
       const css = cardTypeCss({ slug: 'hero', labelKey: 'x', classes: ['card-type-hero'] }, makePaper('t'));
       for (const key of PAPER_TOKEN_KEYS) {
          expect(css).toContain(`--${PAPER_TO_CARD_VAR[key]}: t-${key};`);

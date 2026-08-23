@@ -194,7 +194,7 @@ export const OtherscapeThemeCard = React.memo(
                   // Loadout card: Loaded/Unloaded Gear + Flaws + Wildcard Slots
                   <>
                      {/* Wildcard Slots as single line */}
-                     <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold bg-black/10 border-y border-card-accent/30">
+                     <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold bg-card-accent/10 border-y border-card-accent/30">
                         <span>{t('Common.wildcardSlots')}</span>
                         <div className="flex items-center gap-2">
                            {isEditing && (

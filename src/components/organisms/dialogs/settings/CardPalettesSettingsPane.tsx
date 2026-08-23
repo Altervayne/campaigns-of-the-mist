@@ -19,7 +19,7 @@ import { useSettingsFocus } from './settingsFocus';
 import { cn } from '@/lib/utils';
 
 // -- Theme Imports --
-import { cardPaletteFieldsEqual } from '@/lib/theme/cardPalettes';
+import { CARD_PALETTE_GAMES, cardPaletteFieldsEqual } from '@/lib/theme/cardPalettes';
 import { defaultCardTypesForGame } from '@/lib/theme/cardPaletteProbe';
 import { useCreateCardPalette } from '@/lib/theme/useCreateCardPalette';
 
@@ -29,9 +29,6 @@ import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSett
 // -- Type Imports --
 import type { ReactNode } from 'react';
 import type { CardPaletteGame } from '@/lib/theme/cardPalettes';
-
-/** The games that own card palettes, in selector order. */
-const GAME_OPTIONS: CardPaletteGame[] = ['LEGENDS', 'CITY_OF_MIST', 'OTHERSCAPE'];
 
 /**
  * The Card Palettes section: a game selector, the game's palette manager (list + select + CRUD), and an editor
@@ -151,7 +148,7 @@ export function CardPalettesSettingsPane() {
          <div data-tutorial="card-palettes-game" className="flex flex-col gap-2">
             <Label className="text-left">{t('SettingsDialog.cardPalettes.game')}</Label>
             <div className="inline-flex w-full rounded-md border border-border bg-muted p-0.5">
-               {GAME_OPTIONS.map((option) => {
+               {CARD_PALETTE_GAMES.map((option) => {
                   const isActive = game === option;
                   return (
                      <button

@@ -5,10 +5,7 @@ import { useEffect } from 'react';
 import { useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 
 // -- Theme Imports --
-import { CARD_PALETTE_STYLE_ID, cardPaletteCss } from '@/lib/theme/cardPalettes';
-import type { CardPaletteGame } from '@/lib/theme/cardPalettes';
-
-const GAMES: CardPaletteGame[] = ['LEGENDS', 'CITY_OF_MIST', 'OTHERSCAPE'];
+import { CARD_PALETTE_GAMES, CARD_PALETTE_STYLE_ID, cardPaletteCss } from '@/lib/theme/cardPalettes';
 
 export function CardPaletteClassManager({ children }: { children: React.ReactNode }) {
    const cardPalettes = useAppSettingsStore((state) => state.cardPalettes);
@@ -19,7 +16,7 @@ export function CardPaletteClassManager({ children }: { children: React.ReactNod
       // Per game: a draft for that game drives the live preview (so editing shows on the cards); else the
       // active custom palette; else nothing (`'default'` lets the global.css rules show through). Every
       // rendered palette's per-card-type overrides go into one managed <style>.
-      const css = GAMES.map((game) => {
+      const css = CARD_PALETTE_GAMES.map((game) => {
          const palette = cardPaletteDraft?.game === game
             ? cardPaletteDraft
             : cardPalettes.find((entry) => entry.id === activeCardPalettes[game]);

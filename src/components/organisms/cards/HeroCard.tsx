@@ -142,7 +142,7 @@ const HeroCardContent = React.memo(
                   </div>
                </div>
 
-               <div className="flex justify-around items-center py-2 px-2 shrink-0 w-full border-t border-black/30">
+               <div className="flex justify-around items-center py-2 px-2 shrink-0 w-full border-t border-card-accent/30">
                   <PipTracker 
                      label="promise" 
                      value={details.promise} 

@@ -93,6 +93,13 @@ export const CARD_TYPES_BY_GAME: Record<CardPaletteGame, CardTypeDef[]> = {
    ],
 };
 
+/**
+ * The games that own card palettes, in selector order. Derived from {@link CARD_TYPES_BY_GAME} (itself
+ * compiler-forced exhaustive over {@link CardPaletteGame}), so adding a game to the union covers every
+ * consumer - the class emitter, both settings selectors, and the import gate - from one source.
+ */
+export const CARD_PALETTE_GAMES = Object.keys(CARD_TYPES_BY_GAME) as CardPaletteGame[];
+
 /** The id of the managed `<style>` element that holds the active custom card-palette rules. */
 export const CARD_PALETTE_STYLE_ID = 'cotm-card-palettes';
 

@@ -7,11 +7,11 @@ import { MobileSettingsSubScreen } from '@/components/mobile/menu/MobileSettings
 import { MobileSettingsToggleGroup } from '@/components/mobile/menu/MobileSettingsToggleGroup';
 import { MobileCardPaletteList } from '@/components/mobile/menu/MobileCardPaletteList';
 
+// -- Theme Imports --
+import { CARD_PALETTE_GAMES } from '@/lib/theme/cardPalettes';
+
 // -- Type Imports --
 import type { CardPaletteGame } from '@/lib/theme/cardPalettes';
-
-/** The games that own card palettes, in selector order. */
-const GAME_OPTIONS: CardPaletteGame[] = ['LEGENDS', 'CITY_OF_MIST', 'OTHERSCAPE'];
 
 interface MobileSettingsCardPalettesProps {
 	onBack?: () => void;
@@ -30,7 +30,7 @@ export default function MobileSettingsCardPalettes({ onBack, onOpenEditor }: Mob
 		<MobileSettingsSubScreen title={t('SettingsShell.sections.cardPalettes')} onBack={onBack}>
 			<MobileSettingsToggleGroup
 				label={t('SettingsDialog.cardPalettes.game')}
-				options={GAME_OPTIONS.map((option) => ({
+				options={CARD_PALETTE_GAMES.map((option) => ({
 					icon: null,
 					label: t(`SettingsDialog.cardPalettes.games.${option}`),
 					isActive: game === option,
