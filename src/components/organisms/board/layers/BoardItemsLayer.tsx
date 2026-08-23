@@ -23,7 +23,7 @@ import type { BoardState } from '@/lib/stores/boardStore';
 import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, Viewport } from '@/lib/types/board';
 import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
-import type { DistanceBadge, GuideSegment } from '@/lib/board/boardSnapping';
+import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
  *  the full set (width + color + dash), so any single-facet edit keeps the others. */
@@ -58,6 +58,10 @@ interface BoardItemsLayerProps {
    /** Alignment guides and equal-spacing badges for the in-progress Shift-held move (empty otherwise). */
    snapGuides: GuideSegment[];
    snapBadges: DistanceBadge[];
+   /** The other items' rects (connections excluded) for a Shift-held resize snap; a box captures them at start. */
+   resizeSnapTargetsFor: (excludeId: string) => SnapRect[];
+   /** Feeds a box's live resize-snap guides into the shared move-snap overlay. */
+   onResizeSnapGuides: (guides: GuideSegment[], badges: DistanceBadge[]) => void;
    connectPreview: { fromId: string; cursor: Point } | null;
    penPreview: number[] | null;
    polygonPreview: number[] | null;
@@ -112,6 +116,8 @@ export function BoardItemsLayer({
    groupDrag,
    snapGuides,
    snapBadges,
+   resizeSnapTargetsFor,
+   onResizeSnapGuides,
    connectPreview,
    penPreview,
    polygonPreview,
@@ -186,6 +192,8 @@ export function BoardItemsLayer({
             zIndex={itemZIndex(layerRank.get(item.id) ?? 0, selectedIds.has(item.id), layerCount, item.kind === 'zone')}
             memberCount={members?.length}
             resizeMin={members ? zoneContentMinSize(item, members) : item.kind === 'portal' ? PORTAL_MIN_SIZE : undefined}
+            resizeSnapTargetsFor={resizeSnapTargetsFor}
+            onResizeSnapGuides={onResizeSnapGuides}
             zoom={viewport.zoom}
             moveDelta={moveDeltaFor(item.id)}
             interacting={interacting}

@@ -9,6 +9,7 @@ import cuid from 'cuid';
 import { itemsInMarquee, screenDeltaToWorld, screenToWorld } from '@/lib/board/boardCoordinates';
 import { DEFAULT_CONNECTION_STYLE } from '@/lib/board/boardConnections';
 import { computeGuides } from '@/lib/board/boardSnapping';
+import { effectiveSnapRect } from '@/lib/board/snapTargets';
 import { MOVE_THRESHOLD, SNAP_PX } from '@/components/organisms/board/boardCanvasConstants';
 
 // -- Type Imports --
@@ -58,6 +59,14 @@ export function useBoardPointerInteraction({
    // Rendered in the world layer.
    const [snapGuides, setSnapGuides] = useState<GuideSegment[]>([]);
    const [snapBadges, setSnapBadges] = useState<DistanceBadge[]>([]);
+
+   // The resize gesture (owned by BoardItemBox) feeds its alignment guides through here into the same
+   // overlay. A move and a resize never run together, so both share the one guide state; a resize never
+   // produces spacing badges, so it clears them alongside.
+   const showResizeGuides = useCallback((guides: GuideSegment[], badges: DistanceBadge[]) => {
+      setSnapGuides(guides);
+      setSnapBadges(badges);
+   }, []);
 
    // The in-progress connect drag (preview line follows the cursor in world coords).
    const [connectPreview, setConnectPreview] = useState<{ fromId: string; cursor: Point } | null>(null);
@@ -109,13 +118,14 @@ export function useBoardPointerInteraction({
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             for (const item of Object.values(liveItems)) {
                if (item.kind === 'connection') continue;
+               const r = effectiveSnapRect(item);
                if (set.has(item.id)) {
-                  minX = Math.min(minX, item.x);
-                  minY = Math.min(minY, item.y);
-                  maxX = Math.max(maxX, item.x + item.width);
-                  maxY = Math.max(maxY, item.y + item.height);
+                  minX = Math.min(minX, r.x);
+                  minY = Math.min(minY, r.y);
+                  maxX = Math.max(maxX, r.x + r.width);
+                  maxY = Math.max(maxY, r.y + r.height);
                } else {
-                  snapTargets.push({ x: item.x, y: item.y, width: item.width, height: item.height });
+                  snapTargets.push(r);
                }
             }
             movingBbox = Number.isFinite(minX) ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY } : null;
@@ -266,6 +276,7 @@ export function useBoardPointerInteraction({
       groupDrag,
       snapGuides,
       snapBadges,
+      showResizeGuides,
       connectPreview,
       moveDeltaFor,
       handleMoveStart,

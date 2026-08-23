@@ -129,6 +129,91 @@ export function computeSnap(movingBbox: Rect, targets: Rect[], threshold: number
    return { adjust, guides };
 }
 
+/** The chosen snap on one resize axis: a size-match to a neighbor beats/loses to edge-alignment purely on distance. */
+interface ResizeAxisSnap {
+   /** Offset that lands the snap, applied as a SIZE change (top-left is pinned). */
+   adjust: number;
+   /** The aligned edge coord (for an alignment guide), null when nothing is in range. */
+   coord: number | null;
+   /** The target whose SIZE was matched (for an equal-size badge), null for an edge-alignment snap. */
+   sizeMatch: Rect | null;
+}
+
+/**
+ * Closest resize snap on one axis. The moving `edge` (right or bottom) is solved against two candidate
+ * families within `threshold`, closest wins: the targets' edge/center anchors (aligns the edge, `coord`),
+ * and each target's SIZE projected off the pinned `origin` (`origin + targetSize` makes the box the same
+ * width/height as that target, wherever it sits - `sizeMatch`). `sizeOf` and `anchorsOf` pick the axis.
+ */
+function solveResizeAxis(edge: number, origin: number, targets: Rect[], sizeOf: (t: Rect) => number, anchorsOf: (r: Rect) => number[], threshold: number): ResizeAxisSnap {
+   // Every candidate coord the edge could snap to: each target's edge/center anchors (alignment) and each
+   // target's size projected off the pinned origin (equal-size). Edge anchors precede the size-match per
+   // target, so an exact tie keeps alignment. Closest within threshold wins.
+   const candidates: { coord: number; sizeMatch: Rect | null }[] = [];
+   for (const target of targets) {
+      for (const anchor of anchorsOf(target)) candidates.push({ coord: anchor, sizeMatch: null });
+      candidates.push({ coord: origin + sizeOf(target), sizeMatch: target });
+   }
+   let best: ResizeAxisSnap = { adjust: 0, coord: null, sizeMatch: null };
+   let bestDist = Infinity;
+   for (const candidate of candidates) {
+      const dist = Math.abs(candidate.coord - edge);
+      if (dist > threshold || dist >= bestDist) continue;
+      best = { adjust: candidate.coord - edge, coord: candidate.coord, sizeMatch: candidate.sizeMatch };
+      bestDist = dist;
+   }
+   return best;
+}
+
+/** An equal-size measure bar spanning `span` along `axis` at the box's cross-axis center, labeled with the size. */
+function sizeBadge(axis: 'x' | 'y', box: Rect): DistanceBadge {
+   return axis === 'x'
+      ? { axis, gap: box.width, from: box.x, to: box.x + box.width, mid: { x: box.x + box.width / 2, y: box.y + box.height / 2 } }
+      : { axis, gap: box.height, from: box.y, to: box.y + box.height, mid: { x: box.x + box.width / 2, y: box.y + box.height / 2 } };
+}
+
+/**
+ * Snap for a bottom-right resize: the top-left is pinned, so only the RIGHT edge (`x + width`) and BOTTOM
+ * edge (`y + height`) move. Each edge snaps to the closest of the targets' edges/centers (an alignment guide)
+ * or a neighbor's matching dimension (equal width/height, an equal-size badge on both boxes). Each edge's
+ * `adjust` becomes a size change; a snap that would drop a dimension below its floor is dropped on that axis.
+ */
+export function computeResizeSnap(rect: Rect, targets: Rect[], threshold: number, minWidth: number, minHeight: number): { width: number; height: number; guides: GuideSegment[]; badges: DistanceBadge[] } {
+   const x = solveResizeAxis(rect.x + rect.width, rect.x, targets, (t) => t.width, xAnchors, threshold);
+   const y = solveResizeAxis(rect.y + rect.height, rect.y, targets, (t) => t.height, yAnchors, threshold);
+
+   let width = rect.width;
+   let height = rect.height;
+   let xSnap: ResizeAxisSnap | null = x.coord !== null ? x : null;
+   let ySnap: ResizeAxisSnap | null = y.coord !== null ? y : null;
+   // An edge adjust is a size adjust (top-left pinned). Drop the snap on an axis it would floor below.
+   if (xSnap) {
+      const snapped = rect.width + xSnap.adjust;
+      if (snapped >= minWidth) width = snapped;
+      else xSnap = null;
+   }
+   if (ySnap) {
+      const snapped = rect.height + ySnap.adjust;
+      if (snapped >= minHeight) height = snapped;
+      else ySnap = null;
+   }
+
+   const box: Rect = { x: rect.x, y: rect.y, width, height };
+   const guides: GuideSegment[] = [];
+   const badges: DistanceBadge[] = [];
+   // An edge alignment draws a guide (box + aligned neighbors); a size-match draws equal-length bars on both boxes.
+   if (xSnap) {
+      if (xSnap.sizeMatch) badges.push(sizeBadge('x', box), sizeBadge('x', xSnap.sizeMatch));
+      else guides.push(xGuide(xSnap.coord!, box, targets));
+   }
+   if (ySnap) {
+      if (ySnap.sizeMatch) badges.push(sizeBadge('y', box), sizeBadge('y', ySnap.sizeMatch));
+      else guides.push(yGuide(ySnap.coord!, box, targets));
+   }
+
+   return { width, height, guides, badges };
+}
+
 /*
  * Equal-spacing detection. The moving box and its neighbors are projected onto one axis as spans; when the
  * box forms equal gaps with the flanking neighbors it snaps to equalize and measures those gaps. The

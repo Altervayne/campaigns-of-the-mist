@@ -48,6 +48,8 @@ import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSett
 
 // -- Type Imports --
 import type { BoardStore } from '@/lib/stores/boardStore';
+import type { Rect as SnapRect } from '@/lib/board/boardSnapping';
+import { effectiveSnapRect } from '@/lib/board/snapTargets';
 import type { BoardGridType, BoardItem, BoardTexture, BrushKind, PortalBoardContent } from '@/lib/types/board';
 import type { ChallengeGame } from '@/lib/types/common';
 
@@ -119,6 +121,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       groupDrag,
       snapGuides,
       snapBadges,
+      showResizeGuides,
       connectPreview,
       moveDeltaFor,
       handleMoveStart,
@@ -126,6 +129,18 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       handleConnectStart,
       beginMarquee,
    } = useBoardPointerInteraction({ store, actions, cursorToWorld, clipRef, viewportRef });
+
+   // The snap targets a Shift-held resize aligns to: every spatial item's rect except the resizing one
+   // (connections excluded, like the move path). Stable (reads live store state), captured once per gesture
+   // by the box at resize-start.
+   const resizeSnapTargetsFor = useCallback((excludeId: string): SnapRect[] => {
+      const targets: SnapRect[] = [];
+      for (const item of Object.values(store.getState().items)) {
+         if (item.kind === 'connection' || item.id === excludeId) continue;
+         targets.push(effectiveSnapRect(item));
+      }
+      return targets;
+   }, [store]);
 
    // Selection + text-editing sub-state: the delete/duplicate handlers, the sole-selection derivation, and
    // the multi-select group bbox. Subscribes to selectedIds in the store; the group bbox tracks a live move
@@ -609,6 +624,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             groupDrag={groupDrag}
             snapGuides={snapGuides}
             snapBadges={snapBadges}
+            resizeSnapTargetsFor={resizeSnapTargetsFor}
+            onResizeSnapGuides={showResizeGuides}
             connectPreview={connectPreview}
             penPreview={penPreview}
             polygonPreview={polygonPreview}

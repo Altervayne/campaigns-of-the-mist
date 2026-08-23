@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { computeGuides, computeSnap, computeSpacing, type Rect } from './boardSnapping';
+import { computeGuides, computeResizeSnap, computeSnap, computeSpacing, type Rect } from './boardSnapping';
 
 /*
  * Alignment snapping: X and Y solve independently, the closest anchor pair within threshold wins, and
@@ -191,6 +191,113 @@ describe('computeSpacing', () => {
       const one = computeSpacing(moving, [lonePeer], THRESHOLD);
       expect(one.adjust).toEqual({ x: 0, y: 0 });
       expect(one.badges).toEqual([]);
+   });
+});
+
+/*
+ * Resize snapping: the top-left is pinned, so the right edge snaps to target x-anchors and the bottom edge
+ * to target y-anchors, each folding into a size change. A snap that floors a dimension is dropped. All
+ * coords are world units; the floors here are the default MIN_ITEM_SIZE (40).
+ */
+describe('computeResizeSnap', () => {
+   const MIN = 40;
+
+   it('snaps the right edge to a target left edge, growing width', () => {
+      // right edge = 100 + 50 = 150, target left = 153 -> +3 width.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 153, y: 0, width: 20, height: 20 };
+      const { width, height, guides } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(53);
+      expect(height).toBe(40);
+      const guide = guides.find((g) => g.axis === 'x');
+      expect(guide).toMatchObject({ axis: 'x', coord: 153, from: 0, to: 140 });
+   });
+
+   it('snaps the right edge to a target center-x', () => {
+      // right edge = 150, target center-x = 138 + 10 = 148 -> -2 width.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 138, y: 0, width: 20, height: 20 };
+      const { width } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(48);
+   });
+
+   it('snaps the right edge to a target right edge, shrinking width', () => {
+      // right edge = 150, target right = 100 + 47 = 147 -> -3 width.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 100, y: 0, width: 47, height: 20 };
+      const { width } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(47);
+   });
+
+   it('snaps the bottom edge to a target y-anchor', () => {
+      // bottom edge = 100 + 50 = 150, target top = 148 -> -2 height; x untouched.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 50 };
+      const target: Rect = { x: 0, y: 148, width: 20, height: 20 };
+      const { width, height, guides } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(50);
+      expect(height).toBe(48);
+      expect(guides.find((g) => g.axis === 'y')).toMatchObject({ axis: 'y', coord: 148 });
+   });
+
+   it('snaps both edges at once', () => {
+      // right edge = 150 -> 153 (+3), bottom edge = 150 -> 148 (-2).
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 50 };
+      const target: Rect = { x: 153, y: 148, width: 20, height: 20 };
+      const { width, height, guides } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(53);
+      expect(height).toBe(48);
+      expect(guides).toHaveLength(2);
+      expect(guides.some((g) => g.axis === 'x')).toBe(true);
+      expect(guides.some((g) => g.axis === 'y')).toBe(true);
+   });
+
+   it('drops a snap that would floor the dimension, keeping the un-snapped size', () => {
+      // right edge = 100 + 42 = 142, target left = 138 -> -4 -> width 38 < min 40, so no snap and no guide.
+      const rect: Rect = { x: 100, y: 100, width: 42, height: 40 };
+      const target: Rect = { x: 138, y: 0, width: 20, height: 20 };
+      const { width, guides } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(42);
+      expect(guides).toEqual([]);
+   });
+
+   it('returns the original size and no guides with nothing in range', () => {
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 500, y: 500, width: 20, height: 20 };
+      const { width, height, guides } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(50);
+      expect(height).toBe(40);
+      expect(guides).toEqual([]);
+   });
+
+   it('matches a distant neighbor width (equal-size), emitting badges not a guide', () => {
+      // right edge = 150; the target is far away (x 400) but 52 wide, so origin 100 + 52 = 152 -> +2 width == its width.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 400, y: 400, width: 52, height: 30 };
+      const { width, guides, badges } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(52);
+      expect(guides).toEqual([]);
+      expect(badges).toHaveLength(2);
+      expect(badges.every((b) => b.axis === 'x' && b.gap === 52)).toBe(true);
+   });
+
+   it('matches a distant neighbor height (equal-size)', () => {
+      // bottom edge = 140; the target is 43 tall, so origin 100 + 43 = 143 -> +3 height == its height.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 400, y: 400, width: 30, height: 43 };
+      const { height, badges } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(height).toBe(43);
+      expect(badges.some((b) => b.axis === 'y' && b.gap === 43)).toBe(true);
+   });
+
+   it('prefers edge-alignment over an equal-size match at the same distance', () => {
+      // right edge = 150: target left = 152 (+2 align) and target width 48 -> origin 100 + 48 = 148 (-2 size). Both
+      // 2 away, alignment is tried first, so it wins -> a guide and no size badge.
+      const rect: Rect = { x: 100, y: 100, width: 50, height: 40 };
+      const target: Rect = { x: 152, y: 0, width: 48, height: 20 };
+      const { width, guides, badges } = computeResizeSnap(rect, [target], THRESHOLD, MIN, MIN);
+      expect(width).toBe(52);
+      expect(guides.some((g) => g.axis === 'x')).toBe(true);
+      expect(badges).toEqual([]);
    });
 });
 

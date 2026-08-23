@@ -89,6 +89,8 @@ function renderLayer(overrides: {
          groupDrag={null}
          snapGuides={[]}
          snapBadges={[]}
+         resizeSnapTargetsFor={() => []}
+         onResizeSnapGuides={() => {}}
          connectPreview={null}
          penPreview={null}
          polygonPreview={null}

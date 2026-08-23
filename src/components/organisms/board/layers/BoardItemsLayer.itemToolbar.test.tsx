@@ -70,6 +70,8 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
          groupDrag={null}
          snapGuides={[]}
          snapBadges={[]}
+         resizeSnapTargetsFor={() => []}
+         onResizeSnapGuides={() => {}}
          connectPreview={null}
          penPreview={null}
          polygonPreview={null}

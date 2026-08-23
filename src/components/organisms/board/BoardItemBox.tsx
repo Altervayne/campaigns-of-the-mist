@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { screenDeltaToWorld } from '@/lib/board/boardCoordinates';
 import { MIN_ITEM_SIZE, computeResize, effectiveHeight, fitContentHeight, fitContentWidth, shouldSyncMeasuredHeight, shouldSyncMeasuredSize } from '@/lib/board/boardResize';
+import { computeResizeSnap } from '@/lib/board/boardSnapping';
+import { SNAP_PX } from './boardCanvasConstants';
 import { isRotatableKind, rotatedResize, rotatedTopExtra } from '@/lib/board/boardRotation';
 import { imageBoxShadowCss } from '@/lib/board/imageStyle';
 import { COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_WIDTH } from '@/lib/board/zoneCollapse';
@@ -24,6 +26,7 @@ import { useBoardItemRotate } from '@/hooks/board/useBoardItemRotate';
 // -- Type Imports --
 import type { BoardItem, BoardItemContent, BoardItemKind } from '@/lib/types/board';
 import type { ResizePatch } from '@/lib/board/boardCommands';
+import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /*
  * The chrome for one board item: the positioned box, the selection ring, a single
@@ -135,6 +138,11 @@ interface BoardItemBoxProps {
    onCachePortalName: (itemId: string, name: string) => void;
    /** Lower bound for the resize (a zone passes its member extent); each axis defaults to MIN_ITEM_SIZE. */
    resizeMin?: { width: number; height: number };
+   /** The other spatial items' rects (connections excluded) for a Shift-held resize snap; captured once at
+    *  resize-start. Omitted when the surface has no snap targets to offer. */
+   resizeSnapTargetsFor?: (excludeId: string) => SnapRect[];
+   /** Reports the live resize-snap alignment guides and equal-size badges (empty to clear) into the shared move-snap overlay. */
+   onResizeSnapGuides?: (guides: GuideSegment[], badges: DistanceBadge[]) => void;
    /** Stacking band for this box: selection raises it via z-index, NOT a DOM re-order (no remount). */
    zIndex?: number;
 }
@@ -187,6 +195,8 @@ export const BoardItemBox = memo(function BoardItemBox({
    onRequestRelinkPortal,
    onCachePortalName,
    resizeMin,
+   resizeSnapTargetsFor,
+   onResizeSnapGuides,
    zIndex,
 }: BoardItemBoxProps) {
    const { t } = useTranslation();
@@ -195,6 +205,9 @@ export const BoardItemBox = memo(function BoardItemBox({
    // arrives as `moveDelta`.
    const [resizeRect, setResizeRect] = useState<DragRect | null>(null);
    const resizeStart = useRef<{ x: number; y: number; orig: DragRect; rect: DragRect } | null>(null);
+   // The snap targets (the other items' rects), fixed for the resize gesture; captured once at resize-start
+   // so a Shift-held sample never re-reads the store.
+   const resizeSnapTargets = useRef<SnapRect[]>([]);
 
    // Rotation gesture (free-form kinds only): the live angle drives the box transform; the stored angle
    // otherwise. The resize-while-rotated math reads the stored angle, which never changes mid-resize.
@@ -305,6 +318,7 @@ export const BoardItemBox = memo(function BoardItemBox({
       onSelect(item.id, false);
       const orig = { x: item.x, y: item.y, width: item.width, height: item.height };
       resizeStart.current = { x: event.clientX, y: event.clientY, orig, rect: orig };
+      resizeSnapTargets.current = resizeSnapTargetsFor?.(item.id) ?? [];
       setResizeRect(orig);
       event.currentTarget.setPointerCapture(event.pointerId);
    };
@@ -329,13 +343,25 @@ export const BoardItemBox = memo(function BoardItemBox({
       const next = item.rotation
          ? rotatedResize(start.orig, delta, item.rotation, min)
          : computeResize(start.orig, delta, min, posterAspect);
-      start.rect = next;
-      setResizeRect(next);
+      // Shift snaps the moving right/bottom edges to the other items' anchors (read live, so a press/release
+      // toggles it mid-resize). Guides render in the shared move-snap overlay. A rotated box grows along its
+      // local axes (a different assumption) and an aspect-locked poster must keep its ratio, so both skip snap.
+      let sized = next;
+      if (event.shiftKey && !item.rotation && posterAspect === undefined) {
+         const snap = computeResizeSnap(next, resizeSnapTargets.current, SNAP_PX / zoom, min.width, min.height);
+         sized = { ...next, width: snap.width, height: snap.height };
+         onResizeSnapGuides?.(snap.guides, snap.badges);
+      } else {
+         onResizeSnapGuides?.([], []);
+      }
+      start.rect = sized;
+      setResizeRect(sized);
    };
 
    const handleResizePointerUp = (event: ReactPointerEvent) => {
       const start = resizeStart.current;
       resizeStart.current = null;
+      onResizeSnapGuides?.([], []);
       // Commit (and clear the live rect) before releasing capture, so the resize can't be lost if the
       // release throws. An unrotated bottom-right resize only grows the size (x/y never move); a rotated
       // one also repositions to pin the opposite corner, so it carries x/y too. The dragged size is the
