@@ -31,7 +31,10 @@ export function ChallengeCardEditor({ isOpen, onOpenChange, card, modal = true }
 
    return (
       <Dialog open={isOpen} onOpenChange={onOpenChange} modal={modal}>
-         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+         {/* The dialog is portaled, but React still bubbles its synthetic pointer events through the tree - on
+             the board that reaches the host item's move/select handlers and deselects it, unmounting the
+             toolbar this editor lives in (it closes on any click). Stop the pointer at the content root. */}
+         <DialogContent onPointerDown={(event) => event.stopPropagation()} className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
                <DialogTitle>{t('ChallengeCard.editor.title')}</DialogTitle>
                <DialogDescription>{t('ChallengeCard.editor.description')}</DialogDescription>

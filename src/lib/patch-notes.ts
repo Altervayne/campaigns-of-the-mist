@@ -7,10 +7,19 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.3.1',
+      content: `
+### 🔧 Changes
+* Made it so snap helpers can also be used while resizing
+
+### 🐛 Bugfixes
+* Fixed clicking somewhere in the challenge edit modal on a Board closing the modal
+`,
+   },
+   {
       version: '2.3.0',
       content: `
-## ✨ Features
-
+### ✨ Features
 * **Boards**:
   * **Element Rotation**: The board now permits rotation for the following elements:
     * Post-it note
@@ -23,8 +32,7 @@ export const patchNotes: PatchNote[] = [
 
 * **First shot at 📱 tablet support**: I've added an interactivity layer for touch controls on a tablet. The desktop UI is preserved, but some buttons will be made bigger and easier to reach, and new touch controls have been added. I've definitely missed some stuff, so as usual, please report any issues ! So far, the app is meant to be used in Landscape mode for tablets.
 
-## 🐛 Bugfixes
-
+### 🐛 Bugfixes
 * Fixed changing a board element's color by dragging in the color picker accidentally **moving the element** across the board (and the picker sliding away with it, so you couldn't finish choosing).
 * Fixed the board selection toolbar (single and multi-select) sliding off the bottom edge of the viewport when the selection sat near the bottom.
 * Fixed workspace tabs ignoring a custom theme's corner roundness.
