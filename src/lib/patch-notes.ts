@@ -7,6 +7,19 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.3.2',
+      content: `
+### 🐛 Bugfixes
+* Fixed the "load character in sheet" option in drawer item context menus making its way into a folder's context menu too instead of being properly cleaned out.
+* Fixed dice rolls being lost if the dice panel was closed before the animation finished.
+* Fixed dice tray modifications being undone after a roll if they were made during one.
+* Fixed the warning "cannot drop here" overlay showing incorrect information after spring-navigating to a different character during a drag.
+* Fixed drag and dropping from one character sheet to another using spring-navigation doing nothing. Now if the games match it imports a copy.
+* Fixed LitM "Hero Card" and Otherscape Theme Card having a hardcoded color for some elements instead of properly using card palette (custom or not) colors.
+* Fixed using the scroll wheel over a board's layers panel zooming in and out of the board instead of correctly scrolling the panel's list.
+`,
+   },
+   {
       version: '2.3.1',
       content: `
 ### 🔧 Changes
