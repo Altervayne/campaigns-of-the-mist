@@ -47,14 +47,14 @@ export function SidebarUpdateDialogs({
          <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.resetConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.resetConfirmTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                     {t('CharacterSheetPage.SidebarMenu.resetConfirmDescription')}
+                     {t('WorkspacePage.SidebarMenu.resetConfirmDescription')}
                   </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onResetCharacter}>{t('CharacterSheetPage.SidebarMenu.resetConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onResetCharacter}>{t('WorkspacePage.SidebarMenu.resetConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>
@@ -62,12 +62,12 @@ export function SidebarUpdateDialogs({
          <AlertDialog open={pendingCharacterUpdate !== null} onOpenChange={(open) => { if (!open) setPendingCharacterUpdate(null); }}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmDescription')}</AlertDialogDescription>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.updateCharacterConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.updateCharacterConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmCharacterUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmCharacterUpdate}>{t('WorkspacePage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>
@@ -75,12 +75,12 @@ export function SidebarUpdateDialogs({
          <AlertDialog open={pendingBoardUpdate !== null} onOpenChange={(open) => { if (!open) setPendingBoardUpdate(null); }}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateBoardConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateBoardConfirmDescription')}</AlertDialogDescription>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.updateBoardConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.updateBoardConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmBoardUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmBoardUpdate}>{t('WorkspacePage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>
@@ -88,12 +88,12 @@ export function SidebarUpdateDialogs({
          <AlertDialog open={pendingNoteUpdate !== null} onOpenChange={(open) => { if (!open) setPendingNoteUpdate(null); }}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.updateNoteConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmNoteUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={onConfirmNoteUpdate}>{t('WorkspacePage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

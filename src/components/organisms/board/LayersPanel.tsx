@@ -191,6 +191,9 @@ export function LayersPanel({ store, onClose, onSelect, onActivate, onHover, onC
    return (
       <div
          data-tutorial="board-layers-panel"
+         // The panel sits inside the board clip, so its wheel events reach the canvas zoom listener; this
+         // opt-out makes that listener bail here, so the row list scrolls natively instead of zooming the board.
+         data-board-wheel-scroll
          onPointerDown={(event) => event.stopPropagation()}
          className="absolute inset-y-0 right-0 z-40 flex w-64 flex-col border-l border-border bg-card shadow-sm"
       >

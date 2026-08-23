@@ -677,7 +677,7 @@
       "zoomOut": "Dézoomer",
       "reset": "Réinitialiser le zoom à 100%"
    },
-   "CharacterSheetPage": {
+   "WorkspacePage": {
       "characterNamePlaceholder": "Nom du Personnage...",
       "addElement": "Ajouter...",
       "addCard": "Ajouter une Carte",

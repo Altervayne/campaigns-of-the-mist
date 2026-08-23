@@ -57,10 +57,10 @@ export function SheetAddMenu({ game, hasPortrait, onAddCard, onAddPortrait, onAd
 
    // Card wears its game's glyph (as the board radial does); the others reuse the drawer icon source.
    const rows: SheetAddRow[] = [
-      { id: 'card', icon: getGameVisual(game).Icon, labelKey: 'CharacterSheetPage.addCard', onSelect: onAddCard },
-      { id: 'portrait', icon: getItemTypeIconComponent('IMAGE_CARD'), labelKey: 'CharacterSheetPage.addPortrait', onSelect: onAddPortrait, hidden: hasPortrait },
-      { id: 'challenge', icon: getItemTypeIconComponent('CHALLENGE_CARD'), labelKey: 'CharacterSheetPage.addChallenge', onSelect: onAddChallenge, hidden: !hasChallengeVariant(game) },
-      { id: 'journal', icon: getItemTypeIconComponent('JOURNAL'), labelKey: 'CharacterSheetPage.addJournal', onSelect: onAddJournal },
+      { id: 'card', icon: getGameVisual(game).Icon, labelKey: 'WorkspacePage.addCard', onSelect: onAddCard },
+      { id: 'portrait', icon: getItemTypeIconComponent('IMAGE_CARD'), labelKey: 'WorkspacePage.addPortrait', onSelect: onAddPortrait, hidden: hasPortrait },
+      { id: 'challenge', icon: getItemTypeIconComponent('CHALLENGE_CARD'), labelKey: 'WorkspacePage.addChallenge', onSelect: onAddChallenge, hidden: !hasChallengeVariant(game) },
+      { id: 'journal', icon: getItemTypeIconComponent('JOURNAL'), labelKey: 'WorkspacePage.addJournal', onSelect: onAddJournal },
    ];
 
    return (
@@ -75,7 +75,7 @@ export function SheetAddMenu({ game, hasPortrait, onAddCard, onAddPortrait, onAd
                )}
             >
                <Plus className="w-10 h-10" />
-               <span className="text-3xl font-semibold">{t('CharacterSheetPage.addElement')}</span>
+               <span className="text-3xl font-semibold">{t('WorkspacePage.addElement')}</span>
             </div>
          </DropdownMenuTrigger>
          <DropdownMenuContent side="right" align="start">

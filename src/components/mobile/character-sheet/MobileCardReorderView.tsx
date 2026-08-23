@@ -174,7 +174,7 @@ export function MobileCardReorderView({ items, isMobileFABMode, isLeftHanded, on
 						)}
 					>
 						<PlusCircle className="h-5 w-5" />
-						<span className="text-sm font-medium">{t('CharacterSheetPage.addElement')}</span>
+						<span className="text-sm font-medium">{t('WorkspacePage.addElement')}</span>
 					</button>
 				)}
 			</div>

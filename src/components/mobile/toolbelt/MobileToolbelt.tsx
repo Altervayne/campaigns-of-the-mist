@@ -78,12 +78,12 @@ export default function MobileToolbelt({
 			<AlertDialog open={pendingUpdate !== null} onOpenChange={(open) => { if (!open) cancelUpdate(); }}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmTitle')}</AlertDialogTitle>
-						<AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateCharacterConfirmDescription')}</AlertDialogDescription>
+						<AlertDialogTitle>{t('WorkspacePage.SidebarMenu.updateCharacterConfirmTitle')}</AlertDialogTitle>
+						<AlertDialogDescription>{t('WorkspacePage.SidebarMenu.updateCharacterConfirmDescription')}</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-						<AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
+						<AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmUpdate}>{t('WorkspacePage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

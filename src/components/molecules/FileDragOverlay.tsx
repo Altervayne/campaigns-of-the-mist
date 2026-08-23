@@ -32,7 +32,7 @@ export function FileDragOverlay({ isDragActive }: FileDragOverlayProps) {
                <div className="flex flex-col items-center justify-center w-full h-full text-center p-12 border-4 border-dashed border-primary/30">
                   <Download className="mx-auto h-12 w-12 text-primary" />
                   <p className="mt-2 font-semibold text-foreground">
-                     {t('CharacterSheetPage.dropToImport')}
+                     {t('WorkspacePage.dropToImport')}
                   </p>
                </div>
             </motion.div>

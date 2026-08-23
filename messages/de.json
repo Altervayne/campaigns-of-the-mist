@@ -53,7 +53,7 @@
          "Global": "Ansicht folgt den globalen Einstellungen"
       }
    },
-   "CharacterSheetPage": {
+   "WorkspacePage": {
       "characterNamePlaceholder": "Charakter Name...",
       "addCard": "Karte hinzufügen",
       "dropToLoadCharacter": "Ziehe den Character hier hin um ihn vollständig zu laden. Aber vorsicht, dass wird den bisher aktiven Charakter ersetzen.",

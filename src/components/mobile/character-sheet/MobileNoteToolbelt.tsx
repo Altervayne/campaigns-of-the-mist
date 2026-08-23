@@ -53,7 +53,7 @@ export default function MobileNoteToolbelt({
    const allActions: ToolbeltAction[] = [
       {
          id: 'note-save',
-         label: t('CharacterSheetPage.SidebarMenu.saveNoteToDrawer'),
+         label: t('WorkspacePage.SidebarMenu.saveNoteToDrawer'),
          icon: Save,
          onClick: () => { void save(); },
          group: 'workspace',
@@ -61,7 +61,7 @@ export default function MobileNoteToolbelt({
       },
       {
          id: 'note-save-as',
-         label: t('CharacterSheetPage.SidebarMenu.saveNoteToDrawerAs'),
+         label: t('WorkspacePage.SidebarMenu.saveNoteToDrawerAs'),
          icon: SaveAll,
          onClick: openSaveAs,
          group: 'workspace',
@@ -69,7 +69,7 @@ export default function MobileNoteToolbelt({
       },
       {
          id: 'note-export',
-         label: t('CharacterSheetPage.SidebarMenu.exportNote'),
+         label: t('WorkspacePage.SidebarMenu.exportNote'),
          icon: Upload,
          onClick: exportNote,
          group: 'workspace',
@@ -77,7 +77,7 @@ export default function MobileNoteToolbelt({
       },
       {
          id: 'note-import',
-         label: t('CharacterSheetPage.SidebarMenu.importNote'),
+         label: t('WorkspacePage.SidebarMenu.importNote'),
          icon: Download,
          onClick: importNote,
          group: 'workspace',
@@ -85,7 +85,7 @@ export default function MobileNoteToolbelt({
       },
       {
          id: 'note-export-md',
-         label: t('CharacterSheetPage.SidebarMenu.exportNoteMarkdown'),
+         label: t('WorkspacePage.SidebarMenu.exportNoteMarkdown'),
          icon: FileUp,
          onClick: exportMarkdown,
          group: 'workspace',
@@ -93,7 +93,7 @@ export default function MobileNoteToolbelt({
       },
       {
          id: 'note-update',
-         label: t('CharacterSheetPage.SidebarMenu.updateNote'),
+         label: t('WorkspacePage.SidebarMenu.updateNote'),
          icon: RefreshCw,
          onClick: updateNote,
          group: 'workspace',

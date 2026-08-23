@@ -44,7 +44,7 @@ export function SidebarBottomActions({ isCollapsed, activeWindow, onOpenMenu, on
                "flex flex-col items-center gap-2 p-2 bg-card border-t-2 border-b border-border"
             )}>
                <SidebarButton data-tutorial="open-menu-button" isCollapsed={isCollapsed} onClick={onOpenMenu} Icon={SquareMenu}>
-                  {t('CharacterSheetPage.SidebarMenu.openMenu')}
+                  {t('WorkspacePage.SidebarMenu.openMenu')}
                </SidebarButton>
             </motion.section>
          }
@@ -55,7 +55,7 @@ export function SidebarBottomActions({ isCollapsed, activeWindow, onOpenMenu, on
             activeWindow === 'MAIN_MENU' && "border-t-2 border-border"
          )}>
             <SidebarButton data-tutorial="settings-button" isCollapsed={isCollapsed} onClick={onOpenSettings} Icon={Settings}>
-               {t('CharacterSheetPage.SidebarMenu.settings')}
+               {t('WorkspacePage.SidebarMenu.settings')}
             </SidebarButton>
             {/* What's new carries the New! dot in its corner until the section is opened. */}
             <div className="relative">

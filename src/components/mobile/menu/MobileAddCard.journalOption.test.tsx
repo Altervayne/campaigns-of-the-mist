@@ -16,7 +16,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => k
 
 import MobileAddCard from './MobileAddCard';
 
-const journalOption = () => screen.queryByText('CharacterSheetPage.addJournal');
+const journalOption = () => screen.queryByText('WorkspacePage.addJournal');
 
 afterEach(cleanup);
 

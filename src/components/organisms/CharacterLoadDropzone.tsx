@@ -72,7 +72,7 @@ export function CharacterLoadDropZone({ activeDragItem, isBoardActive = false }:
                )}
             >
                {isBoardDrag ? <LayoutGrid className="mx-auto h-12 w-12" /> : isNoteDrag ? <NotebookPen className="mx-auto h-12 w-12" /> : <Upload className="mx-auto h-12 w-12" />}
-               <p className="mt-2 font-semibold">{t(isBoardDrag ? 'CharacterSheetPage.dropToOpenBoard' : isNoteDrag ? 'CharacterSheetPage.dropToOpenNote' : 'CharacterSheetPage.dropToLoadCharacter')}</p>
+               <p className="mt-2 font-semibold">{t(isBoardDrag ? 'WorkspacePage.dropToOpenBoard' : isNoteDrag ? 'WorkspacePage.dropToOpenNote' : 'WorkspacePage.dropToLoadCharacter')}</p>
             </div>
          )}
       </motion.div>

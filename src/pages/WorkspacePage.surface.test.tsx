@@ -200,7 +200,7 @@ const sheet = () => document.querySelector('[data-tutorial="character-sheet"]');
 const zoomLayer = () => sheet()?.querySelector<HTMLElement>('.flex-1') ?? null;
 const activeWindow = () => screen.getByTestId('sidebar').getAttribute('data-active-window');
 const typeName = (value: string) =>
-   fireEvent.change(screen.getByPlaceholderText('CharacterSheetPage.characterNamePlaceholder'), { target: { value } });
+   fireEvent.change(screen.getByPlaceholderText('WorkspacePage.characterNamePlaceholder'), { target: { value } });
 
 beforeEach(() => {
    setSurface({});
@@ -286,7 +286,7 @@ describe('WorkspacePage name flush across a switch', () => {
       expect(mocks.commitFor('char-a')).toHaveBeenCalledTimes(1);
       expect(mocks.commitFor('char-a')).toHaveBeenCalledWith('Alice the Bold');
       expect(mocks.commitFor('char-b')).not.toHaveBeenCalled();
-      expect(screen.getByPlaceholderText('CharacterSheetPage.characterNamePlaceholder')).toHaveProperty('value', 'Bob');
+      expect(screen.getByPlaceholderText('WorkspacePage.characterNamePlaceholder')).toHaveProperty('value', 'Bob');
    });
 
    it('does not commit an untouched name across a surface switch (dirty-guarded)', () => {

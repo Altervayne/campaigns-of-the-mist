@@ -50,7 +50,7 @@ export function CannotDropOverlay({ active }: { active: boolean }) {
          {active && (
             <div className="flex flex-col items-center justify-center w-full h-full text-center p-36 border-4 border-dashed border-destructive/40 text-destructive">
                <Ban className="mx-auto h-12 w-12" />
-               <p className="mt-2 font-semibold">{t('CharacterSheetPage.cannotDropWrongGame')}</p>
+               <p className="mt-2 font-semibold">{t('WorkspacePage.cannotDropWrongGame')}</p>
             </div>
          )}
       </motion.div>

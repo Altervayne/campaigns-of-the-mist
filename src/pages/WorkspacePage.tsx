@@ -280,7 +280,7 @@ function DesktopWorkspacePage() {
                      <CharacterSheetSurface
                         scrollRef={sheetScrollRef}
                         character={character}
-                        namePlaceholder={t('CharacterSheetPage.characterNamePlaceholder')}
+                        namePlaceholder={t('WorkspacePage.characterNamePlaceholder')}
                         onCommitName={updateCharacterName}
                         sheetZoom={sheetZoom}
                         isEditing={isEditing}

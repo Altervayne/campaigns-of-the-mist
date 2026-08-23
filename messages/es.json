@@ -79,7 +79,7 @@
          "Global": "La vista sigue los ajustes globales"
       }
    },
-   "CharacterSheetPage": {
+   "WorkspacePage": {
       "loading": "Cargando personaje...",
       "newCharacterName": "Nuevo personaje",
       "characterNamePlaceholder": "Nombre del personaje...",

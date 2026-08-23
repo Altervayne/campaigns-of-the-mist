@@ -39,7 +39,7 @@ export function SidebarPlayAreaActions({ isCollapsed, isEditing, canReset, onTog
             isCollapsed ? "px-0" : "px-2"
          )}>
             <SidebarButton data-tutorial="edit-mode-toggle" isCollapsed={isCollapsed} onClick={onToggleEditing} variant={isEditing ? 'secondary' : 'default'} Icon={Edit}>
-               {t('CharacterSheetPage.SidebarMenu.editMode')}
+               {t('WorkspacePage.SidebarMenu.editMode')}
             </SidebarButton>
          </motion.section>
 
@@ -47,22 +47,22 @@ export function SidebarPlayAreaActions({ isCollapsed, isEditing, canReset, onTog
             "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
          )}>
             <SidebarButton data-tutorial="save-character-button" isCollapsed={isCollapsed} onClick={saveCharacterToDrawer} Icon={Save}>
-               {t('CharacterSheetPage.SidebarMenu.saveToDrawer')}
+               {t('WorkspacePage.SidebarMenu.saveToDrawer')}
             </SidebarButton>
             <SidebarButton data-tutorial="save-character-as-button" isCollapsed={isCollapsed} onClick={saveCharacterAsToDrawer} Icon={SaveAll}>
-               {t('CharacterSheetPage.SidebarMenu.saveToDrawerAs')}
+               {t('WorkspacePage.SidebarMenu.saveToDrawerAs')}
             </SidebarButton>
             <SidebarButton data-tutorial="export-character-button" isCollapsed={isCollapsed} onClick={onExportCharacter} Icon={Upload}>
-               {t('CharacterSheetPage.SidebarMenu.exportCharacter')}
+               {t('WorkspacePage.SidebarMenu.exportCharacter')}
             </SidebarButton>
             <SidebarButton data-tutorial="import-character-button" isCollapsed={isCollapsed} onClick={() => characterImportInputRef.current?.click()} Icon={Download}>
-               {t('CharacterSheetPage.SidebarMenu.importCharacter')}
+               {t('WorkspacePage.SidebarMenu.importCharacter')}
             </SidebarButton>
             <SidebarButton isCollapsed={isCollapsed} onClick={() => characterUpdateInputRef.current?.click()} Icon={RefreshCw}>
-               {t('CharacterSheetPage.SidebarMenu.updateCharacter')}
+               {t('WorkspacePage.SidebarMenu.updateCharacter')}
             </SidebarButton>
             <SidebarButton data-tutorial="import-component-button" isCollapsed={isCollapsed} onClick={() => componentImportInputRef.current?.click()} Icon={Layers}>
-               {t('CharacterSheetPage.SidebarMenu.importComponent')}
+               {t('WorkspacePage.SidebarMenu.importComponent')}
             </SidebarButton>
          </motion.section>
 
@@ -70,7 +70,7 @@ export function SidebarPlayAreaActions({ isCollapsed, isEditing, canReset, onTog
             "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
          )}>
             <SidebarButton data-tutorial="reset-character-button" disabled={!canReset} variant="destructive" isCollapsed={isCollapsed} onClick={onOpenResetDialog} Icon={Trash2}>
-               {t('CharacterSheetPage.SidebarMenu.resetCharacter')}
+               {t('WorkspacePage.SidebarMenu.resetCharacter')}
             </SidebarButton>
          </motion.section>
       </>

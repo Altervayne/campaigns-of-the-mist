@@ -80,12 +80,12 @@ export function useNoteMarkdownIO() {
       <AlertDialog open={pendingExport !== null} onOpenChange={(open) => { if (!open) setPendingExport(null); }}>
          <AlertDialogContent>
             <AlertDialogHeader>
-               <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningTitle')}</AlertDialogTitle>
-               <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningDescription')}</AlertDialogDescription>
+               <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.exportMarkdownWarningTitle')}</AlertDialogTitle>
+               <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.exportMarkdownWarningDescription')}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-               <AlertDialogAction className="cursor-pointer" onClick={confirmExport}>{t('CharacterSheetPage.SidebarMenu.exportMarkdownWarningConfirm')}</AlertDialogAction>
+               <AlertDialogAction className="cursor-pointer" onClick={confirmExport}>{t('WorkspacePage.SidebarMenu.exportMarkdownWarningConfirm')}</AlertDialogAction>
             </AlertDialogFooter>
          </AlertDialogContent>
       </AlertDialog>

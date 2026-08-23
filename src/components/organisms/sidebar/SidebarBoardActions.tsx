@@ -34,19 +34,19 @@ export function SidebarBoardActions({ isCollapsed, saveBoardToDrawer, saveBoardA
             "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
          )}>
             <SidebarButton isCollapsed={isCollapsed} onClick={saveBoardToDrawer} Icon={Save}>
-               {t('CharacterSheetPage.SidebarMenu.saveBoardToDrawer')}
+               {t('WorkspacePage.SidebarMenu.saveBoardToDrawer')}
             </SidebarButton>
             <SidebarButton isCollapsed={isCollapsed} onClick={saveBoardAsToDrawer} Icon={SaveAll}>
-               {t('CharacterSheetPage.SidebarMenu.saveBoardToDrawerAs')}
+               {t('WorkspacePage.SidebarMenu.saveBoardToDrawerAs')}
             </SidebarButton>
             <SidebarButton isCollapsed={isCollapsed} onClick={onExportBoard} Icon={Upload}>
-               {t('CharacterSheetPage.SidebarMenu.exportBoard')}
+               {t('WorkspacePage.SidebarMenu.exportBoard')}
             </SidebarButton>
             <SidebarButton isCollapsed={isCollapsed} onClick={() => boardImportInputRef.current?.click()} Icon={Download}>
-               {t('CharacterSheetPage.SidebarMenu.importBoard')}
+               {t('WorkspacePage.SidebarMenu.importBoard')}
             </SidebarButton>
             <SidebarButton isCollapsed={isCollapsed} onClick={() => boardUpdateInputRef.current?.click()} Icon={RefreshCw}>
-               {t('CharacterSheetPage.SidebarMenu.updateBoard')}
+               {t('WorkspacePage.SidebarMenu.updateBoard')}
             </SidebarButton>
          </motion.section>
 

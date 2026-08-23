@@ -33,22 +33,22 @@ export function SidebarNoteActions({ isCollapsed, saveNoteToDrawer, saveNoteAsTo
          "flex flex-col items-center gap-2 p-2 bg-popover border-b border-border"
       )}>
          <SidebarButton isCollapsed={isCollapsed} onClick={saveNoteToDrawer} Icon={Save}>
-            {t('CharacterSheetPage.SidebarMenu.saveNoteToDrawer')}
+            {t('WorkspacePage.SidebarMenu.saveNoteToDrawer')}
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={saveNoteAsToDrawer} Icon={SaveAll}>
-            {t('CharacterSheetPage.SidebarMenu.saveNoteToDrawerAs')}
+            {t('WorkspacePage.SidebarMenu.saveNoteToDrawerAs')}
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={onExportNote} Icon={Upload}>
-            {t('CharacterSheetPage.SidebarMenu.exportNote')}
+            {t('WorkspacePage.SidebarMenu.exportNote')}
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={() => noteImportInputRef.current?.click()} Icon={Download}>
-            {t('CharacterSheetPage.SidebarMenu.importNote')}
+            {t('WorkspacePage.SidebarMenu.importNote')}
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={onExportNoteMarkdown} Icon={FileUp}>
-            {t('CharacterSheetPage.SidebarMenu.exportNoteMarkdown')}
+            {t('WorkspacePage.SidebarMenu.exportNoteMarkdown')}
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={() => noteUpdateInputRef.current?.click()} Icon={RefreshCw}>
-            {t('CharacterSheetPage.SidebarMenu.updateNote')}
+            {t('WorkspacePage.SidebarMenu.updateNote')}
          </SidebarButton>
       </motion.section>
    );

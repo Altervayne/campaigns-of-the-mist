@@ -93,12 +93,12 @@ export function useMobileNoteFileActions() {
          <AlertDialog open={pendingUpdate !== null} onOpenChange={(open) => { if (!open) cancelUpdate(); }}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.updateNoteConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.updateNoteConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmUpdate}>{t('CharacterSheetPage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={confirmUpdate}>{t('WorkspacePage.SidebarMenu.updateConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

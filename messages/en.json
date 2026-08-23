@@ -677,7 +677,7 @@
       "zoomOut": "Zoom out",
       "reset": "Reset zoom to 100%"
    },
-   "CharacterSheetPage": {
+   "WorkspacePage": {
       "characterNamePlaceholder": "Character Name...",
       "addElement": "Add...",
       "addCard": "Add Card",

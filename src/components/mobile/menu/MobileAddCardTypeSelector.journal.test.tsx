@@ -14,7 +14,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => k
 
 import { MobileAddCardTypeSelector } from './MobileAddCardTypeSelector';
 
-const journalButton = () => screen.queryByText('CharacterSheetPage.addJournal')?.closest('button') ?? null;
+const journalButton = () => screen.queryByText('WorkspacePage.addJournal')?.closest('button') ?? null;
 
 afterEach(cleanup);
 

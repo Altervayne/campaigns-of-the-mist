@@ -50,18 +50,18 @@ function ClearBoardControlInner({ store, isCollapsed }: { store: BoardStore; isC
    return (
       <>
          <SidebarButton variant="destructive" disabled={itemCount === 0} isCollapsed={isCollapsed} onClick={() => setIsOpen(true)} Icon={Eraser}>
-            {t('CharacterSheetPage.SidebarMenu.clearBoard')}
+            {t('WorkspacePage.SidebarMenu.clearBoard')}
          </SidebarButton>
 
          <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogContent>
                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmDescription')}</AlertDialogDescription>
+                  <AlertDialogTitle>{t('WorkspacePage.SidebarMenu.clearBoardConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('WorkspacePage.SidebarMenu.clearBoardConfirmDescription')}</AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer">{t('Common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={handleClear}>{t('CharacterSheetPage.SidebarMenu.clearBoardConfirmButton')}</AlertDialogAction>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer" onClick={handleClear}>{t('WorkspacePage.SidebarMenu.clearBoardConfirmButton')}</AlertDialogAction>
                </AlertDialogFooter>
             </AlertDialogContent>
          </AlertDialog>

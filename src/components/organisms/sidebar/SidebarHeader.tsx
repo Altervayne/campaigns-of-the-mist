@@ -34,7 +34,7 @@ export function SidebarHeader({ isCollapsed, activeWindow, onToggleCollapse }: S
             isCollapsed ? "justify-center" : "justify-between",
             activeWindow === 'MAIN_MENU' && "pb-2 border-b-2 border-border"
          )}>
-            {!isCollapsed && <h2 className="text-lg font-bold">{t('CharacterSheetPage.SidebarMenu.sidebarTitle')}</h2>}
+            {!isCollapsed && <h2 className="text-lg font-bold">{t('WorkspacePage.SidebarMenu.sidebarTitle')}</h2>}
 
             <div data-tutorial="menu-collapse-button" onClick={onToggleCollapse} className="rounded p-2 hover:bg-muted cursor-pointer">
                {isCollapsed ? <PanelLeftOpen className="h-6 w-6" /> : <PanelLeftClose className="h-6 w-6" />}

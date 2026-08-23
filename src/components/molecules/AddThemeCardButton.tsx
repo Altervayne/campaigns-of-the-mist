@@ -34,7 +34,7 @@ export function AddCardButton({ onClick }: AddCardButtonProps) {
          )}
       >
          <PlusCircle className="w-7 h-7" />
-         <span className="text-lg font-semibold">{t('CharacterSheetPage.addElement')}</span>
+         <span className="text-lg font-semibold">{t('WorkspacePage.addElement')}</span>
       </div>
    );
 }

@@ -29,7 +29,7 @@ export function SidebarMainMenuActions({ isCollapsed, workspaceImportInputRef }:
          isCollapsed ? "px-0" : "px-2"
       )}>
          <SidebarButton isCollapsed={isCollapsed} onClick={() => workspaceImportInputRef.current?.click()} Icon={FileUp}>
-            {t('CharacterSheetPage.SidebarMenu.importWorkspace')}
+            {t('WorkspacePage.SidebarMenu.importWorkspace')}
          </SidebarButton>
       </motion.section>
    );

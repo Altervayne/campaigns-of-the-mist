@@ -86,7 +86,7 @@ export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSe
 						className="h-auto min-h-12 text-base justify-start"
 					>
 						<PortraitIcon className="mr-2 h-4 w-4" />
-						{t('CharacterSheetPage.addPortrait')}
+						{t('WorkspacePage.addPortrait')}
 					</Button>
 				)}
 
@@ -97,7 +97,7 @@ export function MobileAddCardTypeSelector({ game, mode, cardType, onSelect, onSe
 						className="h-auto min-h-12 text-base justify-start"
 					>
 						<JournalIcon className="mr-2 h-4 w-4" />
-						{t('CharacterSheetPage.addJournal')}
+						{t('WorkspacePage.addJournal')}
 					</Button>
 				)}
 			</div>

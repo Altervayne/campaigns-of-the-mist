@@ -206,7 +206,7 @@ export default function MobileCharacterSheet({
 				key={character.id}
 				name={character.name}
 				onCommit={updateCharacterName}
-				placeholder={t('CharacterSheetPage.characterNamePlaceholder')}
+				placeholder={t('WorkspacePage.characterNamePlaceholder')}
 				isLeftHanded={isLeftHanded}
 				trigger={onOpenSwitcher && (
 					<IconButton
