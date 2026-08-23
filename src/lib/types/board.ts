@@ -482,9 +482,10 @@ export type BrushKind = 'pen' | 'brush' | 'highlighter';
 /**
  * The active pointer tool on the board. `select` is the default (a click-through overlay); every other
  * value is a Draw gesture that owns the pointer. Ephemeral UI state, never persisted. `shape` draws a
- * bounding-box ellipse/rect (circle/square when constrained).
+ * bounding-box ellipse/rect (circle/square when constrained). `transform` selects and moves the strokes of
+ * one drawing layer (it appends nothing, so it stays out of {@link isAppendTool}).
  */
-export type ActiveTool = 'select' | 'freehand' | 'line' | 'freeformPolygon' | 'regularPolygon' | 'shape' | 'eraser';
+export type ActiveTool = 'select' | 'freehand' | 'line' | 'freeformPolygon' | 'regularPolygon' | 'shape' | 'eraser' | 'transform';
 
 /**
  * One freehand stroke on a drawing layer. `points` is a flat `[x0,y0,x1,y1,...]` list in LAYER-LOCAL

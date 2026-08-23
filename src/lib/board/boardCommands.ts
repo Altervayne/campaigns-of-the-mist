@@ -1,6 +1,6 @@
 // -- Local Imports --
 import { BoardNotFoundError } from './boardErrors';
-import { appendStrokeToDrawing, mergeDrawings, rebasePoints, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany } from './drawingStyle';
+import { appendStrokeToDrawing, mergeDrawings, rebasePoints, recomputeDrawingBoxRotated, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany } from './drawingStyle';
 import {
    addItem,
    deleteItem,
@@ -439,6 +439,34 @@ export function createMergeDrawingsCommand(targetId: string, sourceIds: string[]
       },
       async undo() {
          if (before) await updateItem(targetId, before);
+      },
+   };
+}
+
+/**
+ * Replace a drawing layer's strokes with a transformed set (a move/transform gesture's commit), refitting the
+ * box to the new ink and writing origin/size/content TOGETHER, so undo reverts the box shift with the strokes.
+ * `nextStrokes` are layer-local, expressed in the layer's CURRENT frame (the same frame the box refit rebases
+ * from), so `recomputeDrawingBoxWithout(item, '')` tightens the origin and rebases them exactly as an append
+ * does. Captures the target's full before-state {x,y,width,height,content} on first `do()` and restores it on
+ * undo (mirrors {@link createMergeDrawingsCommand}'s co-write; unlike {@link createUpdateItemContentCommand},
+ * which would leave the shifted origin behind). Re-running `do()` from the restored before-state refits the same
+ * captured strokes to the same box, so redo is id-stable. No-ops if the target is missing or no longer a drawing.
+ */
+export function createTransformStrokesCommand(layerId: string, nextStrokes: Stroke[]): BoardCommand {
+   let before: { x: number; y: number; width: number; height: number; content: BoardItemContent } | null = null;
+   return {
+      label: 'transform-strokes',
+      async do() {
+         const item = await getItem(layerId);
+         if (!item) throw new BoardNotFoundError(`Board item not found: ${layerId}`);
+         if (item.content.kind !== 'drawing') return;
+         if (!before) before = { x: item.x, y: item.y, width: item.width, height: item.height, content: item.content };
+         const refit = recomputeDrawingBoxRotated(item, item.content, nextStrokes);
+         await updateItem(layerId, { x: refit.x, y: refit.y, width: refit.width, height: refit.height, content: { ...item.content, strokes: refit.strokes } });
+      },
+      async undo() {
+         if (before) await updateItem(layerId, before);
       },
    };
 }

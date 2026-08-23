@@ -75,6 +75,7 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
          connectPreview={null}
          penPreview={null}
          polygonPreview={null}
+         transform={null}
          penSettings={{ brush: 'pen', color: null, width: 2, shapeBase: 'circle', shapeFilled: false }}
          activeTool="select"
          focusLayer={undefined}

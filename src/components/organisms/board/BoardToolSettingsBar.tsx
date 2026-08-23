@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Brush, Check, ChevronDown, Circle, Eraser, Highlighter, LayersPlus, Minus, PaintBucket, Pen, Pencil, Pentagon, Plus, Shapes, Slash, Square, Waypoints, type LucideIcon } from 'lucide-react';
+import { BoxSelect, Brush, Check, ChevronDown, Circle, Eraser, Highlighter, LayersPlus, Minus, PaintBucket, Pen, Pencil, Pentagon, Plus, Shapes, Slash, Square, Waypoints, type LucideIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -34,6 +34,7 @@ const GESTURE_OPTIONS: { tool: Exclude<ActiveTool, 'select'>; icon: LucideIcon; 
    { tool: 'freeformPolygon', icon: Waypoints, labelKey: 'gestureFreeformPolygon' },
    { tool: 'regularPolygon', icon: Pentagon, labelKey: 'gestureRegularPolygon' },
    { tool: 'shape', icon: Shapes, labelKey: 'gestureShape' },
+   { tool: 'transform', icon: BoxSelect, labelKey: 'gestureTransform' },
    { tool: 'eraser', icon: Eraser, labelKey: 'gestureEraser' },
 ];
 
@@ -87,10 +88,11 @@ interface BoardToolSettingsBarProps {
 export function BoardToolSettingsBar({ tool, onSetTool, penSettings, onSetBrush, onSetColor, onSetWidth, onNewLayer, newLayerArmed, sides, onSetSides, shapeBase, onSetShapeBase, shapeFilled, onSetShapeFilled }: BoardToolSettingsBarProps) {
    const { t } = useTranslation();
    const activeWidth = penSettings.width;
-   const erasing = tool === 'eraser';
-   // The eraser carries no brush, so the brush cluster greys out - but it stays IN PLACE (inert, not hidden)
-   // so toggling the eraser never reflows the bar. The controls relight the instant a drawing gesture is set.
-   const inertCls = erasing ? 'pointer-events-none opacity-40' : undefined;
+   // The eraser and the transform tool append no ink, so the brush/size/ink cluster greys out - but it stays
+   // IN PLACE (inert, not hidden) so switching tools never reflows the bar. The controls relight the instant a
+   // drawing gesture is set. (The transform tool's own edit controls are a later phase.)
+   const inkless = tool === 'eraser' || tool === 'transform';
+   const inertCls = inkless ? 'pointer-events-none opacity-40' : undefined;
 
    return (
       <>
@@ -165,7 +167,7 @@ export function BoardToolSettingsBar({ tool, onSetTool, penSettings, onSetBrush,
          <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
 
          {/* Brush set - inert while erasing, kept in place so the bar holds its shape. */}
-         <div className={cn('flex shrink-0 items-center gap-0.5', inertCls)} aria-disabled={erasing || undefined}>
+         <div className={cn('flex shrink-0 items-center gap-0.5', inertCls)} aria-disabled={inkless || undefined}>
             {BRUSH_OPTIONS.map(({ brush, icon: Icon, labelKey }) => (
                <button
                   key={brush}
@@ -185,12 +187,12 @@ export function BoardToolSettingsBar({ tool, onSetTool, penSettings, onSetBrush,
          </div>
          {/* Size slot: the width selector - inert while erasing (the eraser radius is a fixed constant, so
              nothing swaps in; the control just greys out like the rest). */}
-         <div className={cn('flex shrink-0 items-center', inertCls)} aria-disabled={erasing || undefined}>
+         <div className={cn('flex shrink-0 items-center', inertCls)} aria-disabled={inkless || undefined}>
             <SizeSelector width={activeWidth} onSetWidth={onSetWidth} />
          </div>
          {/* Ink swatch - inert while erasing. Matches the sibling control groups' flex row so the trigger
             centers vertically instead of picking up an inline-block baseline gap. */}
-         <div className={cn('flex shrink-0 items-center', inertCls)} aria-disabled={erasing || undefined}>
+         <div className={cn('flex shrink-0 items-center', inertCls)} aria-disabled={inkless || undefined}>
             <InkColorControl color={penSettings.color} onApply={onSetColor} />
          </div>
          {/* Starts the next stroke on a fresh layer - inert while erasing (the eraser doesn't append). Reads
@@ -200,7 +202,7 @@ export function BoardToolSettingsBar({ tool, onSetTool, penSettings, onSetBrush,
             title={t('BoardView.newDrawingLayer')}
             aria-label={t('BoardView.newDrawingLayer')}
             aria-pressed={newLayerArmed || undefined}
-            aria-disabled={erasing || undefined}
+            aria-disabled={inkless || undefined}
             onClick={onNewLayer}
             className={cn(
                'flex size-6 shrink-0 items-center justify-center rounded text-foreground hover:bg-muted cursor-pointer',

@@ -294,13 +294,20 @@ function TextSizeControl({ size, onApplyStyle }: { size: number; onApplyStyle: (
                      type="button"
                      title={t('BoardView.textSizePresets')}
                      aria-label={t('BoardView.textSizePresets')}
-                     onPointerDown={(event) => event.preventDefault()}
+                     onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
                      className="flex h-6 w-4 items-center justify-center rounded-r text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                   >
                      <ChevronDown className="h-3 w-3" />
                   </button>
                </PopoverTrigger>
-               <PopoverContent align="start" sideOffset={4} className="w-16 rounded-md border border-border bg-popover p-1 shadow-md">
+               <PopoverContent
+                  align="start"
+                  sideOffset={4}
+                  // Portaled, so a press inside still bubbles the React tree to the item's pointer handler
+                  // and deselects it (the size then applies to nothing) - stop it at the content root.
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="w-16 rounded-md border border-border bg-popover p-1 shadow-md"
+               >
                   <div className="max-h-56 overflow-y-auto">
                      {TEXT_SIZE_PRESETS.map((preset) => (
                         <button

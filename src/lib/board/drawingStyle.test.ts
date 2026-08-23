@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { BRUSH_MIN_WIDTH_FACTOR, DEFAULT_STROKE_WIDTH, HIGHLIGHTER_OPACITY, MIN_LINE_LENGTH, NIB_ANGLE, SHAPE_ELLIPSE_SEGMENTS, appendStrokeToDrawing, brushOpacity, buildBrushRibbonPath, buildEllipsePath, buildGeometricRibbonPath, buildPolylinePath, buildRectPath, buildStrokePath, ellipseVertices, isAppendTool, isLineDegenerate, makePenStroke, makeStroke, mergeDrawings, pointsBounds, rebasePoints, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany, regularPolygonVertices, shapeBoxCorners, snapAngle, strokeColorToCss, strokeHitsPoint, strokePaint } from './drawingStyle';
+import { BRUSH_MIN_WIDTH_FACTOR, DEFAULT_STROKE_WIDTH, HIGHLIGHTER_OPACITY, MIN_LINE_LENGTH, NIB_ANGLE, SHAPE_ELLIPSE_SEGMENTS, appendStrokeToDrawing, brushOpacity, buildBrushRibbonPath, buildEllipsePath, buildGeometricRibbonPath, buildPolylinePath, buildRectPath, buildStrokePath, ellipseVertices, isAppendTool, isLineDegenerate, makePenStroke, makeStroke, mergeDrawings, pointsBounds, rebasePoints, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany, regularPolygonVertices, shapeBoxCorners, snapAngle, strokeColorToCss, strokeHitsPoint, strokeIntersectsRect, strokePaint } from './drawingStyle';
 
 // -- Type Imports --
 import type { BrushKind, DrawingBoardContent, Stroke } from '@/lib/types/board';
@@ -581,6 +581,30 @@ describe('recomputeDrawingBoxWithoutMany', () => {
    it('returns a zero box holding no stroke when every stroke is removed', () => {
       const item = layer(0, 0, [stroke('s1', [0, 0, 10, 10]), stroke('s2', [3, 3, 4, 4])]);
       expect(recomputeDrawingBoxWithoutMany(item, new Set(['s1', 's2']))).toEqual({ x: 0, y: 0, width: 0, height: 0, strokes: [] });
+   });
+});
+
+describe('strokeIntersectsRect', () => {
+   it('hits when a stroke bbox overlaps the rect (points offset to world by the layer origin)', () => {
+      const item = { x: 100, y: 100 };
+      const s = stroke('s1', [0, 0, 10, 10]); // world bounds 100..110
+      expect(strokeIntersectsRect(item, s, { minX: 105, minY: 105, maxX: 200, maxY: 200 })).toBe(true);
+   });
+
+   it('misses when the world bboxes are disjoint', () => {
+      const item = { x: 0, y: 0 };
+      const s = stroke('s1', [0, 0, 10, 10]);
+      expect(strokeIntersectsRect(item, s, { minX: 50, minY: 50, maxX: 60, maxY: 60 })).toBe(false);
+   });
+
+   it('counts a touching edge as a hit', () => {
+      const item = { x: 0, y: 0 };
+      const s = stroke('s1', [0, 0, 10, 10]);
+      expect(strokeIntersectsRect(item, s, { minX: 10, minY: 10, maxX: 20, maxY: 20 })).toBe(true);
+   });
+
+   it('never hits an empty stroke', () => {
+      expect(strokeIntersectsRect({ x: 0, y: 0 }, stroke('s1', []), { minX: -10, minY: -10, maxX: 10, maxY: 10 })).toBe(false);
    });
 });
 

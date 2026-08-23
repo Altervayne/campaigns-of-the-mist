@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { isRotatableKind, normalizeAngle, pointerAngleDeg, rotateVec, rotatedResize, rotatedTopExtra, snapAngle } from './boardRotation';
+import { isRotatableKind, normalizeAngle, pointerAngleDeg, rotateVec, rotatedRefitOffset, rotatedResize, rotatedTopExtra, snapAngle } from './boardRotation';
 
 // -- Type Imports --
 import type { BoxRect } from './boardRotation';
@@ -149,6 +149,37 @@ describe('rotatedResize', () => {
       expect(result.height).toBe(40);
       const before = topLeftWorld(orig, deg);
       const after = topLeftWorld(result, deg);
+      expect(after.x).toBeCloseTo(before.x);
+      expect(after.y).toBeCloseTo(before.y);
+   });
+});
+
+/** A layer-local point placed in a box then rotated about the box center, in world coords. */
+function rotatedPointWorld(box: BoxRect, local: { x: number; y: number }, deg: number) {
+   const cx = box.x + box.width / 2;
+   const cy = box.y + box.height / 2;
+   const rel = rotateVec({ x: box.x + local.x - cx, y: box.y + local.y - cy }, deg);
+   return { x: rel.x + cx, y: rel.y + cy };
+}
+
+describe('rotatedRefitOffset', () => {
+   const prev: BoxRect = { x: 0, y: 0, width: 100, height: 100 };
+   // A refit that expands the box asymmetrically (so the center moves); the point's local is re-based to
+   // preserve its UN-rotated world position, exactly as `recomputeDrawingBoxWithout` does.
+   const next: BoxRect = { x: -40, y: 0, width: 140, height: 100 };
+   const world = { x: 10, y: 10 }; // the sample stroke point's un-rotated world position
+   const localPrev = { x: world.x - prev.x, y: world.y - prev.y };
+   const localNext = { x: world.x - next.x, y: world.y - next.y };
+
+   it('is zero at rotation 0 (a non-rotated refit is left alone)', () => {
+      expect(rotatedRefitOffset(prev, next, 0)).toEqual({ x: 0, y: 0 });
+   });
+
+   it.each([37, 90, 180, -52])('holds a rotated layer\'s ink in place across a refit (%s deg)', (deg) => {
+      const offset = rotatedRefitOffset(prev, next, deg);
+      const compensated: BoxRect = { x: next.x + offset.x, y: next.y + offset.y, width: next.width, height: next.height };
+      const before = rotatedPointWorld(prev, localPrev, deg);
+      const after = rotatedPointWorld(compensated, localNext, deg);
       expect(after.x).toBeCloseTo(before.x);
       expect(after.y).toBeCloseTo(before.y);
    });

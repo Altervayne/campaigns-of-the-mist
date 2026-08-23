@@ -15,6 +15,7 @@ import { useToolbarMetrics } from '@/hooks/board/useToolbarMetrics';
 import { BoardItemBox } from '../BoardItemBox';
 import { BoardConnectionsLayer } from '../BoardConnectionsLayer';
 import { BoardGroupToolbar } from '../BoardGroupToolbar';
+import { BoardTransformOverlay } from '../BoardTransformOverlay';
 import { StrokeShape } from '../items/BoardDrawingItem';
 import { SnapOverlay } from './SnapOverlay';
 
@@ -23,6 +24,7 @@ import type { BoardState } from '@/lib/stores/boardStore';
 import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, Viewport } from '@/lib/types/board';
 import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
+import type { WorldRect } from '@/lib/board/drawingStyle';
 import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
@@ -65,6 +67,9 @@ interface BoardItemsLayerProps {
    connectPreview: { fromId: string; cursor: Point } | null;
    penPreview: number[] | null;
    polygonPreview: number[] | null;
+   /** The Transform tool's live selection + previews (null off the tool): the selected layer, its selected
+    *  stroke ids, the in-flight local move delta, and the world-space marquee rect. */
+   transform: { layer: BoardItem | null; strokeIds: ReadonlySet<string>; moveDelta: Point | null; marquee: WorldRect | null } | null;
    penSettings: { brush: BrushKind; color: string | null; width: number; shapeBase: 'circle' | 'square'; shapeFilled: boolean };
    activeTool: ActiveTool;
    focusLayer: BoardItem | undefined;
@@ -121,6 +126,7 @@ export function BoardItemsLayer({
    connectPreview,
    penPreview,
    polygonPreview,
+   transform,
    penSettings,
    activeTool,
    focusLayer,
@@ -306,6 +312,19 @@ export function BoardItemsLayer({
                   borderWidth: 2 / viewport.zoom,
                   zIndex: groupToolbarZIndex(layerCount),
                }}
+            />
+         )}
+
+         {/* Transform tool: the stroke-selection overlay (per-stroke outlines + tight bbox in the layer's local
+             frame) and the marquee. Only present while the tool is active; renders nothing when idle. */}
+         {transform && (
+            <BoardTransformOverlay
+               layer={transform.layer}
+               strokeIds={transform.strokeIds}
+               moveDelta={transform.moveDelta}
+               marquee={transform.marquee}
+               zoom={viewport.zoom}
+               layerCount={layerCount}
             />
          )}
       </div>

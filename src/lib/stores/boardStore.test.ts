@@ -282,6 +282,36 @@ describe('mutating actions', () => {
       expect({ x: regrownRepo?.x, y: regrownRepo?.y, width: regrownRepo?.width, height: regrownRepo?.height }).toEqual({ x: -5, y: -5, width: 15, height: 15 });
    });
 
+   it('transformStrokes moves a stroke, co-writes the refit box, and undo restores the whole before-state', async () => {
+      const board = await repository.createBoard('Board');
+      // A layer with two strokes: s1 spanning 0..10, s2 a dot at (2,2). Box is 0,0 10x10.
+      await repository.addItem(makeRecord('layer', board.id, 0, { kind: 'drawing', x: 0, y: 0, width: 10, height: 10, content: { kind: 'drawing', strokes: [
+         { id: 's1', brush: 'pen', color: null, width: 3, points: [0, 0, 10, 10] },
+         { id: 's2', brush: 'pen', color: null, width: 3, points: [2, 2] },
+      ] } }));
+      const store = createBoardStore();
+      await store.getState().actions.hydrate(board.id);
+
+      // Move s2 up/left by (-5,-5), from (2,2) to (-3,-3): the box origin shifts to (-3,-3) - s2's new min -
+      // and grows to hold s1's far corner (10,10), so 13x13.
+      await store.getState().actions.transformStrokes('layer', [
+         { id: 's1', brush: 'pen', color: null, width: 3, points: [0, 0, 10, 10] },
+         { id: 's2', brush: 'pen', color: null, width: 3, points: [-3, -3] },
+      ]);
+      const moved = store.getState().items['layer'];
+      expect({ x: moved.x, y: moved.y, width: moved.width, height: moved.height }).toEqual({ x: -3, y: -3, width: 13, height: 13 });
+      // The optimistic view and the persisted record agree (the additive fast path relies on this).
+      const movedRepo = await repository.getItem('layer');
+      expect({ x: movedRepo?.x, y: movedRepo?.y, width: movedRepo?.width, height: movedRepo?.height }).toEqual({ x: -3, y: -3, width: 13, height: 13 });
+
+      // Undo restores origin, size, AND strokes together (never a content-only revert leaving a stale box).
+      await store.getState().actions.undo();
+      const back = store.getState().items['layer'];
+      expect({ x: back.x, y: back.y, width: back.width, height: back.height }).toEqual({ x: 0, y: 0, width: 10, height: 10 });
+      const backContent = back.content;
+      expect(backContent.kind === 'drawing' && backContent.strokes.find((s) => s.id === 's2')?.points).toEqual([2, 2]);
+   });
+
    it('eraseStrokes removes strokes and deletes an emptied layer as one step, undo/redo converge (box + layer)', async () => {
       const board = await repository.createBoard('Board');
       // Layer A keeps a survivor after the erase; layer B loses all its strokes (so it is deleted).

@@ -1,4 +1,5 @@
 // -- Type Imports --
+import { rotatedRefitOffset } from '@/lib/board/boardRotation';
 import type { ActiveTool, BrushKind, DrawingBoardContent, Stroke } from '@/lib/types/board';
 
 /*
@@ -593,6 +594,30 @@ export function strokeHitsPoint(item: { x: number; y: number }, stroke: Stroke, 
    return false;
 }
 
+/** A world-space rectangle (normalized min/max corners) - the marquee's footprint for a stroke hit-test. */
+export interface WorldRect {
+   minX: number;
+   minY: number;
+   maxX: number;
+   maxY: number;
+}
+
+/**
+ * True when a stroke's bounding box overlaps a world rect (a marquee's coarse hit-test). `item` supplies the
+ * layer origin, since points are layer-local; the stroke's local bounds are offset to world and tested for an
+ * axis-aligned overlap. A v1 bbox test - a precise segment-rect intersection is deferred; an empty stroke never
+ * hits.
+ */
+export function strokeIntersectsRect(item: { x: number; y: number }, stroke: Stroke, worldRect: WorldRect): boolean {
+   const bounds = pointsBounds(stroke.points);
+   if (!bounds) return false;
+   const minX = bounds.minX + item.x;
+   const maxX = bounds.maxX + item.x;
+   const minY = bounds.minY + item.y;
+   const maxY = bounds.maxY + item.y;
+   return minX <= worldRect.maxX && maxX >= worldRect.minX && minY <= worldRect.maxY && maxY >= worldRect.minY;
+}
+
 /** The minimal drawing-layer shape the box math reads: its live origin plus its strokes. */
 type DrawingBox = { x: number; y: number; content: DrawingBoardContent };
 
@@ -696,6 +721,28 @@ export function recomputeDrawingBoxWithoutMany(item: DrawingBox, strokeIds: Set<
          ? remaining
          : remaining.map((stroke) => ({ ...stroke, points: rebasePoints(stroke.points, shiftX, shiftY) }));
    return { x: item.x + shiftX, y: item.y + shiftY, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, strokes };
+}
+
+/**
+ * Refits a drawing layer's box to `nextStrokes` and, for a ROTATED layer, offsets the origin so the ink stays
+ * put: the layer renders rotated about its box center, so a plain refit that moves the center rigidly shifts
+ * the whole layer. No-op at rotation 0. Both the optimistic store apply and the undo command call this, so
+ * their box math stays byte-identical.
+ */
+export function recomputeDrawingBoxRotated(
+   box: { x: number; y: number; width: number; height: number; rotation?: number },
+   content: DrawingBoardContent,
+   nextStrokes: Stroke[],
+): DrawingBoxResult {
+   const refit = recomputeDrawingBoxWithout({ x: box.x, y: box.y, content: { ...content, strokes: nextStrokes } }, '');
+   const rotation = box.rotation ?? 0;
+   if (!rotation) return refit;
+   const offset = rotatedRefitOffset(
+      { x: box.x, y: box.y, width: box.width, height: box.height },
+      { x: refit.x, y: refit.y, width: refit.width, height: refit.height },
+      rotation,
+   );
+   return { ...refit, x: refit.x + offset.x, y: refit.y + offset.y };
 }
 
 /**

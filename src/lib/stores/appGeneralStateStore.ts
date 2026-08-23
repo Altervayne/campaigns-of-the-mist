@@ -33,6 +33,7 @@ export type BoardAction =
    | 'setTool:freeformPolygon'
    | 'setTool:regularPolygon'
    | 'setTool:shape'
+   | 'setTool:transform'
    | 'setTool:eraser'
    | `setBrush:${BrushKind}`
    | 'saveItemToDrawer'

@@ -99,3 +99,18 @@ export function rotatedResize(orig: BoxRect, worldDelta: Vec2, rotationDeg: numb
    const newCenter = { x: topLeft.x + half.x, y: topLeft.y + half.y };
    return { x: newCenter.x - width / 2, y: newCenter.y - height / 2, width, height };
 }
+
+/**
+ * A drawing layer renders rotated about its box center, so refitting the box (which moves the center) rigidly
+ * shifts the ink by (I - R)*(center change). Given the box before/after a refit and the layer's rotation,
+ * returns the origin offset that cancels that shift - add it to the refit origin. Zero at rotation 0.
+ */
+export function rotatedRefitOffset(prev: BoxRect, next: BoxRect, rotationDeg: number): Vec2 {
+   if (!rotationDeg) return { x: 0, y: 0 };
+   const dc = {
+      x: prev.x + prev.width / 2 - (next.x + next.width / 2),
+      y: prev.y + prev.height / 2 - (next.y + next.height / 2),
+   };
+   const rotated = rotateVec(dc, rotationDeg);
+   return { x: dc.x - rotated.x, y: dc.y - rotated.y };
+}

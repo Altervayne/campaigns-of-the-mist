@@ -19,13 +19,14 @@ import {
    createSetItemLabelCommand,
    createSetItemZCommand,
    createSetItemZoneCommand,
+   createTransformStrokesCommand,
    createUpdateItemContentCommand,
    createUpdateItemContentAndSizeCommand,
 } from '@/lib/board/boardCommands';
 import { connectionsReferencing } from '@/lib/board/boardConnections';
 import { normalizeAngle } from '@/lib/board/boardRotation';
 import { byZThenId, flattenBoardOrder, repairBoardZ } from '@/lib/board/boardTree';
-import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxWithoutMany } from '@/lib/board/drawingStyle';
+import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxRotated, recomputeDrawingBoxWithoutMany } from '@/lib/board/drawingStyle';
 import { zoneContaining } from '@/lib/board/zoneMembership';
 
 // -- Store Imports --
@@ -160,6 +161,12 @@ export interface BoardState {
        * a layer with {@link addItem} for the first stroke, then appends here.
        */
       appendStroke: (itemId: string, stroke: Stroke) => Promise<void>;
+      /**
+       * Replaces a drawing layer's strokes with a transformed set (the transform tool's move commit) as one
+       * undo step, via a box-co-writing command. Refits the layer box to the new ink and rebases the strokes,
+       * applied optimistically then persisted on the additive fast path (byte-identical to the command).
+       */
+      transformStrokes: (layerId: string, nextStrokes: Stroke[]) => Promise<void>;
       /**
        * Removes strokes from one or more drawing layers as ONE undo step (a whole eraser scrub). A layer whose
        * entire stroke set is erased is deleted; the rest re-fit to their survivors. Applied optimistically then
@@ -833,6 +840,20 @@ export function createBoardStore(options: { viewportSaveDebounceMs?: number } = 
                // Additive: a single-item content delta, so the optimistic apply above is authoritative -
                // no full reload per stroke.
                await runItemMutation(createAppendStrokeCommand(itemId, stroke), { additive: true });
+            },
+
+            transformStrokes: async (layerId, nextStrokes) => {
+               markDirty();
+               const existing = get().items[layerId];
+               if (existing && existing.content.kind === 'drawing') {
+                  // Refit the box with the SAME helper the command persists with, so the optimistic view is
+                  // byte-identical to the persisted one - the additive fast path (no reload) stays valid.
+                  const refit = recomputeDrawingBoxRotated(existing, existing.content, nextStrokes);
+                  const next = { ...existing, x: refit.x, y: refit.y, width: refit.width, height: refit.height, content: { ...existing.content, strokes: refit.strokes } };
+                  set((state) => ({ items: { ...state.items, [layerId]: next } }));
+               }
+               // Additive: a single-item content delta, so the optimistic apply above is authoritative.
+               await runItemMutation(createTransformStrokesCommand(layerId, nextStrokes), { additive: true });
             },
 
             eraseStrokes: async (erasures) => {

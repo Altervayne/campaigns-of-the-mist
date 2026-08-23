@@ -17,6 +17,7 @@ export const patchNotes: PatchNote[] = [
 * Fixed drag and dropping from one character sheet to another using spring-navigation doing nothing. Now if the games match it imports a copy.
 * Fixed LitM "Hero Card" and Otherscape Theme Card having a hardcoded color for some elements instead of properly using card palette (custom or not) colors.
 * Fixed using the scroll wheel over a board's layers panel zooming in and out of the board instead of correctly scrolling the panel's list.
+* Fixed the text element font size selector on a board not working because the click would be hijacked by the board's canvas.
 `,
    },
    {

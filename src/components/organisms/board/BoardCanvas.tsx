@@ -14,7 +14,7 @@ import { alignPositions, distributePositions, type AlignEdge, type DistributeAxi
 import { isRotatableKind } from '@/lib/board/boardRotation';
 import { withBackgroundTexture } from '@/lib/board/boardBackgroundStyle';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
-import { PendingEraseContext } from '@/lib/board/PendingEraseContext';
+import { PendingEraseContext, EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
@@ -23,6 +23,7 @@ import { useBoardTools } from '@/hooks/board/useBoardTools';
 import { useBoardSelection } from '@/hooks/board/useBoardSelection';
 import { useBoardPointerInteraction } from '@/hooks/board/useBoardPointerInteraction';
 import { useBoardDrawing } from '@/hooks/board/useBoardDrawing';
+import { useBoardTransform } from '@/hooks/board/useBoardTransform';
 import { useBoardCreation } from '@/hooks/board/useBoardCreation';
 import { useBoardRadial } from '@/hooks/board/useBoardRadial';
 import { useBoardLayers } from '@/hooks/board/useBoardLayers';
@@ -229,13 +230,35 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       polygonSides,
    });
 
+   // The Transform gesture: stroke selection (click / marquee, one layer) + move-drag, previewing via the
+   // overlay and committing one `transformStrokes` command on pointerup. Its in-flight listeners tear down on
+   // unmount, so a mid-drag tab switch discards the preview; `resetForBoard` clears the selection on a board switch.
+   const {
+      selection: transformSelection,
+      moveDelta: transformMoveDelta,
+      marquee: transformMarquee,
+      handleTransformPointerDown,
+      resetForBoard: resetTransformForBoard,
+   } = useBoardTransform({
+      store,
+      actions,
+      cursorToWorld,
+      beginPan,
+      viewportRef,
+      spaceHeldRef,
+      activeTool,
+      activeLayerId,
+      setActiveLayerId,
+   });
+
    // Board switches keep this canvas mounted (a new `store` prop, no remount), so the tool/layer + drawing
    // state would leak across boards; reset them when the loaded board id changes.
    const boardId = useStore(store, (state) => state.boardId);
    useEffect(() => {
       resetForBoard();
       resetDrawingForBoard();
-   }, [boardId, resetForBoard, resetDrawingForBoard]);
+      resetTransformForBoard();
+   }, [boardId, resetForBoard, resetDrawingForBoard, resetTransformForBoard]);
 
    // Paint order is the scope-relative tree flatten (root items by z, each zone immediately followed by
    // its members), NOT a global z-sort - so a zone's members band contiguously with it. Connections
@@ -324,6 +347,9 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       if (selectedIds.size === 0) return;
       const onKeyDown = (event: KeyboardEvent) => {
          if (isEditableTarget(event.target)) return;
+         // The Transform tool owns Delete/Backspace over its stroke selection (stroke-delete lands in a later
+         // phase); don't let it fall through to element-delete or the polygon-vertex splice while it's active.
+         if (activeTool === 'transform') return;
          // A freeform polygon in progress owns Backspace (it pops a vertex); don't also delete the selection.
          if (event.key === 'Backspace' && polygonRef.current) return;
          if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -336,7 +362,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       };
       window.addEventListener('keydown', onKeyDown);
       return () => window.removeEventListener('keydown', onKeyDown);
-   }, [selectedIds, handleDeleteSelection, handleDuplicateSelection, polygonRef]);
+   }, [selectedIds, handleDeleteSelection, handleDuplicateSelection, polygonRef, activeTool]);
 
    // A bare `L` toggles the layers panel. Ignored while editing text (a board field / the panel's rename)
    // and when a modifier is held (so browser shortcuts like Ctrl+L stay intact).
@@ -489,6 +515,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       else if (pendingBoardAction === 'setTool:freeformPolygon') chooseDrawTool('freeformPolygon');
       else if (pendingBoardAction === 'setTool:regularPolygon') chooseDrawTool('regularPolygon');
       else if (pendingBoardAction === 'setTool:shape') chooseDrawTool('shape');
+      else if (pendingBoardAction === 'setTool:transform') chooseDrawTool('transform');
       else if (pendingBoardAction === 'setTool:eraser') chooseDrawTool('eraser');
       // A brush pick is a style change; if a non-drawing gesture owns the pointer (select/eraser), enter freehand first.
       else if (pendingBoardAction.startsWith('setBrush:')) { if (activeTool === 'select' || activeTool === 'eraser') chooseDrawTool('freehand'); setPenBrush(pendingBoardAction.slice('setBrush:'.length) as BrushKind); }
@@ -598,7 +625,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
          // Cursor language: panning shows the closed hand, a live marquee the crosshair, a pan-armed
          // modifier (Space/Alt) the open hand. At rest select is the plain default (the hand is pan-only
          // now, so it no longer signals "grab an element"); eraser keeps its cell, every other draw its crosshair.
-         className={cn('absolute inset-0 overflow-hidden bg-muted/10', isPanning ? 'cursor-grabbing' : marquee ? 'cursor-crosshair' : spaceHeld || altHeld ? 'cursor-grab' : activeTool === 'select' ? 'cursor-default' : activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair')}
+         className={cn('absolute inset-0 overflow-hidden bg-muted/10', isPanning ? 'cursor-grabbing' : marquee ? 'cursor-crosshair' : spaceHeld || altHeld ? 'cursor-grab' : activeTool === 'select' || activeTool === 'transform' ? 'cursor-default' : activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair')}
       >
          <BoardBackgroundLayer background={background} />
 
@@ -629,6 +656,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             connectPreview={connectPreview}
             penPreview={penPreview}
             polygonPreview={polygonPreview}
+            transform={activeTool === 'transform' ? { layer: transformSelection ? items[transformSelection.layerId] ?? null : null, strokeIds: transformSelection?.strokeIds ?? EMPTY_STROKE_IDS, moveDelta: transformMoveDelta, marquee: transformMarquee } : null}
             penSettings={penSettings}
             activeTool={activeTool}
             focusLayer={focusLayer}
@@ -653,19 +681,21 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
              the pan escape hatch first, then dispatches by the active gesture; right-click falls through to the
              radial. It renders nothing - strokes live in their drawing items. */}
          <div
-            className={cn('absolute inset-0', activeTool === 'select' ? 'pointer-events-none' : activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair')}
+            className={cn('absolute inset-0', activeTool === 'select' ? 'pointer-events-none' : activeTool === 'eraser' ? 'cursor-cell' : activeTool === 'transform' ? 'cursor-default' : 'cursor-crosshair')}
             onPointerDown={
                activeTool === 'eraser'
                   ? handleEraserPointerDown
-                  : activeTool === 'line'
-                    ? handleLinePointerDown
-                    : activeTool === 'freeformPolygon'
-                      ? handlePolygonPointerDown
-                      : activeTool === 'regularPolygon'
-                        ? handleRegularPolygonPointerDown
-                        : activeTool === 'shape'
-                          ? handleShapePointerDown
-                          : handleFreehandPointerDown
+                  : activeTool === 'transform'
+                    ? handleTransformPointerDown
+                    : activeTool === 'line'
+                      ? handleLinePointerDown
+                      : activeTool === 'freeformPolygon'
+                        ? handlePolygonPointerDown
+                        : activeTool === 'regularPolygon'
+                          ? handleRegularPolygonPointerDown
+                          : activeTool === 'shape'
+                            ? handleShapePointerDown
+                            : handleFreehandPointerDown
             }
             onPointerMove={activeTool === 'freeformPolygon' ? handlePolygonPointerMove : undefined}
             onDoubleClick={activeTool === 'freeformPolygon' ? handlePolygonDoubleClick : undefined}
