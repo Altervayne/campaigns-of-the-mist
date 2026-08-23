@@ -85,9 +85,8 @@ export default function MobileDrawerContextMenu({
 	// Folder export needs only the id/name carried by `target`, so no folder fetch.
 	const [resolvedItem, setResolvedItem] = useState<DrawerItemRecord | null>(null);
 	useEffect(() => {
-		// Only resolve for item targets. A stale value from a previous item target
-		// is harmless: it is read only when the current target is that item (folder
-		// targets gate the item-only controls off), and each item target re-resolves.
+		// Only resolve for item targets; a folder target keeps the previous item's record. That stale value
+		// is neutralized where `item` is derived (folder -> null), so no item-only control reads it.
 		if (!isOpen || !target || target.type === 'folder') return;
 		let cancelled = false;
 		void (async () => {
@@ -120,8 +119,9 @@ export default function MobileDrawerContextMenu({
 	if (!target) return null;
 
 	const isFolder = target.type === 'folder';
-	// The targeted item record (folders carry their id/name on `target`).
-	const item = resolvedItem;
+	// The targeted item record (folders carry their id/name on `target`). Null on a folder target so no
+	// item-only control reads the previous item's still-resolved record - e.g. "Load character" on a folder.
+	const item = isFolder ? null : resolvedItem;
 
 	const handleRename = () => {
 		setNewName(target.name);
@@ -225,11 +225,10 @@ export default function MobileDrawerContextMenu({
 
 	// A saved character loads INTO the sheet (replacing the active one) - no game-match needed. Adding to
 	// the loaded character is offered only by the types that declare it, and needs a character present.
-	// `isFolder` still gates it because a folder target leaves the previous item's record resolved.
+	// Both key off `item`, which is null on a folder target, so neither offers on a folder.
 	const isSheetItem = item?.type === 'FULL_CHARACTER_SHEET';
-	const canLoadCharacter = isSheetItem && !!item && !!onLoadCharacter;
-	const canAddToCharacter = !isFolder
-		&& hasDrawerItemCapability(item?.type, 'ADD_TO_CHARACTER')
+	const canLoadCharacter = isSheetItem && !!onLoadCharacter;
+	const canAddToCharacter = hasDrawerItemCapability(item?.type, 'ADD_TO_CHARACTER')
 		&& !!character
 		&& !!onAddToCharacter;
 

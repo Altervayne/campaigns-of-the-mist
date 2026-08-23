@@ -45,7 +45,6 @@ export function useDragEndRouter({
    character,
    currentFolderView,
    activeDragItem,
-   dragSourceCharacterIdRef,
    tNotifications,
    moveFolder,
    reorderFolders,
@@ -114,7 +113,7 @@ export function useDragEndRouter({
       };
 
       const deps: DragEndDeps = {
-         character, currentFolderView, activeDragItem, dragSourceCharacterIdRef, tNotifications,
+         character, currentFolderView, activeDragItem, tNotifications,
          moveFolder, reorderFolders, moveItem, reorderItems,
          openCharacterTab, openBoardTab, openNoteTab, reorderTabs, setActiveTab, setContextualGame,
          addImportedCard, addImportedTracker, addImportedJournal,
@@ -177,7 +176,6 @@ export function useDragEndRouter({
       contractDrawer,
       setDrawerReceded,
       activeDragItem,
-      dragSourceCharacterIdRef,
       readDragSnapshot,
       setActiveDragItem,
       setIsOverDrawer,

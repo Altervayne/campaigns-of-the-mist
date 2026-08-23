@@ -37,9 +37,22 @@ export function useDiceTrayRoll({ tray, dice, modifiers, modifierTotal, onCacheR
    // The cycling faces during a roll reveal; null when resting (then faces come from lastRoll).
    const [liveFaces, setLiveFaces] = useState<Record<string, number> | null>(null);
    const rafRef = useRef<number | null>(null);
-   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+   // Latest tray content, so a settle firing a frame later (or on unmount) merges onto the current config
+   // instead of clobbering it with the snapshot the roll started from (edits made mid-reveal survive).
+   const trayRef = useRef(tray);
+   useEffect(() => { trayRef.current = tray; });
+   // The in-flight roll's settle, so an unmount mid-reveal (panel closed / tab switched) can flush it rather
+   // than drop the roll. Null when nothing is animating.
+   const pendingSettleRef = useRef<(() => void) | null>(null);
+   useEffect(() => () => {
+      if (rafRef.current) {
+         cancelAnimationFrame(rafRef.current);
+         pendingSettleRef.current?.(); // settle the interrupted roll so it still records lastRoll + history
+      }
+   }, []);
 
    const settle = (faces: Record<string, number>, breakdown: { label?: string; value: number }[], total: number) => {
+      pendingSettleRef.current = null;
       setLiveFaces(null); // rest from the cached lastRoll, not stale animation state
       // Record the roll in history alongside the live lastRoll - both via the non-undoable cache path, so a
       // roll never becomes undo steps. The entry is self-contained (config + faces in dice order + total).
@@ -51,7 +64,8 @@ export function useDiceTrayRoll({ tray, dice, modifiers, modifierTotal, onCacheR
          faces: dice.map((die) => faces[die.id] ?? 0),
          total,
       };
-      onCacheRoll({ ...tray, lastRoll: { faces, modifiers: breakdown, total }, history: appendRollEntry(tray.history ?? [], entry) });
+      const current = trayRef.current;
+      onCacheRoll({ ...current, lastRoll: { faces, modifiers: breakdown, total }, history: appendRollEntry(current.history ?? [], entry) });
    };
 
    const roll = () => {
@@ -69,6 +83,7 @@ export function useDiceTrayRoll({ tray, dice, modifiers, modifierTotal, onCacheR
 
       const start = performance.now();
       const settleAt = new Map(dice.map((die, index) => [die.id, ROLL_BASE_MS + index * ROLL_STAGGER_MS]));
+      pendingSettleRef.current = () => settle(finalFaces, result.modifiers, result.total);
       const tick = (now: number) => {
          const elapsed = now - start;
          const faces: Record<string, number> = {};

@@ -53,9 +53,9 @@ export function routeSheetToBoardFallback(
 // #############################################
 export function routeSheetDrag(
    event: DragEndEvent,
-   { over, activeType, overType, overIdStr }: DragEndTarget,
+   { over, activeType, overType, overIdStr, dragSourceCharacterId }: DragEndTarget,
    {
-      character, activeDragItem, dragSourceCharacterIdRef, tNotifications,
+      character, activeDragItem, tNotifications,
       addImportedCard, addImportedTracker, addImportedJournal,
       dropSheetItemOnBoard, handleSheetToDrawerDrop, handleSheetLayoutReorder, handleSheetTrackerReorder,
    }: DragEndDeps,
@@ -88,12 +88,12 @@ export function routeSheetDrag(
    const overIsSheetZone = overIdStr === 'character-sheet-main-drop-zone' ||
       overIdStr === 'card-drop-zone' || overIdStr === 'tracker-drop-zone' ||
       overType?.startsWith('sheet-');
-   // The source-character ref is read live, NOT from the snapshot: the teardown at the top of the
-   // handler clears it, so this import is unreachable and the drop falls through to the reorder
-   // below. Snapshotting the ref here would revive the path.
+   // The source character is read from the snapshot (captured before the teardown nulls its ref), so a
+   // drop on a DIFFERENT character's sheet after a mid-drag spring-nav imports a copy instead of falling
+   // through to a no-op reorder.
    if (
       character && activeDragItem && overIsSheetZone &&
-      dragSourceCharacterIdRef.current && dragSourceCharacterIdRef.current !== character.id
+      dragSourceCharacterId && dragSourceCharacterId !== character.id
    ) {
       const info = mapItemToStorableInfo(activeDragItem as CardData | Tracker | Journal);
       // NEUTRAL items are game-agnostic; every other component must match the sheet's game.

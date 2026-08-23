@@ -172,4 +172,17 @@ describe('MobileDrawerContextMenu special actions', () => {
       expect(screen.getByText('Common.move')).toBeTruthy();
       expect(screen.getByText('Drawer.Actions.export')).toBeTruthy();
    });
+
+   it('withholds "Load character" on a folder after a character sheet resolved (stale-record guard)', async () => {
+      // The resolve effect skips folder targets, so the sheet's record stays resolved; the folder target must
+      // still gate the load action off, or the menu offers "Load character" on a folder.
+      mocks.itemType = 'FULL_CHARACTER_SHEET';
+      const { rerender } = await renderMenu();
+      expect(screen.getByText(LOAD_CHARACTER_ROW)).toBeTruthy();
+
+      rerender(<MobileDrawerContextMenu {...defaults} target={{ type: 'folder', id: 'folder-a', name: 'Folder A' }} />);
+      await act(async () => {});
+
+      expect(screen.queryByText(LOAD_CHARACTER_ROW)).toBeNull();
+   });
 });

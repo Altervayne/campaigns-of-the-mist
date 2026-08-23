@@ -307,13 +307,11 @@ describe('handleDragEnd BRANCH 2 (from the sheet)', () => {
    });
 
    /*
-    * The cross-character import path does NOT fire today: the source-character ref it keys off is one of
-    * the refs `clearDragFeedback` clears at the top of the handler, and unlike the four snapshotted refs
-    * it is read afterwards, so it is always null by the time the branch tests it. A drop on another
-    * character's sheet therefore falls through to the reorder path. Pinned as the current behaviour, so
-    * that restoring the import is a deliberate change rather than a side effect of moving the teardown.
+    * Cross-character import: dragging a sheet component, spring-navigating to another (game-matching)
+    * character mid-drag, and dropping on its sheet imports a copy. The source-character id is now taken in
+    * the pre-teardown snapshot, so the branch still sees it after `clearDragFeedback` nulls its ref.
     */
-   it('falls through to reorder when the active character changed mid-drag (the source ref is already cleared)', () => {
+   it('imports a copy when dropped on a different character sheet after a mid-drag nav', () => {
       mocks.character = makeCharacter('cA', 'LEGENDS', [card('sc1')]);
       const data = { type: 'sheet-card' };
       const dnd = mountDnD();
@@ -323,8 +321,8 @@ describe('handleDragEnd BRANCH 2 (from the sheet)', () => {
       dnd.rerender();
       dnd.end('sc1', data, { id: 'other', data: { type: 'sheet-card' } });
 
-      expect(mocks.ledger).toEqual(['reorderSheetLayout']);
-      expect(mocks.characterActions.addImportedCard).not.toHaveBeenCalled();
+      expect(mocks.ledger).toEqual(['addImportedCard']);
+      expect(mocks.characterActions.addImportedCard).toHaveBeenCalledTimes(1);
    });
 
    it('saves a sheet component dropped on the drawer', () => {

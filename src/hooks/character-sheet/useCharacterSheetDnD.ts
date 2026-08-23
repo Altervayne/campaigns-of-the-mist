@@ -225,6 +225,14 @@ export function useCharacterSheetDnD() {
 
       setOverDragId(over ? over.id.toString() : null);
 
+      // Keep the "can't drop here" overlay honest against the LIVE active character: a spring-nav to a
+      // different-game tab mid-drag changes whether the dragged component fits, so a flag frozen at pickup
+      // would contradict the actual drop (which routes on the live compatibility). NEUTRAL is game-agnostic.
+      if (dragKindRef.current === 'drawer-component') {
+         const dragged = active.data.current?.item as DrawerItem | undefined;
+         setIsIncompatibleComponentDrag(!!dragged && !!character && dragged.game !== 'NEUTRAL' && dragged.game !== character.game);
+      }
+
       let isHoveringDrawer = false;
       // The actionable surface under the cursor. The drawer splits into its items
       // area (reorder/land) and its nav area (folders, folder slots, Back). The thin
@@ -286,7 +294,7 @@ export function useCharacterSheetDnD() {
       // which is reliable full-row where dnd-kit's collision is center-only.
       overZoneRef.current = zone === 'play-area' || zone === 'sheet' || zone === 'board' ? zone : null;
       updateContext();
-   }, [updateContext, character, overZoneRef, sheetCompatibleRef, setSheetHighlight]);
+   }, [updateContext, character, overZoneRef, sheetCompatibleRef, setSheetHighlight, dragKindRef, setIsIncompatibleComponentDrag]);
 
    // ==================
    //  Drop actions: on-sheet reorders + drawer saves
@@ -307,7 +315,6 @@ export function useCharacterSheetDnD() {
       character,
       currentFolderView,
       activeDragItem,
-      dragSourceCharacterIdRef,
       tNotifications,
       moveFolder,
       reorderFolders,

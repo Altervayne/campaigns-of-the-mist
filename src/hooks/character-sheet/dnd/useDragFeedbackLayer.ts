@@ -317,6 +317,9 @@ export function useDragFeedbackLayer({
       manualDrawerTarget: hoveredDrawerTargetRef.current,
       // The last cursor position, for a board drop's world placement (cleared by cleanup).
       dropPointer: lastPointerRef.current,
+      // Snapshotted here (not read live in the route) because the teardown nulls the ref before the
+      // cross-character import route runs - reading it live left that import permanently unreachable.
+      dragSourceCharacterId: dragSourceCharacterIdRef.current,
    }), []);
 
    /**

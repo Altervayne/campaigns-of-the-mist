@@ -1,5 +1,4 @@
 // -- Type Imports --
-import type { RefObject } from 'react';
 import type { useTranslation } from 'react-i18next';
 import type { DragEndEvent } from '@dnd-kit/core';
 import type { useDrawerSaveActions } from '@/hooks/character-sheet/dnd/useDrawerSaveActions';
@@ -26,6 +25,8 @@ export interface DragEndSnapshot {
    dragKind: DragKind;
    manualDrawerTarget: DrawerDropTarget | null;
    dropPointer: { x: number; y: number } | null;
+   /** The character a dragged sheet item came from, for the cross-character import (null otherwise). */
+   dragSourceCharacterId: string | null;
 }
 
 /** The snapshot plus the dnd-kit target, for the routes that run past the `!over` guard. */
@@ -40,8 +41,6 @@ export interface DragEndDeps {
    character: Character | null;
    currentFolderView: DrawerState['currentFolderView'];
    activeDragItem: ActiveDragItem;
-   /** Read live by the cross-character import, NOT snapshotted - see `dragEndSheetRoutes`. */
-   dragSourceCharacterIdRef: RefObject<string | null>;
    tNotifications: ReturnType<typeof useTranslation>['t'];
    moveFolder: DrawerState['actions']['moveFolder'];
    reorderFolders: DrawerState['actions']['reorderFolders'];
