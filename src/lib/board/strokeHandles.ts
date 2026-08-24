@@ -51,7 +51,8 @@ export function handleLayoutBox(b: WorldRect, minSpan: number): WorldRect {
    return { minX: cx - halfW, minY: cy - halfH, maxX: cx + halfW, maxY: cy + halfH };
 }
 
-/** Each handle's anchor point in the local frame (the knob sits `stalk` above the top-mid edge). */
+/** Each handle's anchor point in the local frame (the knob sits `stalk` below the bottom-mid edge, clear of
+ *  the style toolbar that anchors above the box - mirroring the element rotate handle's clear-of-toolbar spot). */
 export function handleAnchors(box: WorldRect, stalk: number): Record<HandleId, Point> {
    const { minX, minY, maxX, maxY } = box;
    const midX = (minX + maxX) / 2;
@@ -65,7 +66,7 @@ export function handleAnchors(box: WorldRect, stalk: number): Record<HandleId, P
       e: { x: maxX, y: midY },
       s: { x: midX, y: maxY },
       w: { x: minX, y: midY },
-      rotate: { x: midX, y: minY - stalk },
+      rotate: { x: midX, y: maxY + stalk },
    };
 }
 

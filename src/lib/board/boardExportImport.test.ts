@@ -73,6 +73,30 @@ describe('board export -> import round-trip', () => {
       expect((image.content as { assetId: string }).assetId).toBe('asset-h');
    });
 
+   it('preserves an 8-digit alpha stroke color through export/import', async () => {
+      const board = await repo.createBoard('Drawing');
+      await repo.saveBoard(board);
+      const alpha = '#3b82f680'; // rrggbb + aa: the Transform tool stores opacity in the color's alpha
+      await repo.bulkPutItems([
+         rec('draw', board.id, 0, {
+            kind: 'drawing',
+            content: { kind: 'drawing', seq: 1, strokes: [{ id: 's1', brush: 'pen', color: alpha, width: 3, points: [0, 0, 10, 10] }] },
+         }),
+      ]);
+
+      const fileContent = JSON.parse(JSON.stringify((await repo.loadBoard(board.id))!)) as Board;
+      await drawerDatabase.boards.clear();
+      await drawerDatabase.boardItems.clear();
+
+      const reIded = reIdBoardAggregate(fileContent);
+      await repo.importBoard(reIded);
+      const reloaded = (await repo.loadBoard(reIded.id))!;
+
+      const drawing = reloaded.items.find((i) => i.content.kind === 'drawing')!;
+      const strokes = (drawing.content as { strokes: { color: string }[] }).strokes;
+      expect(strokes[0].color).toBe(alpha); // the 8-digit alpha survives byte-identical (no 6-digit truncation)
+   });
+
    it('preserves edited embed copies (card flip/tags, tracker tiers, image asset) through export/import', async () => {
       const board = await repo.createBoard('Embeds');
       await repo.saveBoard(board);

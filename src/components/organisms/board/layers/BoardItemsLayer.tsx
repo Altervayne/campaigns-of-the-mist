@@ -28,6 +28,7 @@ import type { Point } from '@/lib/board/boardConnections';
 import type { WorldRect } from '@/lib/board/drawingStyle';
 import type { Mat } from '@/lib/board/strokeTransform';
 import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/board/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
 import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
@@ -78,6 +79,7 @@ interface BoardItemsLayerProps {
    onPreviewStrokeStyle: (patch: StrokeStylePatch) => void;
    onCommitStrokeStyle: (patch: StrokeStylePatch) => void;
    onFlipStrokes: (axis: 'x' | 'y') => void;
+   onStrokeStructure: (op: StrokeStructureOp) => void;
    penSettings: { brush: BrushKind; color: string | null; width: number; shapeBase: 'circle' | 'square'; shapeFilled: boolean };
    activeTool: ActiveTool;
    focusLayer: BoardItem | undefined;
@@ -139,6 +141,7 @@ export function BoardItemsLayer({
    onPreviewStrokeStyle,
    onCommitStrokeStyle,
    onFlipStrokes,
+   onStrokeStructure,
    penSettings,
    activeTool,
    focusLayer,
@@ -373,7 +376,7 @@ export function BoardItemsLayer({
 
          {/* Transform style toolbar over the stroke selection's world bbox: recolor / width / brush / fill / flip. */}
          {strokeStyleToolbar && (
-            <BoardStrokeStyleToolbarSlot toolbar={strokeStyleToolbar} viewport={viewport} clipWidth={clipWidth} clipHeight={clipHeight} layerCount={layerCount} onPreviewStyle={onPreviewStrokeStyle} onCommitStyle={onCommitStrokeStyle} onFlip={onFlipStrokes} />
+            <BoardStrokeStyleToolbarSlot toolbar={strokeStyleToolbar} viewport={viewport} clipWidth={clipWidth} clipHeight={clipHeight} layerCount={layerCount} onPreviewStyle={onPreviewStrokeStyle} onCommitStyle={onCommitStrokeStyle} onFlip={onFlipStrokes} onStructure={onStrokeStructure} />
          )}
       </div>
       </>

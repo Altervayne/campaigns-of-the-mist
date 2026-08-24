@@ -39,8 +39,8 @@ describe('pickHandle', () => {
       expect(pickHandle({ x: 98, y: 48 }, BOX, 20, 6, false)).toBe('se');
    });
 
-   it('grabs the rotate knob on its stalk above the top edge', () => {
-      expect(pickHandle({ x: 50, y: -20 }, BOX, 20, 6, false)).toBe('rotate');
+   it('grabs the rotate knob on its stalk below the bottom edge', () => {
+      expect(pickHandle({ x: 50, y: 70 }, BOX, 20, 6, false)).toBe('rotate');
    });
 
    it('drops the rotate knob when the selection holds a shape', () => {
@@ -117,11 +117,11 @@ describe('handleMatrix - skew (Ctrl + edge)', () => {
 });
 
 describe('handleAnchors', () => {
-   it('places the eight grips on the box and the knob up the stalk', () => {
+   it('places the eight grips on the box and the knob down the stalk below the bottom edge', () => {
       const a = handleAnchors(BOX, 22);
       expect(a.nw).toEqual({ x: 0, y: 0 });
       expect(a.se).toEqual({ x: 100, y: 50 });
       expect(a.n).toEqual({ x: 50, y: 0 });
-      expect(a.rotate).toEqual({ x: 50, y: -22 });
+      expect(a.rotate).toEqual({ x: 50, y: 72 }); // maxY 50 + stalk 22, clear of the top toolbar
    });
 });

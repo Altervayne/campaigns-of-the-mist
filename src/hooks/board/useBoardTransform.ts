@@ -5,6 +5,9 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type PointerEv
 import { pointsBounds, strokeHitsPoint, strokeIntersectsRect, type WorldRect } from '@/lib/board/drawingStyle';
 import { rotateVec } from '@/lib/board/boardRotation';
 import { applyMatrixToPoints, flip, translate, type Mat } from '@/lib/board/strokeTransform';
+
+// -- Custom Hooks --
+import { useStrokeStructureEditing } from './useStrokeStructureEditing';
 import { HANDLE_HIT_PX, MIN_HANDLE_BOX_PX, ROTATE_STALK_PX, handleLayoutBox, handleMatrix, pickHandle, type HandleId } from '@/lib/board/strokeHandles';
 
 // -- Type Imports --
@@ -165,6 +168,10 @@ export function useBoardTransform({
       const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
       commitMatrix(selection.layerId, selection.strokeIds, flip(axis, center));
    }, [selection, store, commitMatrix]);
+
+   // The structural half (delete / duplicate / reorder-within-layer) lives in its own hook; it reads the
+   // selection and re-targets it (duplicate re-selects the copies, delete clears).
+   const { deleteSelection, duplicateSelection, reorderSelection } = useStrokeStructureEditing({ store, actions, selection, setSelection });
 
    /**
     * Transform-overlay pointerdown, geometry-resolved in priority order: the pan escape hatch first
@@ -365,6 +372,9 @@ export function useBoardTransform({
       marquee,
       handleTransformPointerDown,
       flipSelection,
+      deleteSelection,
+      duplicateSelection,
+      reorderSelection,
       resetForBoard,
    };
 }

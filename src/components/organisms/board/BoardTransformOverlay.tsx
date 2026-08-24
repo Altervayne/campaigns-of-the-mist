@@ -132,13 +132,13 @@ export function BoardTransformOverlay({ layer, strokeIds, preview, marquee, zoom
                            );
                         })}
 
-                        {/* The rotate knob on a stalk from the top-mid edge - a circle vs the square grips. */}
+                        {/* The rotate knob on a stalk below the bottom-mid edge (clear of the top toolbar) - a circle vs the square grips. */}
                         {!hasShape && (() => {
-                           const stalkTop = mapPoint(anchors.n);
+                           const stalkBase = mapPoint(anchors.s);
                            const knob = mapPoint(anchors.rotate);
                            return (
                               <>
-                                 <line className="stroke-primary" x1={stalkTop.x} y1={stalkTop.y} x2={knob.x} y2={knob.y} strokeWidth={boxWidth} />
+                                 <line className="stroke-primary" x1={stalkBase.x} y1={stalkBase.y} x2={knob.x} y2={knob.y} strokeWidth={boxWidth} />
                                  <circle className="fill-primary stroke-background" cx={knob.x} cy={knob.y} r={knobRadius} strokeWidth={gripBorder} />
                               </>
                            );

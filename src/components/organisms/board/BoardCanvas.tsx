@@ -18,6 +18,7 @@ import { PendingEraseContext, EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseC
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { StrokeStylePreviewContext } from '@/lib/board/StrokeStylePreviewContext';
 import { foldStrokeStyle, strokesWorldAABB } from '@/lib/board/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
@@ -242,6 +243,9 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       marquee: transformMarquee,
       handleTransformPointerDown,
       flipSelection,
+      deleteSelection: deleteStrokeSelection,
+      duplicateSelection: duplicateStrokeSelection,
+      reorderSelection: reorderStrokeSelection,
       resetForBoard: resetTransformForBoard,
    } = useBoardTransform({
       store,
@@ -257,6 +261,13 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
 
    // The Transform tool's STYLE half: a live style patch previewed on the layer + the one committed write.
    const { stylePreview, previewStyle, commitStyle } = useStrokeStyleEditing({ store, actions, selection: transformSelection });
+
+   // The style toolbar's structural cluster dispatches to the transform hook's structural ops (each one undo step).
+   const handleStrokeStructure = useCallback((op: StrokeStructureOp) => {
+      if (op === 'delete') deleteStrokeSelection();
+      else if (op === 'duplicate') duplicateStrokeSelection();
+      else reorderStrokeSelection(op);
+   }, [deleteStrokeSelection, duplicateStrokeSelection, reorderStrokeSelection]);
 
    // Board switches keep this canvas mounted (a new `store` prop, no remount), so the tool/layer + drawing
    // state would leak across boards; reset them when the loaded board id changes.
@@ -354,8 +365,8 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       if (selectedIds.size === 0) return;
       const onKeyDown = (event: KeyboardEvent) => {
          if (isEditableTarget(event.target)) return;
-         // The Transform tool owns Delete/Backspace over its stroke selection (stroke-delete lands in a later
-         // phase); don't let it fall through to element-delete or the polygon-vertex splice while it's active.
+         // The Transform tool owns Delete/Backspace + Ctrl/Cmd+D over its stroke selection (handled in the
+         // effect below); don't let it fall through to element-delete or the polygon-vertex splice here.
          if (activeTool === 'transform') return;
          // A freeform polygon in progress owns Backspace (it pops a vertex); don't also delete the selection.
          if (event.key === 'Backspace' && polygonRef.current) return;
@@ -370,6 +381,30 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       window.addEventListener('keydown', onKeyDown);
       return () => window.removeEventListener('keydown', onKeyDown);
    }, [selectedIds, handleDeleteSelection, handleDuplicateSelection, polygonRef, activeTool]);
+
+   // Keyboard for the Transform tool's stroke selection: Delete/Backspace deletes, Ctrl/Cmd+D duplicates.
+   // Scoped to a live stroke selection, so it never fires over an empty transform gesture.
+   useEffect(() => {
+      if (activeTool !== 'transform' || !transformSelection) return;
+      const onKeyDown = (event: KeyboardEvent) => {
+         if (isEditableTarget(event.target)) return;
+         if (event.key === 'Delete' || event.key === 'Backspace') {
+            event.preventDefault();
+            deleteStrokeSelection();
+         } else if ((event.ctrlKey || event.metaKey) && (event.key === 'd' || event.key === 'D')) {
+            event.preventDefault();
+            duplicateStrokeSelection();
+         }
+      };
+      window.addEventListener('keydown', onKeyDown);
+      return () => window.removeEventListener('keydown', onKeyDown);
+   }, [activeTool, transformSelection, deleteStrokeSelection, duplicateStrokeSelection]);
+
+   // Leaving Select for any drawing/transform tool clears the board ELEMENT selection, so a stale selection
+   // doesn't linger into drawing mode. Transform keeps its own separate stroke selection, unaffected by this.
+   useEffect(() => {
+      if (activeTool !== 'select') actions.clearSelection();
+   }, [activeTool, actions]);
 
    // A bare `L` toggles the layers panel. Ignored while editing text (a board field / the panel's rename)
    // and when a modifier is held (so browser shortcuts like Ctrl+L stay intact).
@@ -681,6 +716,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             onPreviewStrokeStyle={previewStyle}
             onCommitStrokeStyle={commitStyle}
             onFlipStrokes={flipSelection}
+            onStrokeStructure={handleStrokeStructure}
             penSettings={penSettings}
             activeTool={activeTool}
             focusLayer={focusLayer}

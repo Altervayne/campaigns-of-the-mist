@@ -80,6 +80,7 @@ function renderLayer(overrides: { viewport?: Viewport; moveDeltaFor?: (id: strin
          onPreviewStrokeStyle={() => {}}
          onCommitStrokeStyle={() => {}}
          onFlipStrokes={() => {}}
+         onStrokeStructure={() => {}}
          penSettings={{ brush: 'pen', color: null, width: 2, shapeBase: 'circle', shapeFilled: false }}
          activeTool="select"
          focusLayer={undefined}
