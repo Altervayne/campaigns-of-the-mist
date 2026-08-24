@@ -778,3 +778,16 @@ body {
    100% { stroke-dashoffset: 0; opacity: 0; }
 }
 @utility animate-cue-press-drag-ring { animation: cue-press-drag-ring 2400ms linear infinite; }
+/* Mist spinner: the page's bespoke loader. `cotm-mist-roll` scrolls a two-period wave layer by exactly one
+   period for a seamless loop; `cotm-mist-spin` turns the optional comet ring. Reduced motion freezes both
+   (the fog still reads as fog, just still). */
+@keyframes cotm-mist-roll {
+   from { transform: translateX(0); }
+   to { transform: translateX(-50%); }
+}
+@keyframes cotm-mist-spin {
+   to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+   [data-mist-anim] { animation: none !important; }
+}

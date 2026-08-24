@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 // -- Icon Imports --
-import { FileType, FileWarning, LoaderCircle } from 'lucide-react';
+import { FileWarning } from 'lucide-react';
 
 // -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfPageCanvas } from './PdfPageCanvas';
 import { PdfToolbar } from './PdfToolbar';
 
@@ -243,12 +244,8 @@ function PdfCenteredState({ kind }: { kind: 'loading' | 'error' }) {
    }
 
    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background text-muted-foreground">
-         <FileType className="h-10 w-10 opacity-40" />
-         <div className="flex items-center gap-2">
-            <LoaderCircle className="h-4 w-4 animate-spin" />
-            <span className="text-sm">{t('PdfView.loading')}</span>
-         </div>
+      <div className="absolute inset-0 flex items-center justify-center bg-background text-muted-foreground">
+         <MistSpinner variant="logo" size={128} tip={t('PdfView.loading')} label={t('PdfView.loading')} />
       </div>
    );
 }

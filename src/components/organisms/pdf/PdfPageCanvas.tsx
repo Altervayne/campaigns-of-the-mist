@@ -1,8 +1,8 @@
 // -- React Imports --
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
-// -- Icon Imports --
-import { LoaderCircle } from 'lucide-react';
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Type Imports --
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
@@ -116,10 +116,10 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
              re-render runs; the backing pixels are set imperatively once that render blits in. */}
          {isVisible ? <canvas ref={canvasRef} className="block" style={{ width, height: Math.round(width * aspect) }} /> : null}
          {rendering && !hasBitmap ? (
-            // A heavy page can take seconds to rasterize; a spinner over the (white) sheet reads as loading
+            // A heavy page can take seconds to rasterize; the mist over the (white) sheet reads as loading
             // rather than a frozen blank. Fixed grey since the sheet is always white, not app-themed.
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-               <LoaderCircle className="h-6 w-6 animate-spin text-black/30" />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-neutral-500">
+               <MistSpinner size={64} comet />
             </div>
          ) : null}
       </div>
