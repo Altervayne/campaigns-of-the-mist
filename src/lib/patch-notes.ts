@@ -7,8 +7,19 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
-      version: '2.3.2',
+      version: '2.4.0',
       content: `
+### ✨ Features
+* **Drawing Transform tool**: A new tool in Drawing mode on the board lets you select, move, and transform individual strokes of a drawing. The following actions are now possible :
+  * Moving, Scaling, Rotating, Skewing and Flipping individual strokes.
+  * Recoloring, changing the brush size, the brush type, and toggling fill on shapes.
+  * Deleting, duplicating and reordering strokes within the layer.
+
+* It is now possible to resize the header of a Zone element on a Board. No more super-tiny zone headers.
+
+### 🔧 Changes
+* Switching to drawing mode on the board now clears the current selection so the former selection box doesn't clutter the canvas.
+
 ### 🐛 Bugfixes
 * Fixed the "load character in sheet" option in drawer item context menus making its way into a folder's context menu too instead of being properly cleaned out.
 * Fixed dice rolls being lost if the dice panel was closed before the animation finished.
@@ -18,6 +29,8 @@ export const patchNotes: PatchNote[] = [
 * Fixed LitM "Hero Card" and Otherscape Theme Card having a hardcoded color for some elements instead of properly using card palette (custom or not) colors.
 * Fixed using the scroll wheel over a board's layers panel zooming in and out of the board instead of correctly scrolling the panel's list.
 * Fixed the text element font size selector on a board not working because the click would be hijacked by the board's canvas.
+* Fixed board image elements' border color, width, and radius not updating live while changing them.
+* Fixed board zones' selection toolbar being slightly offset under the tab strip when the zone is out of bounds.
 `,
    },
    {
