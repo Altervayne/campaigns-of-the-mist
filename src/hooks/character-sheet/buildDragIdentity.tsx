@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 // -- Other Library Imports --
 import type { DragStartEvent } from '@dnd-kit/core';
-import { Folder as FolderIcon, LayoutGrid, NotebookPen } from 'lucide-react';
+import { FileType, Folder as FolderIcon, LayoutGrid, NotebookPen } from 'lucide-react';
 
 // -- Component Imports --
 import { DragIdentityPill } from '@/components/molecules/DragIdentityPill';
@@ -12,6 +12,7 @@ import { DragIdentityPill } from '@/components/molecules/DragIdentityPill';
 import { getOrCreateInstance } from '@/lib/character/characterStoreRegistry';
 import { getOrCreateBoardInstance } from '@/lib/board/boardStoreRegistry';
 import { getOrCreateNoteInstance } from '@/lib/notes/noteStoreRegistry';
+import { getOrCreatePdfInstance } from '@/lib/pdf/pdfStoreRegistry';
 import { useTabManagerStore } from '@/lib/character/tabManagerStore';
 
 // -- Utils Imports --
@@ -59,6 +60,10 @@ export function buildDragIdentity({ kind, active, sheetItem, untitledLabel }: Bu
       if (tab?.type === 'note') {
          const title = getOrCreateNoteInstance(tab.id).getState().note?.title;
          return <DragIdentityPill icon={NotebookPen} label={title?.trim() || untitledLabel} />;
+      }
+      if (tab?.type === 'pdf') {
+         const title = getOrCreatePdfInstance(tab.id).getState().doc?.title;
+         return <DragIdentityPill icon={FileType} label={title?.trim() || untitledLabel} />;
       }
       const character = getOrCreateInstance(String(active.id)).getState().character;
       // A character tab: crest from its resolved game.

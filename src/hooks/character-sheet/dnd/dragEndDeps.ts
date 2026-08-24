@@ -49,6 +49,7 @@ export interface DragEndDeps {
    openCharacterTab: ReturnType<typeof useTabManagerActions>['openCharacterTab'];
    openBoardTab: ReturnType<typeof useTabManagerActions>['openBoardTab'];
    openNoteTab: ReturnType<typeof useTabManagerActions>['openNoteTab'];
+   openPdfTab: ReturnType<typeof useTabManagerActions>['openPdfTab'];
    reorderTabs: ReturnType<typeof useTabManagerActions>['reorderTabs'];
    setActiveTab: ReturnType<typeof useTabManagerActions>['setActiveTab'];
    setContextualGame: ReturnType<typeof useAppSettingsActions>['setContextualGame'];

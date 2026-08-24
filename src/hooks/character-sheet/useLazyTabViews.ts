@@ -9,6 +9,9 @@ import { useEffect } from 'react';
 // SAME module cache Vite dedupes, and the first board/note open never blocks on a cold fetch.
 export const importNoteView = () => import('@/components/organisms/note/NoteView');
 export const importBoardView = () => import('@/components/organisms/board/BoardView');
+// The PDF surface pulls in the whole pdf.js stack (the `pdf-vendor` chunk + the worker), so it is
+// deferred like the note/board views and warmed on idle below.
+export const importPdfView = () => import('@/components/organisms/pdf/PdfView');
 
 /**
  * Prefetches the note + board lazy chunks once the app is idle after boot, so the first open of either
@@ -18,7 +21,7 @@ export const importBoardView = () => import('@/components/organisms/board/BoardV
  */
 export function usePrefetchTabChunks(): void {
    useEffect(() => {
-      const prefetch = () => { void importNoteView(); void importBoardView(); };
+      const prefetch = () => { void importNoteView(); void importBoardView(); void importPdfView(); };
       const w = window as Window & {
          requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
          cancelIdleCallback?: (id: number) => void;

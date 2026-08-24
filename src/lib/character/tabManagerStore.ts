@@ -28,6 +28,8 @@ import { createBoard, deleteBoard, loadBoard } from '@/lib/board/boardRepository
 import { refreezeDrawerlessNoteReferences } from '@/lib/board/refreezeNoteReferences';
 import { disposeNoteInstance, getNoteInstanceIds, getOrCreateNoteInstance, peekNoteInstance, setActiveNoteInstance } from '@/lib/notes/noteStoreRegistry';
 import { createNote, deleteNote, getNote } from '@/lib/notes/noteRepository';
+import { disposePdfInstance, getOrCreatePdfInstance, setActivePdfInstance } from '@/lib/pdf/pdfStoreRegistry';
+import { deletePdf, getPdf } from '@/lib/pdf/pdfRepository';
 
 // -- Journey (portal trail) Imports --
 import {
@@ -62,12 +64,12 @@ import type { JourneyEntry, JourneySlice } from './journey';
  * Boot is platform-aware (`runCharacterBoot`): desktop hydrates all tabs (active
  * first), mobile hydrates only the active one.
  *
- * TAB KINDS: tabs are characters, boards, or notes. The three kinds live in separate
- * registries (character + board + note), but the TabManager owns the single active pointer
- * across all three: exactly one tab is active, and activating one kind PARKS the other two
- * (a board or note tab parks the character registry on the menu fallback, so no sheet
- * shows; and clears whichever of the board/note pointers it isn't). Boards and notes are
- * desktop-only; the `mobile*` actions and `bootMobile` never touch them.
+ * TAB KINDS: tabs are characters, boards, notes, or pdfs. The four kinds live in separate
+ * registries (character + board + note + pdf), but the TabManager owns the single active pointer
+ * across all four: exactly one tab is active, and activating one kind PARKS the other three
+ * (a board/note/pdf tab parks the character registry on the menu fallback, so no sheet
+ * shows; and clears whichever of the board/note/pdf pointers it isn't). Boards, notes, and pdfs
+ * are desktop-only; the `mobile*` actions and `bootMobile` never make them resident.
  *
  * PORTAL TRAIL: the TabManager also owns the `journey` slice - an EPHEMERAL back-stack of portal navigations
  * (see `journey.ts`). It lives here because the TabManager is the ONE place that knows the active pointer moved
@@ -76,8 +78,8 @@ import type { JourneyEntry, JourneySlice } from './journey';
  * `{openTabs, activeId}`, so the trail is simply never serialized and dies on reload.
  */
 
-/** The kind of a tab. Boards and notes are desktop-only. */
-export type TabType = 'character' | 'board' | 'note';
+/** The kind of a tab. Boards, notes, and pdfs are desktop-only. */
+export type TabType = 'character' | 'board' | 'note' | 'pdf';
 
 /** Default name for a freshly created board, until the board UI lets the user rename it. */
 const DEFAULT_BOARD_NAME = 'New Board';
@@ -127,6 +129,8 @@ interface TabManagerState {
       createNoteTab: () => Promise<void>;
       /** Opens note `noteId`; focuses its tab if already open, else hydrates + appends + activates. Desktop-only. */
       openNoteTab: (noteId: string) => Promise<void>;
+      /** Opens pdf `pdfId`; focuses its tab if already open, else hydrates + appends + activates. Read-only, desktop-only. */
+      openPdfTab: (pdfId: string) => Promise<void>;
       /** Closes tab `id` (dispose + delete its record) and activates a neighbour, or the menu when none remain. */
       closeTab: (id: string) => void;
       /** Convenience: closes the currently active tab. */
@@ -213,54 +217,71 @@ function persistWorkspace(): void {
 // ==================
 
 /*
- * Active-pointer coordination is a THREE-way park: exactly one of the character / board /
- * note registries is pointed at a real instance, and the other two are cleared (board/note
- * to `null`, character to its menu fallback so no sheet shows). Every activate-function
- * below sets ALL THREE pointers, so activating any kind can never leave a stale surface
- * from another kind still pointed at.
+ * Active-pointer coordination is a FOUR-way park: exactly one of the character / board / note /
+ * pdf registries is pointed at a real instance, and the other three are cleared (board/note/pdf
+ * to `null`, character to its menu fallback so no sheet shows). Every activate-function below sets
+ * ALL FOUR pointers, so activating any kind can never leave a stale surface from another kind
+ * still pointed at.
  */
 
-/** Activates a character: point the character registry at it, clear the board AND note pointers. Pointer-only. */
+/** Activates a character: point the character registry at it, clear the board, note, AND pdf pointers. Pointer-only. */
 function activateCharacterPointers(id: string): void {
    setActiveInstance(id);
    setActiveBoardInstance(null);
    setActiveNoteInstance(null);
+   setActivePdfInstance(null);
 }
 
 /**
  * Activates a board: park the character registry on the menu fallback (so no sheet shows),
- * point the board registry at the board, and clear the note pointer. Pointer-only.
+ * point the board registry at the board, and clear the note + pdf pointers. Pointer-only.
  */
 function activateBoardPointers(id: string): void {
    getMenuFallbackInstance();
    setActiveInstance(SINGLE_ACTIVE_INSTANCE_ID);
    setActiveBoardInstance(id);
    setActiveNoteInstance(null);
+   setActivePdfInstance(null);
 }
 
 /**
  * Activates a note: park the character registry on the menu fallback (so no sheet shows),
- * clear the board pointer, and point the note registry at the note. Pointer-only.
+ * clear the board + pdf pointers, and point the note registry at the note. Pointer-only.
  */
 function activateNotePointers(id: string): void {
    getMenuFallbackInstance();
    setActiveInstance(SINGLE_ACTIVE_INSTANCE_ID);
    setActiveBoardInstance(null);
    setActiveNoteInstance(id);
+   setActivePdfInstance(null);
 }
 
-/** Points every registry at the menu: character fallback, no board, no note. Pointer-only. */
+/**
+ * Activates a pdf: park the character registry on the menu fallback (so no sheet shows),
+ * clear the board + note pointers, and point the pdf registry at the pdf. Pointer-only.
+ */
+function activatePdfPointers(id: string): void {
+   getMenuFallbackInstance();
+   setActiveInstance(SINGLE_ACTIVE_INSTANCE_ID);
+   setActiveBoardInstance(null);
+   setActiveNoteInstance(null);
+   setActivePdfInstance(id);
+}
+
+/** Points every registry at the menu: character fallback, no board, no note, no pdf. Pointer-only. */
 function activateMenuPointers(): void {
    getMenuFallbackInstance();
    setActiveInstance(SINGLE_ACTIVE_INSTANCE_ID);
    setActiveBoardInstance(null);
    setActiveNoteInstance(null);
+   setActivePdfInstance(null);
 }
 
 /** Applies the coordination rule for whichever kind `tab` is. Pointer-only. */
 function activatePointersForTab(tab: OpenTab): void {
    if (tab.type === 'board') activateBoardPointers(tab.id);
    else if (tab.type === 'note') activateNotePointers(tab.id);
+   else if (tab.type === 'pdf') activatePdfPointers(tab.id);
    else activateCharacterPointers(tab.id);
 }
 
@@ -309,6 +330,18 @@ function appendAndActivateNote(id: string): void {
       openTabs: state.openTabs.some((tab) => tab.id === id)
          ? state.openTabs
          : [...state.openTabs, { id, type: 'note' }],
+      activeTabId: id,
+   }));
+   persistWorkspace();
+}
+
+/** Pdf counterpart of {@link appendAndActivate}: appends/focuses a pdf tab and activates it. */
+function appendAndActivatePdf(id: string): void {
+   activatePdfPointers(id);
+   useTabManagerStore.setState((state) => ({
+      openTabs: state.openTabs.some((tab) => tab.id === id)
+         ? state.openTabs
+         : [...state.openTabs, { id, type: 'pdf' }],
       activeTabId: id,
    }));
    persistWorkspace();
@@ -583,6 +616,17 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          await instance.getState().actions.hydrate(noteId);
          appendAndActivateNote(noteId);
       },
+      openPdfTab: async (pdfId) => {
+         // Focus-or-add: an already-open pdf is focused, never re-hydrated. A PDF is read-only, so
+         // there is no create path - it always opens from an already-imported working row.
+         if (useTabManagerStore.getState().openTabs.some((tab) => tab.id === pdfId)) {
+            useTabManagerStore.getState().actions.setActiveTab(pdfId);
+            return;
+         }
+         const instance = getOrCreatePdfInstance(pdfId);
+         await instance.getState().actions.hydrate(pdfId);
+         appendAndActivatePdf(pdfId);
+      },
       closeTab: (id) => {
          const { openTabs, activeTabId } = useTabManagerStore.getState();
          const index = openTabs.findIndex((tab) => tab.id === id);
@@ -617,6 +661,15 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
                   .then(() => deleteNote(id))
                   .catch((error) => { console.error('Failed to re-freeze/reap closed note record:', error); });
             }
+         } else if (closing.type === 'pdf') {
+            // The simplest kind: read-only, so there is nothing to flush or re-freeze. Dispose the
+            // instance (which tears down the pdf.js document) and reap only the working `pdfDocs` row.
+            // The drawer copy is the durable source and survives, so a saved PDF reopens; the blob in
+            // `pdfAssets` is left for the GC to reclaim if it becomes unreferenced.
+            disposePdfInstance(id);
+            void deletePdf(id).catch((error) => {
+               console.error('Failed to delete closed pdf record:', error);
+            });
          } else {
             // Discard the handle WITHOUT flushing (no point saving what we delete).
             discardPersistenceHandle(id);
@@ -676,6 +729,19 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
             // Device-flip safety net: hydrate on demand if this note was never loaded.
             if (instance.getState().noteId === null) {
                void instance.getState().actions.hydrate(id);
+            }
+            return;
+         }
+
+         if (tab.type === 'pdf') {
+            const instance = getOrCreatePdfInstance(id);
+            activatePdfPointers(id); // keep-alive: previous active instance is left intact
+            useTabManagerStore.setState({ activeTabId: id });
+            persistWorkspace();
+            // Hydrate on demand if this pdf was never loaded (a boot-restored tab activated for the
+            // first time, or a device flip). `hydrate` is idempotent, so a re-activate is cheap.
+            if (instance.getState().pdfId === null) {
+               void hydratePdfInstanceFromStorage(id);
             }
             return;
          }
@@ -791,7 +857,7 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
       mobileSetActiveTab: async (id) => {
          const { openTabs, activeTabId } = useTabManagerStore.getState();
          const tab = openTabs.find((openTab) => openTab.id === id);
-         if (!tab || tab.type === 'board') return; // boards can't host on mobile yet (later seam)
+         if (!tab || tab.type === 'board' || tab.type === 'pdf') return; // boards + pdfs can't host on mobile yet (later seam)
          if (activeTabId === id) return; // already active (the UI handles a pure dismiss)
 
          const token = ++mobileSwitchToken;
@@ -889,9 +955,9 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
          const closing = openTabs[index];
          const wasActive = activeTabId === id;
          // Landing neighbour picked BEFORE removal: nearest HOSTABLE tab (right then left), skipping the
-         // desktop-only board tabs a mobile workspace can't host. A note neighbour is a valid landing.
+         // desktop-only board + pdf tabs a mobile workspace can't host. A note neighbour is a valid landing.
          const neighbour =
-            [...openTabs.slice(index + 1), ...openTabs.slice(0, index).reverse()].find((tab) => tab.type !== 'board') ?? null;
+            [...openTabs.slice(index + 1), ...openTabs.slice(0, index).reverse()].find((tab) => tab.type !== 'board' && tab.type !== 'pdf') ?? null;
 
          // Tear down the closing tab for good, by kind. Never flushes a character (no point saving what we
          // delete). For a note, copy the desktop split: a DRAWER-BACKED note's row just reaps (the drawer item
@@ -979,6 +1045,7 @@ export function getActiveTabJourneyEntry(): JourneyEntry | null {
 function resolveTabName(tab: OpenTab): string {
    if (tab.type === 'board') return getOrCreateBoardInstance(tab.id).getState().name ?? '';
    if (tab.type === 'note') return getOrCreateNoteInstance(tab.id).getState().note?.title ?? '';
+   if (tab.type === 'pdf') return getOrCreatePdfInstance(tab.id).getState().doc?.title ?? '';
    return getOrCreateInstance(tab.id).getState().character?.name ?? '';
 }
 
@@ -1025,10 +1092,23 @@ async function hydrateNoteInstanceFromStorage(id: string): Promise<boolean> {
    return true;
 }
 
+/**
+ * Pdf counterpart of {@link hydrateNoteInstanceFromStorage}: creates the pdf instance and loads it
+ * from IndexedDB (row + bytes + parse). A PDF is read-only, so there is no persistence handle.
+ * Returns `false` when no working row exists, so boot prunes a stale pdf tab.
+ */
+async function hydratePdfInstanceFromStorage(id: string): Promise<boolean> {
+   if (!(await getPdf(id))) return false;
+   const instance = getOrCreatePdfInstance(id);
+   await instance.getState().actions.hydrate(id);
+   return true;
+}
+
 /** Hydrates `tab` from storage by kind. Returns `false` when its record is missing. */
 function hydrateTabFromStorage(tab: OpenTab): Promise<boolean> {
    if (tab.type === 'board') return hydrateBoardInstanceFromStorage(tab.id);
    if (tab.type === 'note') return hydrateNoteInstanceFromStorage(tab.id);
+   if (tab.type === 'pdf') return hydratePdfInstanceFromStorage(tab.id);
    return hydrateInstanceFromStorage(tab.id);
 }
 
@@ -1097,9 +1177,9 @@ async function bootMobile(workspace: Workspace): Promise<void> {
    const intendedActiveTab = intendedActiveId !== null ? tabs.find((tab) => tab.id === intendedActiveId) ?? null : null;
 
    let activeId: string | null = null;
-   // Boards can't host on mobile yet: never hydrate or activate one (it stays a dormant id in `openTabs`,
-   // and a board intended-active lands on the menu). A character or note intended-active hydrates and
-   // activates via the shared per-kind dispatch.
+   // Boards + pdfs can't host on mobile yet: never hydrate or activate one (it stays a dormant id in
+   // `openTabs`, and one intended-active lands on the menu). A character or note intended-active hydrates
+   // and activates via the shared per-kind dispatch.
    if (
       (intendedActiveTab?.type === 'character' || intendedActiveTab?.type === 'note') &&
       (await hydrateTabFromStorage(intendedActiveTab))

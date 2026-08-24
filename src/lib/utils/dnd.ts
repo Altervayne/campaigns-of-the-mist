@@ -233,11 +233,11 @@ export const customCollisionDetection: CollisionDetection = (args) => {
    // is always a different row (handleDragEnd's reorder no-ops on a self drop). This
    // mirrors the regular `drawer-item` branch's reorder, kept LAST so the sheet/tab
    // targets still win.
-   if (draggedItemType === 'FULL_CHARACTER_SHEET' || draggedItemType === 'FULL_BOARD' || draggedItemType === 'NOTE') {
+   if (draggedItemType === 'FULL_CHARACTER_SHEET' || draggedItemType === 'FULL_BOARD' || draggedItemType === 'NOTE' || draggedItemType === 'PDF') {
       // A drawer character or note over the board canvas adds an element (board tab only, so the
       // zone is absent elsewhere and never competes below): a character reference, or a live note
       // reference tile. A board never drops onto a board, so FULL_BOARD skips this and keeps its
-      // tab-strip routing.
+      // tab-strip routing; a pdf isn't board-embeddable, so it skips this too and only opens as a tab.
       if (draggedItemType === 'FULL_CHARACTER_SHEET' || draggedItemType === 'NOTE') {
          const boardDroppables = args.droppableContainers.filter((container) => container.id === 'board-drop-zone');
          const boardCollisions = pointerWithin({ ...args, droppableContainers: boardDroppables });

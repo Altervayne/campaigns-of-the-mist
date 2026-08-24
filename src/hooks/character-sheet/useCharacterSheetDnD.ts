@@ -64,7 +64,7 @@ export function useCharacterSheetDnD() {
    const character = useCharacterStore((state) => state.character);
    const { reorderSheetLayout, reorderStatuses, reorderStoryTags, reorderStoryThemes,
             addImportedCard, addImportedTracker, addImportedJournal } = useCharacterActions();
-   const { openCharacterTab, openBoardTab, openNoteTab, reorderTabs, setActiveTab } = useTabManagerActions();
+   const { openCharacterTab, openBoardTab, openNoteTab, openPdfTab, reorderTabs, setActiveTab } = useTabManagerActions();
    // The drawer renders a single folder at a time, so the loaded current-folder
    // view is the reorder scope for any in-drawer drag.
    const currentFolderView = useDrawerStore((state) => state.currentFolderView);
@@ -323,6 +323,7 @@ export function useCharacterSheetDnD() {
       openCharacterTab,
       openBoardTab,
       openNoteTab,
+      openPdfTab,
       reorderTabs,
       setActiveTab,
       setContextualGame,

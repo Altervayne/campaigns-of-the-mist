@@ -25,15 +25,16 @@ import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import { useSaveToDrawer } from '@/hooks/useSaveToDrawer';
 import { useSidebarFileIO } from '@/hooks/sidebar/useSidebarFileIO';
 
+// -- Type Imports --
+import type { ActiveWindow } from '@/lib/character/activeWindow';
 
 
-type WindowTypes = 'MAIN_MENU' | 'PLAY_AREA' | 'BOARD' | 'NOTE';
 
 interface SidebarMenuProps {
    isEditing: boolean;
    isDrawerOpen: boolean;
    isCollapsed: boolean;
-   activeWindow: WindowTypes;
+   activeWindow: ActiveWindow;
    onExportNoteMarkdown: () => void;
    onImportNoteMarkdownFile: (file: File) => Promise<void>;
    onToggleEditing: () => void;

@@ -67,6 +67,7 @@ export function routeTabDrag(
       const draggedTab = useTabManagerStore.getState().openTabs.find((openTab) => openTab.id === tabId);
       if (draggedTab?.type === 'board') void saveBoardTabToDrawer(tabId, overIdStr, overType, over);
       else if (draggedTab?.type === 'note') void saveNoteTabToDrawer(tabId, overIdStr, overType, over);
+      else if (draggedTab?.type === 'pdf') { /* read-only: a pdf has no save-back, so dropping its tab on the drawer is a no-op */ }
       else saveTabToDrawer(tabId, overIdStr, overType, over);
    } else if (overIdStr === 'board-drop-zone') {
       // A tab dropped on the board adds a character element - saved or unsaved. The element keys

@@ -12,6 +12,8 @@ import { clearAllAssets } from '@/lib/assets/assetRepository';
 import { clearAllStencils } from '@/lib/assets/stencilRepository';
 import { clearAllBoards } from '@/lib/board/boardRepository';
 import { clearAllNotes } from '@/lib/notes/noteRepository';
+import { clearAllPdfs } from '@/lib/pdf/pdfRepository';
+import { clearAllPdfAssets } from '@/lib/pdf/pdfAssetRepository';
 import { runSweep, estimateStorageUsage } from '@/lib/assets/assetGarbageCollector';
 import { clearWorkspace } from '@/lib/character/workspaceSession';
 import { clearAllDrawerData } from '@/lib/drawer/drawerRepository';
@@ -47,6 +49,8 @@ export function useDataSettingsActions() {
       await clearAllStencils();
       await clearAllBoards();
       await clearAllNotes();
+      await clearAllPdfs();
+      await clearAllPdfAssets();
       clearWorkspace();
       await clearAllDrawerData();
       drawerCommandEngine.clear();

@@ -15,15 +15,17 @@ import { CharacterUndoRedoControls } from '../../molecules/CharacterUndoRedoCont
 import { BoardUndoRedoControls } from '../../molecules/BoardUndoRedoControls';
 import { NoteUndoRedoControls } from '../../molecules/NoteUndoRedoControls';
 
-type WindowTypes = 'MAIN_MENU' | 'PLAY_AREA' | 'BOARD' | 'NOTE';
+// -- Type Imports --
+import type { ActiveWindow } from '@/lib/character/activeWindow';
 
 interface SidebarHeaderProps {
    isCollapsed: boolean;
-   activeWindow: WindowTypes;
+   activeWindow: ActiveWindow;
    onToggleCollapse: () => void;
 }
 
-// The rail header: title + collapse toggle, then the context undo/redo control switched on the active window.
+// The rail header: title + collapse toggle, then the context undo/redo control switched on the active
+// window. A PDF is read-only, so it carries no undo/redo control.
 export function SidebarHeader({ isCollapsed, activeWindow, onToggleCollapse }: SidebarHeaderProps) {
    const { t } = useTranslation();
 

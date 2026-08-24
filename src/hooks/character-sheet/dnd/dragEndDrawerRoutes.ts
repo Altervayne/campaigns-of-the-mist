@@ -12,6 +12,7 @@ import { boardDropPlacement } from '@/lib/board/boardDropPlacement';
 import { embeddedSpecForDrawerItem } from '@/lib/board/embedDrawerItem';
 import { importBoard } from '@/lib/board/boardRepository';
 import { importNote } from '@/lib/notes/noteRepository';
+import { importPdf } from '@/lib/pdf/pdfRepository';
 
 // -- Type Imports --
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -19,6 +20,7 @@ import type { DragEndDeps, DragEndSnapshot, DragEndTarget } from '@/hooks/charac
 import type { Board, Journal, Note } from '@/lib/types/board';
 import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
 import type { DrawerItem } from '@/lib/types/drawer';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 /*
  * The two drawer-sourced routes: the geometry-resolved in-drawer move, which runs BEFORE the `!over`
@@ -125,7 +127,7 @@ export function routeDrawerDrag(
    { over, activeType, overType, overIdStr, dropPointer }: DragEndTarget,
    {
       character, currentFolderView, tNotifications, contractIfExpanded,
-      reorderItems, openCharacterTab, openBoardTab, openNoteTab, setActiveTab, setContextualGame,
+      reorderItems, openCharacterTab, openBoardTab, openNoteTab, openPdfTab, setActiveTab, setContextualGame,
       addImportedCard, addImportedTracker, addImportedJournal,
    }: DragEndDeps,
 ): boolean {
@@ -187,6 +189,16 @@ export function routeDrawerDrag(
             void importNote(noteData, draggedItem.id).then(() => openNoteTab(noteData.id));
          }
          contractIfExpanded();
+      } else if (draggedItem?.type === 'PDF') {
+         // A pdf opens like a note: focus its tab if already open, else materialize the drawer copy
+         // into the working pdf table (linked to the drawer item) and open its read-only reader by id.
+         const pdfData = draggedItem.content as PdfDocument;
+         if (useTabManagerStore.getState().openTabs.some((tab) => tab.id === pdfData.id)) {
+            setActiveTab(pdfData.id);
+         } else {
+            void importPdf(pdfData, draggedItem.id).then(() => openPdfTab(pdfData.id));
+         }
+         contractIfExpanded();
       }
       return true;
    }
@@ -214,6 +226,12 @@ export function routeDrawerDrag(
          // the drawer item), then focus-or-open its tab (by note id).
          const noteData = draggedItem.content as Note;
          void importNote(noteData, draggedItem.id).then(() => openNoteTab(noteData.id));
+         contractIfExpanded();
+      } else if (draggedItem?.type === 'PDF') {
+         // Same as a note: materialize the drawer copy into the working pdf table (linked to the
+         // drawer item), then focus-or-open its read-only reader tab (by pdf id).
+         const pdfData = draggedItem.content as PdfDocument;
+         void importPdf(pdfData, draggedItem.id).then(() => openPdfTab(pdfData.id));
          contractIfExpanded();
       }
       return true;

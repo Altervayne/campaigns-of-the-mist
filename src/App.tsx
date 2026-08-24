@@ -7,6 +7,7 @@ import { AppStartManagerProvider } from '@/components/providers/AppStartManager'
 import { ActiveCharacterStoreProvider } from '@/lib/character/ActiveCharacterStoreProvider';
 import { ActiveBoardStoreProvider } from '@/lib/board/ActiveBoardStoreProvider';
 import { ActiveNoteStoreProvider } from '@/lib/notes/ActiveNoteStoreProvider';
+import { ActivePdfStoreProvider } from '@/lib/pdf/ActivePdfStoreProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DevPreviewWarning, IS_DEV_PREVIEW } from '@/components/DevPreviewWarning';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
@@ -74,11 +75,15 @@ export default function App() {
                 until a note tab is opened: it resolves null under a character/board tab or
                 the menu, so the app behaves identically for the other tab kinds. */}
             <ActiveNoteStoreProvider>
-              <AppStartManagerProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
-              </AppStartManagerProvider>
+              {/* Parallel resolution layer for the active pdf store (PDF workspace). Inert until a
+                  pdf tab is opened: it resolves null under any other tab kind or the menu. */}
+              <ActivePdfStoreProvider>
+                <AppStartManagerProvider>
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </AppStartManagerProvider>
+              </ActivePdfStoreProvider>
             </ActiveNoteStoreProvider>
           </ActiveBoardStoreProvider>
         </ActiveCharacterStoreProvider>

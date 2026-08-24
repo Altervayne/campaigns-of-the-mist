@@ -2,17 +2,18 @@
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { LayoutGrid, LoaderCircle, NotebookPen } from 'lucide-react';
+import { FileType, LayoutGrid, LoaderCircle, NotebookPen } from 'lucide-react';
 
-// The Suspense fallback for a lazy note/board tab. It fills the tab content area
+// The Suspense fallback for a lazy note/board/pdf tab. It fills the tab content area
 // (not the viewport) so the tab strip and sidebar stay put while the chunk loads,
 // and names what it's fetching with the matching tab icon + label so a tab switch
 // reads as "loading this view", never a blank app.
-type TabViewLoadingKind = 'note' | 'board';
+type TabViewLoadingKind = 'note' | 'board' | 'pdf';
 
 const KIND_ICON = {
    note: NotebookPen,
    board: LayoutGrid,
+   pdf: FileType,
 } as const;
 
 export function TabViewLoading({ kind }: { kind: TabViewLoadingKind }) {

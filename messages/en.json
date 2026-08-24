@@ -8,11 +8,19 @@
    "Loading": {
       "boot": "Loading your workspace...",
       "note": "Loading note...",
-      "board": "Loading board..."
+      "board": "Loading board...",
+      "pdf": "Loading PDF..."
+   },
+   "PdfView": {
+      "loading": "Loading PDF...",
+      "errorTitle": "This PDF could not be opened.",
+      "errorBody": "The file may be corrupted or in an unsupported format.",
+      "pageIndicator": "{{current}} / {{total}}"
    },
    "Tabs": {
       "untitled": "Untitled character",
       "untitledBoard": "Untitled board",
+      "untitledPdf": "Untitled PDF",
       "closeTab": "Close tab",
       "newTab": "New tab",
       "scrollLeft": "Scroll tabs left",

@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { ArrowLeft, ChevronRight, LayoutGrid, NotebookPen, User, X, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ChevronRight, FileType, LayoutGrid, NotebookPen, User, X, type LucideIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -37,13 +37,14 @@ import type { TabType } from '@/lib/character/tabManagerStore';
  */
 
 /** The crumb glyph per tab kind (mirrors the tab strip's own icons). */
-const KIND_ICON: Record<TabType, LucideIcon> = { board: LayoutGrid, note: NotebookPen, character: User };
+const KIND_ICON: Record<TabType, LucideIcon> = { board: LayoutGrid, note: NotebookPen, character: User, pdf: FileType };
 
 /** The untitled fallback key per tab kind, for a crumb whose snapshot name was empty. */
 const KIND_UNTITLED: Record<TabType, string> = {
    board: 'Tabs.untitledBoard',
    note: 'Common.untitledNote',
    character: 'Tabs.untitled',
+   pdf: 'Tabs.untitledPdf',
 };
 
 export function PortalTrailBar() {
@@ -64,6 +65,9 @@ export function PortalTrailBar() {
    /** Reactivates one entry; on a dead target toasts + drops it. Returns whether the tab opened. */
    const reactivate = useCallback(
       async (tabKind: TabType, entityId: string): Promise<boolean> => {
+         // Pdfs aren't portal targets yet, so one never enters the trail; guard keeps `openEntityTab`'s
+         // narrower kind honest until pdf portals land.
+         if (tabKind === 'pdf') return false;
          let missed = false;
          await openEntityTab(tabKind, entityId, { actions, onMissing: () => { missed = true; } });
          if (missed) {

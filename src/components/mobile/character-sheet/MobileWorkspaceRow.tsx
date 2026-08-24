@@ -32,14 +32,14 @@ interface MobileWorkspaceRowProps {
 
 /**
  * One open-workspace row: a type crest, the title, and a dirty marker. Character and note tabs are tappable
- * and carry an active accent; board tabs are desktop-only, so a cross-device session renders them greyed and
- * inert with a hint rather than a switchable row.
+ * and carry an active accent; board and pdf tabs are desktop-only, so a cross-device session renders them
+ * greyed and inert with a hint rather than a switchable row.
  */
 export function MobileWorkspaceRow({ tab, isActive, title, isDirty, onSelect, onRequestClose }: MobileWorkspaceRowProps) {
 	const { t } = useTranslation();
 
-	// Boards can't host on mobile yet, so their row is inert (greyed, desktop-only hint).
-	if (tab.type === 'board') {
+	// Boards + pdfs can't host on mobile yet, so their row is inert (greyed, desktop-only hint).
+	if (tab.type === 'board' || tab.type === 'pdf') {
 		return (
 			<div className="flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 opacity-50">
 				<span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">

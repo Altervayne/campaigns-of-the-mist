@@ -11,7 +11,7 @@ import { useCharacterSheetFileImport } from '@/hooks/character-sheet/useCharacte
 import { useCharacterSheetExport } from '@/hooks/character-sheet/useCharacterSheetExport';
 import { useCharacterSheetUndoRedo } from '@/hooks/character-sheet/useCharacterSheetUndoRedo';
 import { useCardDialogState } from '@/hooks/character-sheet/useCardDialogState';
-import { importBoardView, importNoteView, usePrefetchTabChunks } from '@/hooks/character-sheet/useLazyTabViews';
+import { importBoardView, importNoteView, importPdfView, usePrefetchTabChunks } from '@/hooks/character-sheet/useLazyTabViews';
 import { useNavigatorShortcut } from '@/hooks/character-sheet/useNavigatorShortcut';
 import { useSheetChromeState } from '@/hooks/character-sheet/useSheetChromeState';
 
@@ -43,6 +43,7 @@ import { TabViewLoading } from '@/components/molecules/TabViewLoading';
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
+import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 import { useIsBootHydrating } from '@/lib/character/characterPersistence';
 import { useActiveSheetZoom, useTabManagerStore } from '@/lib/character/tabManagerStore';
 import { useCommandPaletteActions } from '@/hooks/useCommandPaletteActions';
@@ -52,6 +53,7 @@ import { useNoteMarkdownIO } from '@/hooks/useNoteMarkdownIO';
 // on-idle prefetch that warms them). The `.then` unwrap is because both modules are named exports.
 const NoteView = lazy(() => importNoteView().then((m) => ({ default: m.NoteView })));
 const BoardView = lazy(() => importBoardView().then((m) => ({ default: m.BoardView })));
+const PdfView = lazy(() => importPdfView().then((m) => ({ default: m.PdfView })));
 
 function DesktopWorkspacePage() {
    // ==================
@@ -70,6 +72,7 @@ function DesktopWorkspacePage() {
    // 3-way pointer park guarantees it), so the render order below is unambiguous.
    const activeBoard = useActiveBoardInstance();
    const activeNote = useActiveNoteInstance();
+   const activePdf = useActivePdfInstance();
    const isBootHydrating = useIsBootHydrating();
    const { updateCharacterName, addStatus, addStoryTag, addPortrait, addJournal } = useCharacterActions();
 
@@ -211,7 +214,7 @@ function DesktopWorkspacePage() {
    // The one copy of the surface precedence: the sidebar's action set and the surface switch below both
    // dispatch on it, so they can never disagree about which surface is showing. The switch re-tests
    // `character` on the play-area branch only to narrow it non-null for the sheet.
-   const activeWindow = resolveActiveWindow({ hasNote: !!activeNote, hasBoard: !!activeBoard, hasCharacter: !!character });
+   const activeWindow = resolveActiveWindow({ hasPdf: !!activePdf, hasNote: !!activeNote, hasBoard: !!activeBoard, hasCharacter: !!character });
 
    return (
       <DndContext sensors={sensors} onDragOver={handleDragOver} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} collisionDetection={customCollisionDetection} measuring={{ droppable: { strategy: droppableMeasuringStrategy } }}>
@@ -268,7 +271,11 @@ function DesktopWorkspacePage() {
                {/* Content area: own positioning context for the absolutely-filled
                    sheet/menu so they sit below the strip rather than over it. */}
                <div className="relative flex-1 min-h-0">
-                  { activeWindow === 'NOTE' ? (
+                  { activeWindow === 'PDF' ? (
+                     <Suspense fallback={<TabViewLoading kind="pdf" />}>
+                        <PdfView />
+                     </Suspense>
+                  ) : activeWindow === 'NOTE' ? (
                      <Suspense fallback={<TabViewLoading kind="note" />}>
                         <NoteView />
                      </Suspense>
@@ -305,7 +312,7 @@ function DesktopWorkspacePage() {
 
                   <WorkspaceContentOverlays
                      activeDragItem={activeDragItem}
-                     isBoardActive={!!activeBoard || !!activeNote}
+                     isBoardActive={!!activeBoard || !!activeNote || !!activePdf}
                      isIncompatibleComponentDrag={isIncompatibleComponentDrag}
                      isFileDragActive={isFileDragActive}
                      hasCharacter={!!character}

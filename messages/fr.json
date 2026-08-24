@@ -8,11 +8,19 @@
    "Loading": {
       "boot": "Chargement de l'espace de travail...",
       "note": "Chargement de la note...",
-      "board": "Chargement du tableau..."
+      "board": "Chargement du tableau...",
+      "pdf": "[TO COMPLETE]"
+   },
+   "PdfView": {
+      "loading": "[TO COMPLETE]",
+      "errorTitle": "[TO COMPLETE]",
+      "errorBody": "[TO COMPLETE]",
+      "pageIndicator": "{{current}} / {{total}}"
    },
    "Tabs": {
       "untitled": "Personnage sans nom",
       "untitledBoard": "Tableau sans titre",
+      "untitledPdf": "[TO COMPLETE]",
       "closeTab": "Fermer l'onglet",
       "newTab": "Nouvel onlget",
       "scrollLeft": "Défiler les onglets vers la gauche",

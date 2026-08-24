@@ -87,6 +87,19 @@ export const NOTE_VISUAL = {
    gradient: 'bg-gradient-to-br from-slate-500 to-stone-600',
 } as const;
 
+/**
+ * The PDF's fixed identity accent - a deep red/crimson, deliberately outside the games' palette
+ * (Legends' warm gold-to-rose, City purple, Otherscape cyan), the board's emerald, and the note's
+ * slate, so a pdf tab never reads as another kind. A feature-identity colour like the ones above,
+ * NOT a theme token. Shared by the pdf tab badge and its drag clone so the two can't drift.
+ */
+export const PDF_VISUAL = {
+   /** Coloured icon on a card. */
+   accentText: 'text-red-500',
+   /** The solid wash behind a white pdf glyph (the tab badge + its drag clone). */
+   gradient: 'bg-gradient-to-br from-red-600 to-rose-700',
+} as const;
+
 /** A selectable game in the MainMenu / New Tab pickers, with its translation keys. */
 export interface GameCardOption {
    game: GameSystem;

@@ -16,11 +16,12 @@ import { SidebarButton } from '../../molecules/SidebarButton';
 // -- Store and Hook Imports --
 import { useHasUnreadPatchNotes } from '@/hooks/useHasUnreadPatchNotes';
 
-type WindowTypes = 'MAIN_MENU' | 'PLAY_AREA' | 'BOARD' | 'NOTE';
+// -- Type Imports --
+import type { ActiveWindow } from '@/lib/character/activeWindow';
 
 interface SidebarBottomActionsProps {
    isCollapsed: boolean;
-   activeWindow: WindowTypes;
+   activeWindow: ActiveWindow;
    onOpenMenu: () => void;
    onOpenSettings: () => void;
    onOpenWhatsNew: () => void;
@@ -39,7 +40,7 @@ export function SidebarBottomActions({ isCollapsed, activeWindow, onOpenMenu, on
          {/* "Open menu" is a navigation action (leave the sheet/board, go home), set
              apart from the meta utilities below by a divider. It has nowhere to go
              from the main menu itself, so it shows in the play area and on a board. */}
-         { (activeWindow === 'PLAY_AREA' || activeWindow === 'BOARD' || activeWindow === 'NOTE') &&
+         { (activeWindow === 'PLAY_AREA' || activeWindow === 'BOARD' || activeWindow === 'NOTE' || activeWindow === 'PDF') &&
             <motion.section layout transition={{ duration: 0.2 }} className={cn(
                "flex flex-col items-center gap-2 p-2 bg-card border-t-2 border-b border-border"
             )}>
