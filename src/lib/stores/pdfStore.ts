@@ -21,6 +21,10 @@ import type { PdfDocument } from '@/lib/types/pdf';
  * destroy), which the registry calls on every dispose path.
  */
 
+/** Zoom bounds: the render scale multiplier over the fit-width base. */
+export const MIN_ZOOM = 0.2;
+export const MAX_ZOOM = 2;
+
 /** The load lifecycle of the open PDF. */
 export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -35,6 +39,8 @@ export interface PdfState {
    loadingTask: PDFDocumentLoadingTask | null;
    /** The page most in view, 1-based; drives the page indicator. */
    currentPage: number;
+   /** The render scale multiplier over the fit-width base; ephemeral (kept with the instance, never persisted). */
+   zoom: number;
    status: PdfStatus;
    actions: {
       /**
@@ -46,17 +52,20 @@ export interface PdfState {
       hydrate: (pdfId: string) => Promise<void>;
       /** Sets the current page, clamped to `[1, pageCount]`. No-op before the document is ready. */
       setPage: (page: number) => void;
+      /** Sets the zoom multiplier, clamped to `[MIN_ZOOM, MAX_ZOOM]`. Ephemeral, never written to the row. */
+      setZoom: (zoom: number) => void;
       /** Tears down the pdf.js document and resets to the initial state. Idempotent. */
       dispose: () => void;
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | 'currentPage' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | 'currentPage' | 'zoom' | 'status'> = {
    pdfId: null,
    doc: null,
    proxy: null,
    loadingTask: null,
    currentPage: 1,
+   zoom: 1,
    status: 'idle',
 };
 
@@ -104,6 +113,11 @@ export function createPdfStore() {
             if (!doc) return;
             const clamped = Math.min(Math.max(page, 1), doc.pageCount);
             set({ currentPage: clamped });
+         },
+
+         setZoom: (zoom) => {
+            const clamped = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
+            set({ zoom: clamped });
          },
 
          dispose: () => {

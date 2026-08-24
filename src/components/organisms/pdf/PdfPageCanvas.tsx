@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // -- Icon Imports --
 import { LoaderCircle } from 'lucide-react';
@@ -10,15 +10,22 @@ import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 /*
  * One page of the reader. Its box always reserves height (from an aspect ratio) so the virtualized
  * scroll stays stable, but the <canvas> mounts and renders only while `isVisible` - a 300-page
- * document therefore never holds 300 canvases. The canvas backs at devicePixelRatio for crispness
- * and displays at the fit-width CSS size.
+ * document therefore never holds 300 canvases.
+ *
+ * The page renders into an OFFSCREEN canvas and is blitted onto the visible one only once it's ready, so a
+ * re-render (a zoom step, a re-fit) never clears the page - the current bitmap stays put and the CSS width
+ * follows the zoom instantly, then snaps crisp when the new render lands. The backing resolution is capped so
+ * an extreme zoom can't allocate an enormous bitmap (CSS upscales past the cap).
  */
+
+/** Cap on the canvas backing width (px); past this the CSS width upscales instead of growing the bitmap. */
+const MAX_CANVAS_WIDTH = 3000;
 
 interface PdfPageCanvasProps {
    proxy: PDFDocumentProxy;
    /** 1-based page number. */
    pageNumber: number;
-   /** Fit-width CSS width for the page, in px. */
+   /** CSS width for the page at the current zoom, in px. */
    width: number;
    /** Aspect (height / width) to reserve before this page's own size is known. */
    defaultAspect: number;
@@ -28,16 +35,24 @@ interface PdfPageCanvasProps {
    registerPage: (pageNumber: number, el: HTMLElement | null) => void;
 }
 
-export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, registerPage }: PdfPageCanvasProps) {
+// Memoized: during a wheel-zoom only the column's CSS zoom changes, so with the render width held steady these
+// props don't, and 491 pages skip re-rendering entirely.
+export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, registerPage }: PdfPageCanvasProps) {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [aspect, setAspect] = useState(defaultAspect);
    const [rendering, setRendering] = useState(false);
+   // Whether the visible canvas currently holds a bitmap. Drives the spinner: only a FIRST render (or a
+   // re-render after the page scrolled out and back) shows it - a zoom re-render keeps the old bitmap on
+   // screen, so no spinner.
+   const [hasBitmap, setHasBitmap] = useState(false);
 
    const boxRef = useCallback((el: HTMLElement | null) => registerPage(pageNumber, el), [pageNumber, registerPage]);
 
    useEffect(() => {
       if (!isVisible || width <= 0) {
+         // Off-screen: the canvas unmounts, so its bitmap is gone - a return must render (and spin) afresh.
          setRendering(false);
+         setHasBitmap(false);
          return;
       }
       let cancelled = false;
@@ -51,19 +66,29 @@ export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisib
             const base = page.getViewport({ scale: 1 });
             if (base.width > 0) setAspect(base.height / base.width);
 
+            const dpr = window.devicePixelRatio || 1;
+            // Clamp the backing scale so the bitmap width never exceeds the cap; the CSS width stays full.
+            const scale = Math.min((width / base.width) * dpr, MAX_CANVAS_WIDTH / base.width);
+            const viewport = page.getViewport({ scale });
+
+            // Render offscreen, then blit onto the visible canvas in one step, so a re-render never blanks it.
+            const offscreen = document.createElement('canvas');
+            offscreen.width = Math.floor(viewport.width);
+            offscreen.height = Math.floor(viewport.height);
+            const offscreenCtx = offscreen.getContext('2d');
+            if (!offscreenCtx) return;
+
+            renderTask = page.render({ canvas: offscreen, canvasContext: offscreenCtx, viewport });
+            await renderTask.promise;
+            if (cancelled) return;
+
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext('2d');
             if (!canvas || !ctx) return;
-
-            const dpr = window.devicePixelRatio || 1;
-            const viewport = page.getViewport({ scale: (width / base.width) * dpr });
-            canvas.width = Math.floor(viewport.width);
-            canvas.height = Math.floor(viewport.height);
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${width * (base.height / base.width)}px`;
-
-            renderTask = page.render({ canvas, canvasContext: ctx, viewport });
-            await renderTask.promise;
+            canvas.width = offscreen.width;
+            canvas.height = offscreen.height;
+            ctx.drawImage(offscreen, 0, 0);
+            setHasBitmap(true);
          } catch {
             // A cancelled render (unmount / re-fit) rejects here; nothing to surface.
          } finally {
@@ -87,8 +112,10 @@ export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisib
          className="relative shrink-0 overflow-hidden bg-white shadow-md shadow-black/10"
          style={{ width, height: Math.round(width * aspect) }}
       >
-         {isVisible ? <canvas ref={canvasRef} className="block" /> : null}
-         {rendering ? (
+         {/* The CSS size follows the zoom immediately (scaling the current bitmap) while the higher-res
+             re-render runs; the backing pixels are set imperatively once that render blits in. */}
+         {isVisible ? <canvas ref={canvasRef} className="block" style={{ width, height: Math.round(width * aspect) }} /> : null}
+         {rendering && !hasBitmap ? (
             // A heavy page can take seconds to rasterize; a spinner over the (white) sheet reads as loading
             // rather than a frozen blank. Fixed grey since the sheet is always white, not app-themed.
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -97,4 +124,4 @@ export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisib
          ) : null}
       </div>
    );
-}
+});

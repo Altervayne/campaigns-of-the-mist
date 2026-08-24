@@ -15,7 +15,16 @@
       "loading": "Loading PDF...",
       "errorTitle": "This PDF could not be opened.",
       "errorBody": "The file may be corrupted or in an unsupported format.",
-      "pageIndicator": "{{current}} / {{total}}"
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageInputLabel": "Page number",
+      "pageTotal": "/ {{total}}",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "zoomReset": "Reset zoom",
+      "zoomPercent": "{{percent}}%",
+      "fitWidth": "Fit width",
+      "fitPage": "Fit page"
    },
    "Tabs": {
       "untitled": "Untitled character",

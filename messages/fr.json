@@ -15,7 +15,16 @@
       "loading": "[TO COMPLETE]",
       "errorTitle": "[TO COMPLETE]",
       "errorBody": "[TO COMPLETE]",
-      "pageIndicator": "{{current}} / {{total}}"
+      "prevPage": "[TO COMPLETE]",
+      "nextPage": "[TO COMPLETE]",
+      "pageInputLabel": "[TO COMPLETE]",
+      "pageTotal": "[TO COMPLETE]",
+      "zoomOut": "[TO COMPLETE]",
+      "zoomIn": "[TO COMPLETE]",
+      "zoomReset": "[TO COMPLETE]",
+      "zoomPercent": "[TO COMPLETE]",
+      "fitWidth": "[TO COMPLETE]",
+      "fitPage": "[TO COMPLETE]"
    },
    "Tabs": {
       "untitled": "Personnage sans nom",
