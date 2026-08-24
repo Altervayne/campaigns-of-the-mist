@@ -40,6 +40,7 @@ const FILTERABLE_ITEM_TYPES: GeneralItemType[] = [
    'IMAGE_CARD',
    'FULL_BOARD',
    'ROLL_TABLE',
+   'PDF',
 ];
 
 /** The games offered as filters: the three systems plus NEUTRAL (game-agnostic items). */

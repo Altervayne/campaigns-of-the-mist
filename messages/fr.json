@@ -790,7 +790,8 @@
             "NOTE": "Note",
             "POST_IT": "Pense-bête",
             "JOURNAL": "Journal",
-            "ROLL_TABLE": "Table aléatoire"
+            "ROLL_TABLE": "Table aléatoire",
+            "PDF": "[TO COMPLETE]"
          }
       },
       "toggleView": "Change la vue des Objets du tiroir entre prévisualisation riche et liste simple",
@@ -886,8 +887,10 @@
          "JOURNAL": "Journal",
          "NOTE": "Note",
          "ROLL_TABLE": "Table aléatoire",
+         "PDF": "[TO COMPLETE]",
          "boardItemCount": "{{count}} élément(s)",
          "journalPageCount": "{{count}} page(s)",
+         "pdfPageCount": "[TO COMPLETE]",
          "cards": "Carte(s)",
          "trackers": "Suivi(s)"
       }

@@ -790,7 +790,8 @@
             "NOTE": "Note",
             "POST_IT": "Post-it",
             "JOURNAL": "Journal",
-            "ROLL_TABLE": "Roll table"
+            "ROLL_TABLE": "Roll table",
+            "PDF": "PDF"
          }
       },
       "toggleView": "Toggle view mode between rich preview and list entry for Drawer Items",
@@ -886,8 +887,10 @@
          "JOURNAL": "Journal",
          "NOTE": "Note",
          "ROLL_TABLE": "Roll table",
+         "PDF": "PDF",
          "boardItemCount": "{{count}} item(s)",
          "journalPageCount": "{{count}} page(s)",
+         "pdfPageCount": "{{count}} page(s)",
          "cards": "Card(s)",
          "trackers": "Tracker(s)"
       }

@@ -92,7 +92,8 @@ export function LinkTargetList({ onPick, sections, fill }: LinkTargetListProps) 
    useEffect(() => {
       let alive = true;
       void queryItems({ sort: { by: 'updatedAt', direction: 'desc' } }).then((list) => {
-         if (alive) setResults(list);
+         // PDF link targets (with page support) arrive in a later phase; exclude them for now.
+         if (alive) setResults(list.filter((item) => item.type !== 'PDF'));
       });
       return () => { alive = false; };
    }, []);

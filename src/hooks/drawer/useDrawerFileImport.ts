@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
+import cuid from 'cuid';
 
 // -- Hook Imports --
 import { useFileDrop } from '@/hooks/useFileDrop';
@@ -13,6 +14,9 @@ import { deriveDrawerFolderName, exportDrawer, importFromFile, readFileAsText } 
 import { harmonizeData } from '@/lib/harmonization';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
+import { hashBytes } from '@/lib/assets/processImage';
+import { storePdfAsset } from '@/lib/pdf/pdfAssetRepository';
+import { parsePdfFile } from '@/lib/pdf/parsePdf';
 
 // -- Store Imports --
 import { useDrawerActions } from '@/lib/stores/drawerStore';
@@ -20,6 +24,7 @@ import { exportEntireDrawerAsNestedTree } from '@/lib/drawer/drawerRepository';
 
 // -- Type Imports --
 import type { Folder as FolderType, DrawerItemContent, Drawer as DrawerType } from '@/lib/types/drawer';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 
 
@@ -61,6 +66,18 @@ export function useDrawerFileImport(currentFolderId: string | null) {
             return;
          }
 
+         // A PDF files as a game-agnostic drawer item, its bytes stored content-addressed. Parse FIRST so a
+         // corrupt or encrypted PDF throws (caught below) before any asset is stored - no orphan bytes, no item.
+         if (name.endsWith('.pdf')) {
+            const { pageCount, title } = await parsePdfFile(file);
+            const hash = await hashBytes(await file.arrayBuffer());
+            await storePdfAsset({ hash, blob: file, mimeType: 'application/pdf', byteSize: file.size });
+            const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, pageCount };
+            await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
+            toast.success(tNotifications('Notifications.drawer.importSuccess'));
+            return;
+         }
+
          const importedData = await importFromFile(file);
          // Harmonize the parsed payload BEFORE persisting - file import is the only path 1.x data
          // takes into 2.0, so a drawer / folder / loose item must be migrated the same way the
@@ -87,6 +104,13 @@ export function useDrawerFileImport(currentFolderId: string | null) {
             case 'STENCIL':
                // Themes, card palettes, and stencils live in app settings (imported from their own manager),
                // not the drawer - reject here.
+               toast.error(tNotifications('Notifications.general.importFailed'));
+               break;
+
+            case 'PDF':
+               // A PDF drawer item imports from a raw `.pdf` (handled above), never from a standalone `.cotm`
+               // (its bytes aren't embedded in the envelope), so reject a `PDF`-typed envelope rather than
+               // creating an item with missing bytes.
                toast.error(tNotifications('Notifications.general.importFailed'));
                break;
 

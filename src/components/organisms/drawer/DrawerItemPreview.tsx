@@ -16,6 +16,7 @@ import { StoryTagTrackerCard } from '@/components/organisms/trackers/StoryTagTra
 import { CharacterSheetPreview } from '@/components/molecules/CharacterSheetPreview';
 import { StoryThemeTrackerCard } from '@/components/organisms/trackers/StoryThemeTracker';
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
+import { PdfPreview } from '@/components/organisms/drawer/PdfPreview';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { FitToBox } from '@/components/molecules/drawer/FitToBox';
@@ -32,6 +33,7 @@ import type { ReactElement } from 'react';
 import type { DrawerItem, Folder as FolderType, GameSystem } from '@/lib/types/drawer';
 import type { Board, ConnectionBoardContent, Journal, Note, PinBoardContent, PostItBoardContent, PostItNote, ZoneBoardContent } from '@/lib/types/board';
 import type { RollTableContent } from '@/lib/rolltable/types';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 /** The game glyph element (resolved in this module helper, not in render); neutral items have none. */
 function gameGlyph(game: GameSystem): ReactElement | null {
@@ -366,6 +368,10 @@ export function DrawerItemPreview({
 
          if (type === 'ROLL_TABLE') {
             return <RollTablePreview table={content as RollTableContent} />;
+         }
+
+         if (type === 'PDF') {
+            return <PdfPreview pdf={content as PdfDocument} />;
          }
       }
 

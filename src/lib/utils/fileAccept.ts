@@ -14,6 +14,9 @@ const COTM_ENVELOPE = '.cotm,.json,application/json';
 // Portable-text Markdown, matched by extension and by MIME.
 const MARKDOWN = '.md,.markdown,text/markdown';
 
+// A PDF document, matched by extension and by MIME.
+const PDF = '.pdf,application/pdf';
+
 /** Characters, components and boards imported as new, or picked to update an open one in place. */
 export const ACCEPT_ENTITY_IMPORT = COTM_ENVELOPE;
 
@@ -35,8 +38,8 @@ export const ACCEPT_NOTE_IMPORT = `${COTM_ENVELOPE},${MARKDOWN}`;
 /** The sidebar's one-entry import, routed by file type to a character, board or note. */
 export const ACCEPT_WORKSPACE_IMPORT = `${COTM_ENVELOPE},${MARKDOWN}`;
 
-/** Drawer import, by picker or by drop: a full drawer, a folder, an item, or a Markdown note. */
-export const ACCEPT_DRAWER_IMPORT = `${COTM_ENVELOPE},${MARKDOWN}`;
+/** Drawer import, by picker or by drop: a full drawer, a folder, an item, a Markdown note, or a PDF. */
+export const ACCEPT_DRAWER_IMPORT = `${COTM_ENVELOPE},${MARKDOWN},${PDF}`;
 
 /** Full-backup restore archives. */
 export const ACCEPT_BACKUP_RESTORE = '.cotmbak';

@@ -32,7 +32,10 @@ describe('picker family accept strings', () => {
    it('adds Markdown for the families that import portable text', () => {
       expect(ACCEPT_NOTE_IMPORT).toBe('.cotm,.json,application/json,.md,.markdown,text/markdown');
       expect(ACCEPT_WORKSPACE_IMPORT).toBe('.cotm,.json,application/json,.md,.markdown,text/markdown');
-      expect(ACCEPT_DRAWER_IMPORT).toBe('.cotm,.json,application/json,.md,.markdown,text/markdown');
+   });
+
+   it('adds Markdown and PDF for the drawer family', () => {
+      expect(ACCEPT_DRAWER_IMPORT).toBe('.cotm,.json,application/json,.md,.markdown,text/markdown,.pdf,application/pdf');
    });
 
    it('keeps the non-envelope families to themselves', () => {
@@ -55,10 +58,10 @@ describe('picker family accept strings', () => {
 });
 
 describe('the drop gates the strings feed', () => {
-   // `useFileDrop` gates a drop on extension tokens only, so the added MIME spellings must leave these
-   // exactly as they were: `.cotm,.json,.md,.markdown` for the drawer, `.cotm,.json` for the sheet.
-   it('leaves the drawer drop gate unchanged', () => {
-      expect(parseAcceptExtensions(ACCEPT_DRAWER_IMPORT)).toEqual(['.cotm', '.json', '.md', '.markdown']);
+   // `useFileDrop` gates a drop on extension tokens only, so the added MIME spellings drop away here:
+   // `.cotm,.json,.md,.markdown,.pdf` for the drawer, `.cotm,.json` for the sheet.
+   it('gates the drawer drop on its extension tokens', () => {
+      expect(parseAcceptExtensions(ACCEPT_DRAWER_IMPORT)).toEqual(['.cotm', '.json', '.md', '.markdown', '.pdf']);
    });
 
    it('leaves the character sheet drop gate unchanged', () => {

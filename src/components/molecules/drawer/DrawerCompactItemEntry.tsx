@@ -14,7 +14,7 @@ import { MoreHorizontal, Pencil, Trash2, Move, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { deriveExportHandle, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
+import { deriveExportHandle, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Hook Imports --
@@ -35,11 +35,14 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
       e.stopPropagation();
       const { content, type, game, name } = item;
 
-      const handle = deriveExportHandle(content, name);
+      const exportable = toExportableItemContent(type, content);
+      if (!exportable) return;
+
+      const handle = deriveExportHandle(exportable, name);
 
       const fileName = generateExportFilename(game, type, handle);
       try {
-         await exportToFile(content, type, game, fileName);
+         await exportToFile(exportable, type, game, fileName);
       } catch (error) {
          console.error('Drawer item export failed:', error);
       }
@@ -66,7 +69,8 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
                         <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                            <DropdownMenuItem onClick={onRename} className="cursor-pointer"><Pencil className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.rename')}</span></DropdownMenuItem>
                            <DropdownMenuItem onClick={onMove} className="cursor-pointer"><Move className="mr-2 h-4 w-4" /><span>{t('Common.move')}</span></DropdownMenuItem>
-                           <DropdownMenuItem onClick={handleExport} className="cursor-pointer"><Upload className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.export')}</span></DropdownMenuItem>
+                           {/* A PDF has no export yet (its bytes ride no envelope), so it offers no Export. */}
+                           {item.type !== 'PDF' && <DropdownMenuItem onClick={handleExport} className="cursor-pointer"><Upload className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.export')}</span></DropdownMenuItem>}
                            <DropdownMenuItem onClick={onDelete} className="text-destructive cursor-pointer"><Trash2 className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.delete')}</span></DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>

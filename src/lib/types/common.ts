@@ -19,6 +19,7 @@ export type GeneralItemType =
    | 'JOURNAL'
    | 'NOTE'
    | 'ROLL_TABLE'
+   | 'PDF'
    | 'FULL_CHARACTER_SHEET'
    | 'FULL_BOARD';
 

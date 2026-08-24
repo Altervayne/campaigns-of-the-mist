@@ -32,7 +32,7 @@ import { exportFolderAsNestedTree, getItem } from '@/lib/drawer/drawerRepository
 import { hasDrawerItemCapability } from '@/lib/drawer/drawerItemCapabilities';
 
 // -- Utils Imports --
-import { deriveExportHandle, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
+import { deriveExportHandle, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
 
 // -- Utils Imports --
 import { readSafeAreaInsetBottom } from '@/lib/utils/safeArea';
@@ -177,9 +177,11 @@ export default function MobileDrawerContextMenu({
 				toast.success(t('Notifications.drawer.folderExported'));
 			} else if (item) {
 				const { content, type, game, name } = item;
-				const handle = deriveExportHandle(content, name);
+				const exportable = toExportableItemContent(type, content);
+				if (!exportable) return;
+				const handle = deriveExportHandle(exportable, name);
 				const fileName = generateExportFilename(game, type, handle);
-				exportToFile(content, type, game, fileName);
+				exportToFile(exportable, type, game, fileName);
 				toast.success(t('Notifications.drawer.itemExported'));
 			}
 		} catch {
@@ -320,15 +322,17 @@ export default function MobileDrawerContextMenu({
                   {t('Common.move')}
                </Button>
 
-               {/* Export */}
-               <Button
-                  variant="ghost"
-                  className="w-full justify-start cursor-pointer"
-                  onClick={handleExport}
-               >
-                  <Download className="w-4 h-4 mr-3" />
-                  {t('Drawer.Actions.export')}
-               </Button>
+               {/* Export (a folder or any item except a PDF, whose bytes have no export envelope yet). */}
+               {item?.type !== 'PDF' && (
+                  <Button
+                     variant="ghost"
+                     className="w-full justify-start cursor-pointer"
+                     onClick={handleExport}
+                  >
+                     <Download className="w-4 h-4 mr-3" />
+                     {t('Drawer.Actions.export')}
+                  </Button>
+               )}
 
                {/* Delete */}
                <Button

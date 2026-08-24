@@ -1,5 +1,5 @@
 import type { Card, Tracker, Character, LegendsThemeDetails, LegendsHeroDetails } from '@/lib/types/character';
-import type { Drawer, DrawerItem, Folder, GameSystem, GeneralItemType } from '../types/drawer';
+import type { Drawer, DrawerItem, DrawerItemContent, Folder, GameSystem, GeneralItemType } from '../types/drawer';
 import type { Board, BoardItemContent, PostItNote, Journal, Note } from '@/lib/types/board';
 import type { CustomTheme } from '@/lib/theme/themeTokens';
 import { CARD_PALETTE_GAMES } from '@/lib/theme/cardPalettes';
@@ -154,6 +154,10 @@ export function generateExportFilename(game: GameSystem, type: ExportableItemTyp
          textType = "Roll-Table"
          break;
 
+      case "PDF":
+         textType = "PDF"
+         break;
+
       case "CUSTOM_THEME":
          textType = "Theme"
          break;
@@ -191,6 +195,16 @@ export function deriveExportHandle(content: ExportableContent, fallback?: string
       }
    }
    return fallback;
+}
+
+/**
+ * Narrows a drawer item's content to the exportable union, or returns null for a type that has no per-item
+ * export. A PDF returns null: its bytes aren't embedded in an export envelope yet, so exporting one would
+ * write a file that imports to missing bytes - the caller skips the export instead.
+ */
+export function toExportableItemContent(type: GeneralItemType, content: DrawerItemContent): ExportableContent | null {
+   if (type === 'PDF') return null;
+   return content as ExportableContent;
 }
 
 /**

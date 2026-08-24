@@ -14,7 +14,7 @@ const DIST = 'dist';
 const SW = join(DIST, 'sw.js');
 
 // Mirrors the workbox `globPatterns` in vite.config.ts.
-const PRECACHE_EXTS = new Set(['.js', '.css', '.html', '.ico', '.png', '.svg', '.webmanifest', '.woff2']);
+const PRECACHE_EXTS = new Set(['.js', '.mjs', '.css', '.html', '.ico', '.png', '.svg', '.webmanifest', '.woff2']);
 // The service worker and its runtime are never listed in their own manifest.
 const RUNTIME = /^(sw\.js|workbox-[-\w]+\.js|registerSW\.js)$/;
 // Per-file budget, held below Workbox's cap (5 MiB in vite.config.ts) so the build fails with

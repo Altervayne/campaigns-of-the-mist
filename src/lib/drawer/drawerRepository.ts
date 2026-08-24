@@ -218,12 +218,18 @@ function toNestedItem(record: DrawerItemRecord): DrawerItem {
    return { id: record.id, game: record.game, type: record.type, name: record.name, content: record.content };
 }
 
+/** PDF bytes aren't embedded in an export yet, so a PDF item is skipped when assembling an export tree - an
+ *  exported drawer/folder never carries a PDF that would import to missing bytes. */
+function isExportableTreeItem(record: DrawerItemRecord): boolean {
+   return record.type !== 'PDF';
+}
+
 /**
  * Reassembles a folder record and its subtree into the nested {@link Folder}
  * shape, ordered by `order`. Runs inside the active read transaction.
  */
 async function buildNestedFolder(folderRecord: DrawerFolderRecord): Promise<Folder> {
-   const items = (await orderedChildItems(folderRecord.id)).map(toNestedItem);
+   const items = (await orderedChildItems(folderRecord.id)).filter(isExportableTreeItem).map(toNestedItem);
    const childFolderRecords = await orderedChildFolders(folderRecord.id);
 
    const folders: Folder[] = [];
@@ -757,7 +763,7 @@ export function exportFolderAsNestedTree(folderId: string): Promise<Folder> {
 /** Reassembles the entire drawer back into the nested {@link Drawer} shape (for full export). */
 export function exportEntireDrawerAsNestedTree(): Promise<Drawer> {
    return runReadTransaction([db.folders, db.items], async () => {
-      const rootItems = (await orderedChildItems(DRAWER_ROOT_PARENT_ID)).map(toNestedItem);
+      const rootItems = (await orderedChildItems(DRAWER_ROOT_PARENT_ID)).filter(isExportableTreeItem).map(toNestedItem);
       const rootFolderRecords = await orderedChildFolders(DRAWER_ROOT_PARENT_ID);
 
       const folders: Folder[] = [];

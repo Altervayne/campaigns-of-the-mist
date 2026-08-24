@@ -14,7 +14,7 @@ import { MoreHorizontal, Pencil, Trash2, Move, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { deriveExportHandle, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
+import { deriveExportHandle, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Hook Imports --
@@ -37,11 +37,14 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
       e.stopPropagation();
       const { content, type, game, name } = item;
 
-      const handle = deriveExportHandle(content, name);
+      const exportable = toExportableItemContent(type, content);
+      if (!exportable) return;
+
+      const handle = deriveExportHandle(exportable, name);
 
       const fileName = generateExportFilename(game, type, handle);
       try {
-         await exportToFile(content, type, game, fileName);
+         await exportToFile(exportable, type, game, fileName);
       } catch (error) {
          console.error('Drawer item export failed:', error);
       }
@@ -79,10 +82,13 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
                               <Move className="mr-2 h-4 w-4" />
                               <span>{t('Common.move')}</span>
                            </DropdownMenuItem>
+                           {/* A PDF has no export yet (its bytes ride no envelope), so it offers no Export. */}
+                           {item.type !== 'PDF' && (
                            <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
                               <Upload className="mr-2 h-4 w-4" />
                               <span>{t('Drawer.Actions.export')}</span>
                            </DropdownMenuItem>
+                           )}
                            <DropdownMenuItem onClick={onDelete} className="bg-destructive text-destructive-foreground cursor-pointer">
                               <Trash2 className="text-destructive-foreground mr-2 h-4 w-4" />
                               <span>{t('Drawer.Actions.delete')}</span>
