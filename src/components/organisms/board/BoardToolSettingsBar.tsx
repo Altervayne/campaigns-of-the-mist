@@ -158,7 +158,7 @@ export function BoardToolSettingsBar({ tool, onSetTool, penSettings, onSetBrush,
          {/* Ink swatch - inert while erasing. Matches the sibling control groups' flex row so the trigger
             centers vertically instead of picking up an inline-block baseline gap. */}
          <div className={cn('flex shrink-0 items-center', inertCls)} aria-disabled={inkless || undefined}>
-            <InkColorControl color={penSettings.color} title={t('BoardView.penColor')} removeLabel={t('BoardView.inkDefaultColor')} onApply={onSetColor} />
+            <InkColorControl color={penSettings.color} alpha title={t('BoardView.penColor')} removeLabel={t('BoardView.inkDefaultColor')} onApply={onSetColor} />
          </div>
          {/* Starts the next stroke on a fresh layer - inert while erasing (the eraser doesn't append). Reads
              armed (pressed) while a fresh layer is pending, so "the next stroke mints one" is legible. */}

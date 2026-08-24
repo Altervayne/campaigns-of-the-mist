@@ -18,6 +18,7 @@ export const patchNotes: PatchNote[] = [
 * It is now possible to resize the header of a Zone element on a Board. No more super-tiny zone headers.
 
 ### 🔧 Changes
+* It is now possible to define an opacity for the pen when freehand drawing on a board. Careful: The Highlighter's transparency will not be ignored. Both opacities will compose into a final opacity.
 * Switching to drawing mode on the board now clears the current selection so the former selection box doesn't clutter the canvas.
 
 ### 🐛 Bugfixes
