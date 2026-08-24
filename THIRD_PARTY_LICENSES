@@ -13,11 +13,11 @@ This file attributes the PRODUCTION (runtime) dependency tree only -- the
 components that are bundled into and shipped with the built web application.
 Build-time-only tooling (devDependencies) is not distributed and is not listed.
 
-Total third-party components: 214
+Total third-party components: 215
 
 License distribution:
   - MIT            207
-  - Apache-2.0     3
+  - Apache-2.0     4
   - ISC            3
   - 0BSD           1
 
@@ -1047,6 +1047,12 @@ parse-entities@4.0.2
   Copyright (c) Titus Wormer <mailto:tituswormer@gmail.com>
   Repository: https://github.com/wooorm/parse-entities
   License text: see LICENSE TEXT [43]
+
+pdfjs-dist@6.2.108
+  License: Apache-2.0
+  Copyright (c) Mozilla Foundation
+  Repository: https://github.com/mozilla/pdf.js
+  License text: see LICENSE TEXT [27]
 
 property-information@7.1.0
   License: MIT
@@ -2162,7 +2168,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ------------------------------------------------------------------------------
 LICENSE TEXT [27]
-Applies to: dexie@4.4.4
+Applies to: dexie@4.4.4, pdfjs-dist@6.2.108
 ------------------------------------------------------------------------------
 
 Apache License

@@ -8,6 +8,8 @@ import type { AssetRecord } from '@/lib/assets/assetRecords';
 import type { BoardRecord, BoardItemRecord } from '@/lib/board/boardRecords';
 import type { NoteRecord } from '@/lib/notes/noteRecords';
 import type { StencilRecord } from '@/lib/assets/stencilRecords';
+import type { PdfAssetRecord } from '@/lib/pdf/pdfAssetRecords';
+import type { PdfRecord } from '@/lib/pdf/pdfRecords';
 
 /**
  * The Dexie database for the normalized drawer.
@@ -33,6 +35,11 @@ import type { StencilRecord } from '@/lib/assets/stencilRecords';
  * - `stencils`: one row per user stencil-library entry, keyed by `id`, indexed on
  *   `order` (manual sort) and `createdAt`; name + owned `maskAssetId` stored inline
  *   (added in `version(7)`).
+ * - `pdfAssets`: one row per content-addressed PDF, keyed by `hash` (the SHA-256 of the
+ *   raw pdf bytes), indexed on `createdAt` for the GC grace window; the blob and metadata
+ *   are stored inline (added in `version(8)`).
+ * - `pdfDocs`: one row per working PDF, keyed by `id`, indexed on `updatedAt`; the rest
+ *   stored inline (added in `version(8)`).
  *
  * Despite the database name, it holds both the drawer and the character domains:
  * keeping them in one database lets a save-character-to-drawer update both the
@@ -62,6 +69,10 @@ export class DrawerDatabase extends Dexie {
    notes!: EntityTable<NoteRecord, 'id'>;
    /** One row per user stencil-library entry, name + owned mask asset stored inline (version(7)). */
    stencils!: EntityTable<StencilRecord, 'id'>;
+   /** One row per content-addressed PDF asset, keyed by `hash` (version(8)). */
+   pdfAssets!: EntityTable<PdfAssetRecord, 'hash'>;
+   /** One row per working PDF, the whole aggregate stored inline (version(8)). */
+   pdfDocs!: EntityTable<PdfRecord, 'id'>;
 
    constructor() {
       super('CharactersOfTheMistDrawerDatabase');
@@ -126,6 +137,16 @@ export class DrawerDatabase extends Dexie {
       // existing data.
       this.version(7).stores({
          stencils: 'id, order, createdAt',
+      });
+
+      // version(8): purely additive - declares only the NEW `pdfAssets` + `pdfDocs` stores.
+      // `pdfAssets` indexes `hash` (primary key) and `createdAt` (the GC grace window);
+      // `pdfDocs` indexes `id` (primary key) and `updatedAt`. Blobs and the rest are stored
+      // unindexed. An existing database upgrades by creating two empty stores with no
+      // transform of existing data.
+      this.version(8).stores({
+         pdfAssets: 'hash, createdAt',
+         pdfDocs: 'id, updatedAt',
       });
    }
 }

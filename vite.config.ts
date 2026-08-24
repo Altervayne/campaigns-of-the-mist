@@ -179,6 +179,13 @@ export default defineConfig({
             return 'codemirror-vendor'
           }
 
+          // pdf.js (viewer + worker glue). Only the lazy PDF surface imports it, so this
+          // chunk is pulled by that lazy chunk and stays deferred + precached, never in
+          // the eager vendor bundle. The worker ships as its own emitted asset.
+          if (/[\\/]node_modules[\\/]pdfjs-dist[\\/]/.test(id)) {
+            return 'pdf-vendor'
+          }
+
           // Everything else falls to Rollup's default vendor grouping.
           return 'vendor'
         }
