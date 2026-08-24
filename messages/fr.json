@@ -302,6 +302,7 @@
       "portalOpenNote": "Ouvrir la note",
       "portalOpenBoard": "Ouvrir le tableau",
       "portalOpenCharacter": "Ouvrir le personnage",
+      "portalOpenPdf": "[TO COMPLETE]",
       "portalOpenExternal": "Ouvrir le lien externe",
       "portalShowOnBoard": "Afficher sur ce tableau",
       "editPortal": "Modifier le portail",
@@ -582,7 +583,8 @@
          "importing": "[TO COMPLETE]"
       },
       "link": {
-         "targetNotFound": "La cible de ce lien n'existe plus."
+         "targetNotFound": "La cible de ce lien n'existe plus.",
+         "pdfDesktopOnly": "[TO COMPLETE]"
       },
       "theme": {
          "exported": "Thème exporté vers vos téléchargements.",

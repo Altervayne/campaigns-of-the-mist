@@ -37,7 +37,7 @@ export interface LinkMetadata {
 }
 
 /** Maps a linkable entity to the drawer item type that represents it, so a chip matches its drawer glyph. */
-const ENTITY_ITEM_TYPE = { note: 'NOTE', board: 'FULL_BOARD', character: 'FULL_CHARACTER_SHEET' } as const;
+const ENTITY_ITEM_TYPE = { note: 'NOTE', board: 'FULL_BOARD', character: 'FULL_CHARACTER_SHEET', pdf: 'PDF' } as const;
 
 /**
  * Resolves the metadata that needs NO I/O - a same-note `#section` (against `headings`) and an `external` URL -

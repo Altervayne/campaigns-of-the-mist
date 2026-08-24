@@ -39,6 +39,12 @@ export interface PdfState {
    loadingTask: PDFDocumentLoadingTask | null;
    /** The page most in view, 1-based; drives the page indicator. */
    currentPage: number;
+   /**
+    * A monotonic counter bumped by {@link PdfState.actions.requestPage} - the explicit "jump here" signal an
+    * ALREADY-OPEN reader listens for. The reader freezes its scroll target at mount, so a plain `setPage` moves
+    * the indicator without scrolling; incrementing this makes the mounted surface scroll to `currentPage`.
+    */
+   jumpSeq: number;
    /** The render scale multiplier over the fit-width base; ephemeral (kept with the instance, never persisted). */
    zoom: number;
    status: PdfStatus;
@@ -52,6 +58,12 @@ export interface PdfState {
       hydrate: (pdfId: string) => Promise<void>;
       /** Sets the current page, clamped to `[1, pageCount]`. No-op before the document is ready. */
       setPage: (page: number) => void;
+      /**
+       * Jumps to `page` (clamped to `[1, pageCount]`): sets `currentPage` AND bumps {@link PdfState.jumpSeq} so
+       * an already-open reader scrolls there. Use for an explicit navigation (a page link); {@link setPage} is
+       * for the scroll-driven indicator updates that must NOT trigger a jump. No-op before the document is ready.
+       */
+      requestPage: (page: number) => void;
       /** Sets the zoom multiplier, clamped to `[MIN_ZOOM, MAX_ZOOM]`. Ephemeral, never written to the row. */
       setZoom: (zoom: number) => void;
       /** Tears down the pdf.js document and resets to the initial state. Idempotent. */
@@ -59,12 +71,13 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | 'currentPage' | 'zoom' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'status'> = {
    pdfId: null,
    doc: null,
    proxy: null,
    loadingTask: null,
    currentPage: 1,
+   jumpSeq: 0,
    zoom: 1,
    status: 'idle',
 };
@@ -113,6 +126,13 @@ export function createPdfStore() {
             if (!doc) return;
             const clamped = Math.min(Math.max(page, 1), doc.pageCount);
             set({ currentPage: clamped });
+         },
+
+         requestPage: (page) => {
+            const { doc, jumpSeq } = get();
+            if (!doc) return;
+            const clamped = Math.min(Math.max(page, 1), doc.pageCount);
+            set({ currentPage: clamped, jumpSeq: jumpSeq + 1 });
          },
 
          setZoom: (zoom) => {

@@ -65,9 +65,7 @@ export function PortalTrailBar() {
    /** Reactivates one entry; on a dead target toasts + drops it. Returns whether the tab opened. */
    const reactivate = useCallback(
       async (tabKind: TabType, entityId: string): Promise<boolean> => {
-         // Pdfs aren't portal targets yet, so one never enters the trail; guard keeps `openEntityTab`'s
-         // narrower kind honest until pdf portals land.
-         if (tabKind === 'pdf') return false;
+         // A pdf reopens at page 1 (the trail records no page); `openEntityTab` focuses-or-imports it by id.
          let missed = false;
          await openEntityTab(tabKind, entityId, { actions, onMissing: () => { missed = true; } });
          if (missed) {

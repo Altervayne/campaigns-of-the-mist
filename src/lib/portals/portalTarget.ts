@@ -14,7 +14,7 @@ import type { PortalTarget } from '@/lib/types/board';
 export function portalTargetToLinkTarget(target: PortalTarget): LinkTarget | null {
    switch (target.kind) {
       case 'entity':
-         return { kind: 'entity', entity: target.entity, id: target.id };
+         return { kind: 'entity', entity: target.entity, id: target.id, page: target.page };
       case 'element':
          return { kind: 'element', drawerItemId: target.drawerItemId };
       case 'external':

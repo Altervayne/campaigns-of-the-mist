@@ -10,8 +10,8 @@ import type { LinkAction } from './linkTarget';
 
 /** The services the dispatch composes. `openExternal` defaults to `window.open`; the rest are always injected. */
 export interface RunLinkActionDeps {
-   /** Opens (or focuses) an entity's tab, resolving the aggregate and toasting on a dead target. */
-   openEntityTab: (entity: 'note' | 'board' | 'character', id: string) => void | Promise<void>;
+   /** Opens (or focuses) an entity's tab, resolving the aggregate and toasting on a dead target. `page` is pdf-only. */
+   openEntityTab: (entity: 'note' | 'board' | 'character' | 'pdf', id: string, page?: number) => void | Promise<void>;
    /** Scrolls the calling surface to a same-note section slug (a dead slug is the surface's own no-op). */
    scrollToSection: (slug: string) => void;
    /**
@@ -32,7 +32,7 @@ export function runLinkAction(action: LinkAction, deps: RunLinkActionDeps): void
          deps.scrollToSection(action.slug);
          return;
       case 'open-tab':
-         void deps.openEntityTab(action.entity, action.id);
+         void deps.openEntityTab(action.entity, action.id, action.page);
          return;
       case 'open-external':
          (deps.openExternal ?? defaultOpenExternal)(action.href);

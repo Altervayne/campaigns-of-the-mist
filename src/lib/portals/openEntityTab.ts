@@ -1,9 +1,11 @@
 // -- Repository Imports --
 import { getNote } from '@/lib/notes/noteRepository';
 import { recordToNote } from '@/lib/notes/noteRecords';
-import { getNoteItemIdMap, getBoardItemIdMap, getCharacterItemIdMap, getItem } from '@/lib/drawer/drawerRepository';
+import { getNoteItemIdMap, getBoardItemIdMap, getCharacterItemIdMap, getPdfItemIdMap, getItem } from '@/lib/drawer/drawerRepository';
 import { loadBoard, importBoard } from '@/lib/board/boardRepository';
 import { getCharacter } from '@/lib/character/characterRepository';
+import { getPdf, importPdf } from '@/lib/pdf/pdfRepository';
+import { getActivePdfStore } from '@/lib/pdf/pdfStoreRegistry';
 import { openNoteReference } from '@/lib/notes/openNoteReference';
 import { useTabManagerStore } from '@/lib/character/tabManagerStore';
 
@@ -11,6 +13,7 @@ import { useTabManagerStore } from '@/lib/character/tabManagerStore';
 import type { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import type { Note, Board } from '@/lib/types/board';
 import type { Character } from '@/lib/types/character';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 /*
  * The Portals entity open-or-create-tab service: resolves an entity link's id to its aggregate and opens (or
@@ -52,9 +55,10 @@ async function resolveNoteAggregate(noteId: string): Promise<{ note: Note; sourc
 /**
  * Opens (or focuses) the tab for entity `id`. A note reuses the note tile's focus-or-import path; a board
  * hydrates itself once its record is confirmed; a character resolves its aggregate then opens with its drawer
- * link. A dead target on any branch calls `onMissing` and no-ops.
+ * link; a pdf focuses-or-imports then jumps to `page` when one is given. A dead target on any branch calls
+ * `onMissing` and no-ops. `page` is honored only by the pdf branch (a bare link just focuses at page 1).
  */
-export async function openEntityTab(entity: 'note' | 'board' | 'character', id: string, deps: OpenEntityDeps): Promise<void> {
+export async function openEntityTab(entity: 'note' | 'board' | 'character' | 'pdf', id: string, deps: OpenEntityDeps, page?: number): Promise<void> {
    if (entity === 'note') {
       // Already open: focus it (skips the resolve entirely).
       if (useTabManagerStore.getState().openTabs.some((tab) => tab.id === id)) {
@@ -83,6 +87,26 @@ export async function openEntityTab(entity: 'note' | 'board' | 'character', id: 
       if (!item) return deps.onMissing();
       await importBoard(item.content as Board);
       await deps.actions.openBoardTab(id);
+      deps.onNavigated?.();
+      return;
+   }
+
+   if (entity === 'pdf') {
+      // Working row present (open, or previously opened): `openPdfTab` focuses-or-hydrates by id.
+      if (await getPdf(id)) {
+         await deps.actions.openPdfTab(id);
+      } else {
+         // Saved-but-closed: the durable copy lives as the PDF drawer item; import it into the working table
+         // (like the drawer's own open path), then open it.
+         const drawerItemId = (await getPdfItemIdMap()).get(id);
+         const item = drawerItemId ? await getItem(drawerItemId) : undefined;
+         if (!item) return deps.onMissing();
+         await importPdf(item.content as PdfDocument, drawerItemId ?? null);
+         await deps.actions.openPdfTab(id);
+      }
+      // A page link jumps the now-active reader (works whether it just opened or was already open); a bare link
+      // leaves it at page 1.
+      if (page) getActivePdfStore()?.getState().actions.requestPage(page);
       deps.onNavigated?.();
       return;
    }

@@ -302,6 +302,7 @@
       "portalOpenNote": "Open note",
       "portalOpenBoard": "Open board",
       "portalOpenCharacter": "Open character",
+      "portalOpenPdf": "Open PDF",
       "portalOpenExternal": "Open link",
       "portalShowOnBoard": "Show on this board",
       "editPortal": "Edit portal",
@@ -582,7 +583,8 @@
          "importing": "Importing PDF…"
       },
       "link": {
-         "targetNotFound": "That link's target no longer exists."
+         "targetNotFound": "That link's target no longer exists.",
+         "pdfDesktopOnly": "This PDF opens on desktop."
       },
       "theme": {
          "exported": "Theme exported to downloads.",

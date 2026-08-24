@@ -76,6 +76,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const scrollRef = useRef<HTMLDivElement>(null);
    const measureRef = useRef<HTMLDivElement>(null);
    const currentPage = useStore(store, (state) => state.currentPage);
+   const jumpSeq = useStore(store, (state) => state.jumpSeq);
    const { setPage } = store.getState().actions;
 
    // The reading position to restore on (re)mount: the page the instance kept, frozen at mount so live
@@ -136,16 +137,25 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       return () => scroller.removeEventListener('scroll', track);
    }, []);
 
-   // Land the reading position once the pages have a height, then keep it as the layout changes. First pass
-   // (mount): scroll to the restored page. Later passes hold the viewport-center content in place - no snap -
-   // on BOTH the live zoom (`effectivePageWidth`) AND the settle re-layout (`renderWidth`, where the scaled
-   // gaps snap to real ones), so the settle never nudges the page. A layout effect (before paint) keeps it
-   // flicker-free.
+   // Keep the reading position, in priority order, once the pages have a height (width-guarded at the top, so a
+   // jump requested before the pages lay out still lands the moment they do):
+   //   1. An explicit page jump (a `requestPage`, which bumps `jumpSeq`) wins - scroll to it. Covers a page link
+   //      into an already-open reader AND a just-opened one whose `requestPage` raced the mount.
+   //   2. First pass: restore the mount page.
+   //   3. A width change (zoom / settle re-layout / resize): hold the viewport-center content in place - no snap.
+   // A layout effect (before paint) keeps it flicker-free.
    const restored = useRef(false);
+   const seenJump = useRef(jumpSeq);
    useLayoutEffect(() => {
       if (effectivePageWidth <= 0 || renderWidth <= 0) return;
       const scroller = scrollRef.current;
       if (!scroller) return;
+      if (jumpSeq !== seenJump.current) {
+         seenJump.current = jumpSeq;
+         restored.current = true;
+         scrollToPage(store.getState().currentPage);
+         return;
+      }
       if (!restored.current) {
          restored.current = true;
          if (restoreToPage > 1) scrollToPage(restoreToPage);
@@ -154,7 +164,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       const { y, x } = viewportCenter.current;
       scroller.scrollTop = Math.max(0, y * scroller.scrollHeight - scroller.clientHeight / 2);
       scroller.scrollLeft = Math.max(0, x * scroller.scrollWidth - scroller.clientWidth / 2);
-   }, [effectivePageWidth, renderWidth, restoreToPage, scrollToPage]);
+   }, [effectivePageWidth, renderWidth, jumpSeq, restoreToPage, scrollToPage, store]);
 
    // Ctrl/Cmd + wheel zooms (mirrors the character sheet). Native + non-passive so it can preventDefault ONLY
    // when the modifier is held - a plain wheel still scrolls the reader.

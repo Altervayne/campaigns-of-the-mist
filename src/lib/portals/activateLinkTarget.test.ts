@@ -55,7 +55,7 @@ describe('activateLinkTarget - entity nav + trail', () => {
       activateLinkTarget(target, { host: { kind: 'tab' }, actions, t: (k) => k, originItemId: nextOrigin(), toName: 'Dest Note' });
 
       expect(openTab).toHaveBeenCalledTimes(1);
-      expect(openTab).toHaveBeenCalledWith('note', 'note-dest', expect.objectContaining({ actions }));
+      expect(openTab).toHaveBeenCalledWith('note', 'note-dest', expect.objectContaining({ actions }), undefined);
       expect(pushJourney).toHaveBeenCalledTimes(1);
       expect(pushJourney).toHaveBeenCalledWith(from, { tabKind: 'note', entityId: 'note-dest', name: 'Dest Note' });
    });

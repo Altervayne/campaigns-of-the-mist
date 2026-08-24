@@ -32,6 +32,16 @@ describe('parseLinkHref', () => {
       expect(parseLinkHref('cotm://note/abc123#some-heading')).toEqual({ kind: 'entity', entity: 'note', id: 'abc123' });
    });
 
+   it('reads a pdf fragment back as the page, and a bare pdf link as page 1 (no page field)', () => {
+      expect(parseLinkHref('cotm://pdf/x#42')).toEqual({ kind: 'entity', entity: 'pdf', id: 'x', page: 42 });
+      expect(parseLinkHref('cotm://pdf/x')).toEqual({ kind: 'entity', entity: 'pdf', id: 'x' });
+   });
+
+   it('ignores a non-positive or non-numeric pdf fragment (opens at page 1)', () => {
+      expect(parseLinkHref('cotm://pdf/x#0')).toEqual({ kind: 'entity', entity: 'pdf', id: 'x' });
+      expect(parseLinkHref('cotm://pdf/x#abc')).toEqual({ kind: 'entity', entity: 'pdf', id: 'x' });
+   });
+
    it('classifies http and https as external', () => {
       expect(parseLinkHref('https://example.com')).toEqual({ kind: 'external', href: 'https://example.com' });
       expect(parseLinkHref('http://example.com/x')).toEqual({ kind: 'external', href: 'http://example.com/x' });
@@ -54,6 +64,10 @@ describe('resolveLinkAction', () => {
    it('resolves an entity to open-tab, host-independent', () => {
       expect(resolveLinkAction({ kind: 'entity', entity: 'board', id: 'b1' }, TAB_HOST)).toEqual({ type: 'open-tab', entity: 'board', id: 'b1' });
       expect(resolveLinkAction({ kind: 'entity', entity: 'note', id: 'n1' }, BOARD_HOST)).toEqual({ type: 'open-tab', entity: 'note', id: 'n1' });
+   });
+
+   it('carries a pdf page through to the open-tab action', () => {
+      expect(resolveLinkAction({ kind: 'entity', entity: 'pdf', id: 'p1', page: 42 }, TAB_HOST)).toEqual({ type: 'open-tab', entity: 'pdf', id: 'p1', page: 42 });
    });
 
    it('splits an element by host: reveal-in-drawer in a tab, spawn-on-board on a board tile', () => {

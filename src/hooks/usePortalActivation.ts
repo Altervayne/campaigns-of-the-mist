@@ -2,11 +2,15 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// -- Library Imports --
+import toast from 'react-hot-toast';
+
 // -- Portals Imports --
 import { activateLinkTarget } from '@/lib/portals/activateLinkTarget';
 import { portalTargetToLinkTarget } from '@/lib/portals/portalTarget';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
+import { getEffectiveDeviceType } from '@/hooks/useDeviceType';
 
 // -- Type Imports --
 import type { PortalBoardContent } from '@/lib/types/board';
@@ -28,6 +32,12 @@ export function usePortalActivation(itemId: string, content: PortalBoardContent)
    return useCallback(() => {
       const linkTarget = portalTargetToLinkTarget(content.target);
       if (!linkTarget) return; // board-element (same-board phase) or otherwise not activatable in 1a.
+
+      // Pdf tabs are desktop-only (a board never renders on mobile, so this is a defensive stop).
+      if (linkTarget.kind === 'entity' && linkTarget.entity === 'pdf' && getEffectiveDeviceType() === 'mobile') {
+         toast.error(t('Notifications.link.pdfDesktopOnly'));
+         return;
+      }
 
       const boardId = getActiveBoardStore()?.getState().boardId ?? '';
       activateLinkTarget(linkTarget, {

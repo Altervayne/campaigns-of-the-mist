@@ -392,7 +392,7 @@ export interface ThreatBoardContent {
  * `external` carries a URL. Structured, never a `cotm://` string - a portal is board data, not markdown.
  */
 export type PortalTarget =
-   | { kind: 'entity'; entity: 'note' | 'board' | 'character'; id: string }
+   | { kind: 'entity'; entity: 'note' | 'board' | 'character' | 'pdf'; id: string; page?: number }
    | { kind: 'element'; drawerItemId: string }
    | { kind: 'board-element'; boardItemId: string }
    | { kind: 'external'; href: string };

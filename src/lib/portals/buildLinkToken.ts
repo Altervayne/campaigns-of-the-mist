@@ -15,19 +15,20 @@ import type { GeneralItemType } from '@/lib/types/drawer';
 /** A target the picker has resolved, ready to become a link token. */
 export type LinkInsertTarget =
    | { kind: 'section'; slug: string }
-   | { kind: 'entity'; entity: 'note' | 'board' | 'character'; id: string }
+   | { kind: 'entity'; entity: 'note' | 'board' | 'character' | 'pdf'; id: string; page?: number }
    | { kind: 'element'; drawerItemId: string }
    | { kind: 'external'; url: string };
 
-/** The three drawer item types that own a tab (entity links); everything else is a tabless element. */
-const ITEM_TYPE_ENTITY: Partial<Record<GeneralItemType, 'note' | 'board' | 'character'>> = {
+/** The drawer item types that own a tab (entity links); everything else is a tabless element. */
+const ITEM_TYPE_ENTITY: Partial<Record<GeneralItemType, 'note' | 'board' | 'character' | 'pdf'>> = {
    NOTE: 'note',
    FULL_BOARD: 'board',
    FULL_CHARACTER_SHEET: 'character',
+   PDF: 'pdf',
 };
 
 /** The entity kind a drawer item type links as, or `null` when it's a tabless element (addressed by item id). */
-export function entityForItemType(type: GeneralItemType): 'note' | 'board' | 'character' | null {
+export function entityForItemType(type: GeneralItemType): 'note' | 'board' | 'character' | 'pdf' | null {
    return ITEM_TYPE_ENTITY[type] ?? null;
 }
 
@@ -37,7 +38,10 @@ export function buildLinkHref(target: LinkInsertTarget): string {
       case 'section':
          return `#${target.slug}`;
       case 'entity':
-         return `cotm://${target.entity}/${target.id}`;
+         // A pdf carries its page as the `#fragment`; page 1 (or none) stays bare, round-tripping with the parser.
+         return target.entity === 'pdf' && target.page && target.page > 1
+            ? `cotm://pdf/${target.id}#${target.page}`
+            : `cotm://${target.entity}/${target.id}`;
       case 'element':
          return `cotm://item/${target.drawerItemId}`;
       case 'external':

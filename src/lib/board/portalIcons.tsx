@@ -10,7 +10,7 @@ import {
    Cone, Contact, Container, CornerUpRight, Cpu, Cross, Crosshair, Crown, CupSoda, Cylinder, Database,
    Diamond, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Dices, Disc, Dna, Dog, DoorClosed, DoorOpen, Download,
    Drama, Droplet, Droplets, Drum, Drumstick, Eclipse, Egg, ExternalLink, Eye, EyeOff, Factory, Feather,
-   Fence, FileText, Files, Film, Fingerprint, Fish, Flag, FlagTriangleRight, Flame, FlameKindling,
+   Fence, FileText, FileType, Files, Film, Fingerprint, Fish, Flag, FlagTriangleRight, Flame, FlameKindling,
    FlaskConical, Flower, Flower2, Folder, FolderHeart, FolderOpen, Footprints, Fuel, Gamepad, Gamepad2, Gem,
    Ghost, Gift, Globe, GraduationCap, Grid3x3, Group, Guitar, Ham, Hammer, Hand, HandCoins, Handshake,
    HardDrive, Headphones, Heart, HeartCrack, HeartPulse, HelpCircle, Hexagon, History, Home, Hotel, Hourglass,
@@ -57,7 +57,7 @@ const PORTAL_ICONS: Record<string, LucideIcon> = {
    search: Search, flag: Flag, 'flag-triangle-right': FlagTriangleRight, bookmark: Bookmark, tag: Tag, tags: Tags,
    pin: Pin, 'layout-grid': LayoutGrid, 'notebook-pen': NotebookPen, 'notebook-text': NotebookText, book: Book,
    'book-open': BookOpen, 'book-open-text': BookOpenText, 'book-marked': BookMarked, library: Library,
-   scroll: Scroll, 'scroll-text': ScrollText, 'file-text': FileText, files: Files, folder: Folder,
+   scroll: Scroll, 'scroll-text': ScrollText, 'file-text': FileText, 'file-type': FileType, files: Files, folder: Folder,
    'folder-open': FolderOpen, 'sticky-note': StickyNote, clipboard: Clipboard, 'clipboard-list': ClipboardList,
    pencil: Pencil, 'pen-tool': PenTool, feather: Feather, quote: Quote, 'message-square': MessageSquare,
    'message-circle': MessageCircle, mail: Mail, send: Send, sword: Sword, swords: Swords, shield: Shield,
@@ -120,7 +120,7 @@ export const PORTAL_ICON_NAMES: readonly string[] = [
    'compass', 'milestone', 'signpost', 'signpost-big', 'route', 'waypoints', 'locate', 'crosshair', 'target',
    'scan-eye', 'eye', 'eye-off', 'search', 'flag', 'flag-triangle-right', 'bookmark', 'tag', 'tags', 'pin',
    'layout-grid', 'notebook-pen', 'notebook-text', 'book', 'book-open', 'book-open-text', 'book-marked', 'library',
-   'scroll', 'scroll-text', 'file-text', 'files', 'folder', 'folder-open', 'sticky-note', 'clipboard',
+   'scroll', 'scroll-text', 'file-text', 'file-type', 'files', 'folder', 'folder-open', 'sticky-note', 'clipboard',
    'clipboard-list', 'pencil', 'pen-tool', 'feather', 'quote', 'message-square', 'message-circle', 'mail', 'send',
    'sword', 'swords', 'shield', 'shield-half', 'shield-alert', 'shield-check', 'axe', 'hammer', 'wand', 'wand-2',
    'wand-sparkles', 'bomb', 'skull', 'ghost', 'drama', 'biohazard', 'radiation', 'flame', 'flame-kindling', 'zap',
@@ -163,7 +163,13 @@ export function resolvePortalIcon(name: string): LucideIcon {
 export function portalDestinationIcon(target: PortalTarget): LucideIcon {
    switch (target.kind) {
       case 'entity':
-         return target.entity === 'note' ? NotebookPen : target.entity === 'board' ? LayoutGrid : IdCard;
+         return target.entity === 'note'
+            ? NotebookPen
+            : target.entity === 'board'
+               ? LayoutGrid
+               : target.entity === 'character'
+                  ? IdCard
+                  : FileType;
       case 'element':
          return Shapes;
       case 'board-element':
@@ -177,7 +183,13 @@ export function portalDestinationIcon(target: PortalTarget): LucideIcon {
 export function smartPortalIconName(target: PortalTarget): string {
    switch (target.kind) {
       case 'entity':
-         return target.entity === 'note' ? 'notebook-pen' : target.entity === 'board' ? 'layout-grid' : 'id-card';
+         return target.entity === 'note'
+            ? 'notebook-pen'
+            : target.entity === 'board'
+               ? 'layout-grid'
+               : target.entity === 'character'
+                  ? 'id-card'
+                  : 'file-type';
       case 'element':
          return 'shapes';
       case 'board-element':
@@ -195,7 +207,9 @@ export function portalOutcomeKey(target: PortalTarget): string {
             ? 'BoardView.portalOpenNote'
             : target.entity === 'board'
                ? 'BoardView.portalOpenBoard'
-               : 'BoardView.portalOpenCharacter';
+               : target.entity === 'character'
+                  ? 'BoardView.portalOpenCharacter'
+                  : 'BoardView.portalOpenPdf';
       case 'element':
          return 'BoardView.portalShowOnBoard';
       case 'board-element':

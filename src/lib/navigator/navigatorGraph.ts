@@ -93,7 +93,8 @@ export function canonicalKeyForTarget(target: LinkTarget): string {
 export function navKindForTarget(target: LinkTarget): NavKind {
    switch (target.kind) {
       case 'entity':
-         return target.entity;
+         // A pdf is a leaf: always-visible `element` kind (never crawled, no filter chip of its own).
+         return target.entity === 'pdf' ? 'element' : target.entity;
       case 'external':
          return 'external';
       default:

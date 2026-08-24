@@ -93,9 +93,9 @@ export function activateLinkTarget(linkTarget: LinkTarget, { host, actions, t, o
    // synchronously, so they release the guard right after dispatch.
    let async = false;
    runLinkAction(action, {
-      openEntityTab: (entity, id) => {
+      openEntityTab: (entity, id, page) => {
          async = true;
-         return openEntityTab(entity, id, { actions, onMissing, onNavigated }).finally(clear);
+         return openEntityTab(entity, id, { actions, onMissing, onNavigated }, page).finally(clear);
       },
       scrollToSection: () => {},
       spawnBeside,

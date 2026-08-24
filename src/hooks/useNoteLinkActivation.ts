@@ -11,6 +11,7 @@ import { runLinkAction } from '@/lib/portals/runLinkAction';
 import { openEntityTab } from '@/lib/portals/openEntityTab';
 import { revealDrawerItem } from '@/lib/portals/revealDrawerItem';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
+import { getEffectiveDeviceType } from '@/hooks/useDeviceType';
 
 // -- Type Imports --
 import type { NoteHostContext } from '@/lib/portals/linkTarget';
@@ -45,10 +46,17 @@ export function useNoteLinkActivation(host: NoteHostContext, scrollToSection: (s
 
    return useCallback(
       (href: string) => {
-         const action = resolveLinkAction(parseLinkHref(href), host);
+         const target = parseLinkHref(href);
+         // Pdf tabs are desktop-only; a pdf link tapped on mobile would open a tab the mobile workspace can't
+         // host, so surface a toast and stop before dispatch rather than stranding a dead tab.
+         if (target.kind === 'entity' && target.entity === 'pdf' && getEffectiveDeviceType() === 'mobile') {
+            toast.error(t('Notifications.link.pdfDesktopOnly'));
+            return;
+         }
+         const action = resolveLinkAction(target, host);
          const onMissing = () => toast.error(t('Notifications.link.targetNotFound'));
          runLinkAction(action, {
-            openEntityTab: (entity, id) => openEntityTab(entity, id, { actions, onMissing }),
+            openEntityTab: (entity, id, page) => openEntityTab(entity, id, { actions, onMissing }, page),
             scrollToSection,
             spawnBeside: onSpawnBeside,
             revealInDrawer: (drawerItemId) => void revealDrawerItem(drawerItemId, { onMissing }),

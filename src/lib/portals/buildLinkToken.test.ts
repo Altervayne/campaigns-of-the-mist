@@ -6,10 +6,11 @@ import { buildLinkHref, buildLinkMarkdown, detectExternalUrl, entityForItemType 
 import { parseLinkHref } from './linkTarget';
 
 describe('entityForItemType', () => {
-   it('maps the three tab-owning types to their entity kind', () => {
+   it('maps the tab-owning types to their entity kind', () => {
       expect(entityForItemType('NOTE')).toBe('note');
       expect(entityForItemType('FULL_BOARD')).toBe('board');
       expect(entityForItemType('FULL_CHARACTER_SHEET')).toBe('character');
+      expect(entityForItemType('PDF')).toBe('pdf');
    });
 
    it('returns null for tabless elements (addressed by drawer item id)', () => {
@@ -33,6 +34,18 @@ describe('buildLinkHref + parseLinkHref round-trip', () => {
          expect(href).toBe(`cotm://${entity}/ent123`);
          expect(parseLinkHref(href)).toEqual({ kind: 'entity', entity, id: 'ent123' });
       }
+   });
+
+   it('a pdf page past 1 carries the page as the fragment and reads back as that page', () => {
+      const href = buildLinkHref({ kind: 'entity', entity: 'pdf', id: 'p1', page: 42 });
+      expect(href).toBe('cotm://pdf/p1#42');
+      expect(parseLinkHref(href)).toEqual({ kind: 'entity', entity: 'pdf', id: 'p1', page: 42 });
+   });
+
+   it('a pdf on page 1 (or no page) stays bare and reads back without a page', () => {
+      expect(buildLinkHref({ kind: 'entity', entity: 'pdf', id: 'p1', page: 1 })).toBe('cotm://pdf/p1');
+      expect(buildLinkHref({ kind: 'entity', entity: 'pdf', id: 'p1' })).toBe('cotm://pdf/p1');
+      expect(parseLinkHref('cotm://pdf/p1')).toEqual({ kind: 'entity', entity: 'pdf', id: 'p1' });
    });
 
    it('element carries the drawer item id under the item scheme', () => {

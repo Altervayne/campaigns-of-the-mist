@@ -19,6 +19,7 @@ import type { DrawerFolderRecord, DrawerItemRecord } from './drawerRecords';
 import type { Drawer, DrawerItem, DrawerItemContent, Folder, GameSystem, GeneralItemType } from '@/lib/types/drawer';
 import type { Character } from '@/lib/types/character';
 import type { Note } from '@/lib/types/board';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 /*
  * Framework-agnostic data-access layer for the normalized drawer. Pure persistence:
@@ -384,16 +385,31 @@ export async function getBoardItemIdMap(): Promise<Map<string, string>> {
    return map;
 }
 
+/**
+ * Maps every saved pdf's id to the drawer item id that holds it (PDF items only). Mirrors
+ * {@link getNoteItemIdMap}; backs the Portals resolver's drawer fallback for a `cotm://pdf/<id>` link whose
+ * working row is gone (the durable copy lives as the drawer item). On an id collision the last item wins.
+ */
+export async function getPdfItemIdMap(): Promise<Map<string, string>> {
+   const items = await db.items.where('type').equals('PDF').toArray();
+   const map = new Map<string, string>();
+   for (const item of items) {
+      const pdfId = (item.content as PdfDocument).id;
+      if (pdfId) map.set(pdfId, item.id);
+   }
+   return map;
+}
+
 /** The drawer item TYPE that holds each linkable entity, so an entity id can be resolved to its drawer save. */
-const ENTITY_ITEM_TYPE = { note: 'NOTE', board: 'FULL_BOARD', character: 'FULL_CHARACTER_SHEET' } as const;
+const ENTITY_ITEM_TYPE = { note: 'NOTE', board: 'FULL_BOARD', character: 'FULL_CHARACTER_SHEET', pdf: 'PDF' } as const;
 
 /**
- * Finds the drawer item that holds entity `id` of kind `entity` (a saved note/board/character), or `undefined`
- * when none does. Backs the Portals link-metadata resolver's naming of an ENTITY link (whose href carries the
- * entity id, not a drawer item id). Scans the entity's type table and matches on `content.id`, mirroring the
- * `get*ItemIdMap` helpers; on the vanishingly unlikely id collision the first match wins.
+ * Finds the drawer item that holds entity `id` of kind `entity` (a saved note/board/character/pdf), or
+ * `undefined` when none does. Backs the Portals link-metadata resolver's naming of an ENTITY link (whose href
+ * carries the entity id, not a drawer item id). Scans the entity's type table and matches on `content.id`,
+ * mirroring the `get*ItemIdMap` helpers; on the vanishingly unlikely id collision the first match wins.
  */
-export async function findEntityDrawerItem(entity: 'note' | 'board' | 'character', id: string): Promise<DrawerItemRecord | undefined> {
+export async function findEntityDrawerItem(entity: 'note' | 'board' | 'character' | 'pdf', id: string): Promise<DrawerItemRecord | undefined> {
    const items = await db.items.where('type').equals(ENTITY_ITEM_TYPE[entity]).toArray();
    return items.find((item) => (item.content as { id?: string }).id === id);
 }
