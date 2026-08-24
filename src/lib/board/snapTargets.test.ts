@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 // -- Local Imports --
 import { effectiveSnapRect } from './snapTargets';
 import { EXPANDED_CARD_SIZE } from './embedDrawerItem';
-import { COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from './zoneCollapse';
+import { COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from './zoneHeader';
 import type { BoardItem } from '@/lib/types/board';
 
 /*
@@ -58,6 +58,19 @@ describe('effectiveSnapRect', () => {
          content: { kind: 'zone', collapsed: true },
       });
       expect(effectiveSnapRect(zone)).toEqual({ x: 10, y: 20, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT });
+   });
+
+   it('scales the collapsed bar height by the zone title scale (width fixed)', () => {
+      const zone = item({
+         id: 'd2',
+         kind: 'zone',
+         x: 10,
+         y: 20,
+         width: 400,
+         height: 300,
+         content: { kind: 'zone', collapsed: true, titleScale: 3 },
+      });
+      expect(effectiveSnapRect(zone)).toEqual({ x: 10, y: 20, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT * 3 });
    });
 
    it('keeps the stored extent for an expanded zone', () => {

@@ -11,10 +11,9 @@ import { computeResizeSnap } from '@/lib/board/boardSnapping';
 import { SNAP_PX } from './boardCanvasConstants';
 import { isRotatableKind, rotatedResize, rotatedTopExtra } from '@/lib/board/boardRotation';
 import { imageBoxShadowCss } from '@/lib/board/imageStyle';
-import { COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_WIDTH } from '@/lib/board/zoneCollapse';
+import { COLLAPSED_BAR_WIDTH, zoneCollapsedBarHeight, zoneTitleBarHeight } from '@/lib/board/zoneHeader';
 import { EXPANDED_CARD_SIZE } from '@/lib/board/embedDrawerItem';
 import { isExpandedCardItem } from '@/lib/board/expandedCardItem';
-import { ZONE_TITLE_BAR_HEIGHT } from './items/ZoneItem';
 
 // -- Component Imports --
 import { BoardItemBody } from './items/BoardItemBody';
@@ -414,7 +413,8 @@ export const BoardItemBox = memo(function BoardItemBox({
    // chrome - click-through everywhere else so the items sitting inside it stay interactive. Selecting the
    // empty interior is the tinted frame's job.
    const isZone = item.kind === 'zone';
-   const zoneColor = item.content.kind === 'zone' ? item.content.color : undefined;
+   const zoneContent = item.content.kind === 'zone' ? item.content : undefined;
+   const zoneColor = zoneContent?.color;
    // A collapsed zone paints as a compact bar at its origin (frame hidden, members hidden, resize
    // off); its stored width/height are preserved for when it expands.
    const isCollapsedZone = isZone && item.content.kind === 'zone' && item.content.collapsed;
@@ -433,7 +433,7 @@ export const BoardItemBox = memo(function BoardItemBox({
    // An expanded challenge card renders at the fixed landscape footprint on BOTH axes (its stored
    // portrait width/height are preserved for when it collapses back to a card).
    const boxWidth = isCollapsedZone ? COLLAPSED_BAR_WIDTH : isExpandedCard ? EXPANDED_CARD_SIZE.width : fitWidth || fitBoth ? fitContentWidth(rect.width, contentWidth) : rect.width;
-   const boxHeight = isCollapsedZone ? COLLAPSED_BAR_HEIGHT : isExpandedCard ? EXPANDED_CARD_SIZE.height : renderHeight;
+   const boxHeight = isCollapsedZone && zoneContent ? zoneCollapsedBarHeight(zoneContent) : isExpandedCard ? EXPANDED_CARD_SIZE.height : renderHeight;
 
    const body = (
       <BoardItemBody
@@ -586,7 +586,7 @@ export const BoardItemBox = memo(function BoardItemBox({
                            // zone's title bar, or (for a rotated item) the extra height the rotation adds, so
                            // the bar hugs the rotated item's visual top instead of tilting with it. A zone is
                            // never rotatable, so the two never combine.
-                           extraBottom={(isZone && !isCollapsedZone ? ZONE_TITLE_BAR_HEIGHT + 4 : 0) + (isRotatable && rotation ? rotatedTopExtra(boxWidth, boxHeight, rotation) : 0)}
+                           extraBottom={(zoneContent && !isCollapsedZone ? zoneTitleBarHeight(zoneContent) + 4 : 0) + (isRotatable && rotation ? rotatedTopExtra(boxWidth, boxHeight, rotation) : 0)}
                            onMoveStart={(event) => onMoveStart(item.id, event)}
                            onConnectStart={(event) => onConnectStart(item.id, event)}
                            onBringToFront={() => onBringToFront(item.id)}

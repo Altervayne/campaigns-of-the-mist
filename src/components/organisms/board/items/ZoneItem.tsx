@@ -1,14 +1,15 @@
 // -- React Imports --
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { AArrowDown, AArrowUp, ChevronDown, ChevronRight } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { pushRecentColor, readRecentColors } from '@/lib/recentColors';
+import { clampZoneTitleScale, MIN_ZONE_TITLE_SCALE, ZONE_TITLE_SCALE_STEP, zoneTitleBarHeight, zoneTitleFontSize, zoneTitleScale } from '@/lib/board/zoneHeader';
 
 // -- Component Imports --
 import { ColorPickerPopover } from '@/components/molecules/color/ColorPickerPopover';
@@ -30,9 +31,6 @@ import type { BoardItemContent, ZoneBoardContent } from '@/lib/types/board';
 
 /** Tint quick-picks for a zone (rendered at low opacity behind the items). */
 const ZONE_PALETTE = ['#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#14b8a6', '#3b82f6', '#64748b'] as const;
-
-/** The expanded title bar's height (world units); the box lifts the selection toolbar above it. */
-export const ZONE_TITLE_BAR_HEIGHT = 26;
 
 interface ZoneItemProps {
    content: ZoneBoardContent;
@@ -101,6 +99,15 @@ export function ZoneItem({ content, isSelected, toolbarSlot, memberCount, onCont
 
    const toggleCollapse = () => onContentChange({ ...content, collapsed: !collapsed });
 
+   // Steps the header size one notch, committing a single undoable change. Back at the default scale the
+   // field is dropped (`undefined`) so a default-size zone carries no `titleScale`.
+   const stepTitleScale = (direction: 1 | -1) => {
+      const current = zoneTitleScale(content);
+      const next = clampZoneTitleScale(current + direction * ZONE_TITLE_SCALE_STEP);
+      if (next === current) return;
+      onContentChange({ ...content, titleScale: next <= MIN_ZONE_TITLE_SCALE ? undefined : next });
+   };
+
    const chevron = (
       <button
          type="button"
@@ -123,7 +130,8 @@ export function ZoneItem({ content, isSelected, toolbarSlot, memberCount, onCont
          onBlur={commitLabel}
          onPointerDown={(event: ReactPointerEvent) => event.stopPropagation()}
          placeholder={t('BoardView.zoneLabelPlaceholder')}
-         className="w-28 min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/60"
+         style={{ fontSize: zoneTitleFontSize(content) }}
+         className="w-28 min-w-0 flex-1 truncate bg-transparent font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/60"
       />
    );
 
@@ -150,7 +158,7 @@ export function ZoneItem({ content, isSelected, toolbarSlot, memberCount, onCont
             // reads as a bar; the label fills the rest and ellipsizes when it overflows.
             <div
                onPointerDown={onPressStart}
-               style={{ height: ZONE_TITLE_BAR_HEIGHT, ...(swatchColor ? { backgroundColor: `${swatchColor}1f`, borderColor: swatchColor } : {}) }}
+               style={{ height: zoneTitleBarHeight(content), ...(swatchColor ? { backgroundColor: `${swatchColor}1f`, borderColor: swatchColor } : {}) }}
                className={cn(
                   'pointer-events-auto absolute inset-x-0 bottom-full mb-0.5 flex items-center gap-0.5 rounded-md border px-1.5',
                   !swatchColor && 'border-border bg-card/80',
@@ -161,13 +169,16 @@ export function ZoneItem({ content, isSelected, toolbarSlot, memberCount, onCont
             </div>
          )}
 
-         {/* Color lives in the selection toolbar's slot, like the post-it's - not in the header. */}
+         {/* Color and header-size live in the selection toolbar's slot, like the post-it's - not in the header. */}
          {isSelected && toolbarSlot && createPortal(
-            <ZoneColorControl
-               activeColor={swatchColor}
-               onPreview={(color) => { pendingRef.current = { color }; setPending({ color }); }}
-               onCommit={commitPendingColor}
-            />,
+            <div className="flex items-center gap-0.5">
+               <ZoneColorControl
+                  activeColor={swatchColor}
+                  onPreview={(color) => { pendingRef.current = { color }; setPending({ color }); }}
+                  onCommit={commitPendingColor}
+               />
+               <ZoneTitleSizeControl onStep={stepTitleScale} />
+            </div>,
             toolbarSlot,
          )}
       </>
@@ -204,5 +215,41 @@ function ZoneColorControl({ activeColor, onPreview, onCommit }: { activeColor: s
             />
          }
       />
+   );
+}
+
+/**
+ * The zone header-size control: an A- / A+ stepper (like the text element's font-size stepper) that grows or
+ * shrinks the whole header - the label text and the bar height scale together. Each press commits one
+ * undoable change; the buttons stop the pointer so they never bubble into the zone's move/select handlers.
+ */
+function ZoneTitleSizeControl({ onStep }: { onStep: (direction: 1 | -1) => void }) {
+   const { t } = useTranslation();
+
+   return (
+      <div className="flex items-center gap-0.5">
+         <ZoneSizeButton title={t('BoardView.zoneTitleSizeDecrease')} onClick={() => onStep(-1)}>
+            <AArrowDown className="h-4 w-4" />
+         </ZoneSizeButton>
+         <ZoneSizeButton title={t('BoardView.zoneTitleSizeIncrease')} onClick={() => onStep(1)}>
+            <AArrowUp className="h-4 w-4" />
+         </ZoneSizeButton>
+      </div>
+   );
+}
+
+/** A compact action button in the zone toolbar; the pointer-down guard keeps a press off the zone's body handlers. */
+function ZoneSizeButton({ title, onClick, children }: { title: string; onClick: () => void; children: ReactNode }) {
+   return (
+      <button
+         type="button"
+         title={title}
+         aria-label={title}
+         onPointerDown={(event) => event.stopPropagation()}
+         onClick={onClick}
+         className="flex h-6 min-w-6 items-center justify-center rounded px-1 text-foreground hover:bg-muted cursor-pointer"
+      >
+         {children}
+      </button>
    );
 }

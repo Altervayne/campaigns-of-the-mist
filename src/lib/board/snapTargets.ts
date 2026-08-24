@@ -5,7 +5,7 @@ import type { Rect } from '@/lib/board/boardSnapping';
 // -- Function Imports --
 import { EXPANDED_CARD_SIZE } from '@/lib/board/embedDrawerItem';
 import { isExpandedCardItem } from '@/lib/board/expandedCardItem';
-import { COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from '@/lib/board/zoneCollapse';
+import { COLLAPSED_BAR_WIDTH, zoneCollapsedBarHeight } from '@/lib/board/zoneHeader';
 
 /*
  * The rect an item actually RENDERS at, for snapping. Most kinds render at their stored rect - content-driven
@@ -16,6 +16,6 @@ import { COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from '@/lib/board/zoneColla
  */
 export function effectiveSnapRect(item: BoardItem): Rect {
    if (isExpandedCardItem(item)) return { x: item.x, y: item.y, width: EXPANDED_CARD_SIZE.width, height: EXPANDED_CARD_SIZE.height };
-   if (item.content.kind === 'zone' && item.content.collapsed) return { x: item.x, y: item.y, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT };
+   if (item.content.kind === 'zone' && item.content.collapsed) return { x: item.x, y: item.y, width: COLLAPSED_BAR_WIDTH, height: zoneCollapsedBarHeight(item.content) };
    return { x: item.x, y: item.y, width: item.width, height: item.height };
 }

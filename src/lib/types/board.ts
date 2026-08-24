@@ -294,6 +294,8 @@ export interface ZoneBoardContent {
    label?: string;
    color?: string;
    collapsed: boolean;
+   /** Header size multiplier (1-3); absent reads as 1, so existing zones need no backfill. */
+   titleScale?: number;
 }
 
 /** A connection's line dash pattern. Optional on the style - absent reads as `solid` (back-compat). */

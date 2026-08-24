@@ -2,20 +2,20 @@
 import type { BoardItem } from '@/lib/types/board';
 import type { RectLike } from '@/lib/board/boardConnections';
 
+// -- Function Imports --
+import { COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_WIDTH, zoneCollapsedBarHeight } from '@/lib/board/zoneHeader';
+
 /*
- * Collapsed-zone geometry, shared by the render (the compact bar) and the connection re-anchor.
- * Collapse is render-only: a collapsed zone keeps its stored bounds but paints as a small bar at
- * its origin, and any connection touching a hidden member anchors to that bar instead. None of
- * this rewrites connection data or item geometry - it's resolved fresh each render.
+ * Collapse resolution, shared by the render (the compact bar) and the connection re-anchor. Collapse is
+ * render-only: a collapsed zone keeps its stored bounds but paints as a small bar at its origin, and any
+ * connection touching a hidden member anchors to that bar instead. None of this rewrites connection data
+ * or item geometry - it's resolved fresh each render. The bar's dimensions live in `zoneHeader`.
  */
 
-/** The collapsed zone's bar size (world units); the bar paints at the zone's origin. */
-export const COLLAPSED_BAR_WIDTH = 220;
-export const COLLAPSED_BAR_HEIGHT = 36;
-
-/** The rect a collapsed zone occupies: a bar at its stored origin, fixed size (bounds untouched). */
-export function collapsedBarRect(zone: { x: number; y: number }): RectLike {
-   return { x: zone.x, y: zone.y, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT };
+/** The rect a collapsed zone occupies: a bar at its stored origin (fixed width, scaled height; bounds untouched). */
+export function collapsedBarRect(zone: BoardItem): RectLike {
+   const height = zone.content.kind === 'zone' ? zoneCollapsedBarHeight(zone.content) : COLLAPSED_BAR_HEIGHT;
+   return { x: zone.x, y: zone.y, width: COLLAPSED_BAR_WIDTH, height };
 }
 
 /**

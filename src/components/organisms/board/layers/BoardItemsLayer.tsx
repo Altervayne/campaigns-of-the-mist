@@ -18,6 +18,7 @@ import { BoardGroupToolbar } from '../BoardGroupToolbar';
 import { BoardStrokeStyleToolbarSlot } from './BoardStrokeStyleToolbarSlot';
 import { BoardTransformOverlay } from '../BoardTransformOverlay';
 import { StrokeShape } from '../items/BoardDrawingItem';
+import { zoneTitleBarHeight } from '@/lib/board/zoneHeader';
 import { SnapOverlay } from './SnapOverlay';
 
 // -- Type Imports --
@@ -178,9 +179,12 @@ export function BoardItemsLayer({
     */
    const toolbarClampFor = (item: BoardItem): number | undefined => {
       if (item.id !== soleSelectedId) return undefined;
-      // The upright bar sits above the rotated item's visual top, so clamp against that higher anchor.
-      const topExtra = item.rotation && isRotatableKind(item.kind) ? rotatedTopExtra(item.width, item.height, item.rotation) : 0;
-      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0) - topExtra, viewport, clipHeight);
+      // The bar is lifted above the item top by a zone's title bar and a rotated item's corner (matching the
+      // box's `extraBottom`), so clamp against that lifted top - else a zone's bar clamps by its frame top and
+      // lands under the tab strip.
+      const zoneLift = item.content.kind === 'zone' && !item.content.collapsed ? zoneTitleBarHeight(item.content) + 4 : 0;
+      const rotExtra = item.rotation && isRotatableKind(item.kind) ? rotatedTopExtra(item.width, item.height, item.rotation) : 0;
+      return toolbarClampDown(item.y + (moveDeltaFor(item.id)?.y ?? 0) - zoneLift - rotExtra, viewport, clipHeight);
    };
 
    /**

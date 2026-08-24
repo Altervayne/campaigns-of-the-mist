@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { collapsedBarRect, isConnectionCollapsedAway, resolveEndpointAnchor, COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from './zoneCollapse';
+import { collapsedBarRect, isConnectionCollapsedAway, resolveEndpointAnchor } from './zoneCollapse';
+import { COLLAPSED_BAR_WIDTH, COLLAPSED_BAR_HEIGHT } from './zoneHeader';
 
 // -- Type Imports --
 import type { BoardItem } from '@/lib/types/board';
@@ -26,6 +27,11 @@ const collapsed = new Set(['Z']);
 describe('collapsedBarRect', () => {
    it('is a fixed-size bar at the zone origin (bounds untouched)', () => {
       expect(collapsedBarRect(zoneCollapsed)).toEqual({ x: 100, y: 100, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT });
+   });
+
+   it('scales the bar height by the zone title scale (width fixed)', () => {
+      const scaled: BoardItem = { ...zoneCollapsed, content: { kind: 'zone', collapsed: true, titleScale: 2 } };
+      expect(collapsedBarRect(scaled)).toEqual({ x: 100, y: 100, width: COLLAPSED_BAR_WIDTH, height: COLLAPSED_BAR_HEIGHT * 2 });
    });
 });
 

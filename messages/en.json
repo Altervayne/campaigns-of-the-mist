@@ -207,6 +207,8 @@
       "zoneCollapse": "Collapse zone",
       "zoneExpand": "Expand zone",
       "zoneMembers": "Members",
+      "zoneTitleSizeIncrease": "Larger header",
+      "zoneTitleSizeDecrease": "Smaller header",
       "diceRoll": "Roll",
       "diceModifier": "Mod",
       "diceTotal": "Total",
