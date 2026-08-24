@@ -19,6 +19,8 @@ import 'react-piqua-color/style.css';
 interface ColorPickerProps {
    value: string;
    onChange: (hex: string) => void;
+   /** Enable the opacity channel: adds an alpha slider and widens the emitted hex to `#RRGGBBAA`. */
+   alpha?: boolean;
 }
 
 // Package token -> app theme token. Thumb rings, mono font, and sizes keep the package defaults,
@@ -32,6 +34,6 @@ const APP_THEME_TOKENS = {
    '--pqc-accent': 'var(--ring)',
 } as CSSProperties;
 
-export function ColorPicker({ value, onChange }: ColorPickerProps) {
-   return <PiquaColorPicker value={value} onChange={onChange} style={APP_THEME_TOKENS} />;
+export function ColorPicker({ value, onChange, alpha }: ColorPickerProps) {
+   return <PiquaColorPicker value={value} onChange={onChange} alpha={alpha} style={APP_THEME_TOKENS} />;
 }

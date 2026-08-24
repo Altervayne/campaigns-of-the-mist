@@ -25,9 +25,11 @@ interface ColorPopoverProps {
    onApply: (color: string | undefined) => void;
    /** Close the popover (used by the discrete swatch / remove actions). */
    onClose: () => void;
+   /** Enable the custom picker's opacity channel, so it emits `#RRGGBBAA`. */
+   alpha?: boolean;
 }
 
-export function ColorPopover({ activeColor, palette, recent, recentLabel, removeLabel, onApply, onClose }: ColorPopoverProps) {
+export function ColorPopover({ activeColor, palette, recent, recentLabel, removeLabel, onApply, onClose, alpha }: ColorPopoverProps) {
    const pickAndClose = (color: string) => { onApply(color); onClose(); };
 
    return (
@@ -55,7 +57,7 @@ export function ColorPopover({ activeColor, palette, recent, recentLabel, remove
 
          {/* Full custom picker */}
          <div className="border-t border-border p-2">
-            <ColorPicker value={activeColor ?? palette[0]} onChange={(color) => onApply(color)} />
+            <ColorPicker value={activeColor ?? palette[0]} onChange={(color) => onApply(color)} alpha={alpha} />
          </div>
 
          {/* Remove color (hidden when no label is supplied - e.g. a connection always has a color) */}

@@ -95,6 +95,10 @@ function renderLayer(overrides: {
          penPreview={null}
          polygonPreview={null}
          transform={null}
+         strokeStyleToolbar={null}
+         onPreviewStrokeStyle={() => {}}
+         onCommitStrokeStyle={() => {}}
+         onFlipStrokes={() => {}}
          penSettings={{ brush: 'pen', color: null, width: 2, shapeBase: 'circle', shapeFilled: false }}
          activeTool="select"
          focusLayer={undefined}

@@ -16,6 +16,8 @@ import { withBackgroundTexture } from '@/lib/board/boardBackgroundStyle';
 import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableRegistry';
 import { PendingEraseContext, EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
+import { StrokeStylePreviewContext } from '@/lib/board/StrokeStylePreviewContext';
+import { foldStrokeStyle, strokesWorldAABB } from '@/lib/board/strokeStyle';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';
@@ -24,6 +26,7 @@ import { useBoardSelection } from '@/hooks/board/useBoardSelection';
 import { useBoardPointerInteraction } from '@/hooks/board/useBoardPointerInteraction';
 import { useBoardDrawing } from '@/hooks/board/useBoardDrawing';
 import { useBoardTransform } from '@/hooks/board/useBoardTransform';
+import { useStrokeStyleEditing } from '@/hooks/board/useStrokeStyleEditing';
 import { useBoardCreation } from '@/hooks/board/useBoardCreation';
 import { useBoardRadial } from '@/hooks/board/useBoardRadial';
 import { useBoardLayers } from '@/hooks/board/useBoardLayers';
@@ -238,6 +241,7 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       preview: transformPreview,
       marquee: transformMarquee,
       handleTransformPointerDown,
+      flipSelection,
       resetForBoard: resetTransformForBoard,
    } = useBoardTransform({
       store,
@@ -250,6 +254,9 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       activeLayerId,
       setActiveLayerId,
    });
+
+   // The Transform tool's STYLE half: a live style patch previewed on the layer + the one committed write.
+   const { stylePreview, previewStyle, commitStyle } = useStrokeStyleEditing({ store, actions, selection: transformSelection });
 
    // Board switches keep this canvas mounted (a new `store` prop, no remount), so the tool/layer + drawing
    // state would leak across boards; reset them when the loaded board id changes.
@@ -612,7 +619,20 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
    const layerRank = new Map(spatialItems.map((item, index) => [item.id, index]));
    const layerCount = spatialItems.length;
 
+   // The Transform tool's style toolbar: shown over the selection's world bbox while a selection stands and no
+   // geometry drag is in flight (so the bar never floats off a stale box mid-transform). Carries the folded
+   // style (mixed markers included) that drives its controls.
+   const transformLayer = transformSelection ? items[transformSelection.layerId] ?? null : null;
+   const strokeStyleToolbar =
+      activeTool === 'transform' && transformSelection && transformLayer && transformLayer.content.kind === 'drawing' && !transformPreview
+         ? (() => {
+              const bbox = strokesWorldAABB(transformLayer, transformLayer.content.strokes, transformSelection.strokeIds);
+              return bbox ? { bbox, fold: foldStrokeStyle(transformLayer.content.strokes, transformSelection.strokeIds) } : null;
+           })()
+         : null;
+
    return (
+      <StrokeStylePreviewContext.Provider value={stylePreview}>
       <PendingEraseContext.Provider value={pendingErase}>
       <DrawingFocusContext.Provider value={focusLayerId}>
       <div
@@ -657,6 +677,10 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
             penPreview={penPreview}
             polygonPreview={polygonPreview}
             transform={activeTool === 'transform' ? { layer: transformSelection ? items[transformSelection.layerId] ?? null : null, strokeIds: transformSelection?.strokeIds ?? EMPTY_STROKE_IDS, preview: transformPreview, marquee: transformMarquee } : null}
+            strokeStyleToolbar={strokeStyleToolbar}
+            onPreviewStrokeStyle={previewStyle}
+            onCommitStrokeStyle={commitStyle}
+            onFlipStrokes={flipSelection}
             penSettings={penSettings}
             activeTool={activeTool}
             focusLayer={focusLayer}
@@ -835,5 +859,6 @@ export function BoardCanvas({ store }: { store: BoardStore }) {
       )}
       </DrawingFocusContext.Provider>
       </PendingEraseContext.Provider>
+      </StrokeStylePreviewContext.Provider>
    );
 }

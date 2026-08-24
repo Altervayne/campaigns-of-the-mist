@@ -15,6 +15,7 @@ import { useToolbarMetrics } from '@/hooks/board/useToolbarMetrics';
 import { BoardItemBox } from '../BoardItemBox';
 import { BoardConnectionsLayer } from '../BoardConnectionsLayer';
 import { BoardGroupToolbar } from '../BoardGroupToolbar';
+import { BoardStrokeStyleToolbarSlot } from './BoardStrokeStyleToolbarSlot';
 import { BoardTransformOverlay } from '../BoardTransformOverlay';
 import { StrokeShape } from '../items/BoardDrawingItem';
 import { SnapOverlay } from './SnapOverlay';
@@ -26,6 +27,7 @@ import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
 import type { WorldRect } from '@/lib/board/drawingStyle';
 import type { Mat } from '@/lib/board/strokeTransform';
+import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/board/strokeStyle';
 import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries
@@ -71,6 +73,11 @@ interface BoardItemsLayerProps {
    /** The Transform tool's live selection + previews (null off the tool): the selected layer, its selected
     *  stroke ids, the in-flight local transform matrix, and the world-space marquee rect. */
    transform: { layer: BoardItem | null; strokeIds: ReadonlySet<string>; preview: Mat | null; marquee: WorldRect | null } | null;
+   /** The Transform tool's style toolbar: the selection's world bbox (its anchor) + folded style; null when hidden. */
+   strokeStyleToolbar: { bbox: { x: number; y: number; width: number; height: number }; fold: StrokeStyleFold } | null;
+   onPreviewStrokeStyle: (patch: StrokeStylePatch) => void;
+   onCommitStrokeStyle: (patch: StrokeStylePatch) => void;
+   onFlipStrokes: (axis: 'x' | 'y') => void;
    penSettings: { brush: BrushKind; color: string | null; width: number; shapeBase: 'circle' | 'square'; shapeFilled: boolean };
    activeTool: ActiveTool;
    focusLayer: BoardItem | undefined;
@@ -128,6 +135,10 @@ export function BoardItemsLayer({
    penPreview,
    polygonPreview,
    transform,
+   strokeStyleToolbar,
+   onPreviewStrokeStyle,
+   onCommitStrokeStyle,
+   onFlipStrokes,
    penSettings,
    activeTool,
    focusLayer,
@@ -358,6 +369,11 @@ export function BoardItemsLayer({
                   onDistribute={onDistribute}
                />
             </div>
+         )}
+
+         {/* Transform style toolbar over the stroke selection's world bbox: recolor / width / brush / fill / flip. */}
+         {strokeStyleToolbar && (
+            <BoardStrokeStyleToolbarSlot toolbar={strokeStyleToolbar} viewport={viewport} clipWidth={clipWidth} clipHeight={clipHeight} layerCount={layerCount} onPreviewStyle={onPreviewStrokeStyle} onCommitStyle={onCommitStrokeStyle} onFlip={onFlipStrokes} />
          )}
       </div>
       </>

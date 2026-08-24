@@ -1,7 +1,9 @@
 // -- Utils Imports --
 import { strokePaint } from '@/lib/board/drawingStyle';
+import { applyStylePatchToStrokes } from '@/lib/board/strokeStyle';
 import { usePendingErase } from '@/lib/board/PendingEraseContext';
 import { useDrawingFocus } from '@/lib/board/DrawingFocusContext';
+import { useStrokeStylePreview } from '@/lib/board/StrokeStylePreviewContext';
 
 // -- Type Imports --
 import type { StrokePaintInput } from '@/lib/board/drawingStyle';
@@ -35,7 +37,11 @@ export function BoardDrawingItem({ id, content }: { id: string; content: Drawing
    // Strokes the eraser has crossed mid-scrub vanish on contact; the removal only becomes real when the
    // scrub commits. An idle board sees an empty set and skips the filter.
    const hidden = usePendingErase();
-   const strokes = hidden.size === 0 ? content.strokes : content.strokes.filter((stroke) => !hidden.has(stroke.id));
+   const visible = hidden.size === 0 ? content.strokes : content.strokes.filter((stroke) => !hidden.has(stroke.id));
+   // A live style edit (a color / width drag on the transform toolbar) previews on this layer's selected
+   // strokes without a store write; the write lands on release. Off (null) whenever nothing is being adjusted.
+   const stylePreview = useStrokeStylePreview();
+   const strokes = stylePreview && stylePreview.layerId === id ? applyStylePatchToStrokes(visible, stylePreview.strokeIds, stylePreview.patch) : visible;
    // While a drawing gesture is armed, every OTHER drawing layer dims so the active append target reads
    // full-strength. Off (id null) whenever the cue is inactive, so nothing dims.
    const focusId = useDrawingFocus();

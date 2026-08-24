@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type PointerEv
 // -- Utils Imports --
 import { pointsBounds, strokeHitsPoint, strokeIntersectsRect, type WorldRect } from '@/lib/board/drawingStyle';
 import { rotateVec } from '@/lib/board/boardRotation';
-import { applyMatrixToPoints, translate, type Mat } from '@/lib/board/strokeTransform';
+import { applyMatrixToPoints, flip, translate, type Mat } from '@/lib/board/strokeTransform';
 import { HANDLE_HIT_PX, MIN_HANDLE_BOX_PX, ROTATE_STALK_PX, handleLayoutBox, handleMatrix, pickHandle, type HandleId } from '@/lib/board/strokeHandles';
 
 // -- Type Imports --
@@ -150,6 +150,21 @@ export function useBoardTransform({
       );
       void actions.transformStrokes(layerId, nextStrokes);
    }, [store, actions]);
+
+   /**
+    * Mirrors the selection about its bounding-box center on the given axis - a style-toolbar Flip button.
+    * Runs through the SAME geometry commit as a handle drag (`commitMatrix` -> `transformStrokes`), so the
+    * flip co-writes the box (rotation compensation for free) and lands as ONE undo step.
+    */
+   const flipSelection = useCallback((axis: 'x' | 'y') => {
+      if (!selection) return;
+      const layer = store.getState().items[selection.layerId];
+      if (!layer || layer.content.kind !== 'drawing') return;
+      const bounds = selectionLocalBounds(layer.content.strokes, selection.strokeIds);
+      if (!bounds) return;
+      const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
+      commitMatrix(selection.layerId, selection.strokeIds, flip(axis, center));
+   }, [selection, store, commitMatrix]);
 
    /**
     * Transform-overlay pointerdown, geometry-resolved in priority order: the pan escape hatch first
@@ -349,6 +364,7 @@ export function useBoardTransform({
       preview,
       marquee,
       handleTransformPointerDown,
+      flipSelection,
       resetForBoard,
    };
 }

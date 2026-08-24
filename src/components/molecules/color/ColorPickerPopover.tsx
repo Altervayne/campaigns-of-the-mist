@@ -30,9 +30,11 @@ interface ColorPickerPopoverProps {
    /** Omit to hide the remove action (e.g. a connection always keeps a color). */
    removeLabel?: string;
    onApply: (color: string | undefined) => void;
+   /** Enable the custom picker's opacity channel, so it emits `#RRGGBBAA` (e.g. per-stroke ink alpha). */
+   alpha?: boolean;
 }
 
-export function ColorPickerPopover({ open, onOpenChange, trigger, activeColor, palette, recent, recentLabel, removeLabel, onApply }: ColorPickerPopoverProps) {
+export function ColorPickerPopover({ open, onOpenChange, trigger, activeColor, palette, recent, recentLabel, removeLabel, onApply, alpha }: ColorPickerPopoverProps) {
    return (
       // Modal so a dismissing outside-click is consumed by Radix (close + commit-on-close) and never
       // reaches the canvas to deselect the host - which would force-unmount the popover before its
@@ -57,6 +59,7 @@ export function ColorPickerPopover({ open, onOpenChange, trigger, activeColor, p
                removeLabel={removeLabel}
                onApply={onApply}
                onClose={() => onOpenChange(false)}
+               alpha={alpha}
             />
          </PopoverContent>
       </Popover>
