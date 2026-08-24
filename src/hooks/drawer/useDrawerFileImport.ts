@@ -67,14 +67,20 @@ export function useDrawerFileImport(currentFolderId: string | null) {
          }
 
          // A PDF files as a game-agnostic drawer item, its bytes stored content-addressed. Parse FIRST so a
-         // corrupt or encrypted PDF throws (caught below) before any asset is stored - no orphan bytes, no item.
+         // corrupt or encrypted PDF throws before any asset is stored - no orphan bytes, no item. Parsing +
+         // hashing + storing a rulebook takes real time, so a loading toast stands in for it, then resolves.
          if (name.endsWith('.pdf')) {
-            const { pageCount, title } = await parsePdfFile(file);
-            const hash = await hashBytes(await file.arrayBuffer());
-            await storePdfAsset({ hash, blob: file, mimeType: 'application/pdf', byteSize: file.size });
-            const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, pageCount };
-            await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
-            toast.success(tNotifications('Notifications.drawer.importSuccess'));
+            const toastId = toast.loading(tNotifications('Notifications.pdf.importing'));
+            try {
+               const { pageCount, title } = await parsePdfFile(file);
+               const hash = await hashBytes(await file.arrayBuffer());
+               await storePdfAsset({ hash, blob: file, mimeType: 'application/pdf', byteSize: file.size });
+               const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, pageCount };
+               await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
+               toast.success(tNotifications('Notifications.drawer.importSuccess'), { id: toastId });
+            } catch {
+               toast.error(tNotifications('Notifications.general.importFailed'), { id: toastId });
+            }
             return;
          }
 

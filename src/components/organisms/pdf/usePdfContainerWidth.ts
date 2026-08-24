@@ -11,9 +11,11 @@ export function usePdfContainerWidth(ref: RefObject<HTMLElement | null>): number
    useEffect(() => {
       const el = ref.current;
       if (!el) return;
+      // Round to whole px so a sub-pixel ResizeObserver jitter never re-fits (which would cancel and
+      // restart a page's in-flight render).
       const observer = new ResizeObserver((entries) => {
          const entry = entries[0];
-         if (entry) setWidth(entry.contentRect.width);
+         if (entry) setWidth(Math.round(entry.contentRect.width));
       });
       observer.observe(el);
       setWidth(el.clientWidth);

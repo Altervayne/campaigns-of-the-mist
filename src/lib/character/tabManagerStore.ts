@@ -624,8 +624,10 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
             return;
          }
          const instance = getOrCreatePdfInstance(pdfId);
-         await instance.getState().actions.hydrate(pdfId);
+         // Show the tab (and the reader's loading state) BEFORE the slow parse, so opening a big rulebook
+         // reads as "loading" rather than a frozen drag. `hydrate` fills the surface in once ready.
          appendAndActivatePdf(pdfId);
+         await instance.getState().actions.hydrate(pdfId);
       },
       closeTab: (id) => {
          const { openTabs, activeTabId } = useTabManagerStore.getState();

@@ -1,5 +1,5 @@
 // -- React Imports --
-import { useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -71,12 +71,30 @@ interface PdfReaderProps {
 function PdfReader({ proxy, pageCount, currentPage, onCurrentPage }: PdfReaderProps) {
    const scrollRef = useRef<HTMLDivElement>(null);
    const columnRef = useRef<HTMLDivElement>(null);
+   // The reading position to restore on (re)mount: the page the instance kept, frozen at mount so live
+   // scrolling never moves the target. Seeded into the visible set so its canvas renders from the first
+   // frame instead of flashing white until the observer catches up.
+   const [restoreToPage] = useState(currentPage);
    const contentWidth = usePdfContainerWidth(columnRef);
    const defaultAspect = usePdfDefaultAspect(proxy);
-   const { visible, registerPage } = useVisiblePages(scrollRef, pageCount, onCurrentPage);
+   const { visible, registerPage } = useVisiblePages(scrollRef, pageCount, onCurrentPage, restoreToPage);
 
    const pageWidth = Math.min(contentWidth, MAX_PAGE_WIDTH);
    const pages = useMemo(() => Array.from({ length: pageCount }, (_, index) => index + 1), [pageCount]);
+
+   // The surface unmounts on a tab switch and remounts here, so scroll to the restored page once the pages
+   // have a measured height. A layout effect (before paint) lands the scroll before the observer's first
+   // pass, so the seeded page stays mounted and never flashes. One-shot, so it never fights live scrolling.
+   const restored = useRef(false);
+   useLayoutEffect(() => {
+      if (restored.current || pageWidth <= 0) return;
+      restored.current = true;
+      const scroller = scrollRef.current;
+      const box = scroller?.querySelector<HTMLElement>(`[data-page="${restoreToPage}"]`);
+      if (scroller && box && restoreToPage > 1) {
+         scroller.scrollTop += box.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      }
+   }, [pageWidth, restoreToPage]);
 
    return (
       <div className="absolute inset-0 bg-muted/40">

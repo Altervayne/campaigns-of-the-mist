@@ -569,6 +569,9 @@
          "importedMarkdown": "Markdown file imported successfully.",
          "updated": "Note updated from file."
       },
+      "pdf": {
+         "importing": "Importing PDF…"
+      },
       "link": {
          "targetNotFound": "That link's target no longer exists."
       },

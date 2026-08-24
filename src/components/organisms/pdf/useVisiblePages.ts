@@ -26,13 +26,16 @@ interface VisiblePages {
  * @param rootRef - The scroll container the pages live in.
  * @param pageCount - Total pages; re-arms the observers when the document changes.
  * @param onCurrentPage - Called with the page most in view whenever it changes.
+ * @param initialPage - The page to seed as visible, so a restored reading position renders THAT page first,
+ *   before the observer adds its off-screen neighbours - what the reader is looking at paints soonest.
  */
 export function useVisiblePages(
    rootRef: RefObject<HTMLElement | null>,
    pageCount: number,
    onCurrentPage: (page: number) => void,
+   initialPage = 1,
 ): VisiblePages {
-   const [visible, setVisible] = useState<Set<number>>(() => new Set([1]));
+   const [visible, setVisible] = useState<Set<number>>(() => new Set([Math.min(Math.max(initialPage, 1), pageCount)]));
    const elements = useRef(new Map<number, HTMLElement>());
    const ratios = useRef(new Map<number, number>());
    const currentPage = useRef(1);

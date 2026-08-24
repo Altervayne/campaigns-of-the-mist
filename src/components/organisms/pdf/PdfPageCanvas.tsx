@@ -1,6 +1,9 @@
 // -- React Imports --
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// -- Icon Imports --
+import { LoaderCircle } from 'lucide-react';
+
 // -- Type Imports --
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 
@@ -28,13 +31,18 @@ interface PdfPageCanvasProps {
 export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, registerPage }: PdfPageCanvasProps) {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [aspect, setAspect] = useState(defaultAspect);
+   const [rendering, setRendering] = useState(false);
 
    const boxRef = useCallback((el: HTMLElement | null) => registerPage(pageNumber, el), [pageNumber, registerPage]);
 
    useEffect(() => {
-      if (!isVisible || width <= 0) return;
+      if (!isVisible || width <= 0) {
+         setRendering(false);
+         return;
+      }
       let cancelled = false;
       let renderTask: RenderTask | null = null;
+      setRendering(true);
 
       void (async () => {
          try {
@@ -58,6 +66,9 @@ export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisib
             await renderTask.promise;
          } catch {
             // A cancelled render (unmount / re-fit) rejects here; nothing to surface.
+         } finally {
+            // Clear the spinner unless this run was superseded (unmount or a re-fit that starts a fresh one).
+            if (!cancelled) setRendering(false);
          }
       })();
 
@@ -73,10 +84,17 @@ export function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisib
          data-page={pageNumber}
          // The page sheet renders PDF content, which assumes white paper, so it stays white in every app
          // theme (the surrounding gutter is themed). The canvas fully covers it once rendered.
-         className="shrink-0 overflow-hidden bg-white shadow-md shadow-black/10"
+         className="relative shrink-0 overflow-hidden bg-white shadow-md shadow-black/10"
          style={{ width, height: Math.round(width * aspect) }}
       >
          {isVisible ? <canvas ref={canvasRef} className="block" /> : null}
+         {rendering ? (
+            // A heavy page can take seconds to rasterize; a spinner over the (white) sheet reads as loading
+            // rather than a frozen blank. Fixed grey since the sheet is always white, not app-themed.
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+               <LoaderCircle className="h-6 w-6 animate-spin text-black/30" />
+            </div>
+         ) : null}
       </div>
    );
 }
