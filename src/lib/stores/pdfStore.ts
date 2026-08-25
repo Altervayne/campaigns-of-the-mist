@@ -7,6 +7,9 @@ import { recordToPdfDocument } from '@/lib/pdf/pdfRecords';
 import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
 
+// -- Store Imports --
+import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
+
 // -- Utility Imports --
 import { createDebouncer } from '@/lib/utils/createDebouncer';
 
@@ -21,8 +24,9 @@ import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
  * ANNOTATIONS are the one writable path, autosaving to both the working row and the linked drawer
  * copy (an open PDF is always drawer-backed). It also holds the ephemeral markup tool state (the
  * read/markup mode, the active tool, and the pen params), which - like `zoom` - lives with the
- * instance and is reset on dispose but never persisted. It mirrors the per-instance factory shape
- * of the note/board stores (one store per open PDF).
+ * instance and is reset on dispose but never persisted. The annotation undo/redo history (snapshot
+ * stacks of prior annotation maps) is likewise ephemeral per-instance state. It mirrors the
+ * per-instance factory shape of the note/board stores (one store per open PDF).
  *
  * The store owns a native resource: the pdf.js document (a worker transport). It keeps the
  * `loadingTask` so `dispose` can tear it down (`loadingTask.destroy()` - the proxy itself has no
@@ -35,6 +39,16 @@ export const MAX_ZOOM = 2;
 
 /** How long an annotation edit settles before it is written back to the pdf row + drawer copy. */
 const PDF_SAVE_DEBOUNCE_MS = 400;
+
+/** Deepest the undo stack grows; the oldest snapshot drops once it is exceeded. */
+const UNDO_STACK_CAP = 50;
+
+/** Appends to a snapshot stack, dropping the oldest entry once the cap is passed. */
+function pushCapped<T>(stack: T[], entry: T, cap: number): T[] {
+   const next = [...stack, entry];
+   if (next.length > cap) next.shift();
+   return next;
+}
 
 /** Distributes `Omit` across a union so each member drops the keys independently. */
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
@@ -99,6 +113,14 @@ export interface PdfState {
    highlightColor: string;
    /** The comment region's outline/fill hex; ephemeral. Real hex - user content on white paper. */
    commentColor: string;
+   /**
+    * Annotation undo history: prior annotation maps, newest last. Every annotation map is a whole-object
+    * replacement, so a snapshot is just the pre-op map; unchanged annotation objects are shared across
+    * snapshots (structural sharing). Ephemeral, capped at {@link UNDO_STACK_CAP}, never persisted.
+    */
+   undoStack: Array<Record<string, PdfAnnotation>>;
+   /** Redo history: annotation maps popped by {@link PdfState.actions.undo}. Cleared by any fresh mutation. Ephemeral. */
+   redoStack: Array<Record<string, PdfAnnotation>>;
    status: PdfStatus;
    actions: {
       /**
@@ -137,6 +159,26 @@ export interface PdfState {
       /** Removes an annotation and debounce-persists the change. No-op if absent. */
       removeAnnotation: (id: string) => void;
       /**
+       * Opens an undo checkpoint: captures the current annotation map and takes undo focus (marks pdf the
+       * last-modified store). Pairs with {@link commitHistory}; a second call before commit just re-captures.
+       */
+      beginHistory: () => void;
+      /**
+       * Closes the open checkpoint. Pushes the captured map onto the undo stack (capped) and clears the redo
+       * stack only when the map was actually replaced since {@link beginHistory}; an untouched gesture pushes
+       * nothing.
+       */
+      commitHistory: () => void;
+      /**
+       * Drops an open checkpoint WITHOUT pushing it - for a deferred create that was abandoned (an empty
+       * comment self-deleted on close), so the add-then-remove leaves no undo step.
+       */
+      cancelHistory: () => void;
+      /** Restores the previous annotation map (moving the current onto the redo stack) and debounce-persists it. No-op with no undo step. */
+      undo: () => void;
+      /** Reapplies the next annotation map (moving the current onto the undo stack) and debounce-persists it. No-op with no redo step. */
+      redo: () => void;
+      /**
        * Immediately persists the current annotations onto the row + drawer copy AND disarms any pending
        * debounce. The reader calls this on unmount (a tab switch fires no blur), and the close path calls it
        * before reaping the row, so the last stroke lands and no stale timer can fire late. Awaitable.
@@ -147,7 +189,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'undoStack' | 'redoStack' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -162,6 +204,8 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    penWidth: DEFAULT_PEN_WIDTH,
    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
    commentColor: DEFAULT_COMMENT_COLOR,
+   undoStack: [],
+   redoStack: [],
    status: 'idle',
 };
 
@@ -178,6 +222,12 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
       const debouncedSave = createDebouncer<PdfDocument>(saveDebounceMs, (doc) => {
          void savePdfToLinkedDrawerItem(doc, get().drawerItemId).catch(console.error);
       });
+
+      // Open undo checkpoint. `pendingSnapshot` is the restore target (null when no checkpoint is open);
+      // `pendingBaseline` is the raw annotation-map ref at begin, so an actual map swap is detected by
+      // reference even when the starting map is `undefined`. Closure state, not reactive (like `debouncedSave`).
+      let pendingSnapshot: Record<string, PdfAnnotation> | null = null;
+      let pendingBaseline: Record<string, PdfAnnotation> | undefined;
 
       return {
          ...initialState,
@@ -275,6 +325,50 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                debouncedSave.run(next);
             },
 
+            beginHistory: () => {
+               pendingBaseline = get().doc?.annotations;
+               pendingSnapshot = pendingBaseline ?? {};
+               // Drawing a mark pulls undo focus off the drawer onto this pdf (mirrors the board).
+               useAppGeneralStateStore.getState().actions.setLastModifiedStore('pdf');
+            },
+
+            commitHistory: () => {
+               if (pendingSnapshot === null) return;
+               // A real op replaced the map object; an untouched gesture leaves the same ref, so push nothing.
+               if (get().doc?.annotations !== pendingBaseline) {
+                  const snapshot = pendingSnapshot;
+                  set((state) => ({ undoStack: pushCapped(state.undoStack, snapshot, UNDO_STACK_CAP), redoStack: [] }));
+               }
+               pendingSnapshot = null;
+            },
+
+            cancelHistory: () => {
+               pendingSnapshot = null;
+            },
+
+            undo: () => {
+               const { doc, undoStack, redoStack } = get();
+               if (!doc || undoStack.length === 0) return;
+               const snapshot = undoStack[undoStack.length - 1];
+               const current = doc.annotations ?? {};
+               const next: PdfDocument = { ...doc, annotations: snapshot };
+               // Drop any half-open checkpoint so a stray gesture can't bleed into the restored state.
+               pendingSnapshot = null;
+               set({ doc: next, undoStack: undoStack.slice(0, -1), redoStack: [...redoStack, current] });
+               debouncedSave.run(next);
+            },
+
+            redo: () => {
+               const { doc, undoStack, redoStack } = get();
+               if (!doc || redoStack.length === 0) return;
+               const snapshot = redoStack[redoStack.length - 1];
+               const current = doc.annotations ?? {};
+               const next: PdfDocument = { ...doc, annotations: snapshot };
+               pendingSnapshot = null;
+               set({ doc: next, redoStack: redoStack.slice(0, -1), undoStack: [...undoStack, current] });
+               debouncedSave.run(next);
+            },
+
             flush: () => {
                // Disarm the pending debounce FIRST, then write now: a still-armed timer holds a stale
                // snapshot that would fire late and clobber a fresher edit after a revisit.
@@ -289,6 +383,7 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             dispose: () => {
                const { loadingTask } = get();
                if (loadingTask) void loadingTask.destroy();
+               pendingSnapshot = null;
                set({ ...initialState });
             },
          },

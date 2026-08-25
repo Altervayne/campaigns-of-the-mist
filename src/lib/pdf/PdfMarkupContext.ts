@@ -51,6 +51,10 @@ export interface PdfMarkupContextValue {
    setCommentBody: (id: string, body: string) => void;
    /** Removes a comment outright and closes its editor. */
    deleteComment: (id: string) => void;
+   /** Opens an undo checkpoint before a store-mutating gesture. Pairs with {@link commitHistory}. */
+   beginHistory: () => void;
+   /** Closes the open checkpoint, recording an undo step only when the gesture changed the annotations. */
+   commitHistory: () => void;
 }
 
 /** The read-mode default: no marking, no-op sinks. Consumers gate on `mode` before ever calling them. */
@@ -71,6 +75,8 @@ const READ_ONLY_VALUE: PdfMarkupContextValue = {
    closeComment: () => {},
    setCommentBody: () => {},
    deleteComment: () => {},
+   beginHistory: () => {},
+   commitHistory: () => {},
 };
 
 export const PdfMarkupContext = createContext<PdfMarkupContextValue>(READ_ONLY_VALUE);

@@ -41,6 +41,11 @@ export function PdfCommentPopover({ comment, onChangeBody, onDelete }: PdfCommen
             value={comment.body}
             placeholder={t('PdfMarkup.commentPlaceholder')}
             onChange={(event) => onChangeBody(event.target.value)}
+            // Keep Ctrl/Cmd+Z / +Y from reaching the window-level shortcut so the field's own native
+            // undo/redo runs; an annotation undo must not fire while editing a comment.
+            onKeyDown={(event) => {
+               if ((event.ctrlKey || event.metaKey) && (event.key === 'z' || event.key === 'y')) event.stopPropagation();
+            }}
             className="min-h-20 resize-none"
          />
          <div className="flex justify-end">

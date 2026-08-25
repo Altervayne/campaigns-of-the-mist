@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 // -- Local Imports --
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
 import { createPdfStore } from './pdfStore';
+import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import * as repository from '@/lib/pdf/pdfRepository';
 import { DRAWER_ROOT_PARENT_ID } from '@/lib/drawer/drawerRecords';
 
@@ -104,5 +105,147 @@ describe('pdf store annotations', () => {
    it('flush resolves without writing when no doc is loaded', async () => {
       const useStore = createPdfStore({ saveDebounceMs: 5 });
       await expect(useStore.getState().actions.flush()).resolves.toBeUndefined();
+   });
+});
+
+describe('pdf store annotation history', () => {
+   const inkAt = (id: string): PdfInk => ({ id, kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 });
+
+   it('undo reverts an add and redo reapplies it', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, commitHistory, undo, redo } = useStore.getState().actions;
+
+      beginHistory();
+      addAnnotation(ink);
+      commitHistory();
+      expect(useStore.getState().doc?.annotations).toEqual({ a1: ink });
+      expect(useStore.getState().undoStack).toHaveLength(1);
+
+      undo();
+      expect(useStore.getState().doc?.annotations).toEqual({});
+      expect(useStore.getState().undoStack).toHaveLength(0);
+      expect(useStore.getState().redoStack).toHaveLength(1);
+
+      redo();
+      expect(useStore.getState().doc?.annotations).toEqual({ a1: ink });
+      expect(useStore.getState().redoStack).toHaveLength(0);
+   });
+
+   it('beginHistory takes undo focus for the pdf', async () => {
+      const useStore = await seedStore(400);
+      useAppGeneralStateStore.getState().actions.setLastModifiedStore('drawer');
+      useStore.getState().actions.beginHistory();
+      expect(useAppGeneralStateStore.getState().lastModifiedStore).toBe('pdf');
+   });
+
+   it('an eraser scrub removing several marks is one undo step', async () => {
+      const useStore = await seedStore(400);
+      const a1 = inkAt('a1');
+      const a2 = inkAt('a2');
+      useStore.setState({ doc: { ...useStore.getState().doc!, annotations: { a1, a2 } } });
+      const { beginHistory, removeAnnotation, commitHistory, undo } = useStore.getState().actions;
+
+      // A scrub brackets one begin / one commit around every contact-removal.
+      beginHistory();
+      removeAnnotation('a1');
+      removeAnnotation('a2');
+      commitHistory();
+      expect(useStore.getState().undoStack).toHaveLength(1);
+      expect(useStore.getState().doc?.annotations).toEqual({});
+
+      undo();
+      expect(useStore.getState().doc?.annotations).toEqual({ a1, a2 });
+   });
+
+   it('a gesture that changes nothing records no step', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, commitHistory } = useStore.getState().actions;
+
+      // A scrub over empty space (never-marked page: annotations still undefined) mutates nothing.
+      beginHistory();
+      commitHistory();
+      expect(useStore.getState().undoStack).toHaveLength(0);
+      expect(useStore.getState().redoStack).toHaveLength(0);
+   });
+
+   it('cancelHistory drops an open checkpoint so an abandoned add leaves no step', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, removeAnnotation, cancelHistory } = useStore.getState().actions;
+
+      // A comment created then abandoned empty: add under an open checkpoint, then remove and cancel.
+      beginHistory();
+      addAnnotation(inkAt('a1'));
+      removeAnnotation('a1');
+      cancelHistory();
+      expect(useStore.getState().undoStack).toHaveLength(0);
+      expect(useStore.getState().doc?.annotations).toEqual({});
+   });
+
+   it('a checkpoint left open by begin commits on a later commitHistory', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, commitHistory, undo } = useStore.getState().actions;
+
+      // A comment authored across two calls: add on create (checkpoint stays open), commit on close.
+      beginHistory();
+      addAnnotation(inkAt('a1'));
+      commitHistory();
+      expect(useStore.getState().undoStack).toHaveLength(1);
+
+      undo();
+      expect(useStore.getState().doc?.annotations).toEqual({});
+   });
+
+   it('a fresh mutation after an undo clears the redo stack', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, commitHistory, undo } = useStore.getState().actions;
+
+      beginHistory();
+      addAnnotation(inkAt('a1'));
+      commitHistory();
+      undo();
+      expect(useStore.getState().redoStack).toHaveLength(1);
+
+      beginHistory();
+      addAnnotation(inkAt('a2'));
+      commitHistory();
+      expect(useStore.getState().redoStack).toHaveLength(0);
+      expect(useStore.getState().undoStack).toHaveLength(1);
+   });
+
+   it('the undo stack caps at 50, dropping the oldest snapshot', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, commitHistory, undo } = useStore.getState().actions;
+
+      // 51 committed adds push 51 snapshots; the pre-first-add (empty) snapshot falls off the bottom.
+      for (let i = 1; i <= 51; i += 1) {
+         beginHistory();
+         addAnnotation(inkAt(`a${i}`));
+         commitHistory();
+      }
+      expect(useStore.getState().undoStack).toHaveLength(50);
+
+      // Undo the full stack: the earliest recoverable state is after the first add, not the empty page.
+      for (let i = 0; i < 50; i += 1) undo();
+      expect(Object.keys(useStore.getState().doc?.annotations ?? {})).toEqual(['a1']);
+      expect(useStore.getState().undoStack).toHaveLength(0);
+   });
+
+   it('undo and redo persist through the autosave', async () => {
+      const useStore = await seedStore(5);
+      const { beginHistory, addAnnotation, commitHistory, undo, redo, flush } = useStore.getState().actions;
+
+      beginHistory();
+      addAnnotation(ink);
+      commitHistory();
+      await flush();
+      expect(await rowAnnotations()).toEqual({ a1: ink });
+
+      undo();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(await rowAnnotations()).toEqual({});
+
+      redo();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(await rowAnnotations()).toEqual({ a1: ink });
    });
 });

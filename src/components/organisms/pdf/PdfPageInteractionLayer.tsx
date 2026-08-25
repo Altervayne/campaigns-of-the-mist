@@ -41,7 +41,7 @@ interface PdfPageInteractionLayerProps {
 }
 
 export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageInteractionLayerProps) {
-   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment } = usePdfMarkup();
+   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, beginHistory, commitHistory } = usePdfMarkup();
 
    // The in-flight pen stroke's normalized points, plus its preview mirror (state so only this layer repaints).
    const pointsRef = useRef<number[] | null>(null);
@@ -74,6 +74,8 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
       event.currentTarget.setPointerCapture(event.pointerId);
       lastScreen.current = { x: event.clientX, y: event.clientY };
       if (tool === 'eraser') {
+         // Bracket the whole scrub as one undo step; the store changes during the drag, unlike an atomic add.
+         beginHistory();
          eraseAt(pageNumber, rect, width, height, event.clientX, event.clientY);
          return;
       }
@@ -113,6 +115,11 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
    const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
       lastScreen.current = null;
+      if (tool === 'eraser') {
+         // Close the scrub's checkpoint; a scrub that hit nothing changed no map, so this records no step.
+         commitHistory();
+         return;
+      }
       if (isRectTool) {
          const start = rectStart.current;
          rectStart.current = null;
@@ -137,7 +144,7 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
       const buffer = pointsRef.current;
       pointsRef.current = null;
       setPreview(null);
-      if (tool === 'eraser' || !buffer || buffer.length < 4) return;
+      if (!buffer || buffer.length < 4) return;
       // Drop a near-stationary gesture (a stray dot): its denormalized path must clear the length floor.
       let length = 0;
       for (let i = 0; i < buffer.length - 2; i += 2) {

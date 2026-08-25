@@ -99,6 +99,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const penWidth = useStore(store, (state) => state.penWidth);
    const highlightColor = useStore(store, (state) => state.highlightColor);
    const commentColor = useStore(store, (state) => state.commentColor);
+   const canUndo = useStore(store, (state) => state.undoStack.length > 0);
+   const canRedo = useStore(store, (state) => state.redoStack.length > 0);
    const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor } = store.getState().actions;
 
    // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
@@ -118,7 +120,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             brush: 'pen',
             createdAt: Date.now(),
          };
-         store.getState().actions.addAnnotation(ink);
+         const actions = store.getState().actions;
+         actions.beginHistory();
+         actions.addAnnotation(ink);
+         actions.commitHistory();
       },
       [store],
    );
@@ -151,12 +156,17 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             rect,
             createdAt: Date.now(),
          };
-         store.getState().actions.addAnnotation(highlight);
+         const actions = store.getState().actions;
+         actions.beginHistory();
+         actions.addAnnotation(highlight);
+         actions.commitHistory();
       },
       [store],
    );
 
    // Mints an empty comment from a finished rect drag and opens its editor so the body can be authored at once.
+   // The history checkpoint stays OPEN until the editor closes: a bodied comment commits one undo step, an
+   // abandoned empty one cancels it (see closeComment), so a stray marquee never leaves a phantom step.
    const commitComment = useCallback(
       (pageNumber: number, rect: PdfRect) => {
          const id = cuid();
@@ -169,7 +179,9 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             rect,
             createdAt: Date.now(),
          };
-         store.getState().actions.addAnnotation(comment);
+         const actions = store.getState().actions;
+         actions.beginHistory();
+         actions.addAnnotation(comment);
          setOpenCommentId(id);
       },
       [store],
@@ -193,11 +205,18 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const openComment = useCallback((id: string) => setOpenCommentId(id), []);
 
    // Close path: an empty (never-authored or cleared) comment self-deletes, so a stray marquee leaves no ghost note.
+   // A freshly created comment holds an open history checkpoint (commitComment) - authored, it commits to one undo
+   // step; abandoned empty, it cancels so add-then-remove leaves no trace. A reopened comment has no open
+   // checkpoint, so commit/cancel are no-ops.
    const closeComment = useCallback(
       (id: string) => {
+         const actions = store.getState().actions;
          const comment = store.getState().doc?.annotations?.[id];
          if (comment && comment.kind === 'comment' && comment.body.trim() === '') {
-            store.getState().actions.removeAnnotation(id);
+            actions.removeAnnotation(id);
+            actions.cancelHistory();
+         } else {
+            actions.commitHistory();
          }
          setOpenCommentId((current) => (current === id ? null : current));
       },
@@ -209,9 +228,17 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
+   // History brackets for the eraser scrub, which mutates the store across a drag (unlike the atomic add
+   // handlers that begin/commit inline). Stable wrappers so an in-progress gesture never sees them swapped.
+   const beginHistory = useCallback(() => store.getState().actions.beginHistory(), [store]);
+   const commitHistory = useCallback(() => store.getState().actions.commitHistory(), [store]);
+
    const deleteComment = useCallback(
       (id: string) => {
-         store.getState().actions.removeAnnotation(id);
+         const actions = store.getState().actions;
+         actions.beginHistory();
+         actions.removeAnnotation(id);
+         actions.commitHistory();
          setOpenCommentId((current) => (current === id ? null : current));
       },
       [store],
@@ -235,8 +262,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          closeComment,
          setCommentBody,
          deleteComment,
+         beginHistory,
+         commitHistory,
       }),
-      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment],
+      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, beginHistory, commitHistory],
    );
 
    // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
@@ -399,6 +428,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   onHighlightColorChange={setHighlightColor}
                   commentColor={commentColor}
                   onCommentColorChange={setCommentColor}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={store.getState().actions.undo}
+                  onRedo={store.getState().actions.redo}
                />
             ) : null}
             <PdfToolbar

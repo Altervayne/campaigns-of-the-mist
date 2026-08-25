@@ -1,6 +1,7 @@
 // -- Store Imports --
 import { getActiveCharacterStore } from '@/lib/character/characterStoreRegistry';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
+import { getActivePdfStore } from '@/lib/pdf/pdfStoreRegistry';
 import { useDrawerStore } from '@/lib/stores/drawerStore';
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
@@ -11,10 +12,11 @@ import { drawerCommandEngine } from '@/lib/drawer/drawerCommandEngine';
  * Shared undo/redo routing for the whole app: the Ctrl/Cmd+Z / +Y shortcut and the palette both go
  * through these, so the target and precedence can't drift. Every read is fresh (nothing captured).
  *
- * Precedence: the drawer when it was the last store modified AND is open, else the active board, else the
- * active character (still zundo-based). Each target acts only when it has history; the drawer and board go
- * through their STORE ACTIONS so the folder view / canvas resyncs after the revert. No active target is a
- * no-op.
+ * Precedence: the drawer when it was the last store modified AND is open, else the active pdf, else the
+ * active board, else the active character (still zundo-based). A pdf tab parks the board/character, so pdf
+ * sits between the drawer (which still wins when it is the open, last-touched store) and the inert board
+ * branch. Each target acts only when it has history; the drawer, board, and pdf go through their STORE
+ * ACTIONS so the surface resyncs after the revert. No active target is a no-op.
  */
 
 /** True when the drawer owns undo/redo: it was the last store touched and it is open. */
@@ -26,6 +28,8 @@ function drawerHasFocus(): boolean {
 /** Whether the active context has an undo step available. */
 export function canUndoActiveContext(): boolean {
    if (drawerHasFocus()) return drawerCommandEngine.canUndo();
+   const pdfStore = getActivePdfStore();
+   if (pdfStore) return pdfStore.getState().undoStack.length > 0;
    const boardStore = getActiveBoardStore();
    if (boardStore) return boardStore.getState().canUndo;
    const temporal = getActiveCharacterStore()?.temporal.getState();
@@ -35,6 +39,8 @@ export function canUndoActiveContext(): boolean {
 /** Whether the active context has a redo step available. */
 export function canRedoActiveContext(): boolean {
    if (drawerHasFocus()) return drawerCommandEngine.canRedo();
+   const pdfStore = getActivePdfStore();
+   if (pdfStore) return pdfStore.getState().redoStack.length > 0;
    const boardStore = getActiveBoardStore();
    if (boardStore) return boardStore.getState().canRedo;
    const temporal = getActiveCharacterStore()?.temporal.getState();
@@ -45,6 +51,12 @@ export function canRedoActiveContext(): boolean {
 export function undoActiveContext(): void {
    if (drawerHasFocus()) {
       if (drawerCommandEngine.canUndo()) void useDrawerStore.getState().actions.undoDrawer();
+      return;
+   }
+   const pdfStore = getActivePdfStore();
+   if (pdfStore) {
+      const pdf = pdfStore.getState();
+      if (pdf.undoStack.length > 0) pdf.actions.undo();
       return;
    }
    const boardStore = getActiveBoardStore();
@@ -61,6 +73,12 @@ export function undoActiveContext(): void {
 export function redoActiveContext(): void {
    if (drawerHasFocus()) {
       if (drawerCommandEngine.canRedo()) void useDrawerStore.getState().actions.redoDrawer();
+      return;
+   }
+   const pdfStore = getActivePdfStore();
+   if (pdfStore) {
+      const pdf = pdfStore.getState();
+      if (pdf.redoStack.length > 0) pdf.actions.redo();
       return;
    }
    const boardStore = getActiveBoardStore();

@@ -9,7 +9,7 @@ import type { MobileNavAction, MobileNavSnapshot } from '@/lib/mobile/mobileNavT
 
 
 
-type StoreName = 'character' | 'drawer' | 'board' | 'note';
+type StoreName = 'character' | 'drawer' | 'board' | 'note' | 'pdf';
 
 export type MobileDrawerSnapPoint = 'closed' | 'half' | 'full';
 
