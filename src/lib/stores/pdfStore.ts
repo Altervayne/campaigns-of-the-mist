@@ -19,8 +19,10 @@ import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
  * Pdf store - the React-facing, in-memory view of ONE open PDF, backed by the pdf repository and
  * the pdf-asset store. The live pdf.js document plus the current page are read-only; markup
  * ANNOTATIONS are the one writable path, autosaving to both the working row and the linked drawer
- * copy (an open PDF is always drawer-backed). It mirrors the per-instance factory shape of the
- * note/board stores (one store per open PDF).
+ * copy (an open PDF is always drawer-backed). It also holds the ephemeral markup tool state (the
+ * read/markup mode, the active tool, and the pen params), which - like `zoom` - lives with the
+ * instance and is reset on dispose but never persisted. It mirrors the per-instance factory shape
+ * of the note/board stores (one store per open PDF).
  *
  * The store owns a native resource: the pdf.js document (a worker transport). It keeps the
  * `loadingTask` so `dispose` can tear it down (`loadingTask.destroy()` - the proxy itself has no
@@ -43,6 +45,18 @@ type PdfAnnotationPatch = Partial<DistributiveOmit<PdfAnnotation, 'kind' | 'id'>
 /** The load lifecycle of the open PDF. */
 export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+/** Whether the reader is a read-only viewer or accepts markup gestures. */
+export type PdfMarkupMode = 'read' | 'markup';
+
+/** The armed markup tool while in markup mode. */
+export type PdfTool = 'pen' | 'eraser';
+
+/** The pen's default ink: a legible rose on white paper. */
+const DEFAULT_PEN_COLOR = '#e11d48';
+
+/** The pen's default width, in the stroke-width selector's world px. */
+const DEFAULT_PEN_WIDTH = 3;
+
 export interface PdfState {
    /** The open PDF's id, or `null` before the first hydrate. */
    pdfId: string | null;
@@ -64,6 +78,14 @@ export interface PdfState {
    jumpSeq: number;
    /** The render scale multiplier over the fit-width base; ephemeral (kept with the instance, never persisted). */
    zoom: number;
+   /** Read-only viewer vs. markup gestures; ephemeral, defaults to `read` so a stray drag never scribbles. */
+   markupMode: PdfMarkupMode;
+   /** The armed markup tool; ephemeral. Meaningful only in markup mode. */
+   tool: PdfTool;
+   /** The pen's ink hex; ephemeral. Real hex - annotation ink is user content on white paper, not chrome. */
+   penColor: string;
+   /** The pen's width in the selector's world px; ephemeral. Normalized to a page-width fraction at commit. */
+   penWidth: number;
    status: PdfStatus;
    actions: {
       /**
@@ -83,6 +105,14 @@ export interface PdfState {
       requestPage: (page: number) => void;
       /** Sets the zoom multiplier, clamped to `[MIN_ZOOM, MAX_ZOOM]`. Ephemeral, never written to the row. */
       setZoom: (zoom: number) => void;
+      /** Switches between read-only viewing and markup. Ephemeral. */
+      setMarkupMode: (mode: PdfMarkupMode) => void;
+      /** Arms a markup tool. Ephemeral. */
+      setTool: (tool: PdfTool) => void;
+      /** Sets the pen's ink hex. Ephemeral. */
+      setPenColor: (color: string) => void;
+      /** Sets the pen's width (selector world px). Ephemeral. */
+      setPenWidth: (width: number) => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
       /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
@@ -100,7 +130,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -109,6 +139,10 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    currentPage: 1,
    jumpSeq: 0,
    zoom: 1,
+   markupMode: 'read',
+   tool: 'pen',
+   penColor: DEFAULT_PEN_COLOR,
+   penWidth: DEFAULT_PEN_WIDTH,
    status: 'idle',
 };
 
@@ -180,6 +214,14 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                const clamped = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
                set({ zoom: clamped });
             },
+
+            setMarkupMode: (mode) => set({ markupMode: mode }),
+
+            setTool: (tool) => set({ tool }),
+
+            setPenColor: (color) => set({ penColor: color }),
+
+            setPenWidth: (width) => set({ penWidth: width }),
 
             addAnnotation: (annotation) => {
                const { doc } = get();

@@ -26,6 +26,13 @@
       "fitWidth": "[TO COMPLETE]",
       "fitPage": "[TO COMPLETE]"
    },
+   "PdfMarkup": {
+      "markup": "[TO COMPLETE]",
+      "read": "[TO COMPLETE]",
+      "pen": "[TO COMPLETE]",
+      "eraser": "[TO COMPLETE]",
+      "inkColor": "[TO COMPLETE]"
+   },
    "Tabs": {
       "untitled": "Personnage sans nom",
       "untitledBoard": "Tableau sans titre",

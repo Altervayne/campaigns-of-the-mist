@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { useStore } from 'zustand';
+import cuid from 'cuid';
 
 // -- Icon Imports --
 import { FileWarning } from 'lucide-react';
@@ -12,6 +13,7 @@ import { FileWarning } from 'lucide-react';
 import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfPageCanvas } from './PdfPageCanvas';
 import { PdfToolbar } from './PdfToolbar';
+import { PdfMarkupToolbar } from './PdfMarkupToolbar';
 
 // -- Local Imports --
 import { usePdfContainerWidth } from './usePdfContainerWidth';
@@ -25,10 +27,12 @@ import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 
 // -- Utils Imports --
 import { groupAnnotationsByPage } from '@/lib/pdf/annotationGeometry';
+import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
+import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
 import type { PdfStore } from '@/lib/stores/pdfStore';
-import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 /*
@@ -47,6 +51,9 @@ const RENDER_SETTLE_MS = 400;
 
 /** Stable empty slice for a page with no annotations, so an unmarked page's prop ref never changes across zooms. */
 const NO_ANNOTATIONS: PdfAnnotation[] = [];
+
+/** The eraser's grab floor in box px; per-ink reach grows past it with the stroke width. */
+const ERASER_HIT_FLOOR = 8;
 
 export function PdfView() {
    const store = useActivePdfInstance();
@@ -85,7 +92,51 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const currentPage = useStore(store, (state) => state.currentPage);
    const jumpSeq = useStore(store, (state) => state.jumpSeq);
    const annotations = useStore(store, (state) => state.doc?.annotations);
-   const { setPage } = store.getState().actions;
+   const markupMode = useStore(store, (state) => state.markupMode);
+   const tool = useStore(store, (state) => state.tool);
+   const penColor = useStore(store, (state) => state.penColor);
+   const penWidth = useStore(store, (state) => state.penWidth);
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth } = store.getState().actions;
+
+   // Mints a pen ink from a finished gesture and hands it to the autosave path. Reads the live pen color at
+   // commit so the handler stays stable (never swapped mid-stroke); `store` is the only dependency.
+   const commitInk = useCallback(
+      (pageNumber: number, normalizedPoints: number[], normalizedWidth: number) => {
+         const ink: PdfInk = {
+            kind: 'ink',
+            id: cuid(),
+            page: pageNumber,
+            color: store.getState().penColor,
+            width: normalizedWidth,
+            points: normalizedPoints,
+            brush: 'pen',
+            createdAt: Date.now(),
+         };
+         store.getState().actions.addAnnotation(ink);
+      },
+      [store],
+   );
+
+   // Erases every annotation under a client point on one page. The point converts to UNZOOMED box px via the
+   // zoomed rect fraction, so the hit-test runs zoom-independently.
+   const eraseAt = useCallback(
+      (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
+         const marks = store.getState().doc?.annotations;
+         if (!marks) return;
+         const px = ((clientX - rect.left) / rect.width) * boxW;
+         const py = ((clientY - rect.top) / rect.height) * boxH;
+         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber);
+         const hits = annotationAtPoint(onPage, px, py, boxW, boxH, ERASER_HIT_FLOOR);
+         const { removeAnnotation } = store.getState().actions;
+         for (const id of hits) removeAnnotation(id);
+      },
+      [store],
+   );
+
+   const markup = useMemo<PdfMarkupContextValue>(
+      () => ({ mode: markupMode, tool, penColor, penWidth, commitInk, eraseAt }),
+      [markupMode, tool, penColor, penWidth, commitInk, eraseAt],
+   );
 
    // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
    // untouched) keeps every page's slice ref, and the page memos survive. Only the changed page's slice re-refs
@@ -211,43 +262,57 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    }, [zoomIn, zoomOut, resetZoom]);
 
    return (
-      <div className="absolute inset-0 bg-muted/40">
-         <div ref={scrollRef} className="h-full overflow-auto overscroll-contain px-4 py-6">
-            {/* Zero-height full-width probe: measures the scroller's content width independent of the page
-                column, which can grow wider than the container when zoomed. */}
-            <div ref={measureRef} className="h-0 w-full" />
-            {/* The live zoom rides a CSS `zoom` on the column (cheap, one element); the pages themselves stay at
-                the settled render width, so a wheel-zoom scales the whole column instantly and re-rasterizes once. */}
-            <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-4" style={{ zoom: columnZoom }}>
-               {renderWidth > 0 &&
-                  pages.map((pageNumber) => (
-                     <PdfPageCanvas
-                        key={pageNumber}
-                        proxy={proxy}
-                        pageNumber={pageNumber}
-                        width={renderWidth}
-                        defaultAspect={defaultAspect}
-                        isVisible={visible.has(pageNumber)}
-                        annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
-                        registerPage={registerPage}
-                     />
-                  ))}
+      <PdfMarkupContext.Provider value={markup}>
+         <div className="absolute inset-0 bg-muted/40">
+            <div ref={scrollRef} className="h-full overflow-auto overscroll-contain px-4 py-6">
+               {/* Zero-height full-width probe: measures the scroller's content width independent of the page
+                   column, which can grow wider than the container when zoomed. */}
+               <div ref={measureRef} className="h-0 w-full" />
+               {/* The live zoom rides a CSS `zoom` on the column (cheap, one element); the pages themselves stay at
+                   the settled render width, so a wheel-zoom scales the whole column instantly and re-rasterizes once. */}
+               <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-4" style={{ zoom: columnZoom }}>
+                  {renderWidth > 0 &&
+                     pages.map((pageNumber) => (
+                        <PdfPageCanvas
+                           key={pageNumber}
+                           proxy={proxy}
+                           pageNumber={pageNumber}
+                           width={renderWidth}
+                           defaultAspect={defaultAspect}
+                           isVisible={visible.has(pageNumber)}
+                           annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
+                           registerPage={registerPage}
+                        />
+                     ))}
+               </div>
             </div>
+            {markupMode === 'markup' ? (
+               <PdfMarkupToolbar
+                  tool={tool}
+                  onToolChange={setTool}
+                  penColor={penColor}
+                  onPenColorChange={setPenColor}
+                  penWidth={penWidth}
+                  onPenWidthChange={setPenWidth}
+               />
+            ) : null}
+            <PdfToolbar
+               current={currentPage}
+               total={pageCount}
+               zoom={zoom}
+               markupMode={markupMode}
+               onToggleMarkup={() => setMarkupMode(markupMode === 'read' ? 'markup' : 'read')}
+               onPrev={() => jumpToPage(currentPage - 1)}
+               onNext={() => jumpToPage(currentPage + 1)}
+               onJump={jumpToPage}
+               onZoomIn={zoomIn}
+               onZoomOut={zoomOut}
+               onResetZoom={resetZoom}
+               onFitWidth={fitWidth}
+               onFitPage={fitPage}
+            />
          </div>
-         <PdfToolbar
-            current={currentPage}
-            total={pageCount}
-            zoom={zoom}
-            onPrev={() => jumpToPage(currentPage - 1)}
-            onNext={() => jumpToPage(currentPage + 1)}
-            onJump={jumpToPage}
-            onZoomIn={zoomIn}
-            onZoomOut={zoomOut}
-            onResetZoom={resetZoom}
-            onFitWidth={fitWidth}
-            onFitPage={fitPage}
-         />
-      </div>
+      </PdfMarkupContext.Provider>
    );
 }
 

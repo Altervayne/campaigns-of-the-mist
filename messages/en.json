@@ -26,6 +26,13 @@
       "fitWidth": "Fit width",
       "fitPage": "Fit page"
    },
+   "PdfMarkup": {
+      "markup": "Mark up",
+      "read": "Done marking up",
+      "pen": "Pen",
+      "eraser": "Eraser",
+      "inkColor": "Ink color"
+   },
    "Tabs": {
       "untitled": "Untitled character",
       "untitledBoard": "Untitled board",

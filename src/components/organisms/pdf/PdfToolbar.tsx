@@ -3,7 +3,13 @@ import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, Minus, MoveHorizontal, Plus, Scan } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, MoveHorizontal, Pencil, Plus, Scan } from 'lucide-react';
+
+// -- Utils Imports --
+import { cn } from '@/lib/utils';
+
+// -- Type Imports --
+import type { PdfMarkupMode } from '@/lib/stores/pdfStore';
 
 /*
  * The reader's floating control bar, pinned bottom-center: page navigation (prev / jump-to input / next),
@@ -15,6 +21,8 @@ interface PdfToolbarProps {
    current: number;
    total: number;
    zoom: number;
+   markupMode: PdfMarkupMode;
+   onToggleMarkup: () => void;
    onPrev: () => void;
    onNext: () => void;
    /** Jumps to a page (clamped by the reader); called on Enter / blur of the page input. */
@@ -26,12 +34,29 @@ interface PdfToolbarProps {
    onFitPage: () => void;
 }
 
-export function PdfToolbar({ current, total, zoom, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
+export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
    const { t } = useTranslation();
 
    return (
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-         <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card/95 px-1.5 py-1 text-card-foreground shadow-md backdrop-blur-sm">
+         <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-card/95 px-1.5 py-1 text-card-foreground shadow-md backdrop-blur-sm">
+            {/* Markup toggle: leads the bar; the nav/zoom groups never move. */}
+            <button
+               type="button"
+               title={markupMode === 'markup' ? t('PdfMarkup.read') : t('PdfMarkup.markup')}
+               aria-label={markupMode === 'markup' ? t('PdfMarkup.read') : t('PdfMarkup.markup')}
+               aria-pressed={markupMode === 'markup'}
+               onClick={onToggleMarkup}
+               className={cn(
+                  'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded text-card-foreground hover:bg-muted',
+                  markupMode === 'markup' && 'bg-muted text-primary',
+               )}
+            >
+               <Pencil className="h-4 w-4" />
+            </button>
+
+            <Divider />
+
             {/* Page group */}
             <ToolbarButton title={t('PdfView.prevPage')} onClick={onPrev} disabled={current <= 1}>
                <ChevronLeft className="h-4 w-4" />
