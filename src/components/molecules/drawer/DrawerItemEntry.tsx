@@ -82,13 +82,10 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
                               <Move className="mr-2 h-4 w-4" />
                               <span>{t('Common.move')}</span>
                            </DropdownMenuItem>
-                           {/* A PDF has no export yet (its bytes ride no envelope), so it offers no Export. */}
-                           {item.type !== 'PDF' && (
                            <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
                               <Upload className="mr-2 h-4 w-4" />
                               <span>{t('Drawer.Actions.export')}</span>
                            </DropdownMenuItem>
-                           )}
                            <DropdownMenuItem onClick={onDelete} className="bg-destructive text-destructive-foreground cursor-pointer">
                               <Trash2 className="text-destructive-foreground mr-2 h-4 w-4" />
                               <span>{t('Drawer.Actions.delete')}</span>

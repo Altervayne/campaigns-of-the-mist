@@ -322,17 +322,15 @@ export default function MobileDrawerContextMenu({
                   {t('Common.move')}
                </Button>
 
-               {/* Export (a folder or any item except a PDF, whose bytes have no export envelope yet). */}
-               {item?.type !== 'PDF' && (
-                  <Button
-                     variant="ghost"
-                     className="w-full justify-start cursor-pointer"
-                     onClick={handleExport}
-                  >
-                     <Download className="w-4 h-4 mr-3" />
-                     {t('Drawer.Actions.export')}
-                  </Button>
-               )}
+               {/* Export */}
+               <Button
+                  variant="ghost"
+                  className="w-full justify-start cursor-pointer"
+                  onClick={handleExport}
+               >
+                  <Download className="w-4 h-4 mr-3" />
+                  {t('Drawer.Actions.export')}
+               </Button>
 
                {/* Delete */}
                <Button

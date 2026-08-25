@@ -10,7 +10,7 @@ import cuid from 'cuid';
 import { useFileDrop } from '@/hooks/useFileDrop';
 
 // -- Utils Imports --
-import { deriveDrawerFolderName, exportDrawer, importFromFile, readFileAsText } from '@/lib/utils/export-import';
+import { deriveDrawerFolderName, exportDrawer, importFromFile, isExportedPdf, readFileAsText } from '@/lib/utils/export-import';
 import { harmonizeData } from '@/lib/harmonization';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
@@ -114,10 +114,16 @@ export function useDrawerFileImport(currentFolderId: string | null) {
                break;
 
             case 'PDF':
-               // A PDF drawer item imports from a raw `.pdf` (handled above), never from a standalone `.cotm`
-               // (its bytes aren't embedded in the envelope), so reject a `PDF`-typed envelope rather than
-               // creating an item with missing bytes.
-               toast.error(tNotifications('Notifications.general.importFailed'));
+               // A PDF `.cotm` carries its bytes in the envelope's `pdfAssets` map (rehydrated by
+               // `importFromFile` before this point). Reject one missing those bytes rather than creating an
+               // item with a dangling `assetHash`; the content keeps its id/hash verbatim (not re-IDed) so
+               // the working round-trip still resolves.
+               if (!isExportedPdf(importedData)) {
+                  toast.error(tNotifications('Notifications.general.importFailed'));
+                  break;
+               }
+               await addImportedItem(migratedContent as DrawerItemContent, 'PDF', importedData.game, currentFolderId ?? undefined);
+               toast.success(tNotifications('Notifications.drawer.importSuccess'));
                break;
 
             default:
