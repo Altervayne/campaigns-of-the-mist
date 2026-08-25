@@ -39,7 +39,11 @@
       "commentColor": "[TO COMPLETE]",
       "markColor": "[TO COMPLETE]",
       "commentPlaceholder": "[TO COMPLETE]",
-      "deleteComment": "[TO COMPLETE]"
+      "deleteComment": "[TO COMPLETE]",
+      "comments": "[TO COMPLETE]",
+      "commentsTitle": "[TO COMPLETE]",
+      "commentsEmpty": "[TO COMPLETE]",
+      "commentPage": "[TO COMPLETE]"
    },
    "Tabs": {
       "untitled": "Personnage sans nom",

@@ -2,10 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, groupAnnotationsByPage, pdfInkToStrokePaintInput, rectFromCorners, translatePoints, translateRect } from './annotationGeometry';
+import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, groupAnnotationsByPage, listComments, pdfInkToStrokePaintInput, rectFromCorners, translatePoints, translateRect } from './annotationGeometry';
 
 // -- Type Imports --
-import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfComment, PdfInk } from '@/lib/types/pdfAnnotation';
 
 const ink = (id: string, page: number, createdAt: number, extra?: Partial<PdfInk>): PdfInk => ({
    id,
@@ -88,6 +88,37 @@ const mixed: Record<string, PdfAnnotation> = {
    h: { id: 'h', page: 2, createdAt: 1, kind: 'highlight', color: '#00ff00', rect: { x: 0, y: 0, w: 0.5, h: 0.5 }, alpha: 0.3 },
    c: { id: 'c', page: 2, createdAt: 2, kind: 'comment', color: '#0000ff', rect: { x: 0.1, y: 0.1, w: 0.2, h: 0.2 }, body: 'note' },
 };
+
+const comment = (id: string, page: number, x: number, y: number, body = 'note'): PdfComment => ({
+   id,
+   page,
+   createdAt: 1,
+   kind: 'comment',
+   color: '#0000ff',
+   rect: { x, y, w: 0.1, h: 0.1 },
+   body,
+});
+
+describe('listComments', () => {
+   it('returns an empty list for undefined', () => {
+      expect(listComments(undefined)).toEqual([]);
+   });
+
+   it('filters out non-comment kinds', () => {
+      const only = listComments({ i: ink('i', 1, 1), h: mixed.h, c: comment('c', 1, 0.2, 0.2) });
+      expect(only.map((x) => x.id)).toEqual(['c']);
+   });
+
+   it('orders by page, then top-to-bottom, then left-to-right', () => {
+      const ordered = listComments({
+         p2: comment('p2', 2, 0.1, 0.1),
+         low: comment('low', 1, 0.1, 0.6),
+         topRight: comment('topRight', 1, 0.8, 0.2),
+         topLeft: comment('topLeft', 1, 0.1, 0.2),
+      });
+      expect(ordered.map((x) => x.id)).toEqual(['topLeft', 'topRight', 'low', 'p2']);
+   });
+});
 
 describe('groupAnnotationsByPage (mixed kinds)', () => {
    it('keeps all kinds in one page bucket, createdAt-ordered', () => {

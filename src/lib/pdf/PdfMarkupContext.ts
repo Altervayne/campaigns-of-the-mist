@@ -53,6 +53,8 @@ export interface PdfMarkupContextValue {
    deleteComment: (id: string) => void;
    /** The selected annotation's id, or `null`. Drives the per-page selection chrome. */
    selectedId: string | null;
+   /** The comment briefly flashed after a comments-list jump, or `null`. Drives the per-page flash chrome. */
+   flashCommentId: string | null;
    /** Sets or clears the selection. */
    select: (id: string | null) => void;
    /**
@@ -87,6 +89,7 @@ const READ_ONLY_VALUE: PdfMarkupContextValue = {
    setCommentBody: () => {},
    deleteComment: () => {},
    selectedId: null,
+   flashCommentId: null,
    select: () => {},
    selectAt: () => null,
    translateSelected: () => {},

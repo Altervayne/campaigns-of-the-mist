@@ -39,7 +39,11 @@
       "commentColor": "Comment color",
       "markColor": "Mark color",
       "commentPlaceholder": "Add a comment…",
-      "deleteComment": "Delete"
+      "deleteComment": "Delete",
+      "comments": "Comments",
+      "commentsTitle": "Comments",
+      "commentsEmpty": "No comments yet.",
+      "commentPage": "p. {{page}}"
    },
    "Tabs": {
       "untitled": "Untitled character",

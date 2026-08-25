@@ -14,6 +14,7 @@ import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfPageCanvas } from './PdfPageCanvas';
 import { PdfToolbar } from './PdfToolbar';
 import { PdfMarkupToolbar } from './PdfMarkupToolbar';
+import { PdfCommentsPanel } from './PdfCommentsPanel';
 
 // -- Local Imports --
 import { usePdfContainerWidth } from './usePdfContainerWidth';
@@ -26,7 +27,8 @@ import { useVisiblePages } from './useVisiblePages';
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 
 // -- Utils Imports --
-import { annotationBounds, clampTranslation, groupAnnotationsByPage, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
+import { cn } from '@/lib/utils';
+import { annotationBounds, clampTranslation, groupAnnotationsByPage, listComments, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
 import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
 import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
 
@@ -58,6 +60,9 @@ const ERASER_HIT_FLOOR = 8;
 
 /** The select tool's grab floor in box px; a thin stroke stays clickable, matching the eraser's reach. */
 const SELECT_HIT_FLOOR = 8;
+
+/** How long a jumped-to comment flashes; matches the flash keyframe so the box fades out as the timer clears it. */
+const FLASH_MS = 1500;
 
 export function PdfView() {
    const store = useActivePdfInstance();
@@ -102,12 +107,15 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const penWidth = useStore(store, (state) => state.penWidth);
    const highlightColor = useStore(store, (state) => state.highlightColor);
    const commentColor = useStore(store, (state) => state.commentColor);
-   const canUndo = useStore(store, (state) => state.undoStack.length > 0);
-   const canRedo = useStore(store, (state) => state.redoStack.length > 0);
    const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor } = store.getState().actions;
 
    // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
    const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+
+   // The comments-list panel visibility and the transient flash after a jump; both ephemeral, reset on remount.
+   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
+   const [flashCommentId, setFlashCommentId] = useState<string | null>(null);
+   const flashTimer = useRef<number | null>(null);
 
    // The selected mark; ephemeral UI, reset on remount. A ref mirror lets the move / recolor / delete handlers
    // read it while staying referentially stable (they never swap mid-gesture).
@@ -318,6 +326,25 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
+   // Scrolls to a comment's page (via the existing jumpSeq path) and flashes its region. The timer is guarded
+   // against a rapid re-jump (clear the prior one) and against unmount (cleared below).
+   const jumpToComment = useCallback(
+      (comment: PdfComment) => {
+         store.getState().actions.requestPage(comment.page);
+         setFlashCommentId(comment.id);
+         if (flashTimer.current !== null) clearTimeout(flashTimer.current);
+         flashTimer.current = window.setTimeout(() => {
+            setFlashCommentId(null);
+            flashTimer.current = null;
+         }, FLASH_MS);
+      },
+      [store],
+   );
+
+   useEffect(() => () => {
+      if (flashTimer.current !== null) clearTimeout(flashTimer.current);
+   }, []);
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
@@ -337,19 +364,23 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          setCommentBody,
          deleteComment,
          selectedId,
+         flashCommentId,
          select,
          selectAt,
          translateSelected,
          beginHistory,
          commitHistory,
       }),
-      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, selectedId, select, selectAt, translateSelected, beginHistory, commitHistory],
+      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, selectedId, flashCommentId, select, selectAt, translateSelected, beginHistory, commitHistory],
    );
 
    // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
    // untouched) keeps every page's slice ref, and the page memos survive. Only the changed page's slice re-refs
    // when a mark is added or removed.
    const byPage = useMemo(() => groupAnnotationsByPage(annotations), [annotations]);
+
+   // Every comment across the document, ordered for the panel; re-refs only when a mark is added or removed.
+   const comments = useMemo(() => listComments(annotations), [annotations]);
 
    // The selected mark's own ink, or null when nothing is selected; drives the toolbar's recolor swatch.
    const selectedColor = selectedId ? annotations?.[selectedId]?.color ?? null : null;
@@ -487,63 +518,80 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    return (
       <PdfMarkupContext.Provider value={markup}>
          <div className="absolute inset-0 bg-muted/40">
-            <div ref={scrollRef} className="h-full overflow-auto overscroll-contain px-4 py-6">
-               {/* Zero-height full-width probe: measures the scroller's content width independent of the page
-                   column, which can grow wider than the container when zoomed. */}
-               <div ref={measureRef} className="h-0 w-full" />
-               {/* The live zoom rides a CSS `zoom` on the column (cheap, one element); the pages themselves stay at
-                   the settled render width, so a wheel-zoom scales the whole column instantly and re-rasterizes once. */}
-               <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-4" style={{ zoom: columnZoom }}>
-                  {renderWidth > 0 &&
-                     pages.map((pageNumber) => (
-                        <PdfPageCanvas
-                           key={pageNumber}
-                           proxy={proxy}
-                           pageNumber={pageNumber}
-                           width={renderWidth}
-                           defaultAspect={defaultAspect}
-                           isVisible={visible.has(pageNumber)}
-                           annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
-                           registerPage={registerPage}
-                        />
-                     ))}
+            {/* Scroller + panel share a flex row so the panel PUSHES the pages (the scroller shrinks and the
+                probe inside it re-measures, re-fitting the pages) rather than covering them. */}
+            <div className="flex h-full">
+               <div ref={scrollRef} className="min-w-0 flex-1 overflow-auto overscroll-contain px-4 py-6">
+                  {/* Zero-height full-width probe: measures the scroller's content width independent of the page
+                      column, which can grow wider than the container when zoomed. */}
+                  <div ref={measureRef} className="h-0 w-full" />
+                  {/* The live zoom rides a CSS `zoom` on the column (cheap, one element); the pages themselves stay at
+                      the settled render width, so a wheel-zoom scales the whole column instantly and re-rasterizes once. */}
+                  <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-4" style={{ zoom: columnZoom }}>
+                     {renderWidth > 0 &&
+                        pages.map((pageNumber) => (
+                           <PdfPageCanvas
+                              key={pageNumber}
+                              proxy={proxy}
+                              pageNumber={pageNumber}
+                              width={renderWidth}
+                              defaultAspect={defaultAspect}
+                              isVisible={visible.has(pageNumber)}
+                              annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
+                              registerPage={registerPage}
+                           />
+                        ))}
+                  </div>
+               </div>
+               {/* The panel width animates 0 <-> w-72 so it slides the pages over rather than snapping; its content
+                   is pinned right and clipped, so it reveals from the edge. `inert` while closed keeps the still-mounted
+                   list out of tab order. */}
+               <div
+                  className={cn('relative h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out', commentsPanelOpen ? 'w-72' : 'w-0')}
+                  inert={!commentsPanelOpen}
+               >
+                  <div className="absolute inset-y-0 right-0 w-72">
+                     <PdfCommentsPanel comments={comments} onJump={jumpToComment} onClose={() => setCommentsPanelOpen(false)} />
+                  </div>
                </div>
             </div>
-            {markupMode === 'markup' ? (
-               <PdfMarkupToolbar
-                  tool={tool}
-                  onToolChange={handleToolChange}
-                  penColor={penColor}
-                  onPenColorChange={setPenColor}
-                  penWidth={penWidth}
-                  onPenWidthChange={setPenWidth}
-                  highlightColor={highlightColor}
-                  onHighlightColorChange={setHighlightColor}
-                  commentColor={commentColor}
-                  onCommentColorChange={setCommentColor}
-                  selectedColor={selectedColor}
-                  onRecolorSelected={recolorSelected}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onUndo={store.getState().actions.undo}
-                  onRedo={store.getState().actions.redo}
+            {/* Floating toolbars: when the panel is open, pad this positioned wrapper by the panel width so the
+                centered pills stay over the VISIBLE pages, not the whole reader. */}
+            <div className={cn('pointer-events-none absolute inset-0 transition-[padding] duration-200 ease-out', commentsPanelOpen && 'pr-72')}>
+               {markupMode === 'markup' ? (
+                  <PdfMarkupToolbar
+                     tool={tool}
+                     onToolChange={handleToolChange}
+                     penColor={penColor}
+                     onPenColorChange={setPenColor}
+                     penWidth={penWidth}
+                     onPenWidthChange={setPenWidth}
+                     highlightColor={highlightColor}
+                     onHighlightColorChange={setHighlightColor}
+                     commentColor={commentColor}
+                     onCommentColorChange={setCommentColor}
+                     selectedColor={selectedColor}
+                     onRecolorSelected={recolorSelected}
+                  />
+               ) : null}
+               <PdfToolbar
+                  current={currentPage}
+                  total={pageCount}
+                  zoom={zoom}
+                  markupMode={markupMode}
+                  onToggleMarkup={toggleMarkup}
+                  commentsPanelOpen={commentsPanelOpen}
+                  onToggleComments={() => setCommentsPanelOpen((open) => !open)}
+                  onPrev={() => jumpToPage(currentPage - 1)}
+                  onNext={() => jumpToPage(currentPage + 1)}
+                  onJump={jumpToPage}
+                  onZoomIn={zoomIn}
+                  onZoomOut={zoomOut}
+                  onResetZoom={resetZoom}
+                  onFitWidth={fitWidth}
+                  onFitPage={fitPage}
                />
-            ) : null}
-            <PdfToolbar
-               current={currentPage}
-               total={pageCount}
-               zoom={zoom}
-               markupMode={markupMode}
-               onToggleMarkup={toggleMarkup}
-               onPrev={() => jumpToPage(currentPage - 1)}
-               onNext={() => jumpToPage(currentPage + 1)}
-               onJump={jumpToPage}
-               onZoomIn={zoomIn}
-               onZoomOut={zoomOut}
-               onResetZoom={resetZoom}
-               onFitWidth={fitWidth}
-               onFitPage={fitPage}
-            />
+            </div>
          </div>
       </PdfMarkupContext.Provider>
    );

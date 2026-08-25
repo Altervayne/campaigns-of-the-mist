@@ -6,13 +6,13 @@ import { usePdfMarkup } from '@/lib/pdf/PdfMarkupContext';
 import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 
 /*
- * Per-page selection chrome: a dashed outline around the selected mark when it sits on this page. Inert
- * (the capture layer below owns the gesture) and rides the same box-px space as the overlay, so it scales
- * with the column's CSS zoom in lockstep. The box is chrome, so it draws in a theme token, not the mark's
- * own ink.
+ * Per-page selection + flash chrome: a dashed outline around the selected mark, and a brief pulse over a
+ * comment the comments list just jumped to. Both are inert (the capture layer below owns the gesture) and
+ * ride the same box-px space as the overlay, so they scale with the column's CSS zoom in lockstep. Chrome,
+ * so they draw in a theme token, not the mark's own ink.
  */
 
-/** Slack around the mark's bounds, in box px, so the outline clears the mark rather than tracing it. */
+/** Slack around a mark's bounds, in box px, so the outline clears the mark rather than tracing it. */
 const SELECTION_PADDING = 4;
 
 interface PdfSelectionLayerProps {
@@ -22,25 +22,44 @@ interface PdfSelectionLayerProps {
 }
 
 export function PdfSelectionLayer({ annotations, width, height }: PdfSelectionLayerProps) {
-   const { selectedId } = usePdfMarkup();
-   if (!selectedId) return null;
-   const selected = annotations.find((annotation) => annotation.id === selectedId);
-   if (!selected) return null;
+   const { selectedId, flashCommentId } = usePdfMarkup();
 
-   const rect = denormalizeRect(annotationBounds(selected), width, height);
+   const selected = selectedId ? annotations.find((annotation) => annotation.id === selectedId) : null;
+   const flashed = flashCommentId ? annotations.find((annotation) => annotation.id === flashCommentId && annotation.kind === 'comment') : null;
+   if (!selected && !flashed) return null;
+
+   const selectedRect = selected ? denormalizeRect(annotationBounds(selected), width, height) : null;
+   const flashRect = flashed ? denormalizeRect(annotationBounds(flashed), width, height) : null;
+
    return (
       <svg className="pointer-events-none absolute inset-0" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
-         <rect
-            x={rect.x - SELECTION_PADDING}
-            y={rect.y - SELECTION_PADDING}
-            width={rect.w + SELECTION_PADDING * 2}
-            height={rect.h + SELECTION_PADDING * 2}
-            rx={3}
-            fill="none"
-            stroke="var(--primary)"
-            strokeWidth={1.5}
-            strokeDasharray="5 3"
-         />
+         {selectedRect ? (
+            <rect
+               x={selectedRect.x - SELECTION_PADDING}
+               y={selectedRect.y - SELECTION_PADDING}
+               width={selectedRect.w + SELECTION_PADDING * 2}
+               height={selectedRect.h + SELECTION_PADDING * 2}
+               rx={3}
+               fill="none"
+               stroke="var(--primary)"
+               strokeWidth={1.5}
+               strokeDasharray="5 3"
+            />
+         ) : null}
+         {flashRect ? (
+            <rect
+               className="cotm-annotation-flash"
+               x={flashRect.x - SELECTION_PADDING}
+               y={flashRect.y - SELECTION_PADDING}
+               width={flashRect.w + SELECTION_PADDING * 2}
+               height={flashRect.h + SELECTION_PADDING * 2}
+               rx={3}
+               fill="var(--primary)"
+               fillOpacity={0.15}
+               stroke="var(--primary)"
+               strokeWidth={2}
+            />
+         ) : null}
       </svg>
    );
 }

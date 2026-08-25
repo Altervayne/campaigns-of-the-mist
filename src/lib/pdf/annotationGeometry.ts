@@ -1,6 +1,6 @@
 // -- Type Imports --
 import type { StrokePaintInput } from '@/lib/board/drawingStyle';
-import type { PdfAnnotation, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfComment, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
  * Pure geometry for the annotation overlay: it buckets annotations per page and denormalizes page-space
@@ -19,6 +19,17 @@ export function groupAnnotationsByPage(annotations: Record<string, PdfAnnotation
    }
    for (const bucket of byPage.values()) bucket.sort((a, b) => a.createdAt - b.createdAt);
    return byPage;
+}
+
+/**
+ * Every comment across the document, ordered for the comments list: page ascending, then top-to-bottom,
+ * then left-to-right by the region's origin. Tolerates an absent map (returns empty).
+ */
+export function listComments(annotations: Record<string, PdfAnnotation> | undefined): PdfComment[] {
+   if (!annotations) return [];
+   const comments = Object.values(annotations).filter((mark): mark is PdfComment => mark.kind === 'comment');
+   comments.sort((a, b) => a.page - b.page || a.rect.y - b.rect.y || a.rect.x - b.rect.x);
+   return comments;
 }
 
 /** Maps a flat `[x0,y0,...]` normalized point list into box pixels: even indices by width, odd by height. */

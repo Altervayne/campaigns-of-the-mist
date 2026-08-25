@@ -3,7 +3,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, Minus, MoveHorizontal, Pencil, Plus, Scan } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessagesSquare, Minus, MoveHorizontal, Pencil, Plus, Scan } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ interface PdfToolbarProps {
    zoom: number;
    markupMode: PdfMarkupMode;
    onToggleMarkup: () => void;
+   commentsPanelOpen: boolean;
+   onToggleComments: () => void;
    onPrev: () => void;
    onNext: () => void;
    /** Jumps to a page (clamped by the reader); called on Enter / blur of the page input. */
@@ -34,7 +36,7 @@ interface PdfToolbarProps {
    onFitPage: () => void;
 }
 
-export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
+export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, commentsPanelOpen, onToggleComments, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
    const { t } = useTranslation();
 
    return (
@@ -94,6 +96,23 @@ export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, o
             <ToolbarButton title={t('PdfView.fitPage')} onClick={onFitPage}>
                <Scan className="h-4 w-4" />
             </ToolbarButton>
+
+            <Divider />
+
+            {/* Comments panel toggle: available in read and markup, so it trails the bar rather than the markup group. */}
+            <button
+               type="button"
+               title={t('PdfMarkup.comments')}
+               aria-label={t('PdfMarkup.comments')}
+               aria-pressed={commentsPanelOpen}
+               onClick={onToggleComments}
+               className={cn(
+                  'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded text-card-foreground hover:bg-muted',
+                  commentsPanelOpen && 'bg-muted text-primary',
+               )}
+            >
+               <MessagesSquare className="h-4 w-4" />
+            </button>
          </div>
       </div>
    );

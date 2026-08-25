@@ -791,3 +791,23 @@ body {
 @media (prefers-reduced-motion: reduce) {
    [data-mist-anim] { animation: none !important; }
 }
+
+/* Comment flash: a brief pulse over a comment's region when the comments list jumps to it. A couple of
+   opacity beats that settle to nothing, so the box fades out on its own as the flash timer clears it.
+   Reduced motion shows the box statically for the same beat (it still appears, just doesn't pulse). */
+@keyframes cotm-annotation-flash {
+   0% { opacity: 0; transform: scale(1.03); }
+   12% { opacity: 1; transform: scale(1); }
+   35% { opacity: 0.35; }
+   55% { opacity: 1; transform: scale(1.02); }
+   75% { opacity: 0.4; transform: scale(1); }
+   100% { opacity: 0; }
+}
+.cotm-annotation-flash {
+   transform-box: fill-box;
+   transform-origin: center;
+   animation: cotm-annotation-flash 1500ms ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+   .cotm-annotation-flash { animation: none; }
+}

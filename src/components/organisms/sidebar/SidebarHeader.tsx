@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { CharacterUndoRedoControls } from '../../molecules/CharacterUndoRedoControls';
 import { BoardUndoRedoControls } from '../../molecules/BoardUndoRedoControls';
 import { NoteUndoRedoControls } from '../../molecules/NoteUndoRedoControls';
+import { PdfUndoRedoControls } from '../../molecules/PdfUndoRedoControls';
 
 // -- Type Imports --
 import type { ActiveWindow } from '@/lib/character/activeWindow';
@@ -24,8 +25,8 @@ interface SidebarHeaderProps {
    onToggleCollapse: () => void;
 }
 
-// The rail header: title + collapse toggle, then the context undo/redo control switched on the active
-// window. A PDF is read-only, so it carries no undo/redo control.
+// The rail header: title + collapse toggle, then the context undo/redo control switched on the active window
+// (a PDF's control drives its annotation history).
 export function SidebarHeader({ isCollapsed, activeWindow, onToggleCollapse }: SidebarHeaderProps) {
    const { t } = useTranslation();
 
@@ -58,6 +59,12 @@ export function SidebarHeader({ isCollapsed, activeWindow, onToggleCollapse }: S
          { activeWindow === 'NOTE' &&
             <div className="py-2 border-b-2 border-border">
                <NoteUndoRedoControls isCollapsed={isCollapsed} />
+            </div>
+         }
+
+         { activeWindow === 'PDF' &&
+            <div className="py-2 border-b-2 border-border">
+               <PdfUndoRedoControls isCollapsed={isCollapsed} />
             </div>
          }
       </motion.section>
