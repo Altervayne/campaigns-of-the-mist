@@ -613,7 +613,8 @@
       },
       "pdf": {
          "importing": "Importing PDF…",
-         "storageHigh": "Storage is getting full. You can free space from Reclaim space in Settings."
+         "storageHigh": "Storage is getting full. You can free space from Reclaim space in Settings.",
+         "exported": "PDF exported."
       },
       "link": {
          "targetNotFound": "That link's target no longer exists.",

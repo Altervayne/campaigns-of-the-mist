@@ -8,7 +8,7 @@ import type { RollTableContent } from '@/lib/rolltable/types';
 import type { PdfDocument } from '@/lib/types/pdf';
 import { APP_VERSION } from '../config';
 import { getAsset, storeAsset } from '@/lib/assets/assetRepository';
-import { getPdfAsset, storePdfAsset } from '@/lib/pdf/pdfAssetRepository';
+import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { hashBytes } from '@/lib/assets/processImage';
 import type { ProcessedImage } from '@/lib/assets/processImage';
 import { collectFromNote } from '@/lib/notes/noteAssets';
@@ -17,7 +17,7 @@ import { collectFromNote } from '@/lib/notes/noteAssets';
 // envelope as everything else. A board (`FULL_BOARD`) rides it too. `STENCIL` is a library entry (its mask
 // bytes ride the envelope's `assets` map, unlike the pure-JSON theme/palette exports).
 export type ExportableItemType = GeneralItemType | 'CUSTOM_THEME' | 'CARD_PALETTE' | 'STENCIL';
-export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note | RollTableContent | ExportedStencil | PdfDocument;
+export type ExportableContent = Card | Tracker | Character | Folder | Drawer | Board | CustomTheme | CardPalette | PostItNote | Journal | Note | RollTableContent | ExportedStencil;
 
 /**
  * The content of a stencil-library export: the entry's name plus the hash of its owned mask asset. Unlike a
@@ -36,14 +36,6 @@ export interface EmbeddedAsset {
    width: number;
    height: number;
    /** The processed webp bytes, base64-encoded. */
-   base64: string;
-}
-
-/** One PDF's raw bytes carried inside an exported file. A separate shape from `EmbeddedAsset`: no image dims, and it rehydrates through the PDF store. */
-export interface EmbeddedPdf {
-   mimeType: string;
-   byteSize: number;
-   /** The raw pdf bytes, base64-encoded. */
    base64: string;
 }
 
@@ -71,12 +63,6 @@ export interface ExportFile {
     * import exactly as before.
     */
    assets?: Record<string, EmbeddedAsset>;
-   /**
-    * The raw bytes of every PDF the `content` references, keyed by hash. A separate
-    * channel from `assets` (no width/height, routes through the PDF store, not the image
-    * pipeline). Optional and additive: only a PDF item / a tree carrying one embeds it.
-    */
-   pdfAssets?: Record<string, EmbeddedPdf>;
    /**
     * The full data of every entity the `content` only references (2.0: a board's character elements),
     * so the reference survives the trip. Optional and additive - only a `FULL_BOARD` with character
@@ -214,10 +200,12 @@ export function deriveExportHandle(content: ExportableContent, fallback?: string
 }
 
 /**
- * Narrows a drawer item's content to the exportable union, or returns null for a type that has no per-item
- * export. A PDF exports like any item now: its bytes ride the envelope's `pdfAssets` map.
+ * Narrows a drawer item's content to the exportable union, or returns null for a type that has no `.cotm`
+ * per-item export. A PDF returns null: it downloads its original raw file through `exportPdfBytes`, never
+ * the `.cotm` envelope, so it must not fall through to `exportToFile`.
  */
-export function toExportableItemContent(_type: GeneralItemType, content: DrawerItemContent): ExportableContent | null {
+export function toExportableItemContent(type: GeneralItemType, content: DrawerItemContent): ExportableContent | null {
+   if (type === 'PDF') return null;
    return content as ExportableContent;
 }
 
@@ -346,45 +334,6 @@ export function collectAssetIdsFromContent(content: ExportableContent): Set<stri
    return ids;
 }
 
-/** A PDF content carries a hash + page count and none of the other content shapes' marker fields. */
-function isPdfContent(content: unknown): content is PdfDocument {
-   const c = content as Partial<PdfDocument> & { cards?: unknown; body?: unknown; details?: unknown };
-   return typeof c.assetHash === 'string' && typeof c.pageCount === 'number'
-      && !('cards' in c) && !('body' in c) && !('details' in c);
-}
-
-/** Folds a PDF item's owned bytes hash into `into`. */
-function collectPdfHashFromItem(item: DrawerItem, into: Set<string>): void {
-   if (isPdfContent(item.content)) into.add(item.content.assetHash);
-}
-
-/** Recurses a folder's items and sub-folders for PDF hashes. */
-function collectPdfHashesFromFolder(folder: Folder, into: Set<string>): void {
-   for (const item of folder.items) collectPdfHashFromItem(item, into);
-   for (const sub of folder.folders) collectPdfHashesFromFolder(sub, into);
-}
-
-/**
- * Collects every PDF asset hash referenced by `content`: a single PDF item contributes its own hash, a
- * folder/drawer tree folds every PDF item it holds. Everything else references no PDF bytes. Separate from
- * `collectAssetIdsFromContent` because PDF bytes ride their own `pdfAssets` channel.
- */
-export function collectPdfHashesFromContent(content: ExportableContent): Set<string> {
-   const hashes = new Set<string>();
-   if ('rootItems' in content) {
-      // Drawer: root items + every folder subtree.
-      for (const item of content.rootItems) collectPdfHashFromItem(item, hashes);
-      for (const folder of content.folders) collectPdfHashesFromFolder(folder, hashes);
-   } else if ('viewport' in content) {
-      // Board (checked before Folder: both have `items`): holds no PDF items.
-   } else if ('items' in content) {
-      collectPdfHashesFromFolder(content, hashes); // Folder
-   } else if (isPdfContent(content)) {
-      hashes.add(content.assetHash); // A single PDF item export.
-   }
-   return hashes;
-}
-
 /** Base64-encodes a blob's bytes, chunking the binary string so large images never blow the call stack. */
 export async function blobToBase64(blob: Blob): Promise<string> {
    const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -431,30 +380,6 @@ async function buildEmbeddedAssets(ids: Set<string>): Promise<Record<string, Emb
 }
 
 /**
- * Builds the `pdfAssets` map for an export by reading each referenced PDF's raw bytes and base64-encoding
- * them. Mirrors `buildEmbeddedAssets` but reads the PDF store (no image dims). A hash missing from the store
- * is skipped, not fatal. Returns `undefined` when nothing embeds.
- */
-async function buildEmbeddedPdfAssets(hashes: Set<string>): Promise<Record<string, EmbeddedPdf> | undefined> {
-   if (hashes.size === 0) return undefined;
-
-   const pdfAssets: Record<string, EmbeddedPdf> = {};
-   for (const hash of hashes) {
-      const record = await getPdfAsset(hash);
-      if (!record) {
-         console.warn(`Export: referenced PDF ${hash} is missing from the store; skipping embed.`);
-         continue;
-      }
-      pdfAssets[hash] = {
-         mimeType: record.mimeType,
-         byteSize: record.byteSize,
-         base64: await blobToBase64(record.blob),
-      };
-   }
-   return Object.keys(pdfAssets).length > 0 ? pdfAssets : undefined;
-}
-
-/**
  * Re-stores every embedded asset so the imported content's references resolve on this
  * machine. Dedup-aware: assets already present collapse (no duplicate rows). The
  * embedded hash is trusted as the key (the content references it); the bytes are
@@ -482,29 +407,6 @@ export async function rehydrateEmbeddedAssets(assets: Record<string, EmbeddedAss
          await storeAsset(processed);
       } catch (error) {
          console.error(`Import: failed to rehydrate embedded asset ${hash}:`, error);
-      }
-   }
-}
-
-/**
- * Re-stores every embedded PDF so an imported PDF item's `assetHash` resolves on this machine. Mirrors
- * `rehydrateEmbeddedAssets`: dedup-aware (`storePdfAsset` collapses a hash already present), the embedded
- * hash is trusted as the key and the bytes re-hashed only to warn on a mismatch, and one bad entry is
- * logged and skipped so it never blocks the rest of the import. Exported so the rehydration can be tested
- * without a DOM `FileReader` (the full `importFromFile` path is browser-verified).
- */
-export async function rehydratePdfAssets(pdfAssets: Record<string, EmbeddedPdf>): Promise<void> {
-   for (const [hash, embedded] of Object.entries(pdfAssets)) {
-      try {
-         const bytes = base64ToBytes(embedded.base64);
-         const blob = new Blob([bytes], { type: embedded.mimeType });
-         const actual = await hashBytes(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
-         if (actual !== hash) {
-            console.warn(`Import: embedded PDF hash mismatch (key ${hash}, bytes ${actual}); storing under the referenced key.`);
-         }
-         await storePdfAsset({ hash, blob, mimeType: embedded.mimeType, byteSize: embedded.byteSize });
-      } catch (error) {
-         console.error(`Import: failed to rehydrate embedded PDF ${hash}:`, error);
       }
    }
 }
@@ -540,27 +442,12 @@ export async function exportToFile(item: ExportableContent, type: ExportableItem
    const assets = await buildEmbeddedAssets(ids);
    if (assets) exportData.assets = assets;
 
-   // PDF bytes ride their own channel (the image `assets` map carries image dims and the wrong store).
-   const pdfAssets = await buildEmbeddedPdfAssets(collectPdfHashesFromContent(item));
-   if (pdfAssets) exportData.pdfAssets = pdfAssets;
-
    const jsonString = JSON.stringify(exportData, null, 2);
-   const blob = new Blob([jsonString], { type: 'application/json' });
-   const url = URL.createObjectURL(blob);
-
-   const a = document.createElement('a');
-   a.href = url;
-   a.download = `${fileName}.cotm`;
-   document.body.appendChild(a);
-   a.click();
-
-   document.body.removeChild(a);
-   URL.revokeObjectURL(url);
+   triggerBlobDownload(`${fileName}.cotm`, new Blob([jsonString], { type: 'application/json' }));
 };
 
-/** Triggers a browser download of a raw text file (Blob + click), for non-envelope formats like `.md`. */
-export function downloadTextFile(fileName: string, text: string, mimeType = 'text/markdown'): void {
-   const blob = new Blob([text], { type: mimeType });
+/** Triggers a browser download of a blob: object URL, synthetic click, revoke. */
+function triggerBlobDownload(fileName: string, blob: Blob): void {
    const url = URL.createObjectURL(blob);
 
    const a = document.createElement('a');
@@ -571,6 +458,22 @@ export function downloadTextFile(fileName: string, text: string, mimeType = 'tex
 
    document.body.removeChild(a);
    URL.revokeObjectURL(url);
+}
+
+/** Triggers a browser download of a raw text file, for non-envelope formats like `.md`. */
+export function downloadTextFile(fileName: string, text: string, mimeType = 'text/markdown'): void {
+   triggerBlobDownload(fileName, new Blob([text], { type: mimeType }));
+};
+
+/**
+ * Downloads a PDF drawer item's ORIGINAL raw bytes as `${fileName}.pdf` - the unmodified file from the PDF
+ * store, no annotations baked in and no `.cotm` envelope, so any size downloads. Throws when the bytes are
+ * missing (a dangling `assetHash`) so the caller can toast the failure.
+ */
+export async function exportPdfBytes(content: PdfDocument, fileName: string): Promise<void> {
+   const blob = await getPdfBlob(content.assetHash);
+   if (!blob) throw new Error(`PDF asset ${content.assetHash} is missing from the store.`);
+   triggerBlobDownload(`${fileName}.pdf`, blob);
 };
 
 /** Reads a picked file's contents as plain text (no parsing), for raw formats like `.md`. */
@@ -677,21 +580,6 @@ export function isExportedStencil(file: ExportFile): boolean {
 }
 
 /**
- * Whether a parsed file is a PDF export carrying a valid `PdfDocument` and its embedded bytes - so a
- * malformed or byte-less `.cotm` is rejected before it creates a drawer item with missing bytes. The raw
- * pdf bytes must be present in the `pdfAssets` map under the referenced hash (the import re-stores them).
- */
-export function isExportedPdf(file: ExportFile): boolean {
-   const content = file.content as Partial<PdfDocument>;
-   return file.fileType === 'PDF'
-      && typeof content.id === 'string' && content.id.length > 0
-      && typeof content.title === 'string'
-      && typeof content.assetHash === 'string' && content.assetHash.length > 0
-      && typeof content.pageCount === 'number'
-      && !!file.pdfAssets && !!file.pdfAssets[content.assetHash];
-}
-
-/**
  * Imports a .cotm file and parses it into an ExportFile structure.
  * Returns a promise that resolves with the parsed data, or rejects if the file is invalid.
  * Validates the file format to make sure it's actually a CotM export.
@@ -719,7 +607,6 @@ export function importFromFile(file: File): Promise<ExportFile> {
 
             const file = parsedData as ExportFile;
             if (file.assets) await rehydrateEmbeddedAssets(file.assets);
-            if (file.pdfAssets) await rehydratePdfAssets(file.pdfAssets);
 
             resolve(file);
          } catch (error) {

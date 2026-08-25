@@ -613,7 +613,8 @@
       },
       "pdf": {
          "importing": "[TO COMPLETE]",
-         "storageHigh": "[TO COMPLETE]"
+         "storageHigh": "[TO COMPLETE]",
+         "exported": "[TO COMPLETE]"
       },
       "link": {
          "targetNotFound": "La cible de ce lien n'existe plus.",

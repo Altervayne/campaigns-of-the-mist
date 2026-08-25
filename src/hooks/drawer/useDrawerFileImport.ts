@@ -10,7 +10,7 @@ import cuid from 'cuid';
 import { useFileDrop } from '@/hooks/useFileDrop';
 
 // -- Utils Imports --
-import { deriveDrawerFolderName, exportDrawer, importFromFile, isExportedPdf, readFileAsText } from '@/lib/utils/export-import';
+import { deriveDrawerFolderName, exportDrawer, importFromFile, readFileAsText } from '@/lib/utils/export-import';
 import { harmonizeData } from '@/lib/harmonization';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
@@ -115,22 +115,11 @@ export function useDrawerFileImport(currentFolderId: string | null) {
             case 'CUSTOM_THEME':
             case 'CARD_PALETTE':
             case 'STENCIL':
-               // Themes, card palettes, and stencils live in app settings (imported from their own manager),
-               // not the drawer - reject here.
-               toast.error(tNotifications('Notifications.general.importFailed'));
-               break;
-
             case 'PDF':
-               // A PDF `.cotm` carries its bytes in the envelope's `pdfAssets` map (rehydrated by
-               // `importFromFile` before this point). Reject one missing those bytes rather than creating an
-               // item with a dangling `assetHash`; the content keeps its id/hash verbatim (not re-IDed) so
-               // the working round-trip still resolves.
-               if (!isExportedPdf(importedData)) {
-                  toast.error(tNotifications('Notifications.general.importFailed'));
-                  break;
-               }
-               await addImportedItem(migratedContent as DrawerItemContent, 'PDF', importedData.game, currentFolderId ?? undefined);
-               toast.success(tNotifications('Notifications.drawer.importSuccess'));
+               // Themes, card palettes, and stencils live in app settings (imported from their own manager),
+               // not the drawer. A PDF is not a `.cotm` type at all - it imports as a raw `.pdf` file (handled
+               // above). Reject all of them here.
+               toast.error(tNotifications('Notifications.general.importFailed'));
                break;
 
             default:

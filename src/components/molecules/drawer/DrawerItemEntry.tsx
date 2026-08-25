@@ -14,7 +14,7 @@ import { MoreHorizontal, Pencil, Trash2, Move, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { deriveExportHandle, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
+import { exportDrawerItem } from '@/lib/drawer/exportDrawerItem';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Hook Imports --
@@ -35,19 +35,7 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
 
    const handleExport = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      const { content, type, game, name } = item;
-
-      const exportable = toExportableItemContent(type, content);
-      if (!exportable) return;
-
-      const handle = deriveExportHandle(exportable, name);
-
-      const fileName = generateExportFilename(game, type, handle);
-      try {
-         await exportToFile(exportable, type, game, fileName);
-      } catch (error) {
-         console.error('Drawer item export failed:', error);
-      }
+      await exportDrawerItem(item, t);
    };
 
    return (

@@ -32,7 +32,8 @@ import { exportFolderAsNestedTree, getItem } from '@/lib/drawer/drawerRepository
 import { hasDrawerItemCapability } from '@/lib/drawer/drawerItemCapabilities';
 
 // -- Utils Imports --
-import { deriveExportHandle, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
+import { exportToFile, generateExportFilename } from '@/lib/utils/export-import';
+import { exportDrawerItem } from '@/lib/drawer/exportDrawerItem';
 
 // -- Utils Imports --
 import { readSafeAreaInsetBottom } from '@/lib/utils/safeArea';
@@ -168,24 +169,18 @@ export default function MobileDrawerContextMenu({
 	};
 
 	const handleExport = async () => {
-		try {
-			if (isFolder) {
+		if (isFolder) {
+			try {
 				// Reassemble the folder's full subtree before exporting.
 				const nestedFolder = await exportFolderAsNestedTree(target.id);
 				const fileName = generateExportFilename('NEUTRAL', 'FOLDER', nestedFolder.name);
 				exportToFile(nestedFolder, 'FOLDER', 'NEUTRAL', fileName);
 				toast.success(t('Notifications.drawer.folderExported'));
-			} else if (item) {
-				const { content, type, game, name } = item;
-				const exportable = toExportableItemContent(type, content);
-				if (!exportable) return;
-				const handle = deriveExportHandle(exportable, name);
-				const fileName = generateExportFilename(game, type, handle);
-				exportToFile(exportable, type, game, fileName);
-				toast.success(t('Notifications.drawer.itemExported'));
+			} catch {
+				toast.error(t('Notifications.general.exportError'));
 			}
-		} catch {
-			toast.error(t('Notifications.general.exportError'));
+		} else if (item) {
+			await exportDrawerItem(item, t);
 		}
 		onClose();
 	};
