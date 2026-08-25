@@ -588,7 +588,8 @@
          "updated": "Note mise à jour depuis un fichier."
       },
       "pdf": {
-         "importing": "[TO COMPLETE]"
+         "importing": "[TO COMPLETE]",
+         "storageHigh": "[TO COMPLETE]"
       },
       "link": {
          "targetNotFound": "La cible de ce lien n'existe plus.",
@@ -1335,10 +1336,10 @@
          "label": "Stockage",
          "usageUsed": "{{mb}} Mo utilisés",
          "usageUnavailable": "Utilisation indisponible",
-         "reclaimButton": "Récupérer l'espace des images",
-         "reclaimed": "{{count}} images récupérées, {{mb}} Mo.",
+         "reclaimButton": "[TO COMPLETE]",
+         "reclaimed": "[TO COMPLETE]",
          "nothing": "Rien à récupérer.",
-         "failed": "Impossible de récupérer l'espace des images. Veuillez réessayer."
+         "failed": "[TO COMPLETE]"
       },
       "backup": {
          "label": "Sauvegarde",
@@ -1560,6 +1561,7 @@
          "distributeHorizontal": "Répartir : Horizontalement",
          "distributeVertical": "Répartir : Verticalement",
          "importFile": "Importer : Fichier",
+         "importPdf": "[TO COMPLETE]",
          "undo": "Annuler",
          "redo": "Rétablir",
          "newCharacter": "Nouveau : Personnage",

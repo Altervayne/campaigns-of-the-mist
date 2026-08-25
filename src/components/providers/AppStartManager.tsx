@@ -34,6 +34,7 @@ import { ensureMenuFallbackInstance } from '@/lib/character/characterStoreRegist
 
 // -- Asset garbage collection --
 import { runSweep } from '@/lib/assets/assetGarbageCollector';
+import { runPdfSweep } from '@/lib/pdf/pdfGarbageCollector';
 import { useAssetGarbageCollection } from '@/hooks/useAssetGarbageCollection';
 import { runWhenIdle } from '@/lib/utils/idle';
 
@@ -118,11 +119,12 @@ export const AppStartManagerProvider = ({ children }: { children: React.ReactNod
          }
          await runCharacterBoot();
 
-         // Reclaim orphaned image assets once boot has settled, scheduled on idle so it
+         // Reclaim orphaned image + PDF assets once boot has settled, scheduled on idle so it
          // never blocks first paint. A GC failure must never break boot; swallow it and
          // let the next trigger retry.
          runWhenIdle(() => {
             void runSweep('startup').catch(() => {});
+            void runPdfSweep('startup').catch(() => {});
          });
 
          // One-time transparency notice: shown only when data was actually moved

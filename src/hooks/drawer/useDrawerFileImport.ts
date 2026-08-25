@@ -17,6 +17,7 @@ import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
 import { hashBytes } from '@/lib/assets/processImage';
 import { storePdfAsset } from '@/lib/pdf/pdfAssetRepository';
 import { parsePdfFile } from '@/lib/pdf/parsePdf';
+import { estimateStorageUsage, STORAGE_SOFT_CAP_BYTES } from '@/lib/assets/assetGarbageCollector';
 
 // -- Store Imports --
 import { useDrawerActions } from '@/lib/stores/drawerStore';
@@ -78,6 +79,12 @@ export function useDrawerFileImport(currentFolderId: string | null) {
                const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, pageCount };
                await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
                toast.success(tNotifications('Notifications.drawer.importSuccess'), { id: toastId });
+               // PDFs are the first tens-of-MB item, so a few rulebooks approach the soft cap. A gentle,
+               // non-blocking heads-up points at "Reclaim space" in settings; there is no hard size cap.
+               const usage = await estimateStorageUsage();
+               if (usage !== null && usage > STORAGE_SOFT_CAP_BYTES) {
+                  toast(tNotifications('Notifications.pdf.storageHigh'));
+               }
             } catch {
                toast.error(tNotifications('Notifications.general.importFailed'), { id: toastId });
             }

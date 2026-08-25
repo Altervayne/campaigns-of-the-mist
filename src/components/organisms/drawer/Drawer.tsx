@@ -1,5 +1,5 @@
 // -- React Imports --
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -44,7 +44,7 @@ import { useDrawerFileImport } from '@/hooks/drawer/useDrawerFileImport';
 import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
 import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
 import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
-import { useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
+import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
 // -- Type Imports --
 import type { Variants } from 'framer-motion';
@@ -114,7 +114,17 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
 
    const isCompactDrawer = useAppSettingsStore((state) => state.isCompactDrawer);
    const { toggleCompactDrawer } = useAppSettingsActions();
-   const { setDrawerOpen, expandDrawer } = useAppGeneralStateActions();
+   const { setDrawerOpen, expandDrawer, clearDrawerImport } = useAppGeneralStateActions();
+
+   // The palette's "Import PDF" signals through the store (the picker lives here, not in the palette).
+   // On the flag, open the hidden file input and clear it. `requestDrawerImport` opened the side panel,
+   // so this responder is mounted; on first mount the flag is already set and the effect fires at once.
+   const pendingDrawerImport = useAppGeneralStateStore((state) => state.pendingDrawerImport);
+   useEffect(() => {
+      if (!pendingDrawerImport) return;
+      fileInputRef.current?.click();
+      clearDrawerImport();
+   }, [pendingDrawerImport, clearDrawerImport, fileInputRef]);
 
 
    const folderIds = useMemo(() => currentFolders.map(f => f.id), [currentFolders]);

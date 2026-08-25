@@ -115,3 +115,24 @@ export function clearAllPdfAssets(): Promise<void> {
       await db.pdfAssets.clear();
    });
 }
+
+/** Bookkeeping written after each PDF sweep; gates the periodic check. Twin of `AssetSweepRecord`. */
+export interface PdfAssetSweepRecord {
+   /** Epoch ms the sweep ran. */
+   at: number;
+   /** PDF asset count remaining after the sweep; the periodic gate compares the live count against this. */
+   assetCount: number;
+   /** What triggered the sweep, for debugging. */
+   reason: 'startup' | 'manual' | 'periodic';
+}
+
+/** Reads the last PDF sweep bookkeeping from the `meta` store, or `undefined` if never swept. */
+export async function readLastPdfSweep(): Promise<PdfAssetSweepRecord | undefined> {
+   const row = await db.meta.get('pdfAssetsLastSwept');
+   return row?.value as PdfAssetSweepRecord | undefined;
+}
+
+/** Records the outcome of a PDF sweep in the `meta` store, for the periodic pressure gate. */
+export async function writeLastPdfSweep(record: PdfAssetSweepRecord): Promise<void> {
+   await db.meta.put({ key: 'pdfAssetsLastSwept', value: record });
+}

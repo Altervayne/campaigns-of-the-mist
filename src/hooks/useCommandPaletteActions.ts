@@ -12,7 +12,7 @@ import { useDeviceType } from '@/hooks/useDeviceType';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { FileUp, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Image as ImageIcon } from 'lucide-react';
+import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Image as ImageIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { exportCharacterSheet, exportDrawer, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
@@ -77,7 +77,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    const character = useCharacterStore((state) => state.character);
    const { resetCharacter, addPortrait } = useCharacterActions();
    const { setSideBySideView, toggleDiceTray, toggleNoteOutline, toggleLayersPanel, toggleNavigator } = useAppSettingsActions();
-   const { setSettingsOpen, setSettingsInitialSection, requestBoardAction } = useAppGeneralStateActions();
+   const { setSettingsOpen, setSettingsInitialSection, requestBoardAction, requestDrawerImport } = useAppGeneralStateActions();
 
    // Deep-link the hub to a section (What's new / About / Learn), mirroring the sidebar doors.
    const openSettingsSection = (section: string) => {
@@ -182,6 +182,10 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
          { id: 'startTutorial', scope: 'global' as const, label: t('CommandPalette.commands.startTutorial'), keywords: ['tutorial', 'start', 'learn', 'lesson', 'teach', 'guide', 'run'], icon: GraduationCap, group: t('Common.general'), pageId: 'startTutorial' },
       ] : []),
       { id: 'importFile', scope: 'global', label: t('CommandPalette.commands.importFile'), keywords: ['import', 'file', 'load', 'open', '.cotm'], icon: Import, group: t('Common.general'), action: onImportFile },
+      // Routes to the DRAWER's PDF-capable picker (via the store signal), not the sheet importer - only
+      // the drawer import accepts `.pdf`. Signals through the store like the board actions, so it needs
+      // no prop threading; the side-panel Drawer opens its file input in response.
+      { id: 'importPdf', scope: 'global', label: t('CommandPalette.commands.importPdf'), keywords: ['import', 'pdf', 'rulebook', 'document', 'load'], icon: FileText, group: t('Common.general'), action: requestDrawerImport },
       // Undo/Redo route themselves (drawer / board / character), so they show in any workspace.
       { id: 'undo', scope: 'global', label: t('CommandPalette.commands.undo'), keywords: ['undo', 'revert', 'back'], icon: Undo2, group: t('Common.general'), action: undoActiveContext },
       { id: 'redo', scope: 'global', label: t('CommandPalette.commands.redo'), keywords: ['redo', 'forward'], icon: Redo2, group: t('Common.general'), action: redoActiveContext },

@@ -96,6 +96,11 @@ interface AppGeneralState {
    // pending. The canvas owns the drop point AND the selection, so the palette signals through here.
    pendingBoardAction: BoardAction | null;
 
+   // A one-shot request the side-panel Drawer consumes and clears: open its file picker. The picker
+   // lives inside the Drawer's import hook, so the palette's "Import PDF" command signals through here;
+   // `requestDrawerImport` also opens the drawer as the side panel so the responder is mounted.
+   pendingDrawerImport: boolean;
+
    // Nav requests the mobile page consumes against its own local setters and drains (mirrors
    // `pendingBoardAction`). The mobile shell keeps its nav state component-local, above the store the
    // tutorial runner can reach, so a drive signals through here. It is a QUEUE, not a slot: one arrival
@@ -144,6 +149,10 @@ interface AppGeneralState {
       requestBoardAction: (action: BoardAction) => void;
       clearBoardAction: () => void;
 
+      // Pending drawer import (open the drawer's file picker)
+      requestDrawerImport: () => void;
+      clearDrawerImport: () => void;
+
       // Pending mobile nav actions + the write-only landing-position mirror
       requestMobileNavAction: (action: MobileNavAction) => void;
       clearMobileNavActions: () => void;
@@ -184,6 +193,9 @@ export const useAppGeneralStateStore = create<AppGeneralState>((set) => ({
 
    // Pending board action
    pendingBoardAction: null,
+
+   // Pending drawer import
+   pendingDrawerImport: false,
 
    // Pending mobile nav actions + landing-position mirror
    pendingMobileNavActions: [],
@@ -226,6 +238,11 @@ export const useAppGeneralStateStore = create<AppGeneralState>((set) => ({
       // Pending board action
       requestBoardAction: (action) => set({ pendingBoardAction: action }),
       clearBoardAction: () => set({ pendingBoardAction: null }),
+
+      // Pending drawer import. Opens the drawer as the side panel (the picker's home) so the
+      // responder is mounted whether the drawer was closed or expanded, then flags the request.
+      requestDrawerImport: () => set({ pendingDrawerImport: true, isDrawerOpen: true, isDrawerExpanded: false, isDrawerReceded: false }),
+      clearDrawerImport: () => set({ pendingDrawerImport: false }),
 
       // Pending mobile nav actions + landing-position mirror. Requests APPEND: a step's arrival dispatches
       // its axes one after another in the same tick, and every one of them has to reach the page.

@@ -588,7 +588,8 @@
          "updated": "Note updated from file."
       },
       "pdf": {
-         "importing": "Importing PDF…"
+         "importing": "Importing PDF…",
+         "storageHigh": "Storage is getting full. You can free space from Reclaim space in Settings."
       },
       "link": {
          "targetNotFound": "That link's target no longer exists.",
@@ -1335,10 +1336,10 @@
          "label": "Storage",
          "usageUsed": "{{mb}} MB used",
          "usageUnavailable": "Usage unavailable",
-         "reclaimButton": "Reclaim image space",
-         "reclaimed": "Reclaimed {{count}} images, {{mb}} MB.",
+         "reclaimButton": "Reclaim space",
+         "reclaimed": "Reclaimed {{count}} items, {{mb}} MB.",
          "nothing": "Nothing to reclaim.",
-         "failed": "Could not reclaim image space. Please try again."
+         "failed": "Could not reclaim space. Please try again."
       },
       "backup": {
          "label": "Backup",
@@ -1560,6 +1561,7 @@
          "distributeHorizontal": "Distribute: Horizontally",
          "distributeVertical": "Distribute: Vertically",
          "importFile": "Import: File",
+         "importPdf": "Import: PDF",
          "undo": "Undo",
          "redo": "Redo",
          "newCharacter": "New: Character",

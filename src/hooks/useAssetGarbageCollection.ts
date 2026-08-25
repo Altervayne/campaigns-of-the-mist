@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 // -- Local Imports --
 import { isPeriodicSweepWarranted, runSweep, PERIODIC_INTERVAL_MS } from '@/lib/assets/assetGarbageCollector';
+import { isPeriodicPdfSweepWarranted, runPdfSweep } from '@/lib/pdf/pdfGarbageCollector';
 import { runWhenIdle } from '@/lib/utils/idle';
 
 /*
@@ -22,6 +23,7 @@ export function useAssetGarbageCollection(): void {
             void (async () => {
                try {
                   if (await isPeriodicSweepWarranted()) await runSweep('periodic');
+                  if (await isPeriodicPdfSweepWarranted()) await runPdfSweep('periodic');
                } catch {
                   // Swallowed: GC must never surface into the session; the next tick retries.
                }

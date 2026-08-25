@@ -98,7 +98,8 @@ export interface DrawerMetaRecord {
       | 'characterMigrationVerified'
       | 'characterMigratedRecordCount'
       | 'characterLegacyBlobRetainedUntil'
-      | 'assetsLastSwept';
+      | 'assetsLastSwept'
+      | 'pdfAssetsLastSwept';
    /** The stored value for `key`. */
    value: unknown;
 }

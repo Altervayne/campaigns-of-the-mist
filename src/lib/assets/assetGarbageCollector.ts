@@ -19,12 +19,15 @@ import {
  * Reads go through repositories; assets are written only via `assetRepository`.
  */
 
-/** Assets younger than this are never deleted, even when unreferenced. */
-const GRACE_WINDOW_MS = 5 * 60 * 1000;
+/** Assets younger than this are never deleted, even when unreferenced. Shared with the PDF collector. */
+export const GRACE_WINDOW_MS = 5 * 60 * 1000;
 /** Coarse cadence at which the periodic trigger checks whether a sweep is warranted. */
 export const PERIODIC_INTERVAL_MS = 10 * 60 * 1000;
-/** A storage estimate above this forces a periodic sweep even without count growth. */
-const STORAGE_SOFT_CAP_BYTES = 250 * 1024 * 1024;
+/**
+ * A storage estimate above this forces a periodic sweep even without count growth. Whole-origin
+ * (the estimate is global), so the PDF collector and the import size-warning read the same cap.
+ */
+export const STORAGE_SOFT_CAP_BYTES = 250 * 1024 * 1024;
 
 /** What a sweep reclaimed. */
 export interface SweepResult {

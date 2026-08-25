@@ -15,6 +15,7 @@ import { clearAllNotes } from '@/lib/notes/noteRepository';
 import { clearAllPdfs } from '@/lib/pdf/pdfRepository';
 import { clearAllPdfAssets } from '@/lib/pdf/pdfAssetRepository';
 import { runSweep, estimateStorageUsage } from '@/lib/assets/assetGarbageCollector';
+import { runPdfSweep } from '@/lib/pdf/pdfGarbageCollector';
 import { clearWorkspace } from '@/lib/character/workspaceSession';
 import { clearAllDrawerData } from '@/lib/drawer/drawerRepository';
 import { drawerCommandEngine } from '@/lib/drawer/drawerCommandEngine';
@@ -116,7 +117,10 @@ export function useDataSettingsActions() {
    const handleReclaimImageSpace = async () => {
       setIsReclaiming(true);
       try {
-         const { deleted, reclaimedBytes } = await runSweep('manual');
+         // Reclaim images and PDFs together: two parallel collectors, one combined readout.
+         const [images, pdfs] = await Promise.all([runSweep('manual'), runPdfSweep('manual')]);
+         const deleted = images.deleted + pdfs.deleted;
+         const reclaimedBytes = images.reclaimedBytes + pdfs.reclaimedBytes;
          setStorageUsageBytes(await estimateStorageUsage());
          if (deleted > 0) {
             toast.success(t('SettingsDialog.storage.reclaimed', { count: deleted, mb: formatMegabytes(reclaimedBytes) }));
