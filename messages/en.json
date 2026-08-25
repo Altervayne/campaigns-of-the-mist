@@ -105,9 +105,17 @@
             "notes": "Notes",
             "boards": "Boards",
             "characters": "Characters",
+            "pdfs": "PDFs",
             "cards": "Cards",
             "trackers": "Trackers",
             "other": "Other elements"
+         },
+         "pdfPage": {
+            "wholeDocument": "Whole document",
+            "pageLabel": "Page",
+            "pagePlaceholder": "Page number",
+            "ofCount": "of {{count}}",
+            "linkToPage": "Link to page"
          }
       },
       "tableMenu": {

@@ -9,6 +9,10 @@ describe('portalTargetFromInsert', () => {
       expect(portalTargetFromInsert({ kind: 'entity', entity: 'board', id: 'b1' })).toEqual({ kind: 'entity', entity: 'board', id: 'b1' });
    });
 
+   it('forwards a pdf page onto the portal entity target', () => {
+      expect(portalTargetFromInsert({ kind: 'entity', entity: 'pdf', id: 'p1', page: 42 })).toEqual({ kind: 'entity', entity: 'pdf', id: 'p1', page: 42 });
+   });
+
    it('maps an element insert target to a portal element target', () => {
       expect(portalTargetFromInsert({ kind: 'element', drawerItemId: 'd1' })).toEqual({ kind: 'element', drawerItemId: 'd1' });
    });

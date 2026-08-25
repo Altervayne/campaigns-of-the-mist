@@ -19,7 +19,8 @@ import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 export function portalTargetFromInsert(insert: LinkInsertTarget): PortalTarget | null {
    switch (insert.kind) {
       case 'entity':
-         return { kind: 'entity', entity: insert.entity, id: insert.id };
+         // A pdf carries its page; the other entities leave it undefined.
+         return { kind: 'entity', entity: insert.entity, id: insert.id, page: insert.page };
       case 'element':
          return { kind: 'element', drawerItemId: insert.drawerItemId };
       case 'external':

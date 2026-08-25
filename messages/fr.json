@@ -105,9 +105,17 @@
             "notes": "Notes",
             "boards": "Tableaux",
             "characters": "Personnages",
+            "pdfs": "[TO COMPLETE]",
             "cards": "Cartes",
             "trackers": "Suivis",
             "other": "Autres éléments"
+         },
+         "pdfPage": {
+            "wholeDocument": "[TO COMPLETE]",
+            "pageLabel": "[TO COMPLETE]",
+            "pagePlaceholder": "[TO COMPLETE]",
+            "ofCount": "[TO COMPLETE]",
+            "linkToPage": "[TO COMPLETE]"
          }
       },
       "tableMenu": {

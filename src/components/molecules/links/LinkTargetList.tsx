@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { Command } from 'cmdk';
-import { Hash, Globe } from 'lucide-react';
+import { Hash, Globe, ChevronLeft, FileType } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -40,8 +40,8 @@ import type { NoteHeading } from '@/lib/notes/noteOutline';
  */
 
 /** The coarse group a drawer item falls into (order = display order below the same-note sections). */
-type PickerCategory = 'notes' | 'boards' | 'characters' | 'cards' | 'trackers' | 'other';
-const CATEGORY_ORDER: PickerCategory[] = ['notes', 'boards', 'characters', 'cards', 'trackers', 'other'];
+type PickerCategory = 'notes' | 'boards' | 'characters' | 'pdfs' | 'cards' | 'trackers' | 'other';
+const CATEGORY_ORDER: PickerCategory[] = ['notes', 'boards', 'characters', 'pdfs', 'cards', 'trackers', 'other'];
 
 /** Buckets a drawer item type into its picker group. */
 function categoryForType(type: GeneralItemType): PickerCategory {
@@ -49,6 +49,7 @@ function categoryForType(type: GeneralItemType): PickerCategory {
       case 'NOTE': return 'notes';
       case 'FULL_BOARD': return 'boards';
       case 'FULL_CHARACTER_SHEET': return 'characters';
+      case 'PDF': return 'pdfs';
       case 'STATUS_TRACKER':
       case 'STORY_TAG_TRACKER':
       case 'STORY_THEME_TRACKER': return 'trackers';
@@ -78,6 +79,8 @@ export function LinkTargetList({ onPick, sections, fill }: LinkTargetListProps) 
    const { t } = useTranslation();
    const [search, setSearch] = useState('');
    const [results, setResults] = useState<DrawerItemSummary[]>([]);
+   // A picked PDF drops into a second step (whole document / a page) before it emits; null = the list is shown.
+   const [pdfStep, setPdfStep] = useState<{ pdfId: string; name: string; pageCount: number } | null>(null);
 
    // In-document sections, narrowed by the search text (client-side; the host handed us the full list).
    const matchedSections = useMemo(() => {
@@ -92,8 +95,7 @@ export function LinkTargetList({ onPick, sections, fill }: LinkTargetListProps) 
    useEffect(() => {
       let alive = true;
       void queryItems({ sort: { by: 'updatedAt', direction: 'desc' } }).then((list) => {
-         // PDF link targets (with page support) arrive in a later phase; exclude them for now.
-         if (alive) setResults(list.filter((item) => item.type !== 'PDF'));
+         if (alive) setResults(list);
       });
       return () => { alive = false; };
    }, []);
@@ -137,14 +139,39 @@ export function LinkTargetList({ onPick, sections, fill }: LinkTargetListProps) 
          onPick({ kind: 'element', drawerItemId: item.id }, defaultName);
          return;
       }
-      // Entity link needs the ENTITY id (note/board/character id), which lives in the item's content.
+      // Entity link needs the ENTITY id (note/board/character/pdf id), which lives in the item's content.
       void getItem(item.id).then((record) => {
-         const entityId = record ? (record.content as { id?: string }).id : undefined;
-         if (entityId) onPick({ kind: 'entity', entity, id: entityId }, defaultName);
+         const content = record ? (record.content as { id?: string; pageCount?: number }) : undefined;
+         const entityId = content?.id;
+         if (!entityId) return;
+         // A PDF picks a page before it emits; everything else links straight through.
+         if (entity === 'pdf') {
+            setPdfStep({ pdfId: entityId, name: defaultName, pageCount: content?.pageCount ?? 1 });
+            return;
+         }
+         onPick({ kind: 'entity', entity, id: entityId }, defaultName);
       });
    };
 
+   const pickWholeDocument = (step: { pdfId: string; name: string }): void =>
+      onPick({ kind: 'entity', entity: 'pdf', id: step.pdfId }, step.name);
+   const pickPdfPage = (step: { pdfId: string; name: string }, page: number): void =>
+      onPick({ kind: 'entity', entity: 'pdf', id: step.pdfId, page }, `${step.name} · p.${page}`);
+
    const showEmpty = !externalUrl && matchedSections.length === 0 && grouped.length === 0;
+
+   // A picked PDF takes over the panel with the page step until it emits or backs out.
+   if (pdfStep) {
+      return (
+         <PdfPageStep
+            step={pdfStep}
+            fill={fill}
+            onBack={() => setPdfStep(null)}
+            onWholeDocument={() => pickWholeDocument(pdfStep)}
+            onPage={(page) => pickPdfPage(pdfStep, page)}
+         />
+      );
+   }
 
    return (
       <Command
@@ -216,6 +243,81 @@ function formatFolderPath(names: string[]): string {
    if (names.length === 1) return names[0];
    if (names.length === 2) return `${names[0]} / ${names[1]}`;
    return `${names[0]} / … / ${names[names.length - 1]}`;
+}
+
+/** A page-step row/button: same look as a picker item, but hover-driven since it lives outside the cmdk list. */
+const STEP_ITEM_CLASS =
+   'flex w-full cursor-pointer select-none items-center gap-2 rounded px-2 py-1.5 text-sm text-popover-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground';
+
+/**
+ * The second step after a PDF is picked: link the whole document (the default), or a specific page. The page
+ * input is clamped to `[1, pageCount]`; an empty or non-numeric value falls back to the whole document. Enter
+ * confirms. Chrome, not paper - it floats on the same app-theme tokens as the list it replaces.
+ */
+function PdfPageStep({
+   step,
+   fill,
+   onBack,
+   onWholeDocument,
+   onPage,
+}: {
+   step: { pdfId: string; name: string; pageCount: number };
+   fill?: boolean;
+   onBack: () => void;
+   onWholeDocument: () => void;
+   onPage: (page: number) => void;
+}) {
+   const { t } = useTranslation();
+   const [pageText, setPageText] = useState('');
+
+   // A valid in-range page links to it; empty or out-of-range falls back to the whole document.
+   const confirm = (): void => {
+      const page = Number.parseInt(pageText, 10);
+      if (Number.isFinite(page) && page >= 1 && page <= step.pageCount) onPage(page);
+      else onWholeDocument();
+   };
+
+   return (
+      <div className={cn('flex flex-col', fill && 'min-h-0 flex-1')}>
+         <button
+            type="button"
+            onClick={onBack}
+            className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-border px-3 text-sm text-popover-foreground outline-none hover:text-accent-foreground"
+         >
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate font-medium">{step.name}</span>
+         </button>
+         <div className="flex flex-col gap-1 p-1">
+            <button type="button" onClick={onWholeDocument} className={STEP_ITEM_CLASS}>
+               <FileType className="h-4 w-4 shrink-0" />
+               <span className="truncate">{t('NoteView.linkPicker.pdfPage.wholeDocument')}</span>
+            </button>
+            <div className="flex items-center gap-2 px-2 py-1.5">
+               <span className="shrink-0 text-xs font-medium text-muted-foreground">{t('NoteView.linkPicker.pdfPage.pageLabel')}</span>
+               <input
+                  type="number"
+                  min={1}
+                  max={step.pageCount}
+                  value={pageText}
+                  onChange={(event) => setPageText(event.target.value)}
+                  onKeyDown={(event) => {
+                     if (event.key === 'Enter') {
+                        event.preventDefault();
+                        confirm();
+                     }
+                  }}
+                  placeholder={t('NoteView.linkPicker.pdfPage.pagePlaceholder')}
+                  className="min-w-0 flex-1 rounded border border-border bg-transparent px-2 py-1 text-sm text-popover-foreground placeholder:text-muted-foreground focus:outline-none"
+               />
+               <span className="shrink-0 text-xs text-muted-foreground">{t('NoteView.linkPicker.pdfPage.ofCount', { count: step.pageCount })}</span>
+            </div>
+            <button type="button" onClick={confirm} className={STEP_ITEM_CLASS}>
+               <Hash className="h-4 w-4 shrink-0" />
+               <span className="truncate">{t('NoteView.linkPicker.pdfPage.linkToPage')}</span>
+            </button>
+         </div>
+      </div>
+   );
 }
 
 /** One drawer result row: the type glyph, the item name (untitled falls back to a label), + its folder path. */
