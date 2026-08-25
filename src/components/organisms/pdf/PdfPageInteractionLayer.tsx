@@ -41,7 +41,7 @@ interface PdfPageInteractionLayerProps {
 }
 
 export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageInteractionLayerProps) {
-   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, beginHistory, commitHistory } = usePdfMarkup();
+   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, select, selectAt, translateSelected, beginHistory, commitHistory } = usePdfMarkup();
 
    // The in-flight pen stroke's normalized points, plus its preview mirror (state so only this layer repaints).
    const pointsRef = useRef<number[] | null>(null);
@@ -51,6 +51,10 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
    // The in-flight rect drag (highlight / comment): its fixed start corner (normalized) + the down client point.
    const rectStart = useRef<{ x: number; y: number; clientX: number; clientY: number } | null>(null);
    const [rectPreview, setRectPreview] = useState<PdfRect | null>(null);
+
+   // The in-flight select-move: the mark grabbed on pointerdown (null when the gesture hit nothing) + the last
+   // client point, so each move contributes an incremental delta that sums exactly.
+   const moveRef = useRef<{ lastX: number; lastY: number } | null>(null);
 
    if (mode !== 'markup') return null;
 
@@ -79,6 +83,18 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
          eraseAt(pageNumber, rect, width, height, event.clientX, event.clientY);
          return;
       }
+      if (tool === 'select') {
+         const id = selectAt(pageNumber, rect, width, height, event.clientX, event.clientY);
+         if (!id) {
+            select(null);
+            return;
+         }
+         select(id);
+         // Prime a potential move; a pure click never mutates, so its commit records nothing.
+         moveRef.current = { lastX: event.clientX, lastY: event.clientY };
+         beginHistory();
+         return;
+      }
       if (isRectTool) {
          const start = normalize(rect, event.clientX, event.clientY);
          rectStart.current = { x: start.x, y: start.y, clientX: event.clientX, clientY: event.clientY };
@@ -96,6 +112,17 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
       const rect = event.currentTarget.getBoundingClientRect();
       if (tool === 'eraser') {
          eraseAt(pageNumber, rect, width, height, event.clientX, event.clientY);
+         return;
+      }
+      if (tool === 'select') {
+         const move = moveRef.current;
+         if (!move) return;
+         // Incremental delta since the last move; the store clamps per step at the page edges.
+         const dnx = (event.clientX - move.lastX) / rect.width;
+         const dny = (event.clientY - move.lastY) / rect.height;
+         move.lastX = event.clientX;
+         move.lastY = event.clientY;
+         translateSelected(dnx, dny);
          return;
       }
       if (isRectTool) {
@@ -118,6 +145,13 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
       if (tool === 'eraser') {
          // Close the scrub's checkpoint; a scrub that hit nothing changed no map, so this records no step.
          commitHistory();
+         return;
+      }
+      if (tool === 'select') {
+         // Close the move's checkpoint (only opened when the gesture grabbed a mark); a click that never moved
+         // changed no annotation, so this records nothing.
+         if (moveRef.current) commitHistory();
+         moveRef.current = null;
          return;
       }
       if (isRectTool) {
@@ -165,7 +199,7 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
    return (
       <div
          className="absolute inset-0"
-         style={{ touchAction: 'none', cursor: 'crosshair' }}
+         style={{ touchAction: 'none', cursor: tool === 'select' ? 'default' : 'crosshair' }}
          onPointerDown={onPointerDown}
          onPointerMove={onPointerMove}
          onPointerUp={onPointerUp}

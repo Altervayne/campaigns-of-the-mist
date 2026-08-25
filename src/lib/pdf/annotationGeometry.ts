@@ -39,6 +39,49 @@ export function rectFromCorners(ax: number, ay: number, bx: number, by: number):
 }
 
 /**
+ * The annotation's normalized bounding box. Ink spans the min/max of its points padded by half the stroke
+ * width (so the box clears the inked band); a rect kind is its own rect. Feeds move-clamping and the
+ * selection outline.
+ */
+export function annotationBounds(annotation: PdfAnnotation): PdfRect {
+   if (annotation.kind !== 'ink') return annotation.rect;
+   const { points, width } = annotation;
+   if (points.length < 2) return { x: 0, y: 0, w: 0, h: 0 };
+   let minX = points[0];
+   let maxX = points[0];
+   let minY = points[1];
+   let maxY = points[1];
+   for (let i = 2; i < points.length; i += 2) {
+      minX = Math.min(minX, points[i]);
+      maxX = Math.max(maxX, points[i]);
+      minY = Math.min(minY, points[i + 1]);
+      maxY = Math.max(maxY, points[i + 1]);
+   }
+   const pad = width / 2;
+   return { x: minX - pad, y: minY - pad, w: maxX - minX + width, h: maxY - minY + width };
+}
+
+/** Clamps a normalized translation so a bounds box stays within the page `[0,1]` on both axes. */
+export function clampTranslation(bounds: PdfRect, dnx: number, dny: number): { dx: number; dy: number } {
+   // `+ 0` folds a clamped `-0` (bounds flush against the origin) back to `0`, so a no-move step reads as zero.
+   const dx = Math.max(-bounds.x, Math.min(1 - (bounds.x + bounds.w), dnx)) + 0;
+   const dy = Math.max(-bounds.y, Math.min(1 - (bounds.y + bounds.h), dny)) + 0;
+   return { dx, dy };
+}
+
+/** Shifts a flat `[x0,y0,...]` point list by a normalized delta: even indices by `dx`, odd by `dy`. */
+export function translatePoints(points: number[], dx: number, dy: number): number[] {
+   const out = new Array<number>(points.length);
+   for (let i = 0; i < points.length; i++) out[i] = points[i] + (i % 2 === 0 ? dx : dy);
+   return out;
+}
+
+/** Shifts a rect's origin by a normalized delta. */
+export function translateRect(rect: PdfRect, dx: number, dy: number): PdfRect {
+   return { ...rect, x: rect.x + dx, y: rect.y + dy };
+}
+
+/**
  * Resolves a PDF ink to the board stroke renderer's paint input in box-pixel space. `width` is a page-width
  * fraction, so it scales by the box width; the hex `color` passes straight through (never the board's adaptive
  * null). A freehand pen: no `shape`, so `strokePaint` builds the smoothed stroked path.

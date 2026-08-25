@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { denormalizePoints, denormalizeRect, groupAnnotationsByPage, pdfInkToStrokePaintInput, rectFromCorners } from './annotationGeometry';
+import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, groupAnnotationsByPage, pdfInkToStrokePaintInput, rectFromCorners, translatePoints, translateRect } from './annotationGeometry';
 
 // -- Type Imports --
 import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
@@ -93,5 +93,56 @@ describe('groupAnnotationsByPage (mixed kinds)', () => {
    it('keeps all kinds in one page bucket, createdAt-ordered', () => {
       const map = groupAnnotationsByPage(mixed);
       expect(map.get(2)?.map((x) => x.id)).toEqual(['h', 'c']);
+   });
+});
+
+describe('annotationBounds', () => {
+   it('spans an ink polyline padded by half its stroke width', () => {
+      const bounds = annotationBounds(ink('a', 1, 1, { points: [0.25, 0.5, 0.75, 0.5], width: 0.125 }));
+      expect(bounds).toEqual({ x: 0.1875, y: 0.4375, w: 0.625, h: 0.125 });
+   });
+
+   it('pads a single-point ink into a width-square box', () => {
+      const bounds = annotationBounds(ink('a', 1, 1, { points: [0.5, 0.5], width: 0.125 }));
+      expect(bounds).toEqual({ x: 0.4375, y: 0.4375, w: 0.125, h: 0.125 });
+   });
+
+   it('returns a zero box for an empty ink', () => {
+      expect(annotationBounds(ink('a', 1, 1, { points: [] }))).toEqual({ x: 0, y: 0, w: 0, h: 0 });
+   });
+
+   it('returns the rect for a highlight or comment', () => {
+      expect(annotationBounds(mixed.h)).toEqual({ x: 0, y: 0, w: 0.5, h: 0.5 });
+      expect(annotationBounds(mixed.c)).toEqual({ x: 0.1, y: 0.1, w: 0.2, h: 0.2 });
+   });
+});
+
+describe('clampTranslation', () => {
+   it('passes a delta through when the bounds stay on the page', () => {
+      expect(clampTranslation({ x: 0.25, y: 0.25, w: 0.25, h: 0.25 }, 0.125, 0.125)).toEqual({ dx: 0.125, dy: 0.125 });
+   });
+
+   it('clamps to zero at the far edge', () => {
+      expect(clampTranslation({ x: 0.5, y: 0.5, w: 0.5, h: 0.5 }, 0.25, 0.25)).toEqual({ dx: 0, dy: 0 });
+   });
+
+   it('clamps to zero at the near edge', () => {
+      expect(clampTranslation({ x: 0, y: 0, w: 0.5, h: 0.5 }, -0.25, -0.25)).toEqual({ dx: 0, dy: 0 });
+   });
+
+   it('caps a delta to the remaining room', () => {
+      expect(clampTranslation({ x: 0.5, y: 0, w: 0.25, h: 0.25 }, 0.5, 0.5)).toEqual({ dx: 0.25, dy: 0.5 });
+   });
+});
+
+describe('translatePoints', () => {
+   it('shifts even indices by dx and odd by dy', () => {
+      expect(translatePoints([0.25, 0.25, 0.5, 0.5], 0.125, 0.25)).toEqual([0.375, 0.5, 0.625, 0.75]);
+   });
+});
+
+describe('translateRect', () => {
+   it('shifts the origin and keeps the size', () => {
+      expect(translateRect({ x: 0.25, y: 0.25, w: 0.5, h: 0.5 }, 0.125, 0.125)).toEqual({ x: 0.375, y: 0.375, w: 0.5, h: 0.5 });
    });
 });

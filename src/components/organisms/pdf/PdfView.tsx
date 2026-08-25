@@ -26,12 +26,12 @@ import { useVisiblePages } from './useVisiblePages';
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 
 // -- Utils Imports --
-import { groupAnnotationsByPage } from '@/lib/pdf/annotationGeometry';
+import { annotationBounds, clampTranslation, groupAnnotationsByPage, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
 import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
 import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
-import type { PdfStore } from '@/lib/stores/pdfStore';
+import type { PdfStore, PdfTool } from '@/lib/stores/pdfStore';
 import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
 import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -55,6 +55,9 @@ const NO_ANNOTATIONS: PdfAnnotation[] = [];
 
 /** The eraser's grab floor in box px; per-ink reach grows past it with the stroke width. */
 const ERASER_HIT_FLOOR = 8;
+
+/** The select tool's grab floor in box px; a thin stroke stays clickable, matching the eraser's reach. */
+const SELECT_HIT_FLOOR = 8;
 
 export function PdfView() {
    const store = useActivePdfInstance();
@@ -105,6 +108,14 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
 
    // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
    const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+
+   // The selected mark; ephemeral UI, reset on remount. A ref mirror lets the move / recolor / delete handlers
+   // read it while staying referentially stable (they never swap mid-gesture).
+   const [selectedId, setSelectedId] = useState<string | null>(null);
+   const selectedIdRef = useRef(selectedId);
+   useEffect(() => {
+      selectedIdRef.current = selectedId;
+   }, [selectedId]);
 
    // Mints a pen ink from a finished gesture and hands it to the autosave path. Reads the live pen color at
    // commit so the handler stays stable (never swapped mid-stroke); `store` is the only dependency.
@@ -244,6 +255,69 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
+   const select = useCallback((id: string | null) => setSelectedId(id), []);
+
+   // Leaving the select tool (or turning markup off) drops the current selection, so a mark never stays
+   // highlighted - or deletable via the Delete key - under another tool or back in read mode.
+   const handleToolChange = useCallback(
+      (next: PdfTool) => {
+         if (next !== 'select') setSelectedId(null);
+         setTool(next);
+      },
+      [setTool],
+   );
+
+   const toggleMarkup = useCallback(() => {
+      setSelectedId(null);
+      setMarkupMode(store.getState().markupMode === 'read' ? 'markup' : 'read');
+   }, [setMarkupMode, store]);
+
+   // The topmost mark of any kind under a client point on one page, or null. Mirrors eraseAt's zoom-independent
+   // conversion (fraction kills the zoom, boxW rescales), grabbing across every kind so any mark is selectable.
+   const selectAt = useCallback(
+      (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
+         const marks = store.getState().doc?.annotations;
+         if (!marks) return null;
+         const px = ((clientX - rect.left) / rect.width) * boxW;
+         const py = ((clientY - rect.top) / rect.height) * boxH;
+         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber);
+         const hits = annotationAtPoint(onPage, px, py, boxW, boxH, SELECT_HIT_FLOOR);
+         return hits[0] ?? null;
+      },
+      [store],
+   );
+
+   // Moves the selected mark by an incremental normalized delta, clamped so its bounds stay on the page. The
+   // interaction layer brackets the whole drag with begin/commit, so this only mutates. A fully-clamped step
+   // (dragging into an edge) writes nothing, so it never swaps the map or leaves a phantom undo step.
+   const translateSelected = useCallback(
+      (dnx: number, dny: number) => {
+         const id = selectedIdRef.current;
+         if (!id) return;
+         const mark = store.getState().doc?.annotations?.[id];
+         if (!mark) return;
+         const { dx, dy } = clampTranslation(annotationBounds(mark), dnx, dny);
+         if (dx === 0 && dy === 0) return;
+         const { updateAnnotation } = store.getState().actions;
+         if (mark.kind === 'ink') updateAnnotation(id, { points: translatePoints(mark.points, dx, dy) });
+         else updateAnnotation(id, { rect: translateRect(mark.rect, dx, dy) });
+      },
+      [store],
+   );
+
+   // Recolors the selected mark in one undo step; bound to the toolbar's color control, which fires on close.
+   const recolorSelected = useCallback(
+      (color: string) => {
+         const id = selectedIdRef.current;
+         if (!id) return;
+         const actions = store.getState().actions;
+         actions.beginHistory();
+         actions.updateAnnotation(id, { color });
+         actions.commitHistory();
+      },
+      [store],
+   );
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
@@ -262,16 +336,23 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          closeComment,
          setCommentBody,
          deleteComment,
+         selectedId,
+         select,
+         selectAt,
+         translateSelected,
          beginHistory,
          commitHistory,
       }),
-      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, beginHistory, commitHistory],
+      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, selectedId, select, selectAt, translateSelected, beginHistory, commitHistory],
    );
 
    // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
    // untouched) keeps every page's slice ref, and the page memos survive. Only the changed page's slice re-refs
    // when a mark is added or removed.
    const byPage = useMemo(() => groupAnnotationsByPage(annotations), [annotations]);
+
+   // The selected mark's own ink, or null when nothing is selected; drives the toolbar's recolor swatch.
+   const selectedColor = selectedId ? annotations?.[selectedId]?.color ?? null : null;
 
    // The reading position to restore on (re)mount: the page the instance kept, frozen at mount so live
    // scrolling never moves the target. Seeded into the visible set so its canvas renders from the first
@@ -374,13 +455,25 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       return () => el.removeEventListener('wheel', onWheel);
    }, [wheelZoom]);
 
-   // Reader-scoped zoom keys: +/= in, - out, 0 reset. The listener lives only while this surface is mounted
-   // (it mounts only when a pdf tab is active), and ignores keys typed into the page input.
+   // Reader-scoped keys: +/= zoom in, - out, 0 reset, and Delete/Backspace removes the selected mark. The
+   // listener lives only while this surface is mounted (it mounts only when a pdf tab is active), and ignores
+   // keys typed into the page input or the comment editor.
    useEffect(() => {
       const onKeyDown = (event: KeyboardEvent) => {
          if (event.ctrlKey || event.metaKey || event.altKey) return;
          const target = event.target as HTMLElement | null;
          if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+         if (event.key === 'Delete' || event.key === 'Backspace') {
+            const id = selectedIdRef.current;
+            if (store.getState().markupMode !== 'markup' || !id) return;
+            const actions = store.getState().actions;
+            actions.beginHistory();
+            actions.removeAnnotation(id);
+            actions.commitHistory();
+            setSelectedId(null);
+            event.preventDefault();
+            return;
+         }
          if (event.key === '+' || event.key === '=') zoomIn();
          else if (event.key === '-') zoomOut();
          else if (event.key === '0') resetZoom();
@@ -389,7 +482,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       };
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
-   }, [zoomIn, zoomOut, resetZoom]);
+   }, [zoomIn, zoomOut, resetZoom, store]);
 
    return (
       <PdfMarkupContext.Provider value={markup}>
@@ -419,7 +512,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             {markupMode === 'markup' ? (
                <PdfMarkupToolbar
                   tool={tool}
-                  onToolChange={setTool}
+                  onToolChange={handleToolChange}
                   penColor={penColor}
                   onPenColorChange={setPenColor}
                   penWidth={penWidth}
@@ -428,6 +521,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   onHighlightColorChange={setHighlightColor}
                   commentColor={commentColor}
                   onCommentColorChange={setCommentColor}
+                  selectedColor={selectedColor}
+                  onRecolorSelected={recolorSelected}
                   canUndo={canUndo}
                   canRedo={canRedo}
                   onUndo={store.getState().actions.undo}
@@ -439,7 +534,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                total={pageCount}
                zoom={zoom}
                markupMode={markupMode}
-               onToggleMarkup={() => setMarkupMode(markupMode === 'read' ? 'markup' : 'read')}
+               onToggleMarkup={toggleMarkup}
                onPrev={() => jumpToPage(currentPage - 1)}
                onNext={() => jumpToPage(currentPage + 1)}
                onJump={jumpToPage}

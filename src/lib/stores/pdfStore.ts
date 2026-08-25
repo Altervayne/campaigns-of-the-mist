@@ -63,7 +63,7 @@ export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type PdfMarkupMode = 'read' | 'markup';
 
 /** The armed markup tool while in markup mode. */
-export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment';
+export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment' | 'select';
 
 /** The pen's default ink: a legible rose on white paper. */
 const DEFAULT_PEN_COLOR = '#e11d48';

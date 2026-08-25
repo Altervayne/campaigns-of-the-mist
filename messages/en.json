@@ -29,6 +29,7 @@
    "PdfMarkup": {
       "markup": "Mark up",
       "read": "Done marking up",
+      "select": "Select",
       "pen": "Pen",
       "eraser": "Eraser",
       "highlight": "Highlight",
@@ -36,6 +37,7 @@
       "inkColor": "Ink color",
       "highlightColor": "Highlight color",
       "commentColor": "Comment color",
+      "markColor": "Mark color",
       "commentPlaceholder": "Add a comment…",
       "deleteComment": "Delete"
    },

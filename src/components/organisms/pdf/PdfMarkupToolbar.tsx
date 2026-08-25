@@ -2,7 +2,7 @@
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Eraser, Highlighter, MessageSquare, Pen, Redo2, Undo2 } from 'lucide-react';
+import { Eraser, Highlighter, MessageSquare, MousePointer2, Pen, Redo2, Undo2 } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -17,9 +17,9 @@ import type { ReactNode } from 'react';
 
 /*
  * The markup pill: stacks above the reader's nav/zoom bar while markup mode is on. It carries the tool
- * axis (pen / eraser / highlight / comment), each tool's own controls (pen width + ink, highlight fill,
- * comment color), and the annotation undo/redo pair. Chrome uses theme tokens; the mark colors are user
- * content, so the swatches show the hex.
+ * axis (select / pen / eraser / highlight / comment), each tool's own controls (pen width + ink, highlight
+ * fill, comment color, the selected mark's recolor), and the annotation undo/redo pair. Chrome uses theme
+ * tokens; the mark colors are user content, so the swatches show the hex.
  */
 
 interface PdfMarkupToolbarProps {
@@ -33,18 +33,24 @@ interface PdfMarkupToolbarProps {
    onHighlightColorChange: (color: string) => void;
    commentColor: string;
    onCommentColorChange: (color: string) => void;
+   /** The selected mark's ink while the select tool is armed, or null when nothing is selected. */
+   selectedColor: string | null;
+   onRecolorSelected: (color: string) => void;
    canUndo: boolean;
    canRedo: boolean;
    onUndo: () => void;
    onRedo: () => void;
 }
 
-export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange, highlightColor, onHighlightColorChange, commentColor, onCommentColorChange, canUndo, canRedo, onUndo, onRedo }: PdfMarkupToolbarProps) {
+export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange, highlightColor, onHighlightColorChange, commentColor, onCommentColorChange, selectedColor, onRecolorSelected, canUndo, canRedo, onUndo, onRedo }: PdfMarkupToolbarProps) {
    const { t } = useTranslation();
 
    return (
       <div className="pointer-events-none absolute inset-x-0 bottom-16 flex justify-center">
          <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-card/95 px-1.5 py-1 text-card-foreground shadow-md backdrop-blur-sm">
+            <ToolButton title={t('PdfMarkup.select')} active={tool === 'select'} onClick={() => onToolChange('select')}>
+               <MousePointer2 className="h-4 w-4" />
+            </ToolButton>
             <ToolButton title={t('PdfMarkup.pen')} active={tool === 'pen'} onClick={() => onToolChange('pen')}>
                <Pen className="h-4 w-4" />
             </ToolButton>
@@ -58,6 +64,12 @@ export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChang
                <MessageSquare className="h-4 w-4" />
             </ToolButton>
 
+            {tool === 'select' && selectedColor !== null ? (
+               <>
+                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+                  <InkColorControl color={selectedColor} title={t('PdfMarkup.markColor')} onApply={(color) => color && onRecolorSelected(color)} />
+               </>
+            ) : null}
             {tool === 'pen' ? (
                <>
                   <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />

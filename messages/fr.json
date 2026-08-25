@@ -29,6 +29,7 @@
    "PdfMarkup": {
       "markup": "[TO COMPLETE]",
       "read": "[TO COMPLETE]",
+      "select": "[TO COMPLETE]",
       "pen": "[TO COMPLETE]",
       "eraser": "[TO COMPLETE]",
       "highlight": "[TO COMPLETE]",
@@ -36,6 +37,7 @@
       "inkColor": "[TO COMPLETE]",
       "highlightColor": "[TO COMPLETE]",
       "commentColor": "[TO COMPLETE]",
+      "markColor": "[TO COMPLETE]",
       "commentPlaceholder": "[TO COMPLETE]",
       "deleteComment": "[TO COMPLETE]"
    },
