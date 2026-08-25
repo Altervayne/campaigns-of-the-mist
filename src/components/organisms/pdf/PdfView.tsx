@@ -596,7 +596,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             {/* Scroller + panel share a flex row so the panel PUSHES the pages (the scroller shrinks and the
                 probe inside it re-measures, re-fitting the pages) rather than covering them. */}
             <div className="flex h-full">
-               <div ref={scrollRef} className="min-w-0 flex-1 overflow-auto overscroll-contain px-4 py-6">
+               <div ref={scrollRef} className="min-w-0 flex-1 overflow-auto overscroll-contain bg-background px-4 py-6">
                   {/* Zero-height full-width probe: measures the scroller's content width independent of the page
                       column, which can grow wider than the container when zoomed. */}
                   <div ref={measureRef} className="h-0 w-full" />
