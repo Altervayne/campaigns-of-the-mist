@@ -31,7 +31,13 @@
       "read": "[TO COMPLETE]",
       "pen": "[TO COMPLETE]",
       "eraser": "[TO COMPLETE]",
-      "inkColor": "[TO COMPLETE]"
+      "highlight": "[TO COMPLETE]",
+      "comment": "[TO COMPLETE]",
+      "inkColor": "[TO COMPLETE]",
+      "highlightColor": "[TO COMPLETE]",
+      "commentColor": "[TO COMPLETE]",
+      "commentPlaceholder": "[TO COMPLETE]",
+      "deleteComment": "[TO COMPLETE]"
    },
    "Tabs": {
       "untitled": "Personnage sans nom",

@@ -49,13 +49,22 @@ export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type PdfMarkupMode = 'read' | 'markup';
 
 /** The armed markup tool while in markup mode. */
-export type PdfTool = 'pen' | 'eraser';
+export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment';
 
 /** The pen's default ink: a legible rose on white paper. */
 const DEFAULT_PEN_COLOR = '#e11d48';
 
 /** The pen's default width, in the stroke-width selector's world px. */
 const DEFAULT_PEN_WIDTH = 3;
+
+/** The highlighter's default fill: a marker yellow on white paper. */
+const DEFAULT_HIGHLIGHT_COLOR = '#fde047';
+
+/** The comment region's default outline/fill: a warm amber. */
+const DEFAULT_COMMENT_COLOR = '#f59e0b';
+
+/** Fixed highlight fill opacity - no alpha slider in v1. */
+export const HIGHLIGHT_ALPHA = 0.35;
 
 export interface PdfState {
    /** The open PDF's id, or `null` before the first hydrate. */
@@ -86,6 +95,10 @@ export interface PdfState {
    penColor: string;
    /** The pen's width in the selector's world px; ephemeral. Normalized to a page-width fraction at commit. */
    penWidth: number;
+   /** The highlighter's fill hex; ephemeral. Real hex - user content on white paper. */
+   highlightColor: string;
+   /** The comment region's outline/fill hex; ephemeral. Real hex - user content on white paper. */
+   commentColor: string;
    status: PdfStatus;
    actions: {
       /**
@@ -113,6 +126,10 @@ export interface PdfState {
       setPenColor: (color: string) => void;
       /** Sets the pen's width (selector world px). Ephemeral. */
       setPenWidth: (width: number) => void;
+      /** Sets the highlighter's fill hex. Ephemeral. */
+      setHighlightColor: (color: string) => void;
+      /** Sets the comment region's hex. Ephemeral. */
+      setCommentColor: (color: string) => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
       /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
@@ -130,7 +147,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -143,6 +160,8 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    tool: 'pen',
    penColor: DEFAULT_PEN_COLOR,
    penWidth: DEFAULT_PEN_WIDTH,
+   highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+   commentColor: DEFAULT_COMMENT_COLOR,
    status: 'idle',
 };
 
@@ -222,6 +241,10 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setPenColor: (color) => set({ penColor: color }),
 
             setPenWidth: (width) => set({ penWidth: width }),
+
+            setHighlightColor: (color) => set({ highlightColor: color }),
+
+            setCommentColor: (color) => set({ commentColor: color }),
 
             addAnnotation: (annotation) => {
                const { doc } = get();

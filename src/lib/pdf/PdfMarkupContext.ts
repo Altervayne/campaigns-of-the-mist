@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react';
 
 // -- Type Imports --
 import type { PdfMarkupMode, PdfTool } from '@/lib/stores/pdfStore';
+import type { PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
  * React Context carrying the markup mode, the armed tool, the pen params, and the commit / erase sinks to
@@ -21,14 +22,35 @@ export interface PdfMarkupContextValue {
    penColor: string;
    /** Pen width in the selector's world px; the layer normalizes it to a page-width fraction at commit. */
    penWidth: number;
+   highlightColor: string;
+   commentColor: string;
+   /** The comment whose editor popover is open, or `null`. Drives the per-page comment layer's controlled popover. */
+   openCommentId: string | null;
    /** Mints a pen ink from a finished gesture: normalized points + a normalized (page-width fraction) width. */
    commitInk: (pageNumber: number, normalizedPoints: number[], normalizedWidth: number) => void;
+   /** Mints a highlight from a finished rect drag (normalized page-space rect). */
+   commitHighlight: (pageNumber: number, rect: PdfRect) => void;
+   /** Mints an empty comment from a finished rect drag AND opens its editor for authoring. */
+   commitComment: (pageNumber: number, rect: PdfRect) => void;
    /**
     * Erases every annotation under a client point on the given page. `rect` is the page box's on-screen
     * (zoomed) rect; `boxW`/`boxH` are its unzoomed pixel size, so the point resolves to box space independent
     * of the current zoom.
     */
    eraseAt: (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => void;
+   /**
+    * The topmost comment id under a client point on the given page, or `null`. Same zoom-independent point
+    * conversion as {@link eraseAt}; used to reopen an existing comment from a click.
+    */
+   commentAtPoint: (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => string | null;
+   /** Opens a comment's editor popover. */
+   openComment: (id: string) => void;
+   /** Closes a comment's editor, deleting it first if its body is still empty. */
+   closeComment: (id: string) => void;
+   /** Edits a comment's body (rides the debounced autosave). */
+   setCommentBody: (id: string, body: string) => void;
+   /** Removes a comment outright and closes its editor. */
+   deleteComment: (id: string) => void;
 }
 
 /** The read-mode default: no marking, no-op sinks. Consumers gate on `mode` before ever calling them. */
@@ -37,8 +59,18 @@ const READ_ONLY_VALUE: PdfMarkupContextValue = {
    tool: 'pen',
    penColor: '#e11d48',
    penWidth: 3,
+   highlightColor: '#fde047',
+   commentColor: '#f59e0b',
+   openCommentId: null,
    commitInk: () => {},
+   commitHighlight: () => {},
+   commitComment: () => {},
    eraseAt: () => {},
+   commentAtPoint: () => null,
+   openComment: () => {},
+   closeComment: () => {},
+   setCommentBody: () => {},
+   deleteComment: () => {},
 };
 
 export const PdfMarkupContext = createContext<PdfMarkupContextValue>(READ_ONLY_VALUE);

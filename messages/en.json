@@ -31,7 +31,13 @@
       "read": "Done marking up",
       "pen": "Pen",
       "eraser": "Eraser",
-      "inkColor": "Ink color"
+      "highlight": "Highlight",
+      "comment": "Comment",
+      "inkColor": "Ink color",
+      "highlightColor": "Highlight color",
+      "commentColor": "Comment color",
+      "commentPlaceholder": "Add a comment…",
+      "deleteComment": "Delete"
    },
    "Tabs": {
       "untitled": "Untitled character",

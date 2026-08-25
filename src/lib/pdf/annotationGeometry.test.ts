@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { denormalizePoints, denormalizeRect, groupAnnotationsByPage, pdfInkToStrokePaintInput } from './annotationGeometry';
+import { denormalizePoints, denormalizeRect, groupAnnotationsByPage, pdfInkToStrokePaintInput, rectFromCorners } from './annotationGeometry';
 
 // -- Type Imports --
 import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
@@ -31,6 +31,21 @@ describe('denormalizePoints', () => {
 describe('denormalizeRect', () => {
    it('maps a normalized rect into box pixels', () => {
       expect(denormalizeRect({ x: 0.1, y: 0.2, w: 0.3, h: 0.4 }, 200, 400)).toEqual({ x: 20, y: 80, w: 60, h: 160 });
+   });
+});
+
+describe('rectFromCorners', () => {
+   it('orders top-left to bottom-right', () => {
+      expect(rectFromCorners(0.25, 0.5, 0.75, 1)).toEqual({ x: 0.25, y: 0.5, w: 0.5, h: 0.5 });
+   });
+
+   it('normalizes a drag started from any corner', () => {
+      expect(rectFromCorners(0.75, 1, 0.25, 0.5)).toEqual({ x: 0.25, y: 0.5, w: 0.5, h: 0.5 });
+      expect(rectFromCorners(0.75, 0.5, 0.25, 1)).toEqual({ x: 0.25, y: 0.5, w: 0.5, h: 0.5 });
+   });
+
+   it('yields a zero-size rect for a point', () => {
+      expect(rectFromCorners(0.5, 0.5, 0.5, 0.5)).toEqual({ x: 0.5, y: 0.5, w: 0, h: 0 });
    });
 });
 

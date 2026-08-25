@@ -33,6 +33,11 @@ export function denormalizeRect(rect: PdfRect, w: number, h: number): { x: numbe
    return { x: rect.x * w, y: rect.y * h, w: rect.w * w, h: rect.h * h };
 }
 
+/** Builds a normalized rect from two opposite corners, ordering the edges so width/height are non-negative. */
+export function rectFromCorners(ax: number, ay: number, bx: number, by: number): PdfRect {
+   return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) };
+}
+
 /**
  * Resolves a PDF ink to the board stroke renderer's paint input in box-pixel space. `width` is a page-width
  * fraction, so it scales by the box width; the hex `color` passes straight through (never the board's adaptive

@@ -2,7 +2,7 @@
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Eraser, Pen } from 'lucide-react';
+import { Eraser, Highlighter, MessageSquare, Pen } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -17,8 +17,8 @@ import type { ReactNode } from 'react';
 
 /*
  * The markup pill: stacks above the reader's nav/zoom bar while markup mode is on. It carries the tool
- * axis (pen / eraser) and, for the pen, the reused board draw controls. Chrome uses theme tokens; the
- * pen INK is user content, so its swatch shows the picked hex.
+ * axis (pen / eraser / highlight / comment) and each tool's own controls (pen width + ink, highlight fill,
+ * comment color). Chrome uses theme tokens; the mark colors are user content, so the swatches show the hex.
  */
 
 interface PdfMarkupToolbarProps {
@@ -28,9 +28,13 @@ interface PdfMarkupToolbarProps {
    onPenColorChange: (color: string) => void;
    penWidth: number;
    onPenWidthChange: (width: number) => void;
+   highlightColor: string;
+   onHighlightColorChange: (color: string) => void;
+   commentColor: string;
+   onCommentColorChange: (color: string) => void;
 }
 
-export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange }: PdfMarkupToolbarProps) {
+export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange, highlightColor, onHighlightColorChange, commentColor, onCommentColorChange }: PdfMarkupToolbarProps) {
    const { t } = useTranslation();
 
    return (
@@ -42,12 +46,30 @@ export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChang
             <ToolButton title={t('PdfMarkup.eraser')} active={tool === 'eraser'} onClick={() => onToolChange('eraser')}>
                <Eraser className="h-4 w-4" />
             </ToolButton>
+            <ToolButton title={t('PdfMarkup.highlight')} active={tool === 'highlight'} onClick={() => onToolChange('highlight')}>
+               <Highlighter className="h-4 w-4" />
+            </ToolButton>
+            <ToolButton title={t('PdfMarkup.comment')} active={tool === 'comment'} onClick={() => onToolChange('comment')}>
+               <MessageSquare className="h-4 w-4" />
+            </ToolButton>
 
             {tool === 'pen' ? (
                <>
                   <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
                   <StrokeWidthSelector width={penWidth} onInput={onPenWidthChange} />
                   <InkColorControl color={penColor} title={t('PdfMarkup.inkColor')} onApply={(color) => color && onPenColorChange(color)} />
+               </>
+            ) : null}
+            {tool === 'highlight' ? (
+               <>
+                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+                  <InkColorControl color={highlightColor} title={t('PdfMarkup.highlightColor')} onApply={(color) => color && onHighlightColorChange(color)} />
+               </>
+            ) : null}
+            {tool === 'comment' ? (
+               <>
+                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+                  <InkColorControl color={commentColor} title={t('PdfMarkup.commentColor')} onApply={(color) => color && onCommentColorChange(color)} />
                </>
             ) : null}
          </div>

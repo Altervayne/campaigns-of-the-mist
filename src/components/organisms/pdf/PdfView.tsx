@@ -32,7 +32,8 @@ import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarku
 
 // -- Type Imports --
 import type { PdfStore } from '@/lib/stores/pdfStore';
-import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
+import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
+import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 /*
@@ -96,7 +97,12 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const tool = useStore(store, (state) => state.tool);
    const penColor = useStore(store, (state) => state.penColor);
    const penWidth = useStore(store, (state) => state.penWidth);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth } = store.getState().actions;
+   const highlightColor = useStore(store, (state) => state.highlightColor);
+   const commentColor = useStore(store, (state) => state.commentColor);
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor } = store.getState().actions;
+
+   // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
+   const [openCommentId, setOpenCommentId] = useState<string | null>(null);
 
    // Mints a pen ink from a finished gesture and hands it to the autosave path. Reads the live pen color at
    // commit so the handler stays stable (never swapped mid-stroke); `store` is the only dependency.
@@ -133,9 +139,104 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
+   // Mints a highlight from a finished rect drag. Reads the live fill color at commit so the handler stays stable.
+   const commitHighlight = useCallback(
+      (pageNumber: number, rect: PdfRect) => {
+         const highlight: PdfHighlight = {
+            kind: 'highlight',
+            id: cuid(),
+            page: pageNumber,
+            color: store.getState().highlightColor,
+            alpha: HIGHLIGHT_ALPHA,
+            rect,
+            createdAt: Date.now(),
+         };
+         store.getState().actions.addAnnotation(highlight);
+      },
+      [store],
+   );
+
+   // Mints an empty comment from a finished rect drag and opens its editor so the body can be authored at once.
+   const commitComment = useCallback(
+      (pageNumber: number, rect: PdfRect) => {
+         const id = cuid();
+         const comment: PdfComment = {
+            kind: 'comment',
+            id,
+            page: pageNumber,
+            color: store.getState().commentColor,
+            body: '',
+            rect,
+            createdAt: Date.now(),
+         };
+         store.getState().actions.addAnnotation(comment);
+         setOpenCommentId(id);
+      },
+      [store],
+   );
+
+   // The topmost comment under a client point on one page, or null. Mirrors eraseAt's zoom-independent conversion,
+   // but filters to comments so a click reopens only a note (never an ink/highlight underneath).
+   const commentAtPoint = useCallback(
+      (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
+         const marks = store.getState().doc?.annotations;
+         if (!marks) return null;
+         const px = ((clientX - rect.left) / rect.width) * boxW;
+         const py = ((clientY - rect.top) / rect.height) * boxH;
+         const comments = Object.values(marks).filter((mark) => mark.page === pageNumber && mark.kind === 'comment');
+         const hits = annotationAtPoint(comments, px, py, boxW, boxH, 0);
+         return hits[0] ?? null;
+      },
+      [store],
+   );
+
+   const openComment = useCallback((id: string) => setOpenCommentId(id), []);
+
+   // Close path: an empty (never-authored or cleared) comment self-deletes, so a stray marquee leaves no ghost note.
+   const closeComment = useCallback(
+      (id: string) => {
+         const comment = store.getState().doc?.annotations?.[id];
+         if (comment && comment.kind === 'comment' && comment.body.trim() === '') {
+            store.getState().actions.removeAnnotation(id);
+         }
+         setOpenCommentId((current) => (current === id ? null : current));
+      },
+      [store],
+   );
+
+   const setCommentBody = useCallback(
+      (id: string, body: string) => store.getState().actions.updateAnnotation(id, { body }),
+      [store],
+   );
+
+   const deleteComment = useCallback(
+      (id: string) => {
+         store.getState().actions.removeAnnotation(id);
+         setOpenCommentId((current) => (current === id ? null : current));
+      },
+      [store],
+   );
+
    const markup = useMemo<PdfMarkupContextValue>(
-      () => ({ mode: markupMode, tool, penColor, penWidth, commitInk, eraseAt }),
-      [markupMode, tool, penColor, penWidth, commitInk, eraseAt],
+      () => ({
+         mode: markupMode,
+         tool,
+         penColor,
+         penWidth,
+         highlightColor,
+         commentColor,
+         openCommentId,
+         commitInk,
+         commitHighlight,
+         commitComment,
+         eraseAt,
+         commentAtPoint,
+         openComment,
+         closeComment,
+         setCommentBody,
+         deleteComment,
+      }),
+      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment],
    );
 
    // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
@@ -294,6 +395,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   onPenColorChange={setPenColor}
                   penWidth={penWidth}
                   onPenWidthChange={setPenWidth}
+                  highlightColor={highlightColor}
+                  onHighlightColorChange={setHighlightColor}
+                  commentColor={commentColor}
+                  onCommentColorChange={setCommentColor}
                />
             ) : null}
             <PdfToolbar

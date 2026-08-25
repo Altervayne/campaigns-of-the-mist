@@ -5,6 +5,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfAnnotationLayer } from './PdfAnnotationLayer';
 import { PdfPageInteractionLayer } from './PdfPageInteractionLayer';
+import { PdfCommentLayer } from './PdfCommentLayer';
 
 // -- Type Imports --
 import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
@@ -123,6 +124,8 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
          {isVisible && annotations.length > 0 ? <PdfAnnotationLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
          {/* Markup capture sits above the marks; context-driven, so it needs no props and returns null in read mode. */}
          {isVisible ? <PdfPageInteractionLayer pageNumber={pageNumber} width={width} height={Math.round(width * aspect)} /> : null}
+         {/* Comment anchors + editors sit topmost; inert in markup mode (the capture layer below owns the gesture). */}
+         {isVisible ? <PdfCommentLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
          {rendering && !hasBitmap ? (
             // A heavy page can take seconds to rasterize; the mist over the (white) sheet reads as loading
             // rather than a frozen blank. Fixed grey since the sheet is always white, not app-themed.
