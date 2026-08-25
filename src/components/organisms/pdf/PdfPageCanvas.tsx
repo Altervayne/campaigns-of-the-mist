@@ -3,8 +3,10 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // -- Component Imports --
 import { MistSpinner } from '@/components/molecules/MistSpinner';
+import { PdfAnnotationLayer } from './PdfAnnotationLayer';
 
 // -- Type Imports --
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 
 /*
@@ -31,13 +33,15 @@ interface PdfPageCanvasProps {
    defaultAspect: number;
    /** Whether the page is near enough the viewport to render its canvas. */
    isVisible: boolean;
+   /** This page's annotations, painted over the canvas. */
+   annotations: PdfAnnotation[];
    /** Registers the page box with the viewport observers. */
    registerPage: (pageNumber: number, el: HTMLElement | null) => void;
 }
 
 // Memoized: during a wheel-zoom only the column's CSS zoom changes, so with the render width held steady these
 // props don't, and 491 pages skip re-rendering entirely.
-export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, registerPage }: PdfPageCanvasProps) {
+export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, annotations, registerPage }: PdfPageCanvasProps) {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [aspect, setAspect] = useState(defaultAspect);
    const [rendering, setRendering] = useState(false);
@@ -115,6 +119,7 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
          {/* The CSS size follows the zoom immediately (scaling the current bitmap) while the higher-res
              re-render runs; the backing pixels are set imperatively once that render blits in. */}
          {isVisible ? <canvas ref={canvasRef} className="block" style={{ width, height: Math.round(width * aspect) }} /> : null}
+         {isVisible && annotations.length > 0 ? <PdfAnnotationLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
          {rendering && !hasBitmap ? (
             // A heavy page can take seconds to rasterize; the mist over the (white) sheet reads as loading
             // rather than a frozen blank. Fixed grey since the sheet is always white, not app-themed.

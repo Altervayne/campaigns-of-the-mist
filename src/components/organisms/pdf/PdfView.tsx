@@ -23,8 +23,12 @@ import { useVisiblePages } from './useVisiblePages';
 // -- Store Imports --
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 
+// -- Utils Imports --
+import { groupAnnotationsByPage } from '@/lib/pdf/annotationGeometry';
+
 // -- Type Imports --
 import type { PdfStore } from '@/lib/stores/pdfStore';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 /*
@@ -40,6 +44,9 @@ const READABLE_MAX_WIDTH = 1000;
 /** After a zoom stops changing for this long, the pages re-rasterize at the new width (a CSS zoom covers the gap).
  *  Lenient enough that several quick wheel bursts read as one gesture instead of settling between each. */
 const RENDER_SETTLE_MS = 400;
+
+/** Stable empty slice for a page with no annotations, so an unmarked page's prop ref never changes across zooms. */
+const NO_ANNOTATIONS: PdfAnnotation[] = [];
 
 export function PdfView() {
    const store = useActivePdfInstance();
@@ -77,7 +84,13 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const measureRef = useRef<HTMLDivElement>(null);
    const currentPage = useStore(store, (state) => state.currentPage);
    const jumpSeq = useStore(store, (state) => state.jumpSeq);
+   const annotations = useStore(store, (state) => state.doc?.annotations);
    const { setPage } = store.getState().actions;
+
+   // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
+   // untouched) keeps every page's slice ref, and the page memos survive. Only the changed page's slice re-refs
+   // when a mark is added or removed.
+   const byPage = useMemo(() => groupAnnotationsByPage(annotations), [annotations]);
 
    // The reading position to restore on (re)mount: the page the instance kept, frozen at mount so live
    // scrolling never moves the target. Seeded into the visible set so its canvas renders from the first
@@ -215,6 +228,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                         width={renderWidth}
                         defaultAspect={defaultAspect}
                         isVisible={visible.has(pageNumber)}
+                        annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
                         registerPage={registerPage}
                      />
                   ))}
