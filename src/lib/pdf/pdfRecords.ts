@@ -1,5 +1,6 @@
 // -- Type Imports --
 import type { PdfDocument } from '@/lib/types/pdf';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 
 /**
  * The per-record schema version for pdf rows, written to `PdfRecord.schemaVersion`.
@@ -9,20 +10,21 @@ import type { PdfDocument } from '@/lib/types/pdf';
 export const PDF_SCHEMA_VERSION = 1;
 
 /**
- * One row per open/working PDF in the `pdfDocs` store. A PDF is read-only, so the whole
- * aggregate is stored inline and `title` is the only field that ever changes. `updatedAt`
- * powers last-write-wins; `drawerItemId` links the working row to its saved drawer copy,
- * mirroring `NoteRecord.drawerItemId`.
+ * One row per open/working PDF in the `pdfDocs` store. The whole aggregate is stored inline;
+ * `title` and `annotations` are the mutable fields. `updatedAt` powers last-write-wins;
+ * `drawerItemId` links the working row to its saved drawer copy, mirroring `NoteRecord.drawerItemId`.
  */
 export interface PdfRecord {
    /** Primary key (a stable cuid assigned at creation, shared with the aggregate `id`). */
    id: string;
-   /** Tab / drawer / preview name (the only mutable field). */
+   /** Tab / drawer / preview name. */
    title: string;
    /** Pointer into `pdfAssets` (the dedup key). */
    assetHash: string;
    /** Page count, parsed once at import. */
    pageCount: number;
+   /** Markup annotations keyed by annotation id. Optional, non-indexed: old rows read as `undefined`. */
+   annotations?: Record<string, PdfAnnotation>;
    /** Epoch milliseconds of the last write; drives last-write-wins. */
    updatedAt: number;
    /** The drawer item this PDF is linked to, or null when unsaved (mirrors `NoteRecord.drawerItemId`). */
@@ -33,5 +35,11 @@ export interface PdfRecord {
 
 /** Projects a stored record onto the {@link PdfDocument} aggregate (drops persistence-only fields). */
 export function recordToPdfDocument(record: PdfRecord): PdfDocument {
-   return { id: record.id, title: record.title, assetHash: record.assetHash, pageCount: record.pageCount };
+   return {
+      id: record.id,
+      title: record.title,
+      assetHash: record.assetHash,
+      pageCount: record.pageCount,
+      annotations: record.annotations,
+   };
 }

@@ -10,12 +10,22 @@ import {
    collectPdfHashesFromContent,
    isExportedPdf,
    rehydratePdfAssets,
+   toExportableItemContent,
 } from '@/lib/utils/export-import';
 
 // -- Type Imports --
 import type { PdfDocument } from '@/lib/types/pdf';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 import type { Drawer, DrawerItem, Folder } from '@/lib/types/drawer';
 import type { EmbeddedPdf, ExportFile } from '@/lib/utils/export-import';
+
+/** A pair of annotations spanning two kinds, for the round-trip fidelity check. */
+function sampleAnnotations(): Record<string, PdfAnnotation> {
+   return {
+      a1: { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1, 0.2, 0.2], width: 0.01 },
+      a2: { id: 'a2', kind: 'highlight', page: 3, color: '#facc15', createdAt: 2, rect: { x: 0.1, y: 0.2, w: 0.3, h: 0.05 }, alpha: 0.4 },
+   };
+}
 
 /*
  * The PDF file round-trip at the data layer (the DOM download/upload is browser-verified): a PDF item's
@@ -101,5 +111,26 @@ describe('isExportedPdf', () => {
       const { hash } = await makeFixture();
       const file: ExportFile = { fileType: 'PDF', game: 'NEUTRAL', content: pdfContent(hash) };
       expect(isExportedPdf(file)).toBe(false);
+   });
+
+   it('accepts an annotated envelope (annotations are optional, not required)', async () => {
+      const { hash, embedded } = await makeFixture();
+      const file: ExportFile = {
+         fileType: 'PDF', game: 'NEUTRAL', content: pdfContent(hash, { annotations: sampleAnnotations() }), pdfAssets: { [hash]: embedded },
+      };
+      expect(isExportedPdf(file)).toBe(true);
+   });
+});
+
+describe('annotation round-trip', () => {
+   it('toExportableItemContent carries annotations verbatim into the envelope content', async () => {
+      const { hash } = await makeFixture();
+      const annotations = sampleAnnotations();
+      const content = pdfContent(hash, { annotations });
+
+      const exportable = toExportableItemContent('PDF', content) as PdfDocument;
+
+      expect(exportable.annotations).toEqual(annotations);
+      expect(exportable).toEqual(content); // whole aggregate, not a whitelisted subset
    });
 });

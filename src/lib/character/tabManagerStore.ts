@@ -28,7 +28,7 @@ import { createBoard, deleteBoard, loadBoard } from '@/lib/board/boardRepository
 import { refreezeDrawerlessNoteReferences } from '@/lib/board/refreezeNoteReferences';
 import { disposeNoteInstance, getNoteInstanceIds, getOrCreateNoteInstance, peekNoteInstance, setActiveNoteInstance } from '@/lib/notes/noteStoreRegistry';
 import { createNote, deleteNote, getNote } from '@/lib/notes/noteRepository';
-import { disposePdfInstance, getOrCreatePdfInstance, setActivePdfInstance } from '@/lib/pdf/pdfStoreRegistry';
+import { disposePdfInstance, getOrCreatePdfInstance, peekPdfInstance, setActivePdfInstance } from '@/lib/pdf/pdfStoreRegistry';
 import { deletePdf, getPdf } from '@/lib/pdf/pdfRepository';
 
 // -- Journey (portal trail) Imports --
@@ -664,14 +664,17 @@ export const useTabManagerStore = create<TabManagerState>(() => ({
                   .catch((error) => { console.error('Failed to re-freeze/reap closed note record:', error); });
             }
          } else if (closing.type === 'pdf') {
-            // The simplest kind: read-only, so there is nothing to flush or re-freeze. Dispose the
-            // instance (which tears down the pdf.js document) and reap only the working `pdfDocs` row.
-            // The drawer copy is the durable source and survives, so a saved PDF reopens; the blob in
-            // `pdfAssets` is left for the GC to reclaim if it becomes unreferenced.
+            // Flush pending annotations to the drawer copy BEFORE reaping the working row, else a stroke
+            // drawn inside the save debounce window is lost. `flush` reads doc + drawerItemId synchronously
+            // and returns the save promise; dispose then tears down the pdf.js document (the flush already
+            // captured the doc), and the reap waits for the flush to commit. The drawer copy is the durable
+            // source and survives; the blob in `pdfAssets` is left for the GC to reclaim if unreferenced.
+            const inst = peekPdfInstance(id);
+            const flushed = inst ? inst.getState().actions.flush() : Promise.resolve();
             disposePdfInstance(id);
-            void deletePdf(id).catch((error) => {
-               console.error('Failed to delete closed pdf record:', error);
-            });
+            void Promise.resolve(flushed)
+               .then(() => deletePdf(id))
+               .catch((error) => { console.error('Failed to flush/reap closed pdf record:', error); });
          } else {
             // Discard the handle WITHOUT flushing (no point saving what we delete).
             discardPersistenceHandle(id);

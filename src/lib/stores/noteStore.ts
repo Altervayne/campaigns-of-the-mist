@@ -5,6 +5,9 @@ import { create } from 'zustand';
 import { getNote, linkNoteToDrawerItem, patchNote, saveNoteToLinkedDrawerItem } from '@/lib/notes/noteRepository';
 import { recordToNote } from '@/lib/notes/noteRecords';
 
+// -- Utility Imports --
+import { createDebouncer } from '@/lib/utils/createDebouncer';
+
 // -- Store Imports --
 import { useAppGeneralStateStore } from './appGeneralStateStore';
 
@@ -125,30 +128,6 @@ function toErrorMessage(error: unknown): string {
 /** Marks the note store as the most recently modified, so Ctrl/Cmd+Z routing skips the drawer. */
 function markNoteModified(): void {
    useAppGeneralStateStore.getState().actions.setLastModifiedStore('note');
-}
-
-/**
- * A trailing-edge debouncer with an explicit `cancel`, so `flush` can write-now AND disarm the pending
- * timer. Without the cancel, an evicted-then-revisited note could let a stale late write clobber a fresh
- * edit. At most one timer in flight. No new dependency.
- */
-function createDebouncer<T>(delay: number, run: (value: T) => void): { run: (value: T) => void; cancel: () => void } {
-   let timer: ReturnType<typeof setTimeout> | null = null;
-   return {
-      run: (value: T) => {
-         if (timer) clearTimeout(timer);
-         timer = setTimeout(() => {
-            timer = null;
-            run(value);
-         }, delay);
-      },
-      cancel: () => {
-         if (timer) {
-            clearTimeout(timer);
-            timer = null;
-         }
-      },
-   };
 }
 
 /**

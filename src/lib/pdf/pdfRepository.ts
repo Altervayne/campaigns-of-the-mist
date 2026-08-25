@@ -44,11 +44,42 @@ export async function loadPdf(id: string): Promise<PdfDocument | undefined> {
 }
 
 /**
- * Patches a working pdf's title, refreshing `updatedAt`. A no-op when the row is absent
- * (idempotent), so a rename that races a close never throws. Title is the only mutable field.
+ * Patches a working pdf's title and/or annotations, refreshing `updatedAt`. A no-op when the
+ * row is absent (idempotent), so a save that races a close never throws.
  */
-export async function patchPdf(id: string, patch: Partial<Pick<PdfRecord, 'title'>>): Promise<void> {
+export async function patchPdf(id: string, patch: Partial<Pick<PdfRecord, 'title' | 'annotations'>>): Promise<void> {
    await db.pdfDocs.update(id, { ...patch, updatedAt: Date.now() });
+}
+
+/** Outcome of {@link savePdfToLinkedDrawerItem} (mirrors the note/board results). */
+export interface SavePdfToDrawerResult {
+   /** `true` when the linked drawer item still existed and was updated; `false` when the link is dangling or unset. */
+   linkedItemUpdated: boolean;
+}
+
+/**
+ * Autosave: in ONE transaction, flush the working pdf's title + annotations onto its row, then -
+ * when it is linked to a drawer `PDF` item that still exists - replace that item's content with the
+ * freshly assembled aggregate. An open PDF is always drawer-backed, so this keeps both copies in
+ * lockstep with no dirty flag. A missing row returns `false` WITHOUT resurrecting it (a close may
+ * have reaped the row); a dangling link returns `false` but the row still saves.
+ */
+export function savePdfToLinkedDrawerItem(doc: PdfDocument, drawerItemId: string | null): Promise<SavePdfToDrawerResult> {
+   return db.transaction('rw', [db.pdfDocs, db.items], async () => {
+      const record = await db.pdfDocs.get(doc.id);
+      if (!record) return { linkedItemUpdated: false };
+      const merged: PdfRecord = { ...record, title: doc.title, annotations: doc.annotations, updatedAt: Date.now() };
+      await db.pdfDocs.put(merged);
+
+      if (drawerItemId) {
+         const existingItem = await db.items.get(drawerItemId);
+         if (existingItem) {
+            await db.items.update(drawerItemId, { content: recordToPdfDocument(merged), name: merged.title });
+            return { linkedItemUpdated: true };
+         }
+      }
+      return { linkedItemUpdated: false };
+   });
 }
 
 /** Deletes a pdf. Idempotent: deleting an absent id is a no-op. */
@@ -69,6 +100,7 @@ export async function importPdf(doc: PdfDocument, drawerItemId: string | null): 
       title: doc.title,
       assetHash: doc.assetHash,
       pageCount: doc.pageCount,
+      annotations: doc.annotations,
       updatedAt: Date.now(),
       drawerItemId: drawerItemId || null,
       schemaVersion: PDF_SCHEMA_VERSION,

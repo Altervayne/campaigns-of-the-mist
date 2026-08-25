@@ -8,15 +8,26 @@ import * as repository from './pdfRepository';
 
 // -- Type Imports --
 import type { PdfDocument } from '@/lib/types/pdf';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
+import type { DrawerItemRecord } from '@/lib/drawer/drawerRecords';
+import { DRAWER_ROOT_PARENT_ID } from '@/lib/drawer/drawerRecords';
 
 /*
  * Unit tests for the pdf working-row repository against fake-indexeddb. Covers create
  * defaults, aggregate load, title patch (including the absent-id no-op), import round-trip,
- * and idempotent delete.
+ * annotation carry-through, the autosave-to-drawer transaction, and idempotent delete.
  */
+
+/** A pair of annotations (one ink, one comment) for the carry-through and save assertions. */
+function sampleAnnotations(): Record<string, PdfAnnotation> {
+   const ink: PdfAnnotation = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1, 0.2, 0.2], width: 0.01 };
+   const comment: PdfAnnotation = { id: 'a2', kind: 'comment', page: 2, color: '#2563eb', createdAt: 2, rect: { x: 0.3, y: 0.3, w: 0.2, h: 0.1 }, body: 'house rule' };
+   return { a1: ink, a2: comment };
+}
 
 beforeEach(async () => {
    await drawerDatabase.pdfDocs.clear();
+   await drawerDatabase.items.clear();
 });
 
 describe('pdf repository', () => {
@@ -82,5 +93,71 @@ describe('pdf repository', () => {
       await repository.deletePdf(record.id);
       expect(await repository.getPdf(record.id)).toBeUndefined();
       await repository.deletePdf(record.id); // already gone -> no throw
+   });
+
+   it('recordToPdfDocument copies annotations onto the aggregate', async () => {
+      const annotations = sampleAnnotations();
+      await repository.importPdf({ id: 'pdf-ann', title: 'Marked', assetHash: 'hash-d', pageCount: 5, annotations }, null);
+
+      const doc = await repository.loadPdf('pdf-ann');
+      expect(doc?.annotations).toEqual(annotations);
+   });
+
+   it('importPdf carries annotations into the working row', async () => {
+      const annotations = sampleAnnotations();
+      await repository.importPdf({ id: 'pdf-imp', title: 'Marked', assetHash: 'hash-e', pageCount: 3, annotations }, 'item-x');
+
+      expect((await repository.getPdf('pdf-imp'))?.annotations).toEqual(annotations);
+   });
+});
+
+describe('savePdfToLinkedDrawerItem', () => {
+   /** Seeds a drawer `PDF` item wrapping the aggregate, mirroring the item the reader opened from. */
+   async function seedDrawerItem(id: string, doc: PdfDocument): Promise<void> {
+      const record: DrawerItemRecord = {
+         id, name: doc.title, parentFolderId: DRAWER_ROOT_PARENT_ID, order: 0,
+         game: 'NEUTRAL', type: 'PDF', createdAt: 1, updatedAt: 1, content: doc,
+      };
+      await drawerDatabase.items.add(record);
+   }
+
+   it('writes annotations to BOTH the row and the linked drawer item content', async () => {
+      await repository.importPdf({ id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 4 }, 'item-1');
+      await seedDrawerItem('item-1', { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 4 });
+
+      const annotations = sampleAnnotations();
+      const result = await repository.savePdfToLinkedDrawerItem(
+         { id: 'pdf-1', title: 'Book (annotated)', assetHash: 'hash-a', pageCount: 4, annotations },
+         'item-1',
+      );
+
+      expect(result).toEqual({ linkedItemUpdated: true });
+      expect((await repository.getPdf('pdf-1'))?.annotations).toEqual(annotations);
+      const item = await drawerDatabase.items.get('item-1');
+      expect((item?.content as PdfDocument).annotations).toEqual(annotations);
+      expect(item?.name).toBe('Book (annotated)');
+   });
+
+   it('saves the row but reports no link when the drawer item is gone (dangling link)', async () => {
+      await repository.importPdf({ id: 'pdf-2', title: 'Book', assetHash: 'hash-b', pageCount: 2 }, 'item-missing');
+
+      const annotations = sampleAnnotations();
+      const result = await repository.savePdfToLinkedDrawerItem(
+         { id: 'pdf-2', title: 'Book', assetHash: 'hash-b', pageCount: 2, annotations },
+         'item-missing',
+      );
+
+      expect(result).toEqual({ linkedItemUpdated: false });
+      expect((await repository.getPdf('pdf-2'))?.annotations).toEqual(annotations); // the row still saved
+   });
+
+   it('does not resurrect an absent row', async () => {
+      const result = await repository.savePdfToLinkedDrawerItem(
+         { id: 'gone', title: 'Nope', assetHash: 'hash-c', pageCount: 1, annotations: sampleAnnotations() },
+         null,
+      );
+
+      expect(result).toEqual({ linkedItemUpdated: false });
+      expect(await repository.getPdf('gone')).toBeUndefined();
    });
 });

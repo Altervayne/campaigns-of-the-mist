@@ -2,19 +2,25 @@
 import { create } from 'zustand';
 
 // -- Pdf Data Layer Imports --
-import { loadPdf } from '@/lib/pdf/pdfRepository';
+import { getPdf, savePdfToLinkedDrawerItem } from '@/lib/pdf/pdfRepository';
+import { recordToPdfDocument } from '@/lib/pdf/pdfRecords';
 import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
+
+// -- Utility Imports --
+import { createDebouncer } from '@/lib/utils/createDebouncer';
 
 // -- Type Imports --
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 import type { PdfDocument } from '@/lib/types/pdf';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 
 /*
  * Pdf store - the React-facing, in-memory view of ONE open PDF, backed by the pdf repository and
- * the pdf-asset store. A PDF is READ-ONLY: there is no edit buffer, no debounce-save, no drawer
- * write-back - only the live pdf.js document plus the current page. It mirrors the per-instance
- * factory shape of the note/board stores (one store per open PDF), minus every mutation path.
+ * the pdf-asset store. The live pdf.js document plus the current page are read-only; markup
+ * ANNOTATIONS are the one writable path, autosaving to both the working row and the linked drawer
+ * copy (an open PDF is always drawer-backed). It mirrors the per-instance factory shape of the
+ * note/board stores (one store per open PDF).
  *
  * The store owns a native resource: the pdf.js document (a worker transport). It keeps the
  * `loadingTask` so `dispose` can tear it down (`loadingTask.destroy()` - the proxy itself has no
@@ -25,14 +31,25 @@ import type { PdfDocument } from '@/lib/types/pdf';
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 2;
 
+/** How long an annotation edit settles before it is written back to the pdf row + drawer copy. */
+const PDF_SAVE_DEBOUNCE_MS = 400;
+
+/** Distributes `Omit` across a union so each member drops the keys independently. */
+type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
+
+/** An `updateAnnotation` patch: any field of a member kind except its discriminant and id. */
+type PdfAnnotationPatch = Partial<DistributiveOmit<PdfAnnotation, 'kind' | 'id'>>;
+
 /** The load lifecycle of the open PDF. */
 export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface PdfState {
    /** The open PDF's id, or `null` before the first hydrate. */
    pdfId: string | null;
-   /** The loaded aggregate (title + page count), or `null` until ready. */
+   /** The loaded aggregate (title + page count + annotations), or `null` until ready. */
    doc: PdfDocument | null;
+   /** The linked drawer `PDF` item, or `null` when this pdf was never saved. Autosave targets it. */
+   drawerItemId: string | null;
    /** The live pdf.js document, or `null` until ready; the page renderer reads it. */
    proxy: PDFDocumentProxy | null;
    /** The pdf.js loading task, kept so {@link PdfState.actions.dispose} can tear down the worker document. */
@@ -66,14 +83,27 @@ export interface PdfState {
       requestPage: (page: number) => void;
       /** Sets the zoom multiplier, clamped to `[MIN_ZOOM, MAX_ZOOM]`. Ephemeral, never written to the row. */
       setZoom: (zoom: number) => void;
+      /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
+      addAnnotation: (annotation: PdfAnnotation) => void;
+      /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
+      updateAnnotation: (id: string, patch: PdfAnnotationPatch) => void;
+      /** Removes an annotation and debounce-persists the change. No-op if absent. */
+      removeAnnotation: (id: string) => void;
+      /**
+       * Immediately persists the current annotations onto the row + drawer copy AND disarms any pending
+       * debounce. The reader calls this on unmount (a tab switch fires no blur), and the close path calls it
+       * before reaping the row, so the last stroke lands and no stale timer can fire late. Awaitable.
+       */
+      flush: () => Promise<void>;
       /** Tears down the pdf.js document and resets to the initial state. Idempotent. */
       dispose: () => void;
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'status'> = {
    pdfId: null,
    doc: null,
+   drawerItemId: null,
    proxy: null,
    loadingTask: null,
    currentPage: 1,
@@ -83,73 +113,125 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'proxy' | 'loadingTask' | '
 };
 
 /**
- * Builds a pdf store instance: the live document plus the read-only action API. Each open PDF tab
- * owns its own instance (like a board/note), so two PDFs never share a document.
+ * Builds a pdf store instance: the live document plus the action API. Each open PDF tab owns its own
+ * instance (like a board/note), so two PDFs never share a document. The `saveDebounceMs` option exists
+ * for tests; production uses the default.
  */
-export function createPdfStore() {
-   const useStore = create<PdfState>()((set, get) => ({
-      ...initialState,
-      actions: {
-         hydrate: async (pdfId) => {
-            const current = get();
-            // Already loading or ready for this instance: a second call (StrictMode, rapid re-activate)
-            // would spawn a duplicate document, so bail.
-            if (current.status === 'loading' || current.status === 'ready') return;
+export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
+   const saveDebounceMs = options.saveDebounceMs ?? PDF_SAVE_DEBOUNCE_MS;
 
-            set({ status: 'loading', pdfId });
-            let loadingTask: PDFDocumentLoadingTask | null = null;
-            try {
-               const doc = await loadPdf(pdfId);
-               if (!doc) {
+   const useStore = create<PdfState>()((set, get) => {
+      /** Persists the current annotations onto the row + drawer copy. Best-effort; a missing row is a no-op. */
+      const debouncedSave = createDebouncer<PdfDocument>(saveDebounceMs, (doc) => {
+         void savePdfToLinkedDrawerItem(doc, get().drawerItemId).catch(console.error);
+      });
+
+      return {
+         ...initialState,
+         actions: {
+            hydrate: async (pdfId) => {
+               const current = get();
+               // Already loading or ready for this instance: a second call (StrictMode, rapid re-activate)
+               // would spawn a duplicate document, so bail.
+               if (current.status === 'loading' || current.status === 'ready') return;
+
+               set({ status: 'loading', pdfId });
+               let loadingTask: PDFDocumentLoadingTask | null = null;
+               try {
+                  // Read the full record (not the aggregate) so the drawer link rides along for autosave.
+                  const record = await getPdf(pdfId);
+                  if (!record) {
+                     set({ ...initialState, pdfId, status: 'error' });
+                     return;
+                  }
+                  const doc = recordToPdfDocument(record);
+                  const blob = await getPdfBlob(doc.assetHash);
+                  if (!blob) {
+                     set({ ...initialState, pdfId, status: 'error' });
+                     return;
+                  }
+                  const data = await blob.arrayBuffer();
+                  const pdfjs = await loadPdfjs();
+                  loadingTask = pdfjs.getDocument({ data });
+                  const proxy = await loadingTask.promise;
+                  set({ pdfId, doc, drawerItemId: record.drawerItemId ?? null, proxy, loadingTask, currentPage: 1, status: 'ready' });
+               } catch {
+                  // Corrupt / encrypted / read failure: drop any partial task and surface the error state.
+                  if (loadingTask) void loadingTask.destroy();
                   set({ ...initialState, pdfId, status: 'error' });
-                  return;
                }
-               const blob = await getPdfBlob(doc.assetHash);
-               if (!blob) {
-                  set({ ...initialState, pdfId, status: 'error' });
-                  return;
-               }
-               const data = await blob.arrayBuffer();
-               const pdfjs = await loadPdfjs();
-               loadingTask = pdfjs.getDocument({ data });
-               const proxy = await loadingTask.promise;
-               set({ pdfId, doc, proxy, loadingTask, currentPage: 1, status: 'ready' });
-            } catch {
-               // Corrupt / encrypted / read failure: drop any partial task and surface the error state.
+            },
+
+            setPage: (page) => {
+               const { doc } = get();
+               if (!doc) return;
+               const clamped = Math.min(Math.max(page, 1), doc.pageCount);
+               set({ currentPage: clamped });
+            },
+
+            requestPage: (page) => {
+               const { doc, jumpSeq } = get();
+               if (!doc) return;
+               const clamped = Math.min(Math.max(page, 1), doc.pageCount);
+               set({ currentPage: clamped, jumpSeq: jumpSeq + 1 });
+            },
+
+            setZoom: (zoom) => {
+               const clamped = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
+               set({ zoom: clamped });
+            },
+
+            addAnnotation: (annotation) => {
+               const { doc } = get();
+               if (!doc) return;
+               const next: PdfDocument = { ...doc, annotations: { ...(doc.annotations ?? {}), [annotation.id]: annotation } };
+               set({ doc: next });
+               debouncedSave.run(next);
+            },
+
+            updateAnnotation: (id, patch) => {
+               const { doc } = get();
+               if (!doc) return;
+               const existing = doc.annotations?.[id];
+               if (!existing) return;
+               const merged = { ...existing, ...patch } as PdfAnnotation;
+               const next: PdfDocument = { ...doc, annotations: { ...(doc.annotations ?? {}), [id]: merged } };
+               set({ doc: next });
+               debouncedSave.run(next);
+            },
+
+            removeAnnotation: (id) => {
+               const { doc } = get();
+               if (!doc || !doc.annotations?.[id]) return;
+               const nextAnnotations = { ...doc.annotations };
+               delete nextAnnotations[id];
+               const next: PdfDocument = { ...doc, annotations: nextAnnotations };
+               set({ doc: next });
+               debouncedSave.run(next);
+            },
+
+            flush: () => {
+               // Disarm the pending debounce FIRST, then write now: a still-armed timer holds a stale
+               // snapshot that would fire late and clobber a fresher edit after a revisit.
+               debouncedSave.cancel();
+               const { doc, drawerItemId } = get();
+               if (!doc) return Promise.resolve();
+               return savePdfToLinkedDrawerItem(doc, drawerItemId).then(() => undefined).catch((error) => {
+                  console.error('Pdf flush failed:', error);
+               });
+            },
+
+            dispose: () => {
+               const { loadingTask } = get();
                if (loadingTask) void loadingTask.destroy();
-               set({ ...initialState, pdfId, status: 'error' });
-            }
+               set({ ...initialState });
+            },
          },
-
-         setPage: (page) => {
-            const { doc } = get();
-            if (!doc) return;
-            const clamped = Math.min(Math.max(page, 1), doc.pageCount);
-            set({ currentPage: clamped });
-         },
-
-         requestPage: (page) => {
-            const { doc, jumpSeq } = get();
-            if (!doc) return;
-            const clamped = Math.min(Math.max(page, 1), doc.pageCount);
-            set({ currentPage: clamped, jumpSeq: jumpSeq + 1 });
-         },
-
-         setZoom: (zoom) => {
-            const clamped = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
-            set({ zoom: clamped });
-         },
-
-         dispose: () => {
-            const { loadingTask } = get();
-            if (loadingTask) void loadingTask.destroy();
-            set({ ...initialState });
-         },
-      },
-   }));
+      };
+   });
 
    return useStore;
 }
 
-/** A single pdf store instance: the live document + read-only actions. */
+/** A single pdf store instance: the live document + action API. */
 export type PdfStore = ReturnType<typeof createPdfStore>;

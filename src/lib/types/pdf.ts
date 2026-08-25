@@ -1,7 +1,10 @@
+// -- Type Imports --
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
+
 /**
- * A PDF document's drawer content: flat, id-keyed, no persistence-only fields. A PDF is
- * read-only, so the only mutable field is `title`; the bytes live in the `pdfAssets` store
- * addressed by `assetHash`, and identical files collapse to one asset.
+ * A PDF document's drawer content: flat, id-keyed, no persistence-only fields. The bytes live
+ * in the `pdfAssets` store addressed by `assetHash`, and identical files collapse to one asset.
+ * `title` and `annotations` are the mutable fields; annotations autosave to the drawer copy.
  */
 export interface PdfDocument {
    id: string;
@@ -11,4 +14,6 @@ export interface PdfDocument {
    assetHash: string;
    /** Page count, parsed once at import. */
    pageCount: number;
+   /** Markup annotations keyed by annotation id, each carrying its own `page`. Absent until the first is drawn. */
+   annotations?: Record<string, PdfAnnotation>;
 }

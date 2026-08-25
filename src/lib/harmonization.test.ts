@@ -416,3 +416,21 @@ describe('harmonization: standalone drawer card', () => {
       expect(harmonized).not.toHaveProperty('order');
    });
 });
+
+// -- PDF pass-through --
+describe('harmonization: pdf content pass-through', () => {
+   it('leaves a PDF content with annotations untouched (harmonizer knows no PDF migration)', () => {
+      const content = {
+         id: 'pdf-1',
+         title: 'Rulebook',
+         assetHash: 'hash-a',
+         pageCount: 42,
+         annotations: {
+            a1: { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1, 0.2, 0.2], width: 0.01 },
+         },
+      };
+
+      const harmonized = harmonizeData(structuredClone(content), 'PDF');
+      expect(harmonized).toEqual(content);
+   });
+});
