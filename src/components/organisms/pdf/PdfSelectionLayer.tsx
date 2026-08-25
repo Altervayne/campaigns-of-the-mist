@@ -1,5 +1,5 @@
 // -- Utils Imports --
-import { annotationBounds, denormalizeRect } from '@/lib/pdf/annotationGeometry';
+import { annotationBounds, denormalizeRect, resizeHandlePositions, SELECTION_PADDING } from '@/lib/pdf/annotationGeometry';
 import { usePdfMarkup } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
@@ -12,8 +12,8 @@ import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
  * so they draw in a theme token, not the mark's own ink.
  */
 
-/** Slack around a mark's bounds, in box px, so the outline clears the mark rather than tracing it. */
-const SELECTION_PADDING = 4;
+/** Resize-handle square side, in box px; centered on each handle position. */
+const HANDLE_SIZE = 8;
 
 interface PdfSelectionLayerProps {
    annotations: PdfAnnotation[];
@@ -31,6 +31,9 @@ export function PdfSelectionLayer({ annotations, width, height }: PdfSelectionLa
    const selectedRect = selected ? denormalizeRect(annotationBounds(selected), width, height) : null;
    const flashRect = flashed ? denormalizeRect(annotationBounds(flashed), width, height) : null;
 
+   // Resize handles ride only a rect kind (highlight/comment); ink has no area, so it stays move-only.
+   const handles = selected && selected.kind !== 'ink' ? resizeHandlePositions(annotationBounds(selected), width, height) : null;
+
    return (
       <svg className="pointer-events-none absolute inset-0" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
          {selectedRect ? (
@@ -46,6 +49,20 @@ export function PdfSelectionLayer({ annotations, width, height }: PdfSelectionLa
                strokeDasharray="5 3"
             />
          ) : null}
+         {handles
+            ? Object.entries(handles).map(([key, pos]) => (
+                 <rect
+                    key={key}
+                    x={pos.x - HANDLE_SIZE / 2}
+                    y={pos.y - HANDLE_SIZE / 2}
+                    width={HANDLE_SIZE}
+                    height={HANDLE_SIZE}
+                    fill="var(--background)"
+                    stroke="var(--primary)"
+                    strokeWidth={1.5}
+                 />
+              ))
+            : null}
          {flashRect ? (
             <rect
                className="cotm-annotation-flash"

@@ -5,11 +5,15 @@ import { useTranslation } from 'react-i18next';
 // -- Icon Imports --
 import { ChevronLeft, ChevronRight, MessagesSquare, Minus, MoveHorizontal, Pencil, Plus, Scan } from 'lucide-react';
 
+// -- Component Imports --
+import { PdfVisibilityMenu } from './PdfVisibilityMenu';
+
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
 // -- Type Imports --
 import type { PdfMarkupMode } from '@/lib/stores/pdfStore';
+import type { PdfAnnotationKind, PdfAnnotationVisibility } from '@/lib/types/pdfAnnotation';
 
 /*
  * The reader's floating control bar, pinned bottom-center: page navigation (prev / jump-to input / next),
@@ -25,6 +29,9 @@ interface PdfToolbarProps {
    onToggleMarkup: () => void;
    commentsPanelOpen: boolean;
    onToggleComments: () => void;
+   annotationVisibility: PdfAnnotationVisibility;
+   onSetTypeVisible: (kind: PdfAnnotationKind, visible: boolean) => void;
+   onSetAllVisible: (visible: boolean) => void;
    onPrev: () => void;
    onNext: () => void;
    /** Jumps to a page (clamped by the reader); called on Enter / blur of the page input. */
@@ -36,7 +43,7 @@ interface PdfToolbarProps {
    onFitPage: () => void;
 }
 
-export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, commentsPanelOpen, onToggleComments, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
+export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, commentsPanelOpen, onToggleComments, annotationVisibility, onSetTypeVisible, onSetAllVisible, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
    const { t } = useTranslation();
 
    return (
@@ -99,7 +106,9 @@ export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, c
 
             <Divider />
 
-            {/* Comments panel toggle: available in read and markup, so it trails the bar rather than the markup group. */}
+            {/* View aids, available in read and markup: annotation visibility + the comments panel. Trail the bar
+                so the nav/zoom groups never move. */}
+            <PdfVisibilityMenu visibility={annotationVisibility} onSetTypeVisible={onSetTypeVisible} onSetAllVisible={onSetAllVisible} />
             <button
                type="button"
                title={t('PdfMarkup.comments')}

@@ -28,7 +28,7 @@ export function SidebarButton({ isCollapsed, Icon, children, ...props }: Sidebar
             // clips the width collapse. The width morph + color transitions are driven inline (below) so the
             // width can carry the directional delay without lagging the hover/colour transition.
             "flex h-auto min-h-10 cursor-pointer overflow-hidden py-2",
-            isCollapsed ? "w-10 px-2 justify-center" : "w-56 px-4 justify-start min-w-0"
+            isCollapsed ? "w-10 px-2 justify-center" : "w-56 px-2.5 justify-start min-w-0"
          )}
          style={{
             // WIDTH group: the width morph leads on EXPAND (delay 0) but waits for the height to collapse
@@ -43,8 +43,8 @@ export function SidebarButton({ isCollapsed, Icon, children, ...props }: Sidebar
 
          <Icon
          className={cn(
-            "shrink-0 transition-all",
-            isCollapsed ? "h-5 w-5" : "h-4 w-4"
+            "shrink-0 transition-all h-5 w-5",
+            !isCollapsed && "mr-1"
          )}
          />
 

@@ -16,7 +16,7 @@ import { createDebouncer } from '@/lib/utils/createDebouncer';
 // -- Type Imports --
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 import type { PdfDocument } from '@/lib/types/pdf';
-import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfAnnotationKind, PdfAnnotationVisibility } from '@/lib/types/pdfAnnotation';
 
 /*
  * Pdf store - the React-facing, in-memory view of ONE open PDF, backed by the pdf repository and
@@ -116,6 +116,11 @@ export interface PdfState {
    /** The comments-list panel visibility; ephemeral, defaults closed. The toolbar and palette both toggle it. */
    commentsPanelOpen: boolean;
    /**
+    * Per-kind annotation visibility; ephemeral, defaults all-visible. A hidden kind is neither painted nor
+    * hit-tested (you can't touch what you can't see) - view-only, the marks themselves stay on the document.
+    */
+   annotationVisibility: PdfAnnotationVisibility;
+   /**
     * Annotation undo history: prior annotation maps, newest last. Every annotation map is a whole-object
     * replacement, so a snapshot is just the pre-op map; unchanged annotation objects are shared across
     * snapshots (structural sharing). Ephemeral, capped at {@link UNDO_STACK_CAP}, never persisted.
@@ -158,6 +163,10 @@ export interface PdfState {
       setCommentsPanelOpen: (open: boolean) => void;
       /** Flips the comments-list panel visibility. Ephemeral. */
       toggleCommentsPanel: () => void;
+      /** Shows or hides one annotation kind in the reader. Ephemeral view state, never persisted. */
+      setAnnotationTypeVisible: (kind: PdfAnnotationKind, visible: boolean) => void;
+      /** Shows or hides all three annotation kinds at once. Ephemeral. */
+      setAllAnnotationsVisible: (visible: boolean) => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
       /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
@@ -195,7 +204,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'undoStack' | 'redoStack' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -211,6 +220,7 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
    commentColor: DEFAULT_COMMENT_COLOR,
    commentsPanelOpen: false,
+   annotationVisibility: { ink: true, highlight: true, comment: true },
    undoStack: [],
    redoStack: [],
    status: 'idle',
@@ -306,6 +316,11 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setCommentsPanelOpen: (open) => set({ commentsPanelOpen: open }),
 
             toggleCommentsPanel: () => set((state) => ({ commentsPanelOpen: !state.commentsPanelOpen })),
+
+            setAnnotationTypeVisible: (kind, visible) =>
+               set((state) => ({ annotationVisibility: { ...state.annotationVisibility, [kind]: visible } })),
+
+            setAllAnnotationsVisible: (visible) => set({ annotationVisibility: { ink: visible, highlight: visible, comment: visible } }),
 
             addAnnotation: (annotation) => {
                const { doc } = get();

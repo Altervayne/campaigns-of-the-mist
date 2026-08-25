@@ -39,12 +39,16 @@
       "commentColor": "Comment color",
       "markColor": "Mark color",
       "commentPlaceholder": "Add a comment…",
+      "commentTooltip": "Comment",
       "deleteComment": "Delete",
       "comments": "Comments",
       "commentsTitle": "Comments",
       "commentsEmpty": "No comments yet.",
       "commentPage": "p. {{page}}",
-      "annotatedBadge": "Annotated"
+      "annotatedBadge": "Annotated",
+      "visibility": "Annotation visibility",
+      "allAnnotations": "All annotations",
+      "ink": "Ink"
    },
    "Tabs": {
       "untitled": "Untitled character",

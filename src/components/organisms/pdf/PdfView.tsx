@@ -26,13 +26,18 @@ import { useVisiblePages } from './useVisiblePages';
 // -- Store Imports --
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 
+// -- Hook Imports --
+import { useNoteLinkActivation } from '@/hooks/useNoteLinkActivation';
+
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { annotationBounds, clampTranslation, groupAnnotationsByPage, listComments, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
+import { annotationBounds, clampTranslation, filterVisibleAnnotations, groupAnnotationsByPage, isAnnotationVisible, listComments, resizeHandleAtPoint, resizeRect, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
+import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
 import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
 import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
+import type { NoteHostContext } from '@/lib/portals/linkTarget';
 import type { PdfStore, PdfTool } from '@/lib/stores/pdfStore';
 import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
 import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
@@ -60,6 +65,12 @@ const ERASER_HIT_FLOOR = 8;
 
 /** The select tool's grab floor in box px; a thin stroke stays clickable, matching the eraser's reach. */
 const SELECT_HIT_FLOOR = 8;
+
+/** How near a handle center a click must land to grab it, in box px. */
+const RESIZE_HANDLE_TOLERANCE = 10;
+
+/** The smallest a resized rect may shrink to, as a page fraction; keeps a mark grabbable after a hard drag. */
+const MIN_RESIZE_NORM = { w: 0.01, h: 0.01 };
 
 /** How long a jumped-to comment flashes; matches the flash keyframe so the box fades out as the timer clears it. */
 const FLASH_MS = 1500;
@@ -108,10 +119,13 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const highlightColor = useStore(store, (state) => state.highlightColor);
    const commentColor = useStore(store, (state) => state.commentColor);
    const commentsPanelOpen = useStore(store, (state) => state.commentsPanelOpen);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel } = store.getState().actions;
+   const annotationVisibility = useStore(store, (state) => state.annotationVisibility);
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setAnnotationTypeVisible, setAllAnnotationsVisible } = store.getState().actions;
 
-   // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
-   const [openCommentId, setOpenCommentId] = useState<string | null>(null);
+   // The comment card highlighted + scrolled-to in the panel; ephemeral UI, reset on remount (a tab switch).
+   const [focusedCommentId, setFocusedCommentId] = useState<string | null>(null);
+   // The comment card in edit mode, or null; ephemeral UI. At most one card edits at a time.
+   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
 
    // The transient flash after a jump; ephemeral, reset on remount.
    const [flashCommentId, setFlashCommentId] = useState<string | null>(null);
@@ -153,9 +167,11 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
          const marks = store.getState().doc?.annotations;
          if (!marks) return;
+         const visibility = store.getState().annotationVisibility;
          const px = ((clientX - rect.left) / rect.width) * boxW;
          const py = ((clientY - rect.top) / rect.height) * boxH;
-         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber);
+         // A hidden kind is off the page visually, so it's off the eraser too - can't erase what you can't see.
+         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber && isAnnotationVisible(mark, visibility));
          const hits = annotationAtPoint(onPage, px, py, boxW, boxH, ERASER_HIT_FLOOR);
          const { removeAnnotation } = store.getState().actions;
          for (const id of hits) removeAnnotation(id);
@@ -183,9 +199,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
-   // Mints an empty comment from a finished rect drag and opens its editor so the body can be authored at once.
-   // The history checkpoint stays OPEN until the editor closes: a bodied comment commits one undo step, an
-   // abandoned empty one cancels it (see closeComment), so a stray marquee never leaves a phantom step.
+   // Mints an empty comment from a finished rect drag, opens the panel, and drops the new card into edit so the
+   // body is authored on the side at once. The history checkpoint stays OPEN until the edit ends: a bodied
+   // comment commits one undo step, an abandoned empty one cancels it (see endEdit), so a stray marquee never
+   // leaves a phantom step.
    const commitComment = useCallback(
       (pageNumber: number, rect: PdfRect) => {
          const id = cuid();
@@ -201,7 +218,9 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          const actions = store.getState().actions;
          actions.beginHistory();
          actions.addAnnotation(comment);
-         setOpenCommentId(id);
+         actions.setCommentsPanelOpen(true);
+         setFocusedCommentId(id);
+         setEditingCommentId(id);
       },
       [store],
    );
@@ -212,6 +231,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
          const marks = store.getState().doc?.annotations;
          if (!marks) return null;
+         // Hidden comments don't reopen on click - the mark is invisible, so its region is inert.
+         if (!store.getState().annotationVisibility.comment) return null;
          const px = ((clientX - rect.left) / rect.width) * boxW;
          const py = ((clientY - rect.top) / rect.height) * boxH;
          const comments = Object.values(marks).filter((mark) => mark.page === pageNumber && mark.kind === 'comment');
@@ -221,13 +242,26 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
-   const openComment = useCallback((id: string) => setOpenCommentId(id), []);
+   // Opens the panel and highlights a comment's card. A doc marker/region click routes here (the read/edit
+   // home is the side, never an overlay).
+   const focusComment = useCallback(
+      (id: string) => {
+         store.getState().actions.setCommentsPanelOpen(true);
+         setFocusedCommentId(id);
+      },
+      [store],
+   );
 
-   // Close path: an empty (never-authored or cleared) comment self-deletes, so a stray marquee leaves no ghost note.
-   // A freshly created comment holds an open history checkpoint (commitComment) - authored, it commits to one undo
-   // step; abandoned empty, it cancels so add-then-remove leaves no trace. A reopened comment has no open
-   // checkpoint, so commit/cancel are no-ops.
-   const closeComment = useCallback(
+   const startEdit = useCallback((id: string) => {
+      setEditingCommentId(id);
+      setFocusedCommentId(id);
+   }, []);
+
+   // End-of-edit (blur / Done): an empty (never-authored or cleared) comment self-deletes, so a stray marquee
+   // leaves no ghost note. A freshly created comment holds an open history checkpoint (commitComment) - authored,
+   // it commits to one undo step; abandoned empty, it cancels so add-then-remove leaves no trace. A reopened
+   // comment has no open checkpoint, so commit/cancel are no-ops (body edits ride native undo only).
+   const endEdit = useCallback(
       (id: string) => {
          const actions = store.getState().actions;
          const comment = store.getState().doc?.annotations?.[id];
@@ -237,7 +271,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          } else {
             actions.commitHistory();
          }
-         setOpenCommentId((current) => (current === id ? null : current));
+         setEditingCommentId((current) => (current === id ? null : current));
       },
       [store],
    );
@@ -258,7 +292,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          actions.beginHistory();
          actions.removeAnnotation(id);
          actions.commitHistory();
-         setOpenCommentId((current) => (current === id ? null : current));
+         setEditingCommentId((current) => (current === id ? null : current));
+         setFocusedCommentId((current) => (current === id ? null : current));
       },
       [store],
    );
@@ -286,9 +321,11 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
          const marks = store.getState().doc?.annotations;
          if (!marks) return null;
+         const visibility = store.getState().annotationVisibility;
          const px = ((clientX - rect.left) / rect.width) * boxW;
          const py = ((clientY - rect.top) / rect.height) * boxH;
-         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber);
+         // A hidden mark isn't selectable - it can't be grabbed, moved, or deleted while out of view.
+         const onPage = Object.values(marks).filter((mark) => mark.page === pageNumber && isAnnotationVisible(mark, visibility));
          const hits = annotationAtPoint(onPage, px, py, boxW, boxH, SELECT_HIT_FLOOR);
          return hits[0] ?? null;
       },
@@ -313,6 +350,36 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
+   // The resize handle under a client point, or null. Only a selected rect kind (highlight/comment) on the
+   // hovered page yields one - ink has no area, and a mark on another page must not be grabbed through this page's
+   // box. Mirrors selectAt's zoom-independent conversion (fraction kills the zoom, boxW rescales).
+   const resizeHandleAt = useCallback(
+      (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => {
+         const id = selectedIdRef.current;
+         if (!id) return null;
+         const mark = store.getState().doc?.annotations?.[id];
+         if (!mark || mark.kind === 'ink' || mark.page !== pageNumber) return null;
+         const px = ((clientX - rect.left) / rect.width) * boxW;
+         const py = ((clientY - rect.top) / rect.height) * boxH;
+         return resizeHandleAtPoint(annotationBounds(mark), boxW, boxH, px, py, RESIZE_HANDLE_TOLERANCE);
+      },
+      [store],
+   );
+
+   // Reshapes the selected rect kind by an incremental normalized delta. The interaction layer brackets the whole
+   // drag with begin/commit, so this only mutates. Ink has no area and is skipped; the rect is kept on-page and
+   // above the size floor by resizeRect itself.
+   const resizeSelected = useCallback(
+      (handle: ResizeHandle, dnx: number, dny: number) => {
+         const id = selectedIdRef.current;
+         if (!id) return;
+         const mark = store.getState().doc?.annotations?.[id];
+         if (!mark || mark.kind === 'ink') return;
+         store.getState().actions.updateAnnotation(id, { rect: resizeRect(mark.rect, handle, dnx, dny, MIN_RESIZE_NORM) });
+      },
+      [store],
+   );
+
    // Recolors the selected mark in one undo step; bound to the toolbar's color control, which fires on close.
    const recolorSelected = useCallback(
       (color: string) => {
@@ -326,11 +393,12 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       [store],
    );
 
-   // Scrolls to a comment's page (via the existing jumpSeq path) and flashes its region. The timer is guarded
-   // against a rapid re-jump (clear the prior one) and against unmount (cleared below).
+   // Scrolls to a comment's page (via the existing jumpSeq path), selects its card, and flashes its region. The
+   // timer is guarded against a rapid re-jump (clear the prior one) and against unmount (cleared below).
    const jumpToComment = useCallback(
       (comment: PdfComment) => {
          store.getState().actions.requestPage(comment.page);
+         setFocusedCommentId(comment.id);
          setFlashCommentId(comment.id);
          if (flashTimer.current !== null) clearTimeout(flashTimer.current);
          flashTimer.current = window.setTimeout(() => {
@@ -345,6 +413,12 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       if (flashTimer.current !== null) clearTimeout(flashTimer.current);
    }, []);
 
+   // Comment-body links: this surface is a TAB host, so a `cotm://` chip routes pdf/note/board/character/external
+   // exactly like a note link. Comments carry no `#section`, so the same-note scroll is a no-op.
+   const linkHost = useMemo<NoteHostContext>(() => ({ kind: 'tab' }), []);
+   const scrollToSection = useCallback(() => {}, []);
+   const onLinkActivate = useNoteLinkActivation(linkHost, scrollToSection);
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
@@ -353,31 +427,32 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          penWidth,
          highlightColor,
          commentColor,
-         openCommentId,
          commitInk,
          commitHighlight,
          commitComment,
          eraseAt,
          commentAtPoint,
-         openComment,
-         closeComment,
+         focusComment,
          setCommentBody,
          deleteComment,
          selectedId,
          flashCommentId,
+         focusedCommentId,
          select,
          selectAt,
          translateSelected,
+         resizeHandleAt,
+         resizeSelected,
          beginHistory,
          commitHistory,
       }),
-      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, openCommentId, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, closeComment, setCommentBody, deleteComment, selectedId, flashCommentId, select, selectAt, translateSelected, beginHistory, commitHistory],
+      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, setCommentBody, deleteComment, selectedId, flashCommentId, focusedCommentId, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory],
    );
 
-   // Grouped per page, referentially stable while `annotations` holds - so a wheel-zoom (which leaves annotations
-   // untouched) keeps every page's slice ref, and the page memos survive. Only the changed page's slice re-refs
-   // when a mark is added or removed.
-   const byPage = useMemo(() => groupAnnotationsByPage(annotations), [annotations]);
+   // Grouped per page after dropping hidden kinds, so the layers paint only visible marks (no per-layer change).
+   // Referentially stable while `annotations` and `annotationVisibility` both hold - so a wheel-zoom (which
+   // touches neither) keeps every page's slice ref and the page memos survive; a visibility toggle re-groups.
+   const byPage = useMemo(() => groupAnnotationsByPage(filterVisibleAnnotations(annotations, annotationVisibility)), [annotations, annotationVisibility]);
 
    // Every comment across the document, ordered for the panel; re-refs only when a mark is added or removed.
    const comments = useMemo(() => listComments(annotations), [annotations]);
@@ -543,21 +618,33 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                         ))}
                   </div>
                </div>
-               {/* The panel width animates 0 <-> w-72 so it slides the pages over rather than snapping; its content
+               {/* The panel width animates 0 <-> w-88 so it slides the pages over rather than snapping; its content
                    is pinned right and clipped, so it reveals from the edge. `inert` while closed keeps the still-mounted
                    list out of tab order. */}
                <div
-                  className={cn('relative h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out', commentsPanelOpen ? 'w-72' : 'w-0')}
+                  className={cn('relative h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out', commentsPanelOpen ? 'w-88' : 'w-0')}
                   inert={!commentsPanelOpen}
                >
-                  <div className="absolute inset-y-0 right-0 w-72">
-                     <PdfCommentsPanel comments={comments} onJump={jumpToComment} onClose={() => setCommentsPanelOpen(false)} />
+                  <div className="absolute inset-y-0 right-0 w-88">
+                     <PdfCommentsPanel
+                        comments={comments}
+                        focusedCommentId={focusedCommentId}
+                        editingCommentId={editingCommentId}
+                        onJump={jumpToComment}
+                        onStartEdit={startEdit}
+                        onChangeBody={setCommentBody}
+                        onEndEdit={endEdit}
+                        onDelete={deleteComment}
+                        onLinkActivate={onLinkActivate}
+                        onClose={() => setCommentsPanelOpen(false)}
+                     />
                   </div>
                </div>
             </div>
-            {/* Floating toolbars: when the panel is open, pad this positioned wrapper by the panel width so the
-                centered pills stay over the VISIBLE pages, not the whole reader. */}
-            <div className={cn('pointer-events-none absolute inset-0 transition-[padding] duration-200 ease-out', commentsPanelOpen && 'pr-72')}>
+            {/* Floating toolbars: when the panel is open, shrink this positioned wrapper from the right by the panel
+                width so the centered pills stay over the VISIBLE pages. It must be `right` (the wrapper's width), not
+                padding - an absolute child's containing block is the padding box, so padding wouldn't move it. */}
+            <div className={cn('pointer-events-none absolute bottom-0 left-0 top-0 transition-[right] duration-200 ease-out', commentsPanelOpen ? 'right-88' : 'right-0')}>
                {markupMode === 'markup' ? (
                   <PdfMarkupToolbar
                      tool={tool}
@@ -582,6 +669,9 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   onToggleMarkup={toggleMarkup}
                   commentsPanelOpen={commentsPanelOpen}
                   onToggleComments={toggleCommentsPanel}
+                  annotationVisibility={annotationVisibility}
+                  onSetTypeVisible={setAnnotationTypeVisible}
+                  onSetAllVisible={setAllAnnotationsVisible}
                   onPrev={() => jumpToPage(currentPage - 1)}
                   onNext={() => jumpToPage(currentPage + 1)}
                   onJump={jumpToPage}

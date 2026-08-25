@@ -2,10 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Local Imports --
-import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, groupAnnotationsByPage, listComments, pdfInkToStrokePaintInput, rectFromCorners, translatePoints, translateRect } from './annotationGeometry';
+import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, filterVisibleAnnotations, groupAnnotationsByPage, isAnnotationVisible, listComments, pdfInkToStrokePaintInput, rectFromCorners, resizeHandleAtPoint, resizeHandlePositions, resizeRect, translatePoints, translateRect } from './annotationGeometry';
 
 // -- Type Imports --
-import type { PdfAnnotation, PdfComment, PdfInk } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk } from '@/lib/types/pdfAnnotation';
 
 const ink = (id: string, page: number, createdAt: number, extra?: Partial<PdfInk>): PdfInk => ({
    id,
@@ -175,5 +175,122 @@ describe('translatePoints', () => {
 describe('translateRect', () => {
    it('shifts the origin and keeps the size', () => {
       expect(translateRect({ x: 0.25, y: 0.25, w: 0.5, h: 0.5 }, 0.125, 0.125)).toEqual({ x: 0.375, y: 0.375, w: 0.5, h: 0.5 });
+   });
+});
+
+describe('resizeHandlePositions', () => {
+   // bounds {0.2,0.2,0.4,0.4} at 100x100 -> box {20,20,40,40}; padded by 4 -> left 16, right 64, top 16, bottom 64.
+   const positions = resizeHandlePositions({ x: 0.2, y: 0.2, w: 0.4, h: 0.4 }, 100, 100);
+
+   it('places corners on the padded box', () => {
+      expect(positions.nw).toEqual({ x: 16, y: 16 });
+      expect(positions.ne).toEqual({ x: 64, y: 16 });
+      expect(positions.se).toEqual({ x: 64, y: 64 });
+      expect(positions.sw).toEqual({ x: 16, y: 64 });
+   });
+
+   it('places edge handles at the unpadded midpoints', () => {
+      expect(positions.n).toEqual({ x: 40, y: 16 });
+      expect(positions.s).toEqual({ x: 40, y: 64 });
+      expect(positions.e).toEqual({ x: 64, y: 40 });
+      expect(positions.w).toEqual({ x: 16, y: 40 });
+   });
+});
+
+describe('resizeHandleAtPoint', () => {
+   const bounds = { x: 0.2, y: 0.2, w: 0.4, h: 0.4 };
+
+   it('grabs the handle within tolerance', () => {
+      expect(resizeHandleAtPoint(bounds, 100, 100, 17, 17, 10)).toBe('nw');
+      expect(resizeHandleAtPoint(bounds, 100, 100, 40, 15, 10)).toBe('n');
+   });
+
+   it('takes the nearest of two nearby handles', () => {
+      // Nudged toward ne (64,16) from the n midpoint (40,16); ne is closer.
+      expect(resizeHandleAtPoint(bounds, 100, 100, 60, 18, 10)).toBe('ne');
+   });
+
+   it('returns null when no handle is within tolerance', () => {
+      expect(resizeHandleAtPoint(bounds, 100, 100, 40, 40, 10)).toBeNull();
+      expect(resizeHandleAtPoint(bounds, 100, 100, 500, 500, 10)).toBeNull();
+   });
+});
+
+// Binary-exact fractions (multiples of 1/16) keep every product/difference exact for `toEqual`.
+describe('resizeRect', () => {
+   const min = { w: 0.0625, h: 0.0625 };
+   const rect = { x: 0.25, y: 0.25, w: 0.25, h: 0.25 };
+
+   it('grows the east edge', () => {
+      expect(resizeRect(rect, 'e', 0.125, 0, min)).toEqual({ x: 0.25, y: 0.25, w: 0.375, h: 0.25 });
+   });
+
+   it('moves the west edge in', () => {
+      expect(resizeRect(rect, 'w', 0.125, 0, min)).toEqual({ x: 0.375, y: 0.25, w: 0.125, h: 0.25 });
+   });
+
+   it('grows the south edge', () => {
+      expect(resizeRect(rect, 's', 0, 0.125, min)).toEqual({ x: 0.25, y: 0.25, w: 0.25, h: 0.375 });
+   });
+
+   it('moves the north edge in', () => {
+      expect(resizeRect(rect, 'n', 0, 0.125, min)).toEqual({ x: 0.25, y: 0.375, w: 0.25, h: 0.125 });
+   });
+
+   it('reshapes both edges from a corner', () => {
+      expect(resizeRect(rect, 'se', 0.125, 0.125, min)).toEqual({ x: 0.25, y: 0.25, w: 0.375, h: 0.375 });
+      expect(resizeRect(rect, 'nw', 0.125, 0.125, min)).toEqual({ x: 0.375, y: 0.375, w: 0.125, h: 0.125 });
+   });
+
+   it('leaves the fixed edges untouched (ne)', () => {
+      expect(resizeRect(rect, 'ne', 0.125, -0.125, min)).toEqual({ x: 0.25, y: 0.125, w: 0.375, h: 0.375 });
+   });
+
+   it('flips cleanly when a west drag crosses the east edge', () => {
+      // left 0.25 dragged +0.375 -> 0.625, past right 0.5; rect flips to the right of the old right edge.
+      expect(resizeRect(rect, 'w', 0.375, 0, min)).toEqual({ x: 0.5, y: 0.25, w: 0.125, h: 0.25 });
+   });
+
+   it('holds the minimum width when collapsed toward the anchor', () => {
+      // left dragged to 0.46875 (gap 0.03125 < min 0.0625) -> stops 0.0625 from the right edge.
+      expect(resizeRect(rect, 'w', 0.21875, 0, min)).toEqual({ x: 0.4375, y: 0.25, w: 0.0625, h: 0.25 });
+   });
+
+   it('clamps the east edge to the page', () => {
+      expect(resizeRect({ x: 0.5, y: 0.5, w: 0.25, h: 0.25 }, 'e', 0.5, 0, min)).toEqual({ x: 0.5, y: 0.5, w: 0.5, h: 0.25 });
+   });
+
+   it('clamps the west edge to the page without moving the anchor', () => {
+      expect(resizeRect({ x: 0.25, y: 0.25, w: 0.25, h: 0.25 }, 'w', -0.5, 0, min)).toEqual({ x: 0, y: 0.25, w: 0.5, h: 0.25 });
+   });
+});
+
+describe('isAnnotationVisible', () => {
+   it('reads the flag matching the annotation kind', () => {
+      const highlight = mixed.h as PdfHighlight;
+      expect(isAnnotationVisible(highlight, { ink: true, highlight: false, comment: true })).toBe(false);
+      expect(isAnnotationVisible(highlight, { ink: false, highlight: true, comment: false })).toBe(true);
+   });
+});
+
+describe('filterVisibleAnnotations', () => {
+   const all: Record<string, PdfAnnotation> = { i: ink('i', 1, 1), h: mixed.h, c: mixed.c };
+
+   it('drops the hidden kind and keeps the visible ones', () => {
+      const kept = filterVisibleAnnotations(all, { ink: false, highlight: true, comment: true });
+      expect(Object.keys(kept ?? {})).toEqual(['h', 'c']);
+   });
+
+   it('drops everything when all kinds are hidden', () => {
+      expect(filterVisibleAnnotations(all, { ink: false, highlight: false, comment: false })).toEqual({});
+   });
+
+   it('keeps everything when all kinds are visible', () => {
+      const kept = filterVisibleAnnotations(all, { ink: true, highlight: true, comment: true });
+      expect(Object.keys(kept ?? {})).toEqual(['i', 'h', 'c']);
+   });
+
+   it('passes an absent map through untouched', () => {
+      expect(filterVisibleAnnotations(undefined, { ink: true, highlight: true, comment: true })).toBeUndefined();
    });
 });

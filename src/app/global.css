@@ -811,3 +811,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
    .cotm-annotation-flash { animation: none; }
 }
+
+/* Comment card pop: a soft one-shot fade-in as a card becomes the focused one, drawing the eye to it. Gated
+   by the motion-safe variant at the call site, so reduced motion skips it and the card simply appears. */
+@keyframes cotm-comment-pop {
+   from { opacity: 0.35; }
+   to { opacity: 1; }
+}

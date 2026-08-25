@@ -4,28 +4,39 @@ import { useTranslation } from 'react-i18next';
 // -- Icon Imports --
 import { X } from 'lucide-react';
 
+// -- Component Imports --
+import { PdfCommentCard } from './PdfCommentCard';
+
 // -- Type Imports --
 import type { PdfComment } from '@/lib/types/pdfAnnotation';
 
 /*
- * The comments side panel: every comment across the PDF, ordered top-to-bottom by page. Clicking a row jumps
- * the reader to that page and flashes the region. A review aid, so it stays available in read and markup mode.
- * Chrome uses theme tokens; the per-row color dot is the comment's own hex (user content, not chrome).
+ * The comments side panel: every comment across the PDF, ordered top-to-bottom by page, each rendered as a
+ * read/edit card. A card is where a comment is read AND authored - clicking a marker or region in the doc
+ * focuses its card here. A review aid, so it stays available in read and markup mode. Chrome uses theme
+ * tokens; a card's color dot is the comment's own hex (user content, not chrome).
  */
 
 interface PdfCommentsPanelProps {
    comments: PdfComment[];
+   focusedCommentId: string | null;
+   editingCommentId: string | null;
    onJump: (comment: PdfComment) => void;
+   onStartEdit: (id: string) => void;
+   onChangeBody: (id: string, body: string) => void;
+   onEndEdit: (id: string) => void;
+   onDelete: (id: string) => void;
+   onLinkActivate: (href: string) => void;
    onClose: () => void;
 }
 
-export function PdfCommentsPanel({ comments, onJump, onClose }: PdfCommentsPanelProps) {
+export function PdfCommentsPanel({ comments, focusedCommentId, editingCommentId, onJump, onStartEdit, onChangeBody, onEndEdit, onDelete, onLinkActivate, onClose }: PdfCommentsPanelProps) {
    const { t } = useTranslation();
 
    return (
-      <aside className="flex h-full w-full flex-col border-l border-border bg-muted/30 text-card-foreground">
-         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-            <h2 className="flex-1 text-sm font-medium">{t('PdfMarkup.commentsTitle')}</h2>
+      <aside className="flex h-full w-full flex-col border-l border-border bg-card text-card-foreground shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.15)]">
+         <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-2">
+            <h2 className="flex-1 text-sm font-semibold">{t('PdfMarkup.commentsTitle')}</h2>
             <span className="text-xs tabular-nums text-muted-foreground">{comments.length}</span>
             <button
                type="button"
@@ -39,26 +50,26 @@ export function PdfCommentsPanel({ comments, onJump, onClose }: PdfCommentsPanel
          </div>
 
          {comments.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+            <div className="flex flex-1 items-center justify-center bg-muted/30 px-6 text-center text-sm text-muted-foreground">
                {t('PdfMarkup.commentsEmpty')}
             </div>
          ) : (
-            <ul className="flex-1 space-y-2 overflow-y-auto p-2">
+            // A recessed tray so the raised cards read figure-ground; the extra left padding gives a focused
+            // card room to lean out toward the page-facing edge.
+            <ul className="flex-1 space-y-2 overflow-y-auto bg-muted/30 p-2 pl-3">
                {comments.map((comment) => (
                   <li key={comment.id}>
-                     <button
-                        type="button"
-                        onClick={() => onJump(comment)}
-                        className="flex w-full flex-col gap-1.5 rounded-lg border border-border bg-card p-2.5 text-left shadow-sm transition-shadow hover:border-primary/50 hover:shadow-md"
-                     >
-                        <span className="flex items-center gap-2">
-                           <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: comment.color }} aria-hidden />
-                           <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                              {t('PdfMarkup.commentPage', { page: comment.page })}
-                           </span>
-                        </span>
-                        <span className="line-clamp-3 text-sm leading-snug">{comment.body}</span>
-                     </button>
+                     <PdfCommentCard
+                        comment={comment}
+                        isFocused={comment.id === focusedCommentId}
+                        isEditing={comment.id === editingCommentId}
+                        onJump={() => onJump(comment)}
+                        onStartEdit={() => onStartEdit(comment.id)}
+                        onChangeBody={(body) => onChangeBody(comment.id, body)}
+                        onEndEdit={() => onEndEdit(comment.id)}
+                        onDelete={() => onDelete(comment.id)}
+                        onLinkActivate={onLinkActivate}
+                     />
                   </li>
                ))}
             </ul>

@@ -53,3 +53,9 @@ export interface PdfComment extends PdfAnnotationBase {
 
 /** Any PDF markup annotation, discriminated by `kind`. */
 export type PdfAnnotation = PdfInk | PdfHighlight | PdfComment;
+
+/** The discriminant of a {@link PdfAnnotation}. */
+export type PdfAnnotationKind = PdfAnnotation['kind'];
+
+/** Per-kind reader visibility; ephemeral view state, never persisted. A hidden kind is neither painted nor hit-tested. */
+export type PdfAnnotationVisibility = Record<PdfAnnotationKind, boolean>;

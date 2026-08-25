@@ -22,7 +22,7 @@ const annotations: PdfAnnotation[] = [
 ];
 
 describe('PdfAnnotationLayer', () => {
-   it('paints highlight, ink, and comment with denormalized geometry', () => {
+   it('paints highlight and ink with denormalized geometry, never comments', () => {
       const { container } = render(<PdfAnnotationLayer annotations={annotations} width={WIDTH} height={HEIGHT} />);
       const svg = container.querySelector('svg')!;
       expect(svg.getAttribute('viewBox')).toBe(`0 0 ${WIDTH} ${HEIGHT}`);
@@ -38,17 +38,8 @@ describe('PdfAnnotationLayer', () => {
       // Ink: the board stroke renderer emits a <path>.
       expect(svg.querySelectorAll('path').length).toBeGreaterThanOrEqual(1);
 
-      // Comment: a faint region rect plus a corner marker, both in the annotation color.
-      const region = svg.querySelector('rect[fill-opacity="0.08"]')!;
-      expect(region.getAttribute('x')).toBe('50');
-      expect(region.getAttribute('y')).toBe('200');
-      expect(region.getAttribute('width')).toBe('50');
-      expect(region.getAttribute('height')).toBe('100');
-      expect(region.getAttribute('stroke')).toBe('#3355ff');
-      const marker = svg.querySelector('g rect[width="12"][height="12"]')!;
-      expect(marker.getAttribute('x')).toBe('50');
-      expect(marker.getAttribute('y')).toBe('200');
-      expect(marker.getAttribute('fill')).toBe('#3355ff');
+      // Comments render in PdfCommentLayer, so this layer paints no region fill for one.
+      expect(svg.querySelector('rect[fill-opacity="0.08"]')).toBeNull();
    });
 
    it('is inert to pointer input this phase', () => {

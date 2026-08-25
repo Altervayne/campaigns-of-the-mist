@@ -249,3 +249,31 @@ describe('pdf store annotation history', () => {
       expect(await rowAnnotations()).toEqual({ a1: ink });
    });
 });
+
+describe('pdf store annotation visibility', () => {
+   it('defaults every kind visible', async () => {
+      const useStore = await seedStore(400);
+      expect(useStore.getState().annotationVisibility).toEqual({ ink: true, highlight: true, comment: true });
+   });
+
+   it('setAnnotationTypeVisible hides one kind, leaving the others', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.setAnnotationTypeVisible('ink', false);
+      expect(useStore.getState().annotationVisibility).toEqual({ ink: false, highlight: true, comment: true });
+   });
+
+   it('setAllAnnotationsVisible flips all three at once', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.setAllAnnotationsVisible(false);
+      expect(useStore.getState().annotationVisibility).toEqual({ ink: false, highlight: false, comment: false });
+      useStore.getState().actions.setAllAnnotationsVisible(true);
+      expect(useStore.getState().annotationVisibility).toEqual({ ink: true, highlight: true, comment: true });
+   });
+
+   it('dispose resets visibility back to all-visible', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.setAllAnnotationsVisible(false);
+      useStore.getState().actions.dispose();
+      expect(useStore.getState().annotationVisibility).toEqual({ ink: true, highlight: true, comment: true });
+   });
+});

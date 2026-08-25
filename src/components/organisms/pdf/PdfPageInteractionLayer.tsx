@@ -10,6 +10,7 @@ import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
 import { StrokeShape } from '@/components/organisms/board/items/BoardDrawingItem';
 
 // -- Type Imports --
+import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
 import type { PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
@@ -33,6 +34,18 @@ const MIN_STROKE_LENGTH = 4;
 /** Shortest committed rect side, in box px; a smaller drag reads as a click (a stray tap, or a comment reopen). */
 const MIN_RECT_SIZE = 6;
 
+/** The directional cursor per resize handle, so a hovered handle reads as reshapeable. */
+const RESIZE_CURSORS: Record<ResizeHandle, string> = {
+   nw: 'nwse-resize',
+   se: 'nwse-resize',
+   ne: 'nesw-resize',
+   sw: 'nesw-resize',
+   n: 'ns-resize',
+   s: 'ns-resize',
+   e: 'ew-resize',
+   w: 'ew-resize',
+};
+
 interface PdfPageInteractionLayerProps {
    pageNumber: number;
    /** The page box's UNZOOMED size in CSS px (the render width and its aspect height). */
@@ -41,7 +54,7 @@ interface PdfPageInteractionLayerProps {
 }
 
 export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageInteractionLayerProps) {
-   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, openComment, select, selectAt, translateSelected, beginHistory, commitHistory } = usePdfMarkup();
+   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory } = usePdfMarkup();
 
    // The in-flight pen stroke's normalized points, plus its preview mirror (state so only this layer repaints).
    const pointsRef = useRef<number[] | null>(null);
@@ -55,6 +68,10 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
    // The in-flight select-move: the mark grabbed on pointerdown (null when the gesture hit nothing) + the last
    // client point, so each move contributes an incremental delta that sums exactly.
    const moveRef = useRef<{ lastX: number; lastY: number } | null>(null);
+
+   // The in-flight resize: the grabbed handle + the last client point. Takes precedence over a move, so a click
+   // on a handle reshapes rather than drags.
+   const resizeRef = useRef<{ handle: ResizeHandle; lastX: number; lastY: number } | null>(null);
 
    if (mode !== 'markup') return null;
 
@@ -84,6 +101,14 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
          return;
       }
       if (tool === 'select') {
+         // A grab on a handle of the current selection reshapes it; only then fall through to select/move.
+         const handle = resizeHandleAt(pageNumber, rect, width, height, event.clientX, event.clientY);
+         if (handle) {
+            resizeRef.current = { handle, lastX: event.clientX, lastY: event.clientY };
+            event.currentTarget.style.cursor = RESIZE_CURSORS[handle];
+            beginHistory();
+            return;
+         }
          const id = selectAt(pageNumber, rect, width, height, event.clientX, event.clientY);
          if (!id) {
             select(null);
@@ -115,14 +140,29 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
          return;
       }
       if (tool === 'select') {
+         const resize = resizeRef.current;
+         if (resize) {
+            // Incremental delta since the last move; resizeRect clamps each step to the page and the size floor.
+            const dnx = (event.clientX - resize.lastX) / rect.width;
+            const dny = (event.clientY - resize.lastY) / rect.height;
+            resize.lastX = event.clientX;
+            resize.lastY = event.clientY;
+            resizeSelected(resize.handle, dnx, dny);
+            return;
+         }
          const move = moveRef.current;
-         if (!move) return;
-         // Incremental delta since the last move; the store clamps per step at the page edges.
-         const dnx = (event.clientX - move.lastX) / rect.width;
-         const dny = (event.clientY - move.lastY) / rect.height;
-         move.lastX = event.clientX;
-         move.lastY = event.clientY;
-         translateSelected(dnx, dny);
+         if (move) {
+            // Incremental delta since the last move; the store clamps per step at the page edges.
+            const dnx = (event.clientX - move.lastX) / rect.width;
+            const dny = (event.clientY - move.lastY) / rect.height;
+            move.lastX = event.clientX;
+            move.lastY = event.clientY;
+            translateSelected(dnx, dny);
+            return;
+         }
+         // Idle hover: a handle under the pointer shows its directional cursor, else the plain select cursor.
+         const handle = resizeHandleAt(pageNumber, rect, width, height, event.clientX, event.clientY);
+         event.currentTarget.style.cursor = handle ? RESIZE_CURSORS[handle] : 'default';
          return;
       }
       if (isRectTool) {
@@ -148,6 +188,12 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
          return;
       }
       if (tool === 'select') {
+         // Close the resize checkpoint (one undo step for the whole reshape), then clear the gesture.
+         if (resizeRef.current) {
+            commitHistory();
+            resizeRef.current = null;
+            return;
+         }
          // Close the move's checkpoint (only opened when the gesture grabbed a mark); a click that never moved
          // changed no annotation, so this records nothing.
          if (moveRef.current) commitHistory();
@@ -168,10 +214,10 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
             else commitComment(pageNumber, built);
             return;
          }
-         // Comment click: reopen an existing note under the down point. Other tools' below-floor clicks no-op.
+         // Comment click: focus an existing note's card under the down point. Other tools' below-floor clicks no-op.
          if (tool === 'comment') {
             const id = commentAtPoint(pageNumber, rect, width, height, start.clientX, start.clientY);
-            if (id) openComment(id);
+            if (id) focusComment(id);
          }
          return;
       }

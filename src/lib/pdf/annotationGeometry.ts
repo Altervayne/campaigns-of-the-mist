@@ -1,6 +1,6 @@
 // -- Type Imports --
 import type { StrokePaintInput } from '@/lib/board/drawingStyle';
-import type { PdfAnnotation, PdfComment, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfAnnotationVisibility, PdfComment, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
  * Pure geometry for the annotation overlay: it buckets annotations per page and denormalizes page-space
@@ -30,6 +30,24 @@ export function listComments(annotations: Record<string, PdfAnnotation> | undefi
    const comments = Object.values(annotations).filter((mark): mark is PdfComment => mark.kind === 'comment');
    comments.sort((a, b) => a.page - b.page || a.rect.y - b.rect.y || a.rect.x - b.rect.x);
    return comments;
+}
+
+/** Whether an annotation's kind is currently shown. */
+export function isAnnotationVisible(annotation: PdfAnnotation, visibility: PdfAnnotationVisibility): boolean {
+   return visibility[annotation.kind];
+}
+
+/** Keeps only the annotations whose kind is visible; passes an absent map through untouched. */
+export function filterVisibleAnnotations(
+   annotations: Record<string, PdfAnnotation> | undefined,
+   visibility: PdfAnnotationVisibility,
+): Record<string, PdfAnnotation> | undefined {
+   if (!annotations) return annotations;
+   const out: Record<string, PdfAnnotation> = {};
+   for (const [id, annotation] of Object.entries(annotations)) {
+      if (visibility[annotation.kind]) out[id] = annotation;
+   }
+   return out;
 }
 
 /** Maps a flat `[x0,y0,...]` normalized point list into box pixels: even indices by width, odd by height. */
@@ -90,6 +108,90 @@ export function translatePoints(points: number[], dx: number, dy: number): numbe
 /** Shifts a rect's origin by a normalized delta. */
 export function translateRect(rect: PdfRect, dx: number, dy: number): PdfRect {
    return { ...rect, x: rect.x + dx, y: rect.y + dy };
+}
+
+/** The 8 resize handles of a rect selection box: corners plus edge midpoints, compass-named. */
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+
+/** Slack around a mark's bounds, in box px, so the selection outline (and its handles) clear the mark. */
+export const SELECTION_PADDING = 4;
+
+/** The 8 handle centers in box px, on the padded selection box around `bounds`. Corners + edge midpoints. */
+export function resizeHandlePositions(bounds: PdfRect, w: number, h: number): Record<ResizeHandle, { x: number; y: number }> {
+   const box = denormalizeRect(bounds, w, h);
+   const left = box.x - SELECTION_PADDING;
+   const right = box.x + box.w + SELECTION_PADDING;
+   const top = box.y - SELECTION_PADDING;
+   const bottom = box.y + box.h + SELECTION_PADDING;
+   const midX = box.x + box.w / 2;
+   const midY = box.y + box.h / 2;
+   return {
+      nw: { x: left, y: top },
+      n: { x: midX, y: top },
+      ne: { x: right, y: top },
+      e: { x: right, y: midY },
+      se: { x: right, y: bottom },
+      s: { x: midX, y: bottom },
+      sw: { x: left, y: bottom },
+      w: { x: left, y: midY },
+   };
+}
+
+/** The handle whose center is within `tolerancePx` of a box-px point (nearest wins), or null. */
+export function resizeHandleAtPoint(bounds: PdfRect, w: number, h: number, px: number, py: number, tolerancePx: number): ResizeHandle | null {
+   const positions = resizeHandlePositions(bounds, w, h);
+   let best: ResizeHandle | null = null;
+   let bestDist = tolerancePx;
+   for (const [handle, pos] of Object.entries(positions) as [ResizeHandle, { x: number; y: number }][]) {
+      const dist = Math.hypot(px - pos.x, py - pos.y);
+      if (dist <= bestDist) {
+         bestDist = dist;
+         best = handle;
+      }
+   }
+   return best;
+}
+
+/** Holds an edge at least `min` from its anchor (a flip past the anchor snaps to the far side), on the page. */
+function clampResizeEdge(edge: number, anchor: number, min: number): number {
+   const kept = edge >= anchor ? Math.max(edge, anchor + min) : Math.min(edge, anchor - min);
+   return Math.min(Math.max(kept, 0), 1);
+}
+
+/**
+ * Reshapes a rect by dragging one handle: the handle's edge(s) shift by the normalized delta while the
+ * opposite edge anchors. Width/height stay positive (a drag past the anchor flips cleanly), the rect holds a
+ * minimum size, and every edge stays within the page `[0,1]`.
+ */
+export function resizeRect(rect: PdfRect, handle: ResizeHandle, dnx: number, dny: number, minNorm: { w: number; h: number }): PdfRect {
+   const left = rect.x;
+   const right = rect.x + rect.w;
+   const top = rect.y;
+   const bottom = rect.y + rect.h;
+   let { x, y, w, h } = rect;
+   const movesW = handle === 'nw' || handle === 'w' || handle === 'sw';
+   const movesE = handle === 'ne' || handle === 'e' || handle === 'se';
+   const movesN = handle === 'nw' || handle === 'n' || handle === 'ne';
+   const movesS = handle === 'sw' || handle === 's' || handle === 'se';
+   if (movesW) {
+      const edge = clampResizeEdge(left + dnx, right, minNorm.w);
+      x = Math.min(edge, right);
+      w = Math.abs(right - edge);
+   } else if (movesE) {
+      const edge = clampResizeEdge(right + dnx, left, minNorm.w);
+      x = Math.min(left, edge);
+      w = Math.abs(edge - left);
+   }
+   if (movesN) {
+      const edge = clampResizeEdge(top + dny, bottom, minNorm.h);
+      y = Math.min(edge, bottom);
+      h = Math.abs(bottom - edge);
+   } else if (movesS) {
+      const edge = clampResizeEdge(bottom + dny, top, minNorm.h);
+      y = Math.min(top, edge);
+      h = Math.abs(edge - top);
+   }
+   return { x, y, w, h };
 }
 
 /**

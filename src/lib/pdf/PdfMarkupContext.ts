@@ -2,6 +2,7 @@
 import { createContext, useContext } from 'react';
 
 // -- Type Imports --
+import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
 import type { PdfMarkupMode, PdfTool } from '@/lib/stores/pdfStore';
 import type { PdfRect } from '@/lib/types/pdfAnnotation';
 
@@ -24,8 +25,6 @@ export interface PdfMarkupContextValue {
    penWidth: number;
    highlightColor: string;
    commentColor: string;
-   /** The comment whose editor popover is open, or `null`. Drives the per-page comment layer's controlled popover. */
-   openCommentId: string | null;
    /** Mints a pen ink from a finished gesture: normalized points + a normalized (page-width fraction) width. */
    commitInk: (pageNumber: number, normalizedPoints: number[], normalizedWidth: number) => void;
    /** Mints a highlight from a finished rect drag (normalized page-space rect). */
@@ -43,18 +42,18 @@ export interface PdfMarkupContextValue {
     * conversion as {@link eraseAt}; used to reopen an existing comment from a click.
     */
    commentAtPoint: (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => string | null;
-   /** Opens a comment's editor popover. */
-   openComment: (id: string) => void;
-   /** Closes a comment's editor, deleting it first if its body is still empty. */
-   closeComment: (id: string) => void;
+   /** Opens the comments panel and highlights a comment's card (the read/edit home). */
+   focusComment: (id: string) => void;
    /** Edits a comment's body (rides the debounced autosave). */
    setCommentBody: (id: string, body: string) => void;
-   /** Removes a comment outright and closes its editor. */
+   /** Removes a comment outright. */
    deleteComment: (id: string) => void;
    /** The selected annotation's id, or `null`. Drives the per-page selection chrome. */
    selectedId: string | null;
    /** The comment briefly flashed after a comments-list jump, or `null`. Drives the per-page flash chrome. */
    flashCommentId: string | null;
+   /** The comment whose card is open in the panel, or `null`. Drives the zone's focused emphasis. */
+   focusedCommentId: string | null;
    /** Sets or clears the selection. */
    select: (id: string | null) => void;
    /**
@@ -64,6 +63,14 @@ export interface PdfMarkupContextValue {
    selectAt: (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => string | null;
    /** Moves the selected annotation by an incremental normalized delta, clamped so it stays on the page. */
    translateSelected: (dnx: number, dny: number) => void;
+   /**
+    * The resize handle under a client point, or null. Only a selected RECT kind (highlight/comment) on the
+    * given page yields a handle; ink and cross-page marks return null. Same zoom-independent point conversion
+    * as {@link selectAt}. Drives resize-mode entry and the hover cursor.
+    */
+   resizeHandleAt: (pageNumber: number, rect: DOMRect, boxW: number, boxH: number, clientX: number, clientY: number) => ResizeHandle | null;
+   /** Reshapes the selected rect kind by an incremental normalized delta on the handle's edge(s). */
+   resizeSelected: (handle: ResizeHandle, dnx: number, dny: number) => void;
    /** Opens an undo checkpoint before a store-mutating gesture. Pairs with {@link commitHistory}. */
    beginHistory: () => void;
    /** Closes the open checkpoint, recording an undo step only when the gesture changed the annotations. */
@@ -78,21 +85,22 @@ const READ_ONLY_VALUE: PdfMarkupContextValue = {
    penWidth: 3,
    highlightColor: '#fde047',
    commentColor: '#f59e0b',
-   openCommentId: null,
    commitInk: () => {},
    commitHighlight: () => {},
    commitComment: () => {},
    eraseAt: () => {},
    commentAtPoint: () => null,
-   openComment: () => {},
-   closeComment: () => {},
+   focusComment: () => {},
    setCommentBody: () => {},
    deleteComment: () => {},
    selectedId: null,
    flashCommentId: null,
+   focusedCommentId: null,
    select: () => {},
    selectAt: () => null,
    translateSelected: () => {},
+   resizeHandleAt: () => null,
+   resizeSelected: () => {},
    beginHistory: () => {},
    commitHistory: () => {},
 };
