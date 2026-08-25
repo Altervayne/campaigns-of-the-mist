@@ -43,7 +43,8 @@
       "comments": "Comments",
       "commentsTitle": "Comments",
       "commentsEmpty": "No comments yet.",
-      "commentPage": "p. {{page}}"
+      "commentPage": "p. {{page}}",
+      "annotatedBadge": "Annotated"
    },
    "Tabs": {
       "untitled": "Untitled character",
@@ -1553,6 +1554,7 @@
          "export": "Exports",
          "creation": "Creation",
          "note": "Note",
+         "pdf": "PDF",
          "tools": "Tools",
          "chooseThemeType": "Choose a Theme Type",
          "chooseThemebook": "Choose a Themebook"
@@ -1589,6 +1591,8 @@
          "toggleNoteOutline": "Toggle note outline",
          "jumpToSection": "Jump to section...",
          "insertLink": "Insert link...",
+         "pdfToggleMarkup": "Toggle markup mode",
+         "pdfToggleComments": "Toggle comments panel",
          "closeTab": "Close: Current Tab",
          "nextTab": "Switch: Next Tab",
          "prevTab": "Switch: Previous Tab",

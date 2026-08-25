@@ -1,8 +1,12 @@
 // -- React Imports --
 import { useTranslation } from 'react-i18next';
 
+// -- Icon Imports --
+import { Highlighter } from 'lucide-react';
+
 // -- Utils Imports --
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
+import { hasAnnotations } from '@/lib/pdf/annotations';
 
 // -- Type Imports --
 import type { PdfDocument } from '@/lib/types/pdf';
@@ -24,7 +28,17 @@ export function PdfPreview({ pdf }: { pdf: PdfDocument }) {
    const pageCount = typeof pdf?.pageCount === 'number' && pdf.pageCount > 0 ? pdf.pageCount : 0;
 
    return (
-      <div className="flex h-45 w-45 flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+      <div className="relative flex h-45 w-45 flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+         {/* Annotated marker: app-themed chrome over the paper, so a marked-up book is discoverable in the drawer. */}
+         {hasAnnotations(pdf) ? (
+            <span
+               title={t('PdfMarkup.annotatedBadge')}
+               aria-label={t('PdfMarkup.annotatedBadge')}
+               className="absolute right-1 top-1 z-10 flex items-center rounded bg-popover/80 p-1 text-muted-foreground"
+            >
+               <Highlighter className="h-3 w-3" />
+            </span>
+         ) : null}
          {title.trim() ? (
             <div className="shrink-0 truncate border-b border-paper-border px-2.5 py-1.5 text-sm font-semibold">{title}</div>
          ) : null}

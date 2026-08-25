@@ -12,7 +12,7 @@ import { useDeviceType } from '@/hooks/useDeviceType';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Image as ImageIcon } from 'lucide-react';
+import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, MessagesSquare, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Image as ImageIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { exportCharacterSheet, exportDrawer, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
@@ -25,6 +25,7 @@ import { useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
 import { getActiveSheetZoom, useTabManagerStore, useTabManagerActions } from '@/lib/character/tabManagerStore';
 import { DEFAULT_SHEET_ZOOM, stepSheetZoom } from '@/lib/character/sheetZoom';
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
+import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 import { exportEntireDrawerAsNestedTree } from '@/lib/drawer/drawerRepository';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
 import { collectBoardEmbeddedEntities } from '@/lib/board/collectBoardEmbeddedEntities';
@@ -61,8 +62,8 @@ export interface CommandAction {
    pageId?: string;
 }
 
-/** The workspace a command applies to. `global` shows everywhere; `character`/`board`/`note` only on that tab kind. */
-type CommandScope = 'global' | 'character' | 'board' | 'note';
+/** The workspace a command applies to. `global` shows everywhere; `character`/`board`/`note`/`pdf` only on that tab kind. */
+type CommandScope = 'global' | 'character' | 'board' | 'note' | 'pdf';
 
 type ScopedCommand = CommandAction & { scope: CommandScope };
 
@@ -92,6 +93,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    const { saveCharacterToDrawer, saveBoardToDrawer } = useSaveToDrawer();
    const { createBoardTab, createNoteTab, closeActiveTab, setActiveTab, setTabZoom } = useTabManagerActions();
    const activeNote = useActiveNoteInstance();
+   const activePdf = useActivePdfInstance();
 
    const openTabs = useTabManagerStore((state) => state.openTabs);
    const activeTabId = useTabManagerStore((state) => state.activeTabId);
@@ -252,6 +254,15 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       { id: 'jumpToSection', scope: 'note', label: t('CommandPalette.commands.jumpToSection'), keywords: ['jump', 'goto', 'section', 'heading', 'outline', 'navigate', 'note'], icon: ListTree, group: t('CommandPalette.groups.note'), pageId: 'jumpToSection' },
       // Opens the toolbar's search-first link picker at the caret (flips to Live first). Note-scoped.
       { id: 'insertLink', scope: 'note', label: t('CommandPalette.commands.insertLink'), keywords: ['link', 'insert', 'url', 'portal', 'anchor', 'reference', 'section', 'note'], icon: Link, group: t('CommandPalette.groups.note'), action: () => activeNote?.getState().actions.openLinkPicker() },
+
+      // #####################
+      // ###   PDF GROUP   ###
+      // #####################
+      // Gated on an active pdf tab; both drive the active pdf instance's own markup state.
+      ...(activePdf ? [
+         { id: 'pdfToggleMarkup', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleMarkup'), keywords: ['pdf', 'markup', 'annotate', 'draw', 'mark', 'notes'], icon: Pencil, group: t('CommandPalette.groups.pdf'), action: () => { const state = activePdf.getState(); state.actions.setMarkupMode(state.markupMode === 'markup' ? 'read' : 'markup'); } },
+         { id: 'pdfToggleComments', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleComments'), keywords: ['pdf', 'comments', 'notes', 'panel', 'annotations'], icon: MessagesSquare, group: t('CommandPalette.groups.pdf'), action: () => activePdf.getState().actions.toggleCommentsPanel() },
+      ] : []),
 
       // #################################
       // ###   CHARACTER SHEET GROUP   ###

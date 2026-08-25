@@ -113,6 +113,8 @@ export interface PdfState {
    highlightColor: string;
    /** The comment region's outline/fill hex; ephemeral. Real hex - user content on white paper. */
    commentColor: string;
+   /** The comments-list panel visibility; ephemeral, defaults closed. The toolbar and palette both toggle it. */
+   commentsPanelOpen: boolean;
    /**
     * Annotation undo history: prior annotation maps, newest last. Every annotation map is a whole-object
     * replacement, so a snapshot is just the pre-op map; unchanged annotation objects are shared across
@@ -152,6 +154,10 @@ export interface PdfState {
       setHighlightColor: (color: string) => void;
       /** Sets the comment region's hex. Ephemeral. */
       setCommentColor: (color: string) => void;
+      /** Sets the comments-list panel visibility. Ephemeral. */
+      setCommentsPanelOpen: (open: boolean) => void;
+      /** Flips the comments-list panel visibility. Ephemeral. */
+      toggleCommentsPanel: () => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
       /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
@@ -189,7 +195,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'undoStack' | 'redoStack' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'undoStack' | 'redoStack' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -204,6 +210,7 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    penWidth: DEFAULT_PEN_WIDTH,
    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
    commentColor: DEFAULT_COMMENT_COLOR,
+   commentsPanelOpen: false,
    undoStack: [],
    redoStack: [],
    status: 'idle',
@@ -295,6 +302,10 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setHighlightColor: (color) => set({ highlightColor: color }),
 
             setCommentColor: (color) => set({ commentColor: color }),
+
+            setCommentsPanelOpen: (open) => set({ commentsPanelOpen: open }),
+
+            toggleCommentsPanel: () => set((state) => ({ commentsPanelOpen: !state.commentsPanelOpen })),
 
             addAnnotation: (annotation) => {
                const { doc } = get();

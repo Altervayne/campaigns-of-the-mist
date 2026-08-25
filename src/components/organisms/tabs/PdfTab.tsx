@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 // -- Icon Imports --
-import { FileType } from 'lucide-react';
+import { FileType, Highlighter } from 'lucide-react';
 
 // -- Component Imports --
 import { TabShell } from './TabShell';
@@ -14,6 +14,9 @@ import { TabShell } from './TabShell';
 // -- Store Imports --
 import { getOrCreatePdfInstance } from '@/lib/pdf/pdfStoreRegistry';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
+
+// -- Utils Imports --
+import { hasAnnotations } from '@/lib/pdf/annotations';
 
 // -- Constants --
 import { PDF_VISUAL } from '@/lib/constants/gameVisuals';
@@ -41,6 +44,7 @@ export function PdfTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
 
    const instance = useMemo(() => getOrCreatePdfInstance(tab.id), [tab.id]);
    const title = useStore(instance, (state) => state.doc?.title);
+   const annotated = useStore(instance, (state) => hasAnnotations(state.doc));
    const label = title && title.trim().length > 0 ? title : t('Tabs.untitledPdf');
 
    const icon = (
@@ -52,11 +56,17 @@ export function PdfTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
       </span>
    );
 
+   // Marks the tab of a marked-up book, matching the drawer card's marker.
+   const trailing = annotated ? (
+      <Highlighter className="size-3.5 shrink-0 opacity-70" aria-label={t('PdfMarkup.annotatedBadge')} />
+   ) : undefined;
+
    return (
       <TabShell
          tabId={tab.id}
          label={label}
          leadingIcon={icon}
+         trailing={trailing}
          isActive={isActive}
          onActivate={() => setActiveTab(tab.id)}
          onRequestClose={() => closeTab(tab.id)}

@@ -107,13 +107,13 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const penWidth = useStore(store, (state) => state.penWidth);
    const highlightColor = useStore(store, (state) => state.highlightColor);
    const commentColor = useStore(store, (state) => state.commentColor);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor } = store.getState().actions;
+   const commentsPanelOpen = useStore(store, (state) => state.commentsPanelOpen);
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel } = store.getState().actions;
 
    // The comment whose editor popover is open; ephemeral UI, reset on remount (a tab switch). Local, not in the store.
    const [openCommentId, setOpenCommentId] = useState<string | null>(null);
 
-   // The comments-list panel visibility and the transient flash after a jump; both ephemeral, reset on remount.
-   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
+   // The transient flash after a jump; ephemeral, reset on remount.
    const [flashCommentId, setFlashCommentId] = useState<string | null>(null);
    const flashTimer = useRef<number | null>(null);
 
@@ -581,7 +581,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   markupMode={markupMode}
                   onToggleMarkup={toggleMarkup}
                   commentsPanelOpen={commentsPanelOpen}
-                  onToggleComments={() => setCommentsPanelOpen((open) => !open)}
+                  onToggleComments={toggleCommentsPanel}
                   onPrev={() => jumpToPage(currentPage - 1)}
                   onNext={() => jumpToPage(currentPage + 1)}
                   onJump={jumpToPage}

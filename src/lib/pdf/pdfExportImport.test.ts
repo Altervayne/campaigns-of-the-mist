@@ -19,11 +19,12 @@ import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 import type { Drawer, DrawerItem, Folder } from '@/lib/types/drawer';
 import type { EmbeddedPdf, ExportFile } from '@/lib/utils/export-import';
 
-/** A pair of annotations spanning two kinds, for the round-trip fidelity check. */
+/** Annotations spanning all three kinds (ink, highlight, comment), for the round-trip fidelity check. */
 function sampleAnnotations(): Record<string, PdfAnnotation> {
    return {
       a1: { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1, 0.2, 0.2], width: 0.01 },
       a2: { id: 'a2', kind: 'highlight', page: 3, color: '#facc15', createdAt: 2, rect: { x: 0.1, y: 0.2, w: 0.3, h: 0.05 }, alpha: 0.4 },
+      a3: { id: 'a3', kind: 'comment', page: 5, color: '#f59e0b', createdAt: 3, rect: { x: 0.4, y: 0.5, w: 0.2, h: 0.1 }, body: 'House rule: we ignore this table.' },
    };
 }
 
@@ -132,5 +133,25 @@ describe('annotation round-trip', () => {
 
       expect(exportable.annotations).toEqual(annotations);
       expect(exportable).toEqual(content); // whole aggregate, not a whitelisted subset
+   });
+
+   it('survives the full .cotm serialize -> parse: ink + highlight + comment come back byte-faithful', async () => {
+      const { hash, embedded } = await makeFixture();
+      const annotations = sampleAnnotations();
+      const content = pdfContent(hash, { annotations });
+
+      // Build the envelope exactly as exportToFile does (content via toExportableItemContent, bytes on the
+      // pdfAssets channel), then push it through the JSON transport importFromFile reads back.
+      const exported: ExportFile = {
+         fileType: 'PDF', game: 'NEUTRAL', content: toExportableItemContent('PDF', content)!, pdfAssets: { [hash]: embedded },
+      };
+      const reparsed = JSON.parse(JSON.stringify(exported)) as ExportFile;
+
+      expect(isExportedPdf(reparsed)).toBe(true);
+      const restored = reparsed.content as PdfDocument;
+      // Same ids, kinds, geometry, and the comment body - nothing dropped or reshaped in transit.
+      expect(restored.annotations).toEqual(annotations);
+      expect(Object.keys(restored.annotations!)).toEqual(['a1', 'a2', 'a3']);
+      expect(restored.annotations!.a3).toMatchObject({ kind: 'comment', body: 'House rule: we ignore this table.' });
    });
 });

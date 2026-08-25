@@ -33,6 +33,8 @@ interface TabShellProps {
    label: string;
    /** The leading icon block (a game crest for characters, a board icon for boards). */
    leadingIcon: ReactNode;
+   /** An optional indicator after the label (a pdf's annotated marker); omitted by most kinds. */
+   trailing?: ReactNode;
    /** Whether this is the active tab (drives the highlight + scroll-into-view). */
    isActive: boolean;
    /** Activates this tab. */
@@ -47,7 +49,7 @@ interface TabShellProps {
  *
  * @param props - See {@link TabShellProps}.
  */
-export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRequestClose }: TabShellProps) {
+export function TabShell({ tabId, label, leadingIcon, trailing, isActive, onActivate, onRequestClose }: TabShellProps) {
    const { t } = useTranslation();
 
    // The discriminating payload lets the sheet's shared DnD handlers route a tab drag
@@ -103,6 +105,7 @@ export function TabShell({ tabId, label, leadingIcon, isActive, onActivate, onRe
          >
             {leadingIcon}
             <span className="min-w-0 flex-1 truncate">{label}</span>
+            {trailing}
          </button>
          <button
             type="button"

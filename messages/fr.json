@@ -43,7 +43,8 @@
       "comments": "[TO COMPLETE]",
       "commentsTitle": "[TO COMPLETE]",
       "commentsEmpty": "[TO COMPLETE]",
-      "commentPage": "[TO COMPLETE]"
+      "commentPage": "[TO COMPLETE]",
+      "annotatedBadge": "[TO COMPLETE]"
    },
    "Tabs": {
       "untitled": "Personnage sans nom",
@@ -1553,6 +1554,7 @@
          "export": "Exports",
          "creation": "Création",
          "note": "Note",
+         "pdf": "[TO COMPLETE]",
          "tools": "Outils",
          "chooseThemeType": "Choisissez un Type",
          "chooseThemebook": "Choisissez un Thème"
@@ -1589,6 +1591,8 @@
          "toggleNoteOutline": "Basculer le plan de la note",
          "jumpToSection": "Aller à la section...",
          "insertLink": "Insérer un lien...",
+         "pdfToggleMarkup": "[TO COMPLETE]",
+         "pdfToggleComments": "[TO COMPLETE]",
          "closeTab": "Fermer : Onglet Actuel",
          "nextTab": "Changer : Onglet Suivant",
          "prevTab": "Changer : Onglet Précédent",
