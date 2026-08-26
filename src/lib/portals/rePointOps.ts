@@ -1,16 +1,24 @@
 // -- Data Imports --
 import { drawerDatabase as db } from '@/lib/drawer/drawerDatabase';
+import { listAllNotes } from '@/lib/notes/noteRepository';
+import { listBoards } from '@/lib/board/boardRepository';
 
 // -- Store Registry Imports --
 import { peekNoteInstance } from '@/lib/notes/noteStoreRegistry';
 import { peekBoardInstance } from '@/lib/board/boardStoreRegistry';
 
 // -- Portals Imports --
-import { rePointNoteBody, rePointBoardItemContent, rePointBoardTarget } from './rePoint';
+import {
+   rePointNoteBody,
+   rePointBoardItemContent,
+   rePointBoardTarget,
+   countNoteBodyLinks,
+   countBoardLinks,
+} from './rePoint';
 
 // -- Type Imports --
 import type { LinkInsertTarget } from './buildLinkToken';
-import type { Note, Board } from '@/lib/types/board';
+import type { Note, Board, BoardItemContent } from '@/lib/types/board';
 
 /*
  * Persistence side of the re-point primitives: buffer-aware ops that apply the pure rewrites in `rePoint.ts` to
@@ -93,4 +101,71 @@ export async function rePointBoardLinks(boardId: string, oldId: string, newTarge
       const nextBoard = rePointBoardTarget(board, oldId, newTarget);
       if (nextBoard !== board) await db.items.update(drawerItemId, { content: nextBoard });
    });
+}
+
+/** Aggregate scope of an app-wide re-point: how many hosts of each kind carry a match, and the total link count. */
+export interface RePointScope {
+   notes: number;
+   boards: number;
+   links: number;
+}
+
+/**
+ * A board's item contents for the count scan: the OPEN board's live items when it is open, else the persisted item
+ * rows. The peek-or-db read lives here so the count and the apply agree on which items a closed board holds.
+ */
+async function boardItemContentsForCount(boardId: string): Promise<BoardItemContent[]> {
+   const live = peekBoardInstance(boardId);
+   if (live) return Object.values(live.getState().items).map((item) => item.content);
+   const rows = await db.boardItems.where('boardId').equals(boardId).toArray();
+   return rows.map((row) => row.content);
+}
+
+/**
+ * Counts every link to `oldId` across all notes and boards, for the picker header's "all N links" scope. The count
+ * reads persisted (and any open board's live) state; an open NOTE's unsaved-but-unpersisted new dead link is not
+ * seen here, but {@link rePointNoteLinks} still fixes it in the buffer, so the count can under-report while the
+ * rewrite stays faithful. `notes`/`boards` count HOSTS with at least one match; `links` is the total.
+ */
+export async function countAllLinks(oldId: string): Promise<RePointScope> {
+   const scope: RePointScope = { notes: 0, boards: 0, links: 0 };
+
+   for (const note of await listAllNotes()) {
+      const count = countNoteBodyLinks(note.body, oldId);
+      if (count > 0) { scope.notes += 1; scope.links += count; }
+   }
+
+   for (const board of await listBoards()) {
+      const count = countBoardLinks(await boardItemContentsForCount(board.id), oldId);
+      if (count > 0) { scope.boards += 1; scope.links += count; }
+   }
+
+   return scope;
+}
+
+/**
+ * Re-points every note-body link and every board portal / note-embed targeting `oldId` to `newTarget`, across the
+ * whole app in one pass, returning the aggregate counts for the toast. A host with no match is skipped; each match
+ * routes through the buffer-aware per-host op, so open buffers stay in sync and the board undo behavior is kept.
+ */
+export async function rePointAllLinks(oldId: string, newTarget: LinkInsertTarget): Promise<RePointScope> {
+   const scope: RePointScope = { notes: 0, boards: 0, links: 0 };
+
+   for (const note of await listAllNotes()) {
+      const count = countNoteBodyLinks(note.body, oldId);
+      if (count === 0) continue;
+      await rePointNoteLinks(note.id, oldId, newTarget);
+      scope.notes += 1;
+      scope.links += count;
+   }
+
+   for (const board of await listBoards()) {
+      const count = countBoardLinks(await boardItemContentsForCount(board.id), oldId);
+      if (count === 0) continue;
+      await rePointBoardLinks(board.id, oldId, newTarget);
+      scope.boards += 1;
+      scope.links += count;
+   }
+
+   return scope;
 }

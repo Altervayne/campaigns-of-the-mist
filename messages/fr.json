@@ -565,6 +565,13 @@
       "seenAbove": "Vu plus haut",
       "seenAboveHint": "Déjà vu plus haut. Sautez-y",
       "scopeToggle": "Cet espace uniquement",
+      "rePoint": {
+         "action": "[TO COMPLETE]",
+         "pickerHeader_one": "[TO COMPLETE]",
+         "pickerHeader_other": "[TO COMPLETE]",
+         "toastDone_one": "[TO COMPLETE]",
+         "toastDone_other": "[TO COMPLETE]"
+      },
       "kinds": {
          "board": "Tableau",
          "note": "Note",

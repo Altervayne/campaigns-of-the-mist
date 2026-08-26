@@ -565,6 +565,13 @@
       "seenAbove": "Seen above",
       "seenAboveHint": "Already shown above. Jump to it",
       "scopeToggle": "This workspace only",
+      "rePoint": {
+         "action": "Re-point broken link…",
+         "pickerHeader_one": "Re-point {{count}} link to this target",
+         "pickerHeader_other": "Re-point {{count}} links to this target",
+         "toastDone_one": "Re-pointed {{count}} link.",
+         "toastDone_other": "Re-pointed {{count}} links."
+      },
       "kinds": {
          "board": "Board",
          "note": "Note",

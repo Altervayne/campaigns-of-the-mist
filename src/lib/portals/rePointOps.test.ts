@@ -25,7 +25,7 @@ vi.mock('@/lib/board/boardStoreRegistry', () => ({ peekBoardInstance: vi.fn() })
 
 import { peekNoteInstance } from '@/lib/notes/noteStoreRegistry';
 import { peekBoardInstance } from '@/lib/board/boardStoreRegistry';
-import { rePointNoteLinks, rePointBoardLinks } from './rePointOps';
+import { rePointNoteLinks, rePointBoardLinks, countAllLinks, rePointAllLinks } from './rePointOps';
 
 const mockPeekNote = vi.mocked(peekNoteInstance);
 const mockPeekBoard = vi.mocked(peekBoardInstance);
@@ -179,5 +179,32 @@ describe('rePointBoardLinks - open board (buffer-safe)', () => {
 
       expect(updateItemContent).toHaveBeenCalledTimes(1);
       expect(updateItemContent).toHaveBeenCalledWith('p1', { kind: 'portal', target: { kind: 'entity', entity: 'note', id: 'newNoteId' }, style: PORTAL_STYLE });
+   });
+});
+
+describe('rePointAllLinks / countAllLinks - app-wide', () => {
+   it('counts and re-points every link across a note and a board in one pass', async () => {
+      // A note with two links to the dead target, plus a board with a matching portal and a non-matching pin.
+      const noteBody = 'See [a](cotm://pdf/oldTargetId) and [b](cotm://pdf/oldTargetId).';
+      await db.notes.put(noteRecord('note1', noteBody, null));
+      await db.boards.put(boardRecord('board1', null));
+      await db.boardItems.put(itemRow('p1', 'board1', portalContent(OLD)));
+      await db.boardItems.put(itemRow('x1', 'board1', { kind: 'pin', color: '#abc' }));
+
+      // The scan sees two note links + one board link across two hosts.
+      expect(await countAllLinks(OLD)).toEqual({ notes: 1, boards: 1, links: 3 });
+
+      const applied = await rePointAllLinks(OLD, NEW_NOTE);
+      expect(applied).toEqual({ notes: 1, boards: 1, links: 3 });
+
+      expect((await db.notes.get('note1'))!.body).toBe('See [a](cotm://note/newNoteId) and [b](cotm://note/newNoteId).');
+      expect((await db.boardItems.get('p1'))!.content).toMatchObject({ target: { kind: 'entity', entity: 'note', id: 'newNoteId' } });
+      expect((await db.boardItems.get('x1'))!.content).toEqual({ kind: 'pin', color: '#abc' });
+   });
+
+   it('is a zero scope and a no-op when nothing points at the id', async () => {
+      await db.notes.put(noteRecord('note1', 'no links here', null));
+      expect(await countAllLinks(OLD)).toEqual({ notes: 0, boards: 0, links: 0 });
+      expect(await rePointAllLinks(OLD, NEW_NOTE)).toEqual({ notes: 0, boards: 0, links: 0 });
    });
 });

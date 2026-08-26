@@ -213,6 +213,24 @@ function toPortalTarget(newTarget: LinkInsertTarget, oldPage: number | undefined
 }
 
 /**
+ * True when a board item's content targets `oldId` (a portal target or a note-embed reference). The single match
+ * rule the board re-point + count share, so they can't drift.
+ */
+export function boardItemTargetsId(content: BoardItemContent, oldId: string): boolean {
+   if (content.kind === 'portal') {
+      const target = content.target;
+      return (target.kind === 'entity' && target.id === oldId) || (target.kind === 'element' && target.drawerItemId === oldId);
+   }
+   return content.kind === 'note' && content.mode === 'reference' && content.noteId === oldId;
+}
+
+/** Counts the board items pointing at `oldId` (the bulk re-point scope for a board). Uses the same match rule as
+ *  {@link rePointBoardTarget}, so the count and the rewrite can't disagree. */
+export function countBoardLinks(contents: BoardItemContent[], oldId: string): number {
+   return contents.filter((c) => boardItemTargetsId(c, oldId)).length;
+}
+
+/**
  * Re-points a single board item's content when it targets `oldId`, returning the new content, or `null` when the
  * item does not match (the caller keeps the original reference). Handles the two structured targets: a `portal`'s
  * `target` field, and a note-embed's `noteId`. A note-embed only mirrors a NOTE, so it re-points only to a note
@@ -224,18 +242,15 @@ export function rePointBoardItemContent(
    newTarget: LinkInsertTarget,
 ): BoardItemContent | null {
    if (content.kind === 'portal') {
+      if (!boardItemTargetsId(content, oldId)) return null;
       const target = content.target;
-      const isMatch =
-         (target.kind === 'entity' && target.id === oldId) ||
-         (target.kind === 'element' && target.drawerItemId === oldId);
-      if (!isMatch) return null;
       const oldPage = target.kind === 'entity' && target.entity === 'pdf' ? target.page : undefined;
       const next = toPortalTarget(newTarget, oldPage);
       if (!next) return null;
       return { ...content, target: next };
    }
 
-   if (content.kind === 'note' && content.mode === 'reference' && content.noteId === oldId) {
+   if (boardItemTargetsId(content, oldId)) {
       if (newTarget.kind !== 'entity' || newTarget.entity !== 'note') return null;
       // Point at the new note; the old source-drawer id and cached snapshot belong to the gone note, so drop them.
       return { kind: 'note', mode: 'reference', noteId: newTarget.id };

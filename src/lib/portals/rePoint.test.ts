@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Units Under Test --
-import { rePointNoteBody, countNoteBodyLinks, rePointableTargetId, rePointBoardItemContent, rePointBoardTarget } from './rePoint';
+import { rePointNoteBody, countNoteBodyLinks, rePointableTargetId, rePointBoardItemContent, rePointBoardTarget, boardItemTargetsId, countBoardLinks } from './rePoint';
 
 // -- Type Imports --
 import type { LinkInsertTarget } from './buildLinkToken';
@@ -238,6 +238,60 @@ describe('rePointBoardItemContent', () => {
       };
       expect(rePointBoardItemContent(otherPortal, OLD, NEW_NOTE)).toBeNull();
       expect(rePointBoardItemContent({ kind: 'pin', color: '#fff' }, OLD, NEW_NOTE)).toBeNull();
+   });
+});
+
+describe('boardItemTargetsId', () => {
+   it('matches a portal entity target, a portal element target, and a note-embed reference', () => {
+      const portalEntity: BoardItemContent = {
+         kind: 'portal',
+         target: { kind: 'entity', entity: 'pdf', id: OLD },
+         style: { visual: null, label: 'Go', align: 'bottom', background: true },
+      };
+      const portalElement: BoardItemContent = {
+         kind: 'portal',
+         target: { kind: 'element', drawerItemId: OLD },
+         style: { visual: null, label: 'Go', align: 'bottom', background: true },
+      };
+      const noteEmbed: BoardItemContent = { kind: 'note', mode: 'reference', noteId: OLD };
+      expect(boardItemTargetsId(portalEntity, OLD)).toBe(true);
+      expect(boardItemTargetsId(portalElement, OLD)).toBe(true);
+      expect(boardItemTargetsId(noteEmbed, OLD)).toBe(true);
+   });
+
+   it('does not match a different id, a copied note-embed, an external portal, or a non-portal item', () => {
+      const otherPortal: BoardItemContent = {
+         kind: 'portal',
+         target: { kind: 'entity', entity: 'pdf', id: 'someoneElse' },
+         style: { visual: null, label: 'Go', align: 'bottom', background: true },
+      };
+      const externalPortal: BoardItemContent = {
+         kind: 'portal',
+         target: { kind: 'external', href: 'https://example.com' },
+         style: { visual: null, label: 'Go', align: 'bottom', background: true },
+      };
+      const copiedEmbed: BoardItemContent = { kind: 'note', mode: 'copy', data: { id: OLD, title: 'N', body: '' } };
+      expect(boardItemTargetsId(otherPortal, OLD)).toBe(false);
+      expect(boardItemTargetsId(externalPortal, OLD)).toBe(false);
+      expect(boardItemTargetsId(copiedEmbed, OLD)).toBe(false);
+      expect(boardItemTargetsId({ kind: 'pin', color: '#fff' }, OLD)).toBe(false);
+   });
+});
+
+describe('countBoardLinks', () => {
+   it('counts only the item contents that target the id', () => {
+      const contents: BoardItemContent[] = [
+         { kind: 'portal', target: { kind: 'entity', entity: 'pdf', id: OLD }, style: { visual: null, label: 'Go', align: 'bottom', background: true } },
+         { kind: 'note', mode: 'reference', noteId: OLD },
+         { kind: 'portal', target: { kind: 'entity', entity: 'pdf', id: 'other' }, style: { visual: null, label: 'Go', align: 'bottom', background: true } },
+         { kind: 'pin', color: '#abc' },
+      ];
+      expect(countBoardLinks(contents, OLD)).toBe(2);
+   });
+
+   it('is zero for an empty list and a list with no matches', () => {
+      expect(countBoardLinks([], OLD)).toBe(0);
+      expect(countBoardLinks([{ kind: 'pin', color: '#abc' }], OLD)).toBe(0);
    });
 });
 

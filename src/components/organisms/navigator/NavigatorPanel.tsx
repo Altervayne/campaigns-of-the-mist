@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { motion, useReducedMotion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 // -- Icon Imports --
 import { RefreshCw, Waypoints, X } from 'lucide-react';
@@ -11,9 +12,14 @@ import { RefreshCw, Waypoints, X } from 'lucide-react';
 // -- Component Imports --
 import { NavigatorRow } from './NavigatorRow';
 import { NavigatorFilterStrip } from './NavigatorFilterStrip';
+import { NavigatorRePointDialog } from './NavigatorRePointDialog';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
+
+// -- Portals Imports --
+import { rePointableTargetId } from '@/lib/portals/rePoint';
+import { countAllLinks, rePointAllLinks } from '@/lib/portals/rePointOps';
 
 // -- Hook Imports --
 import { useNavigatorJump } from '@/hooks/useNavigatorJump';
@@ -37,6 +43,7 @@ import { resolveAppWideRootEdges } from '@/lib/navigator/navigatorRoots';
 
 // -- Type Imports --
 import type { NavNode } from '@/lib/navigator/navigatorGraph';
+import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 
 /*
  * The Navigator: an in-flow LEFT panel that crawls the app's outbound PORTAL graph. It docks as a flex sibling
@@ -73,6 +80,8 @@ export function NavigatorPanel() {
    const [appWideLoading, setAppWideLoading] = useState(false);
    // Bumped by the refresh control to re-seed after clearing the children cache.
    const [refreshNonce, setRefreshNonce] = useState(0);
+   // The dead target the app-wide re-point picker is open for, plus its total link count for the header.
+   const [rePointing, setRePointing] = useState<{ oldId: string; count: number } | null>(null);
 
    // The active tab's canonical key, so its row wears the "current location" ring.
    const activeWorkspaceKey = useMemo(() => {
@@ -169,6 +178,24 @@ export function NavigatorPanel() {
       setRefreshNonce((n) => n + 1);
    }, []);
 
+   // Open the app-wide re-point picker for a dead row, seeding it with the total count of links to that target.
+   const handleRePoint = useCallback(async (node: NavNode) => {
+      const oldId = rePointableTargetId(node.target);
+      if (!oldId) return;
+      const scope = await countAllLinks(oldId);
+      setRePointing({ oldId, count: scope.links });
+   }, []);
+
+   // Apply the picked destination to every link app-wide, toast the count, then refresh so the dead rows re-resolve.
+   const applyRePoint = useCallback(async (newTarget: LinkInsertTarget) => {
+      if (!rePointing) return;
+      const { oldId } = rePointing;
+      setRePointing(null);
+      const scope = await rePointAllLinks(oldId, newTarget);
+      toast.success(t('Navigator.rePoint.toastDone', { count: scope.links }));
+      handleRefresh();
+   }, [rePointing, t, handleRefresh]);
+
    const filterActive = typeFilter.size < NAV_TYPE_FILTER_KINDS.length;
    const hasMaterial = rootScope === 'current-workspace' ? childCount > 0 : rootCount > 0;
    // A current-workspace root with no edges is a degenerate tree (a lone dangling header) - show the empty
@@ -238,6 +265,7 @@ export function NavigatorPanel() {
                      onSelect={(node) => setSelectedId(node.instanceId)}
                      onActivate={handleActivate}
                      onPulseCanonical={handlePulseCanonical}
+                     onRePoint={handleRePoint}
                   />
                ))}
             </div>
@@ -248,6 +276,14 @@ export function NavigatorPanel() {
             />
          )}
        </div>
+
+       {rePointing && (
+          <NavigatorRePointDialog
+             count={rePointing.count}
+             onPick={applyRePoint}
+             onClose={() => setRePointing(null)}
+          />
+       )}
       </motion.aside>
    );
 }

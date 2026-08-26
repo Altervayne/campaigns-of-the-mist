@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ArrowUpRight, ChevronDown, ChevronRight, CornerLeftUp, Link, Link2Off, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronRight, CornerLeftUp, Link, Link2Off, Loader2, Wrench } from 'lucide-react';
 
 // -- Hook Imports --
 import { useLinkMetadata } from '@/hooks/useLinkMetadata';
@@ -13,6 +13,7 @@ import { useBreakpoint } from '@/hooks/useAdaptive';
 import { cn } from '@/lib/utils';
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 import { chooseLinkIcon } from '@/lib/portals/linkMetadata';
+import { rePointableTargetId } from '@/lib/portals/rePoint';
 
 // -- Type Imports --
 import type { LucideIcon } from 'lucide-react';
@@ -52,6 +53,8 @@ interface NavigatorRowProps {
    onSelect: (node: NavNode) => void;
    onActivate: (node: NavNode) => void;
    onPulseCanonical: (node: NavNode) => void;
+   /** Open the app-wide re-point picker for a DEAD, re-pointable target. Absent on surfaces without bulk repair. */
+   onRePoint?: (node: NavNode) => void;
 }
 
 /** The kind glyph for a row, from the shared link-icon decision (dead -> broken glyph, else the target's type icon). */
@@ -75,6 +78,7 @@ export function NavigatorRow({
    onSelect,
    onActivate,
    onPulseCanonical,
+   onRePoint,
 }: NavigatorRowProps) {
    const { t } = useTranslation();
    const { isCoarse } = useBreakpoint();
@@ -86,6 +90,8 @@ export function NavigatorRow({
    const seenAbove = node.seenAbove;
    // No caret on a leaf, a dead target, or a branch that already resolved to zero children (a dead end).
    const showTwisty = node.crawlable && !dead && !node.childless;
+   // A dead row offers bulk re-point only when its target keys on an id the rewrite can swap (entity/element).
+   const canRePoint = dead && onRePoint !== undefined && rePointableTargetId(node.target) !== undefined;
 
    // A "seen above" pulse scrolls the canonical row into view and flashes it (the drawer-reveal idiom).
    useEffect(() => {
@@ -174,9 +180,19 @@ export function NavigatorRow({
             {displayName}
          </span>
 
-         {/* One trailing marker at most: the cycle label, or an external-link hint. */}
+         {/* One trailing marker at most: the cycle label, a dead row's re-point action, or an external-link hint. */}
          {seenAbove ? (
             <span className="ml-1.5 shrink-0 text-xs italic text-muted-foreground">{t('Navigator.seenAbove')}</span>
+         ) : canRePoint ? (
+            <button
+               type="button"
+               onClick={(e) => { e.stopPropagation(); onRePoint?.(node); }}
+               title={t('Navigator.rePoint.action')}
+               aria-label={t('Navigator.rePoint.action')}
+               className="ml-1.5 flex size-5 shrink-0 touch-target cursor-pointer items-center justify-center rounded text-muted-foreground opacity-0 hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+            >
+               <Wrench className="size-3.5" aria-hidden />
+            </button>
          ) : node.navKind === 'external' && !dead ? (
             <ArrowUpRight className="ml-1.5 size-3.5 shrink-0 text-muted-foreground/70" aria-hidden />
          ) : null}
