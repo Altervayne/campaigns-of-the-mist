@@ -15,6 +15,22 @@
       "loading": "Loading PDF...",
       "errorTitle": "This PDF could not be opened.",
       "errorBody": "The file may be corrupted or in an unsupported format.",
+      "placeholderTitle": "This PDF's file isn't here yet",
+      "placeholderBody": "Its pages and your annotations are saved — add the original file to read it.",
+      "repair": {
+         "kept_one": "{{count}} annotation kept · {{pages}} pages",
+         "kept_other": "{{count}} annotations kept · {{pages}} pages",
+         "chooseFromDrawer": "Choose from drawer",
+         "uploadFile": "Upload file…",
+         "pickerTitle": "Choose a PDF file",
+         "pickerEmpty": "No other PDFs in your drawer to take a file from.",
+         "mismatchTitle": "Use this file anyway?",
+         "mismatchBody": "This file has {{new}} pages; annotations were placed on a {{old}}-page document, so some marks may land on the wrong page.",
+         "useAnyway": "Use anyway",
+         "needsFileBadge": "Needs its file",
+         "needsFileCount_one": "{{count}} page · Needs its file",
+         "needsFileCount_other": "{{count}} pages · Needs its file"
+      },
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "pageInputLabel": "Page number",
@@ -626,7 +642,8 @@
          "noAnnotations": "No annotations to export.",
          "markupApplied": "Markup applied.",
          "markupInvalid": "That file isn't PDF markup.",
-         "markupPageOverflow": "This markup references page {{page}}, but the PDF has only {{count}} pages."
+         "markupPageOverflow": "This markup references page {{page}}, but the PDF has only {{count}} pages.",
+         "repairSuccess": "File added — {{title}} is ready."
       },
       "link": {
          "targetNotFound": "That link's target no longer exists.",
@@ -779,6 +796,7 @@
          "exportNoteMarkdown": "Export as Markdown",
          "exportPdf": "Export PDF",
          "exportPdfAnnotations": "Export annotations",
+         "applyPdfAnnotations": "Apply annotations",
          "exportMarkdownWarningTitle": "Export without images?",
          "exportMarkdownWarningDescription": "Images are stored locally and won't appear when this file is opened somewhere else. Export anyway?",
          "exportMarkdownWarningConfirm": "Export",

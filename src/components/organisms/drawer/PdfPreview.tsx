@@ -2,11 +2,12 @@
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Highlighter } from 'lucide-react';
+import { FileClock, Highlighter } from 'lucide-react';
 
 // -- Utils Imports --
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 import { hasAnnotations } from '@/lib/pdf/annotations';
+import { isPlaceholderPdf } from '@/lib/pdf/pdfPlaceholder';
 
 // -- Type Imports --
 import type { PdfDocument } from '@/lib/types/pdf';
@@ -26,9 +27,21 @@ export function PdfPreview({ pdf }: { pdf: PdfDocument }) {
    const { t } = useTranslation();
    const title = typeof pdf?.title === 'string' ? pdf.title : '';
    const pageCount = typeof pdf?.pageCount === 'number' && pdf.pageCount > 0 ? pdf.pageCount : 0;
+   const needsFile = isPlaceholderPdf(pdf);
 
    return (
       <div className="relative flex h-45 w-45 flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+         {/* Needs-file marker: muted app chrome (not an error) top-LEFT, clear of the annotated badge, so a
+             placeholder awaiting its file reads at a glance while the preserved page count reassures. */}
+         {needsFile ? (
+            <span
+               title={t('PdfView.repair.needsFileBadge')}
+               aria-label={t('PdfView.repair.needsFileBadge')}
+               className="absolute left-1 top-1 z-10 flex items-center rounded bg-popover/80 p-1 text-muted-foreground"
+            >
+               <FileClock className="h-3 w-3" />
+            </span>
+         ) : null}
          {/* Annotated marker: app-themed chrome over the paper, so a marked-up book is discoverable in the drawer. */}
          {hasAnnotations(pdf) ? (
             <span
@@ -44,7 +57,9 @@ export function PdfPreview({ pdf }: { pdf: PdfDocument }) {
          ) : null}
          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-2.5">
             <PdfGlyph className="h-10 w-10 shrink-0 opacity-70" />
-            <span className="text-xs opacity-70">{t('Drawer.Types.pdfPageCount', { count: pageCount })}</span>
+            <span className="text-xs opacity-70">
+               {needsFile ? t('PdfView.repair.needsFileCount', { count: pageCount }) : t('Drawer.Types.pdfPageCount', { count: pageCount })}
+            </span>
          </div>
       </div>
    );

@@ -64,6 +64,37 @@ function referenceViaWorkingRow(id: string, assetHash: string): Promise<string> 
    return drawerDatabase.pdfDocs.add(record);
 }
 
+/** Stores a byteless PLACEHOLDER drawer `PDF` item (null hash), which references no blob. */
+function placeholderDrawerItem(itemId: string): Promise<string> {
+   const content: PdfDocument = { id: itemId, title: 'Awaiting file', assetHash: null, pageCount: 42 };
+   const record = {
+      id: itemId,
+      name: 'Awaiting file',
+      parentFolderId: 'root',
+      order: 0,
+      game: 'NEUTRAL',
+      type: 'PDF',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      content,
+   } as unknown as DrawerItemRecord;
+   return drawerDatabase.items.add(record);
+}
+
+/** Stores a byteless PLACEHOLDER working row (null hash), the other reference root. */
+function placeholderWorkingRow(id: string): Promise<string> {
+   const record: PdfRecord = {
+      id,
+      title: 'Awaiting file',
+      assetHash: null,
+      pageCount: 42,
+      updatedAt: Date.now(),
+      drawerItemId: null,
+      schemaVersion: 1,
+   };
+   return drawerDatabase.pdfDocs.add(record);
+}
+
 beforeEach(async () => {
    await drawerDatabase.pdfAssets.clear();
    await drawerDatabase.pdfDocs.clear();
@@ -108,6 +139,28 @@ describe('runPdfSweep', () => {
 
       expect(result.deleted).toBe(0);
       expect(await drawerDatabase.pdfAssets.get('referenced-open')).toBeDefined();
+   });
+
+   it('a placeholder (null hash) contributes no reference, so an orphan asset is still reaped', async () => {
+      await seedPdfAsset('old-orphan', GRACE_MS + 60_000);
+      await placeholderDrawerItem('ph-item'); // null-hash drawer item
+      await placeholderWorkingRow('ph-row'); // null-hash working row
+
+      const result = await runPdfSweep('manual');
+
+      expect(result.deleted).toBe(1); // neither placeholder protected the orphan
+      expect(await drawerDatabase.pdfAssets.get('old-orphan')).toBeUndefined();
+   });
+
+   it('keeps a real PDF asset even when a placeholder also exists', async () => {
+      await seedPdfAsset('referenced-old', GRACE_MS + 60_000);
+      await referenceViaDrawerItem('real-item', 'referenced-old');
+      await placeholderDrawerItem('ph-item'); // a coexisting placeholder must not disturb the real reference
+
+      const result = await runPdfSweep('manual');
+
+      expect(result.deleted).toBe(0);
+      expect(await drawerDatabase.pdfAssets.get('referenced-old')).toBeDefined();
    });
 
    it('reports the reclaimed count and summed byteSize, ignoring protected rows', async () => {

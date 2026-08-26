@@ -214,15 +214,14 @@ async function writeFolderSubtree(folder: Folder, storedParentId: string, order:
    }
 }
 
-/** Maps a stored item record back to the nested {@link DrawerItem} export shape. */
+/**
+ * Maps a stored item record back to the nested {@link DrawerItem} export shape. A PDF is emitted as a byteless
+ * STUB - its bytes-pointer nulled - so the tree carries a placeholder (id + title + pages + annotations survive,
+ * the raw file does not); it imports as a placeholder awaiting a file, keeping `cotm://pdf/<id>` links alive.
+ */
 function toNestedItem(record: DrawerItemRecord): DrawerItem {
-   return { id: record.id, game: record.game, type: record.type, name: record.name, content: record.content };
-}
-
-/** A PDF exports as its own raw `.pdf` file, not through the `.cotm` envelope, so a tree export skips it -
- *  an exported drawer/folder never carries a PDF that would import to missing bytes. */
-function isExportableTreeItem(record: DrawerItemRecord): boolean {
-   return record.type !== 'PDF';
+   const content = record.type === 'PDF' ? { ...(record.content as PdfDocument), assetHash: null } : record.content;
+   return { id: record.id, game: record.game, type: record.type, name: record.name, content };
 }
 
 /**
@@ -230,7 +229,7 @@ function isExportableTreeItem(record: DrawerItemRecord): boolean {
  * shape, ordered by `order`. Runs inside the active read transaction.
  */
 async function buildNestedFolder(folderRecord: DrawerFolderRecord): Promise<Folder> {
-   const items = (await orderedChildItems(folderRecord.id)).filter(isExportableTreeItem).map(toNestedItem);
+   const items = (await orderedChildItems(folderRecord.id)).map(toNestedItem);
    const childFolderRecords = await orderedChildFolders(folderRecord.id);
 
    const folders: Folder[] = [];
@@ -398,6 +397,16 @@ export async function getPdfItemIdMap(): Promise<Map<string, string>> {
       if (pdfId) map.set(pdfId, item.id);
    }
    return map;
+}
+
+/**
+ * Every saved PDF's stored aggregate (drawer `PDF` items), for the reader's repair picker. Mirrors
+ * {@link getPdfItemIdMap}'s type-scoped scan; the picker filters to real files (non-null `assetHash`)
+ * and drops the placeholder being repaired.
+ */
+export async function listSavedPdfs(): Promise<PdfDocument[]> {
+   const items = await db.items.where('type').equals('PDF').toArray();
+   return items.map((item) => item.content as PdfDocument);
 }
 
 /** The drawer item TYPE that holds each linkable entity, so an entity id can be resolved to its drawer save. */
@@ -779,7 +788,7 @@ export function exportFolderAsNestedTree(folderId: string): Promise<Folder> {
 /** Reassembles the entire drawer back into the nested {@link Drawer} shape (for full export). */
 export function exportEntireDrawerAsNestedTree(): Promise<Drawer> {
    return runReadTransaction([db.folders, db.items], async () => {
-      const rootItems = (await orderedChildItems(DRAWER_ROOT_PARENT_ID)).filter(isExportableTreeItem).map(toNestedItem);
+      const rootItems = (await orderedChildItems(DRAWER_ROOT_PARENT_ID)).map(toNestedItem);
       const rootFolderRecords = await orderedChildFolders(DRAWER_ROOT_PARENT_ID);
 
       const folders: Folder[] = [];

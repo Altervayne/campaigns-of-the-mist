@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 // -- Icon Imports --
-import { FileType, Highlighter } from 'lucide-react';
+import { FileClock, FileType, Highlighter } from 'lucide-react';
 
 // -- Component Imports --
 import { TabShell } from './TabShell';
@@ -17,6 +17,7 @@ import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 
 // -- Utils Imports --
 import { hasAnnotations } from '@/lib/pdf/annotations';
+import { isPlaceholderPdf } from '@/lib/pdf/pdfPlaceholder';
 
 // -- Constants --
 import { PDF_VISUAL } from '@/lib/constants/gameVisuals';
@@ -45,6 +46,7 @@ export function PdfTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
    const instance = useMemo(() => getOrCreatePdfInstance(tab.id), [tab.id]);
    const title = useStore(instance, (state) => state.doc?.title);
    const annotated = useStore(instance, (state) => hasAnnotations(state.doc));
+   const needsFile = useStore(instance, (state) => isPlaceholderPdf(state.doc));
    const label = title && title.trim().length > 0 ? title : t('Tabs.untitledPdf');
 
    const icon = (
@@ -56,8 +58,11 @@ export function PdfTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
       </span>
    );
 
-   // Marks the tab of a marked-up book, matching the drawer card's marker.
-   const trailing = annotated ? (
+   // Trailing marker, matching the drawer card. A placeholder awaiting its file takes priority over the
+   // annotated mark (a placeholder keeps its annotations, so both can apply) - needs-file is the signpost.
+   const trailing = needsFile ? (
+      <FileClock className="size-3.5 shrink-0 opacity-70" aria-label={t('PdfView.repair.needsFileBadge')} />
+   ) : annotated ? (
       <Highlighter className="size-3.5 shrink-0 opacity-70" aria-label={t('PdfMarkup.annotatedBadge')} />
    ) : undefined;
 

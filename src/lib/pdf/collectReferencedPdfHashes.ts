@@ -43,9 +43,12 @@ export async function collectReferencedPdfHashes(): Promise<Set<string>> {
    const [itemContents, workingPdfs] = await Promise.all([listAllItemContents(), listAllPdfs()]);
 
    for (const content of itemContents) {
-      if (isPdfContent(content)) referenced.add(content.assetHash);
+      // A placeholder PDF item (null hash) is not `isPdfContent` and references no blob; the truthy check keeps
+      // the string set free of null and satisfies the type.
+      if (isPdfContent(content) && content.assetHash) referenced.add(content.assetHash);
    }
-   for (const pdf of workingPdfs) referenced.add(pdf.assetHash);
+   // A placeholder row (null hash) references no blob, so it never joins the string set.
+   for (const pdf of workingPdfs) if (pdf.assetHash) referenced.add(pdf.assetHash);
 
    return referenced;
 }

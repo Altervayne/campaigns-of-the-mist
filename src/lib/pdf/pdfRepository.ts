@@ -82,6 +82,54 @@ export function savePdfToLinkedDrawerItem(doc: PdfDocument, drawerItemId: string
    });
 }
 
+/**
+ * Persists ONLY the reading position, out of band from the annotation autosave: in ONE transaction,
+ * write `lastPage` onto the working row and - when linked - onto the drawer copy's content. View
+ * state, so it leaves `updatedAt` alone (mirrors {@link savePdfToLinkedDrawerItem}, which never bumps
+ * the drawer item's timestamp either). A missing row is a no-op (a close may have reaped it).
+ */
+export function savePdfLastPage(id: string, page: number, drawerItemId: string | null): Promise<void> {
+   return db.transaction('rw', [db.pdfDocs, db.items], async () => {
+      const record = await db.pdfDocs.get(id);
+      if (!record) return;
+      await db.pdfDocs.update(id, { lastPage: page });
+
+      if (drawerItemId) {
+         const existingItem = await db.items.get(drawerItemId);
+         if (existingItem) {
+            const content = existingItem.content as PdfDocument;
+            await db.items.update(drawerItemId, { content: { ...content, lastPage: page } });
+         }
+      }
+   });
+}
+
+/**
+ * Repairs a placeholder pdf: in ONE transaction, fills the missing bytes-pointer + page count on the
+ * working row AND, when linked, on the drawer copy's content, flipping both out of placeholder in
+ * lockstep. The supplied file is authoritative, so its `pageCount` wins over the stub's remembered
+ * count. Everything identifying stays put - id, title, annotations, `lastPage` are untouched - so
+ * inbound `cotm://pdf/<id>` links and the drawer name keep resolving. The drawer link is read off the
+ * working row (the repair always runs from an open reader, which materialized the row on open); a
+ * missing row is a no-op.
+ */
+export function repairPdf(id: string, assetHash: string, pageCount: number): Promise<void> {
+   return db.transaction('rw', [db.pdfDocs, db.items], async () => {
+      const record = await db.pdfDocs.get(id);
+      if (!record) return;
+      await db.pdfDocs.update(id, { assetHash, pageCount, updatedAt: Date.now() });
+
+      const drawerItemId = record.drawerItemId ?? null;
+      if (drawerItemId) {
+         const existingItem = await db.items.get(drawerItemId);
+         if (existingItem) {
+            const content = existingItem.content as PdfDocument;
+            await db.items.update(drawerItemId, { content: { ...content, assetHash, pageCount } });
+         }
+      }
+   });
+}
+
 /** Deletes a pdf. Idempotent: deleting an absent id is a no-op. */
 export async function deletePdf(id: string): Promise<void> {
    await db.pdfDocs.delete(id);
@@ -101,6 +149,7 @@ export async function importPdf(doc: PdfDocument, drawerItemId: string | null): 
       assetHash: doc.assetHash,
       pageCount: doc.pageCount,
       annotations: doc.annotations,
+      lastPage: doc.lastPage,
       updatedAt: Date.now(),
       drawerItemId: drawerItemId || null,
       schemaVersion: PDF_SCHEMA_VERSION,

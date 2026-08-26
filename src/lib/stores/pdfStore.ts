@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 
 // -- Pdf Data Layer Imports --
-import { getPdf, savePdfToLinkedDrawerItem } from '@/lib/pdf/pdfRepository';
+import { getPdf, savePdfLastPage, savePdfToLinkedDrawerItem } from '@/lib/pdf/pdfRepository';
 import { recordToPdfDocument } from '@/lib/pdf/pdfRecords';
 import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
@@ -40,6 +40,9 @@ export const MAX_ZOOM = 2;
 /** How long an annotation edit settles before it is written back to the pdf row + drawer copy. */
 const PDF_SAVE_DEBOUNCE_MS = 400;
 
+/** How long scrolling settles before the reading position is persisted, out of band from `doc`. */
+const PDF_LAST_PAGE_DEBOUNCE_MS = 500;
+
 /** Deepest the undo stack grows; the oldest snapshot drops once it is exceeded. */
 const UNDO_STACK_CAP = 50;
 
@@ -56,8 +59,8 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 /** An `updateAnnotation` patch: any field of a member kind except its discriminant and id. */
 type PdfAnnotationPatch = Partial<DistributiveOmit<PdfAnnotation, 'kind' | 'id'>>;
 
-/** The load lifecycle of the open PDF. */
-export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error';
+/** The load lifecycle of the open PDF. `placeholder` is a byteless record (null hash) awaiting a file. */
+export type PdfStatus = 'idle' | 'loading' | 'ready' | 'error' | 'placeholder';
 
 /** Whether the reader is a read-only viewer or accepts markup gestures. */
 export type PdfMarkupMode = 'read' | 'markup';
@@ -242,6 +245,14 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
          void savePdfToLinkedDrawerItem(doc, get().drawerItemId).catch(console.error);
       });
 
+      // Persists ONLY the reading position, out of band from `doc` so a scroll tick never re-renders any
+      // `doc` subscriber. Best-effort; a missing row (or pre-ready pdfId) is a no-op.
+      const debouncedSaveLastPage = createDebouncer<number>(PDF_LAST_PAGE_DEBOUNCE_MS, (page) => {
+         const { pdfId, drawerItemId } = get();
+         if (!pdfId) return;
+         void savePdfLastPage(pdfId, page, drawerItemId).catch(console.error);
+      });
+
       // Open undo checkpoint. `pendingSnapshot` is the restore target (null when no checkpoint is open);
       // `pendingBaseline` is the raw annotation-map ref at begin, so an actual map swap is detected by
       // reference even when the starting map is `undefined`. Closure state, not reactive (like `debouncedSave`).
@@ -267,6 +278,12 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                      return;
                   }
                   const doc = recordToPdfDocument(record);
+                  // A null hash is an explicit placeholder (no bytes yet), not a lost file: land there before
+                  // the blob fetch. A REAL hash whose blob is gone still falls to the error guard below.
+                  if (!doc.assetHash) {
+                     set({ pdfId, doc, drawerItemId: record.drawerItemId ?? null, status: 'placeholder' });
+                     return;
+                  }
                   const blob = await getPdfBlob(doc.assetHash);
                   if (!blob) {
                      set({ ...initialState, pdfId, status: 'error' });
@@ -276,7 +293,7 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                   const pdfjs = await loadPdfjs();
                   loadingTask = pdfjs.getDocument({ data });
                   const proxy = await loadingTask.promise;
-                  set({ pdfId, doc, drawerItemId: record.drawerItemId ?? null, proxy, loadingTask, currentPage: 1, status: 'ready' });
+                  set({ pdfId, doc, drawerItemId: record.drawerItemId ?? null, proxy, loadingTask, currentPage: record.lastPage ?? 1, status: 'ready' });
                } catch {
                   // Corrupt / encrypted / read failure: drop any partial task and surface the error state.
                   if (loadingTask) void loadingTask.destroy();
@@ -289,6 +306,8 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                if (!doc) return;
                const clamped = Math.min(Math.max(page, 1), doc.pageCount);
                set({ currentPage: clamped });
+               // Persist the position out of band - never onto `doc`, so scrolling re-renders nothing.
+               debouncedSaveLastPage.run(clamped);
             },
 
             requestPage: (page) => {
@@ -405,15 +424,20 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                debouncedSave.run(next);
             },
 
-            flush: () => {
-               // Disarm the pending debounce FIRST, then write now: a still-armed timer holds a stale
+            flush: async () => {
+               // Disarm both pending debounces FIRST, then write now: a still-armed timer holds a stale
                // snapshot that would fire late and clobber a fresher edit after a revisit.
                debouncedSave.cancel();
-               const { doc, drawerItemId } = get();
-               if (!doc) return Promise.resolve();
-               return savePdfToLinkedDrawerItem(doc, drawerItemId).then(() => undefined).catch((error) => {
+               debouncedSaveLastPage.cancel();
+               const { doc, drawerItemId, pdfId, currentPage } = get();
+               if (!doc) return;
+               try {
+                  // Land the final reading position too - the page debounce may not have fired before close.
+                  if (pdfId) await savePdfLastPage(pdfId, currentPage, drawerItemId);
+                  await savePdfToLinkedDrawerItem(doc, drawerItemId);
+               } catch (error) {
                   console.error('Pdf flush failed:', error);
-               });
+               }
             },
 
             dispose: () => {

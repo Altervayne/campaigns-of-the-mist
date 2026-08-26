@@ -1,11 +1,12 @@
 // -- Library Imports --
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // -- Local Imports --
 import { drawerDatabase } from '@/lib/drawer/drawerDatabase';
 import { createPdfStore } from './pdfStore';
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import * as repository from '@/lib/pdf/pdfRepository';
+import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { DRAWER_ROOT_PARENT_ID } from '@/lib/drawer/drawerRecords';
 
 // -- Type Imports --
@@ -17,8 +18,20 @@ import type { DrawerItemRecord } from '@/lib/drawer/drawerRecords';
  * Unit tests for the pdf store's writable annotation surface: add/update/remove mutate the live
  * doc, the debounced autosave writes through to both the row and the linked drawer copy, and
  * `flush` disarms the pending timer while landing the write exactly once. Bytes/pdf.js are never
- * loaded here - the doc is seeded directly, so no worker transport spins up.
+ * loaded here - the doc is seeded directly, so no worker transport spins up. The one exception is
+ * the hydrate block, which stubs the asset blob + pdf.js loader so the reading-position restore runs.
  */
+
+// The reading-position restore drives hydrate through to `ready`; stub the two native-resource deps so
+// no real asset blob or worker is needed (no other test in this file calls hydrate).
+vi.mock('@/lib/pdf/pdfAssetRepository', () => ({
+   getPdfBlob: vi.fn(async () => new Blob([new Uint8Array([37, 80, 68, 70])])),
+}));
+vi.mock('@/lib/pdf/pdfjsLoader', () => ({
+   loadPdfjs: vi.fn(async () => ({
+      getDocument: () => ({ promise: Promise.resolve({ numPages: 24 }), destroy: async () => {} }),
+   })),
+}));
 
 const ink: PdfInk = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 };
 
@@ -272,6 +285,91 @@ describe('pdf store annotation history', () => {
       redo();
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(await rowAnnotations()).toEqual({ a1: ink });
+   });
+});
+
+describe('pdf last-page persistence', () => {
+   it('savePdfLastPage writes the page onto the row and the linked drawer content', async () => {
+      await seedStore(400); // creates row 'pdf-1' + linked drawer item 'item-1'
+      await repository.savePdfLastPage('pdf-1', 3, 'item-1');
+
+      expect((await repository.getPdf('pdf-1'))?.lastPage).toBe(3);
+      const item = await drawerDatabase.items.get('item-1');
+      expect((item?.content as PdfDocument).lastPage).toBe(3);
+   });
+
+   it('savePdfLastPage is a no-op when the row is absent', async () => {
+      await repository.savePdfLastPage('missing', 5, null);
+      expect(await repository.getPdf('missing')).toBeUndefined();
+   });
+});
+
+describe('pdf hydrate restores the reading position', () => {
+   it('seeds currentPage from the stored lastPage', async () => {
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 24, lastPage: 20 };
+      await repository.importPdf(doc, 'item-1');
+
+      const useStore = createPdfStore();
+      await useStore.getState().actions.hydrate('pdf-1');
+
+      expect(useStore.getState().status).toBe('ready');
+      expect(useStore.getState().currentPage).toBe(20);
+   });
+
+   it('falls back to page 1 when no lastPage is stored', async () => {
+      const doc: PdfDocument = { id: 'pdf-2', title: 'Book', assetHash: 'hash-a', pageCount: 24 };
+      await repository.importPdf(doc, null);
+
+      const useStore = createPdfStore();
+      await useStore.getState().actions.hydrate('pdf-2');
+
+      expect(useStore.getState().currentPage).toBe(1);
+   });
+});
+
+describe('pdf hydrate placeholder / error branch discipline', () => {
+   it('a null-hash record lands on placeholder without fetching a blob', async () => {
+      const doc: PdfDocument = { id: 'pdf-ph', title: 'Book', assetHash: null, pageCount: 12, annotations: { a1: ink } };
+      await repository.importPdf(doc, 'item-ph');
+      vi.mocked(getPdfBlob).mockClear();
+
+      const useStore = createPdfStore();
+      await useStore.getState().actions.hydrate('pdf-ph');
+
+      expect(useStore.getState().status).toBe('placeholder');
+      expect(useStore.getState().doc?.assetHash).toBeNull();
+      expect(useStore.getState().doc?.annotations).toEqual({ a1: ink }); // record intact, waiting on a file
+      expect(getPdfBlob).not.toHaveBeenCalled(); // the null hash branches before the fetch
+   });
+
+   it('a real hash whose blob is missing lands on error, not placeholder', async () => {
+      const doc: PdfDocument = { id: 'pdf-lost', title: 'Book', assetHash: 'hash-gone', pageCount: 12 };
+      await repository.importPdf(doc, null);
+      vi.mocked(getPdfBlob).mockResolvedValueOnce(undefined);
+
+      const useStore = createPdfStore();
+      await useStore.getState().actions.hydrate('pdf-lost');
+
+      expect(useStore.getState().status).toBe('error');
+   });
+
+   it('re-hydrating a repaired placeholder loads the file in place, landing on lastPage', async () => {
+      const doc: PdfDocument = { id: 'pdf-fix', title: 'Book', assetHash: null, pageCount: 12, lastPage: 7, annotations: { a1: ink } };
+      await repository.importPdf(doc, 'item-fix');
+
+      const useStore = createPdfStore();
+      await useStore.getState().actions.hydrate('pdf-fix');
+      expect(useStore.getState().status).toBe('placeholder');
+
+      // Supply the file, then re-hydrate the SAME instance (hydrate bails only on loading/ready).
+      await repository.repairPdf('pdf-fix', 'hash-real', 24);
+      await useStore.getState().actions.hydrate('pdf-fix');
+
+      expect(useStore.getState().status).toBe('ready');
+      expect(useStore.getState().doc?.assetHash).toBe('hash-real');
+      expect(useStore.getState().doc?.pageCount).toBe(24); // the supplied file's count wins
+      expect(useStore.getState().currentPage).toBe(7); // seeded from the kept lastPage
+      expect(useStore.getState().doc?.annotations).toEqual({ a1: ink }); // annotations survive the repair
    });
 });
 

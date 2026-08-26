@@ -15,6 +15,22 @@
       "loading": "[TO COMPLETE]",
       "errorTitle": "[TO COMPLETE]",
       "errorBody": "[TO COMPLETE]",
+      "placeholderTitle": "[TO COMPLETE]",
+      "placeholderBody": "[TO COMPLETE]",
+      "repair": {
+         "kept_one": "[TO COMPLETE]",
+         "kept_other": "[TO COMPLETE]",
+         "chooseFromDrawer": "[TO COMPLETE]",
+         "uploadFile": "[TO COMPLETE]",
+         "pickerTitle": "[TO COMPLETE]",
+         "pickerEmpty": "[TO COMPLETE]",
+         "mismatchTitle": "[TO COMPLETE]",
+         "mismatchBody": "[TO COMPLETE]",
+         "useAnyway": "[TO COMPLETE]",
+         "needsFileBadge": "[TO COMPLETE]",
+         "needsFileCount_one": "[TO COMPLETE]",
+         "needsFileCount_other": "[TO COMPLETE]"
+      },
       "prevPage": "[TO COMPLETE]",
       "nextPage": "[TO COMPLETE]",
       "pageInputLabel": "[TO COMPLETE]",
@@ -626,7 +642,8 @@
          "noAnnotations": "[TO COMPLETE]",
          "markupApplied": "[TO COMPLETE]",
          "markupInvalid": "[TO COMPLETE]",
-         "markupPageOverflow": "[TO COMPLETE]"
+         "markupPageOverflow": "[TO COMPLETE]",
+         "repairSuccess": "[TO COMPLETE]"
       },
       "link": {
          "targetNotFound": "La cible de ce lien n'existe plus.",
@@ -779,6 +796,7 @@
          "exportNoteMarkdown": "Exporter en Markdown",
          "exportPdf": "[TO COMPLETE]",
          "exportPdfAnnotations": "[TO COMPLETE]",
+         "applyPdfAnnotations": "[TO COMPLETE]",
          "exportMarkdownWarningTitle": "Exporter sans les images ?",
          "exportMarkdownWarningDescription": "Les images sont stockées localement et ne pourront pas apparaître lorsque ce fichier sera ouvert ailleurs. Exporter quand même ?",
          "exportMarkdownWarningConfirm": "Exporter",

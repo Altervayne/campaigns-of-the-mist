@@ -16,6 +16,7 @@ import { PdfToolbar } from './PdfToolbar';
 import { PdfMarkupToolbar } from './PdfMarkupToolbar';
 import { PdfCommentsPanel } from './PdfCommentsPanel';
 import { PdfMarkupApplyDialog } from './PdfMarkupApplyDialog';
+import { PdfRepairState } from './PdfRepairState';
 
 // -- Local Imports --
 import { usePdfMarkupApply } from './usePdfMarkupApply';
@@ -89,6 +90,7 @@ function PdfSurface({ store }: { store: PdfStore }) {
    const proxy = useStore(store, (state) => state.proxy);
 
    if (status === 'error') return <PdfCenteredState kind="error" />;
+   if (status === 'placeholder') return <PdfRepairState store={store} />;
    if (status !== 'ready' || !proxy || !doc) return <PdfCenteredState kind="loading" />;
 
    return (

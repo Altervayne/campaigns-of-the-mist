@@ -161,3 +161,62 @@ describe('savePdfToLinkedDrawerItem', () => {
       expect(await repository.getPdf('gone')).toBeUndefined();
    });
 });
+
+describe('repairPdf', () => {
+   /** Seeds a drawer `PDF` item wrapping the aggregate, mirroring the item the reader opened from. */
+   async function seedDrawerItem(id: string, doc: PdfDocument): Promise<void> {
+      const record: DrawerItemRecord = {
+         id, name: doc.title, parentFolderId: DRAWER_ROOT_PARENT_ID, order: 0,
+         game: 'NEUTRAL', type: 'PDF', createdAt: 1, updatedAt: 1, content: doc,
+      };
+      await drawerDatabase.items.add(record);
+   }
+
+   it('fills assetHash + pageCount on BOTH copies, keeping id/title/annotations/lastPage', async () => {
+      const annotations = sampleAnnotations();
+      const placeholder: PdfDocument = { id: 'pdf-1', title: 'Kept Title', assetHash: null, pageCount: 12, annotations, lastPage: 5 };
+      await repository.importPdf(placeholder, 'item-1');
+      await seedDrawerItem('item-1', placeholder);
+
+      await repository.repairPdf('pdf-1', 'hash-real', 40);
+
+      const row = await repository.getPdf('pdf-1');
+      expect(row?.assetHash).toBe('hash-real');
+      expect(row?.pageCount).toBe(40);
+      expect(row?.title).toBe('Kept Title');
+      expect(row?.annotations).toEqual(annotations);
+      expect(row?.lastPage).toBe(5);
+
+      const content = (await drawerDatabase.items.get('item-1'))?.content as PdfDocument;
+      expect(content.assetHash).toBe('hash-real');
+      expect(content.pageCount).toBe(40);
+      expect(content.id).toBe('pdf-1');
+      expect(content.title).toBe('Kept Title');
+      expect(content.annotations).toEqual(annotations);
+      expect(content.lastPage).toBe(5);
+   });
+
+   it('lets the supplied file win the page count over the stub', async () => {
+      await repository.importPdf({ id: 'pdf-2', title: 'Stub', assetHash: null, pageCount: 8 }, 'item-2');
+      await seedDrawerItem('item-2', { id: 'pdf-2', title: 'Stub', assetHash: null, pageCount: 8 });
+
+      await repository.repairPdf('pdf-2', 'hash-real', 200);
+
+      expect((await repository.getPdf('pdf-2'))?.pageCount).toBe(200);
+      expect(((await drawerDatabase.items.get('item-2'))?.content as PdfDocument).pageCount).toBe(200);
+   });
+
+   it('fills the row even when the drawer link is dangling', async () => {
+      await repository.importPdf({ id: 'pdf-3', title: 'Orphan', assetHash: null, pageCount: 3 }, 'item-missing');
+
+      await repository.repairPdf('pdf-3', 'hash-real', 3);
+
+      const row = await repository.getPdf('pdf-3');
+      expect(row?.assetHash).toBe('hash-real');
+   });
+
+   it('is a no-op on an absent row', async () => {
+      await repository.repairPdf('gone', 'hash-real', 4); // no throw
+      expect(await repository.getPdf('gone')).toBeUndefined();
+   });
+});

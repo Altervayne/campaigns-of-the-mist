@@ -19,12 +19,14 @@ export interface PdfRecord {
    id: string;
    /** Tab / drawer / preview name. */
    title: string;
-   /** Pointer into `pdfAssets` (the dedup key). */
-   assetHash: string;
+   /** Pointer into `pdfAssets` (the dedup key). `null` ⇔ no bytes yet (placeholder awaiting a file). */
+   assetHash: string | null;
    /** Page count, parsed once at import. */
    pageCount: number;
    /** Markup annotations keyed by annotation id. Optional, non-indexed: old rows read as `undefined`. */
    annotations?: Record<string, PdfAnnotation>;
+   /** Last-read page, 1-based. Optional, non-indexed view state; absent rows read as `undefined` (`?? 1`). */
+   lastPage?: number;
    /** Epoch milliseconds of the last write; drives last-write-wins. */
    updatedAt: number;
    /** The drawer item this PDF is linked to, or null when unsaved (mirrors `NoteRecord.drawerItemId`). */
@@ -41,5 +43,6 @@ export function recordToPdfDocument(record: PdfRecord): PdfDocument {
       assetHash: record.assetHash,
       pageCount: record.pageCount,
       annotations: record.annotations,
+      lastPage: record.lastPage,
    };
 }

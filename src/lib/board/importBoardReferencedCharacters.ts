@@ -9,6 +9,7 @@ import { createFolder, createItem, getCharacterItemIdMap } from '@/lib/drawer/dr
 
 // -- Board Imports --
 import { rehydrateBoardReferencedNotes, rewireBoardNoteReferences } from './importBoardReferencedNotes';
+import { rehydrateBoardReferencedPdfs } from './importBoardReferencedPdfs';
 
 // -- Type Imports --
 import type { Board, CharacterBoardContent } from '@/lib/types/board';
@@ -81,11 +82,12 @@ export function rewireBoardCharacterElements(board: Board, drawerItemIdByCharact
 }
 
 /**
- * The full board-import transform, shared by every import entry point: rehydrate the referenced characters
- * AND notes (link/create), re-id the aggregate for a fresh independent copy, then rewire the character
- * elements + note reference tiles to the local drawer items. Characters and notes share ONE lazily-made
- * "Imported from {board}" folder (created only if something is actually recreated). Returns the board ready
- * to persist.
+ * The full board-import transform, shared by every import entry point: rehydrate the referenced characters,
+ * notes, AND pdf placeholders (link/create), re-id the aggregate for a fresh independent copy, then rewire the
+ * character elements + note reference tiles to the local drawer items. Pdf portals need no rewire - their
+ * target id is preserved and the materialized placeholder keeps it. Everything recreated shares ONE
+ * lazily-made "Imported from {board}" folder (created only if something is actually recreated). Returns the
+ * board ready to persist.
  */
 export async function prepareImportedBoard(
    board: Board,
@@ -102,6 +104,7 @@ export async function prepareImportedBoard(
 
    const drawerItemIdByCharacterId = await rehydrateBoardReferencedCharacters(embedded?.characters, ensureFolder);
    const drawerItemIdByNoteId = await rehydrateBoardReferencedNotes(embedded?.notes, ensureFolder);
+   await rehydrateBoardReferencedPdfs(embedded?.pdfs, ensureFolder);
 
    const reIded = reIdBoardAggregate(board);
    const rewiredCharacters = rewireBoardCharacterElements(reIded, drawerItemIdByCharacterId);

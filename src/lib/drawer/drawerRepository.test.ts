@@ -13,6 +13,8 @@ import * as repository from './drawerRepository';
 
 // -- Type Imports --
 import type { DrawerItem, DrawerItemContent, Folder } from '@/lib/types/drawer';
+import type { PdfDocument } from '@/lib/types/pdf';
+import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 
 /*
  * Unit tests for the drawer repository against fake-indexeddb. They cross-check
@@ -355,6 +357,42 @@ describe('tree / bulk operations', () => {
 
    it('exportFolderAsNestedTree throws when the folder is missing', async () => {
       await expect(repository.exportFolderAsNestedTree('missing')).rejects.toBeInstanceOf(DrawerNotFoundError);
+   });
+
+   it('exports a PDF item as a byteless stub, keeping its id + title + pages + annotations', async () => {
+      const ink: PdfAnnotation = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 };
+      const pdf: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash-real', pageCount: 42, annotations: { a1: ink } };
+      const folder = await repository.createFolder({ name: 'Books', parentFolderId: null });
+      await repository.createItem({ name: 'Rulebook', game: 'NEUTRAL', type: 'PDF', content: pdf, parentFolderId: folder.id });
+
+      const tree = await repository.exportFolderAsNestedTree(folder.id);
+      const exported = tree.items[0].content as PdfDocument;
+      expect(exported.assetHash).toBeNull();
+      expect(exported.id).toBe('pdf-1');
+      expect(exported.title).toBe('Rulebook');
+      expect(exported.pageCount).toBe(42);
+      expect(exported.annotations).toEqual({ a1: ink });
+   });
+
+   it('re-imports a stubbed PDF as a placeholder: same id + annotations, null hash, no pdfAssets row', async () => {
+      const ink: PdfAnnotation = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 };
+      const stub: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: null, pageCount: 42, annotations: { a1: ink } };
+      const nested = makeFolder('orig-folder', 'Books', [
+         { id: 'wrap-1', game: 'NEUTRAL', type: 'PDF', name: 'Rulebook', content: stub as unknown as DrawerItemContent },
+      ]);
+
+      await repository.importNestedFolderAsRecords(nested, null);
+
+      const importedFolderId = (await repository.getFolderChildren(null)).folders[0].id;
+      const items = await repository.getFolderItems(importedFolderId);
+      expect(items).toHaveLength(1);
+      const content = items[0].content as PdfDocument;
+      expect(items[0].type).toBe('PDF');
+      expect(content.id).toBe('pdf-1'); // PDF content kept verbatim, so the portal id survives
+      expect(content.assetHash).toBeNull();
+      expect(content.annotations).toEqual({ a1: ink });
+      // A placeholder materializes no bytes: the import touches only folders + items.
+      expect(await drawerDatabase.pdfAssets.count()).toBe(0);
    });
 
    it('clearAllDrawerData removes folders and items but preserves meta', async () => {

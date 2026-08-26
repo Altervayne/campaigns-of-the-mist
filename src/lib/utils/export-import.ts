@@ -50,6 +50,12 @@ export interface EmbeddedEntities {
    characters?: Record<string, Character>;
    /** Full data of the notes a board's reference tiles point at, keyed by note id, so those live references survive on another machine. */
    notes?: Record<string, Note>;
+   /**
+    * Byteless stubs of the PDFs a board's portals point at, keyed by pdf id (`assetHash: null`). A PDF's bytes
+    * never travel, so the importer materializes each as a placeholder drawer item; the preserved id keeps the
+    * portal resolving until a file is supplied.
+    */
+   pdfs?: Record<string, PdfDocument>;
 }
 
 export interface ExportFile {
@@ -467,10 +473,11 @@ export function downloadTextFile(fileName: string, text: string, mimeType = 'tex
 
 /**
  * Downloads a PDF drawer item's ORIGINAL raw bytes as `${fileName}.pdf` - the unmodified file from the PDF
- * store, no annotations baked in and no `.cotm` envelope, so any size downloads. Throws when the bytes are
- * missing (a dangling `assetHash`) so the caller can toast the failure.
+ * store, no annotations baked in and no `.cotm` envelope, so any size downloads. Throws when there are no bytes
+ * to download - a placeholder (null hash) or a dangling `assetHash` - so the caller can toast the failure.
  */
 export async function exportPdfBytes(content: PdfDocument, fileName: string): Promise<void> {
+   if (!content.assetHash) throw new Error('PDF has no file to export (placeholder awaiting a file).');
    const blob = await getPdfBlob(content.assetHash);
    if (!blob) throw new Error(`PDF asset ${content.assetHash} is missing from the store.`);
    triggerBlobDownload(`${fileName}.pdf`, blob);

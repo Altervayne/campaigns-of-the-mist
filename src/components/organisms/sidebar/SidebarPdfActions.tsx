@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 // -- Icon Imports --
-import { Upload, Highlighter } from 'lucide-react';
+import { Upload, Highlighter, FileDown } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -17,10 +17,11 @@ interface SidebarPdfActionsProps {
    isCollapsed: boolean;
    onExportPdf: () => void;
    onExportAnnotations: () => void;
+   onApplyAnnotations: () => void;
 }
 
-// The PDF cluster: export the raw original file, or just its markup.
-export function SidebarPdfActions({ isCollapsed, onExportPdf, onExportAnnotations }: SidebarPdfActionsProps) {
+// The PDF cluster: export the raw original file, export just its markup, or apply a shared markup file.
+export function SidebarPdfActions({ isCollapsed, onExportPdf, onExportAnnotations, onApplyAnnotations }: SidebarPdfActionsProps) {
    const { t } = useTranslation();
 
    return (
@@ -32,6 +33,9 @@ export function SidebarPdfActions({ isCollapsed, onExportPdf, onExportAnnotation
          </SidebarButton>
          <SidebarButton isCollapsed={isCollapsed} onClick={onExportAnnotations} Icon={Highlighter}>
             {t('WorkspacePage.SidebarMenu.exportPdfAnnotations')}
+         </SidebarButton>
+         <SidebarButton isCollapsed={isCollapsed} onClick={onApplyAnnotations} Icon={FileDown}>
+            {t('WorkspacePage.SidebarMenu.applyPdfAnnotations')}
          </SidebarButton>
       </motion.section>
    );

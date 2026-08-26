@@ -26,6 +26,7 @@ import { reIdCharacterAggregate } from '@/lib/character/reIdCharacterAggregate';
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import { useDrawerActions } from '@/lib/stores/drawerStore';
+import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
 // -- Type Imports --
 import type { Character, Card as CardData, Tracker } from '@/lib/types/character';
@@ -241,6 +242,10 @@ export function useSidebarFileIO({ onImportNoteMarkdownFile }: UseSidebarFileIOA
       }
    };
 
+   // Signals the reader-mounted markup-apply flow (Feature B): the flag opens the file picker, then the
+   // Add/Replace dialog. Mirrors the palette command, so the sidebar and the palette drive one flow.
+   const handleApplyPdfMarkup = () => useAppGeneralStateStore.getState().actions.requestPdfMarkupApply();
+
    const handleNoteFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -455,6 +460,7 @@ export function useSidebarFileIO({ onImportNoteMarkdownFile }: UseSidebarFileIOA
       handleExportNote,
       handleExportPdf,
       handleExportPdfAnnotations,
+      handleApplyPdfMarkup,
 
       // Import + update-pick change handlers.
       handleWorkspaceFileSelected,

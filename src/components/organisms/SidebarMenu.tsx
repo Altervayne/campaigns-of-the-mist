@@ -79,6 +79,7 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
       handleExportNote,
       handleExportPdf,
       handleExportPdfAnnotations,
+      handleApplyPdfMarkup,
       handleWorkspaceFileSelected,
       handleCharacterFileSelected,
       handleBoardFileSelected,
@@ -179,6 +180,7 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
                      isCollapsed={isCollapsed}
                      onExportPdf={handleExportPdf}
                      onExportAnnotations={handleExportPdfAnnotations}
+                     onApplyAnnotations={handleApplyPdfMarkup}
                   />
                }
 
