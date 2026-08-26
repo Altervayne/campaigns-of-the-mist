@@ -818,3 +818,40 @@ body {
    from { opacity: 0.35; }
    to { opacity: 1; }
 }
+
+/* PDF text layer: the minimal pdf.js text-layer rules the selectable layer needs. pdf.js lays transparent,
+   absolutely-positioned spans over the page canvas; selection shows through the browser's native ::selection.
+   `--total-scale-factor` is set per page on the container (the plain CSS scale) and governs glyph sizing. The
+   page is white paper, so this stays theme-neutral. Not the viewer chrome - only what positions the runs. */
+.pdf-text-layer {
+   position: absolute;
+   inset: 0;
+   overflow: clip;
+   line-height: 1;
+   text-align: initial;
+   text-size-adjust: none;
+   forced-color-adjust: none;
+   transform-origin: 0 0;
+   --min-font-size: 1;
+   --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+   --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.pdf-text-layer :is(span, br) {
+   position: absolute;
+   color: transparent;
+   white-space: pre;
+   cursor: text;
+   transform-origin: 0 0;
+   user-select: text;
+}
+.pdf-text-layer > :not(.markedContent),
+.pdf-text-layer .markedContent span:not(.markedContent) {
+   --font-height: 0;
+   --scale-x: 1;
+   --rotate: 0deg;
+   font-size: calc(var(--text-scale-factor) * var(--font-height));
+   transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.pdf-text-layer .markedContent {
+   display: contents;
+}

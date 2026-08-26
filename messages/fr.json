@@ -49,6 +49,9 @@
          "toggle": "[TO COMPLETE]",
          "close": "[TO COMPLETE]",
          "pageLabel": "[TO COMPLETE]"
+      },
+      "selection": {
+         "copy": "[TO COMPLETE]"
       }
    },
    "PdfMarkup": {
@@ -668,7 +671,8 @@
          "markupApplied": "[TO COMPLETE]",
          "markupInvalid": "[TO COMPLETE]",
          "markupPageOverflow": "[TO COMPLETE]",
-         "repairSuccess": "[TO COMPLETE]"
+         "repairSuccess": "[TO COMPLETE]",
+         "textCopied": "[TO COMPLETE]"
       },
       "link": {
          "targetNotFound": "La cible de ce lien n'existe plus.",

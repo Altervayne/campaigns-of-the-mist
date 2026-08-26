@@ -18,9 +18,11 @@ import { PdfCommentsPanel } from './PdfCommentsPanel';
 import { PdfNavPanel } from './PdfNavPanel';
 import { PdfMarkupApplyDialog } from './PdfMarkupApplyDialog';
 import { PdfRepairState } from './PdfRepairState';
+import { PdfSelectionActionBar } from './PdfSelectionActionBar';
 
 // -- Local Imports --
 import { usePdfMarkupApply } from './usePdfMarkupApply';
+import { usePdfTextSelection } from './usePdfTextSelection';
 import { usePdfContainerWidth } from './usePdfContainerWidth';
 import { usePdfDefaultAspect } from './usePdfDefaultAspect';
 import { usePdfZoom } from './usePdfZoom';
@@ -430,6 +432,9 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    // bridge), and the Add/Replace choice lands as one undo step.
    const { fileInputRef: markupInputRef, onFileChange: onMarkupFileChange, pending: markupApplyPending, apply: applyMarkupChoice, cancel: cancelMarkupApply } = usePdfMarkupApply(store);
 
+   // The live text selection over the pages, tracked only in read mode; drives the floating Copy bar.
+   const textSelection = usePdfTextSelection(scrollRef, markupMode === 'read');
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
@@ -724,6 +729,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                onReplace={() => applyMarkupChoice('replace')}
                onCancel={cancelMarkupApply}
             />
+            {/* Floating Copy bar over a live read-mode selection; fixed in viewport coords (the rect is too). */}
+            {markupMode === 'read' && textSelection ? <PdfSelectionActionBar rect={textSelection.rect} text={textSelection.text} /> : null}
          </div>
       </PdfMarkupContext.Provider>
    );

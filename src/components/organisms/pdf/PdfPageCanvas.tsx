@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 // -- Component Imports --
 import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfAnnotationLayer } from './PdfAnnotationLayer';
+import { PdfTextLayer } from './PdfTextLayer';
 import { PdfPageInteractionLayer } from './PdfPageInteractionLayer';
 import { PdfCommentLayer } from './PdfCommentLayer';
 import { PdfSelectionLayer } from './PdfSelectionLayer';
@@ -123,6 +124,8 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
              re-render runs; the backing pixels are set imperatively once that render blits in. */}
          {isVisible ? <canvas ref={canvasRef} className="block" style={{ width, height: Math.round(width * aspect) }} /> : null}
          {isVisible && annotations.length > 0 ? <PdfAnnotationLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
+         {/* Selectable text over the page; selectable in read mode, inert in markup mode (the capture layer owns the drag). */}
+         {isVisible ? <PdfTextLayer proxy={proxy} pageNumber={pageNumber} width={width} isVisible={isVisible} /> : null}
          {/* Markup capture sits above the marks; context-driven, so it needs no props and returns null in read mode. */}
          {isVisible ? <PdfPageInteractionLayer pageNumber={pageNumber} width={width} height={Math.round(width * aspect)} /> : null}
          {/* Comment anchors + editors sit topmost; inert in markup mode (the capture layer below owns the gesture). */}

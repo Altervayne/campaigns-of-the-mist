@@ -49,6 +49,9 @@
          "toggle": "PDF Navigation",
          "close": "Close navigation",
          "pageLabel": "Page {{page}}"
+      },
+      "selection": {
+         "copy": "Copy"
       }
    },
    "PdfMarkup": {
@@ -668,7 +671,8 @@
          "markupApplied": "Markup applied.",
          "markupInvalid": "That file isn't PDF markup.",
          "markupPageOverflow": "This markup references page {{page}}, but the PDF has only {{count}} pages.",
-         "repairSuccess": "File added — {{title}} is ready."
+         "repairSuccess": "File added — {{title}} is ready.",
+         "textCopied": "Copied to clipboard"
       },
       "link": {
          "targetNotFound": "That link's target no longer exists.",
