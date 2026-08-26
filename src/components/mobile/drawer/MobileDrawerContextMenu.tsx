@@ -20,7 +20,8 @@ import {
 	Trash2,
 	PlusCircle,
 	CornerUpRight,
-	UserRoundCheck
+	UserRoundCheck,
+	Highlighter
 } from 'lucide-react';
 
 // -- Store Imports --
@@ -33,7 +34,7 @@ import { hasDrawerItemCapability } from '@/lib/drawer/drawerItemCapabilities';
 
 // -- Utils Imports --
 import { exportToFile, generateExportFilename } from '@/lib/utils/export-import';
-import { exportDrawerItem } from '@/lib/drawer/exportDrawerItem';
+import { canExportPdfMarkup, exportDrawerItem, exportDrawerItemMarkup } from '@/lib/drawer/exportDrawerItem';
 
 // -- Utils Imports --
 import { readSafeAreaInsetBottom } from '@/lib/utils/safeArea';
@@ -185,6 +186,11 @@ export default function MobileDrawerContextMenu({
 		onClose();
 	};
 
+	const handleExportMarkup = () => {
+		if (item) exportDrawerItemMarkup(item, t);
+		onClose();
+	};
+
 	const handleDelete = () => {
 		setShowDeleteConfirm(true);
 	};
@@ -326,6 +332,18 @@ export default function MobileDrawerContextMenu({
                   <Download className="w-4 h-4 mr-3" />
                   {t('Drawer.Actions.export')}
                </Button>
+
+               {/* Export annotations (a marked-up PDF only): the bytes-free markup share file. */}
+               {item && canExportPdfMarkup(item) && (
+                  <Button
+                     variant="ghost"
+                     className="w-full justify-start cursor-pointer"
+                     onClick={handleExportMarkup}
+                  >
+                     <Highlighter className="w-4 h-4 mr-3" />
+                     {t('Drawer.Actions.exportAnnotations')}
+                  </Button>
+               )}
 
                {/* Delete */}
                <Button

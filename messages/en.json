@@ -48,7 +48,14 @@
       "annotatedBadge": "Annotated",
       "visibility": "Annotation visibility",
       "allAnnotations": "All annotations",
-      "ink": "Ink"
+      "ink": "Ink",
+      "apply": {
+         "title": "Apply PDF markup",
+         "body": "Applying {{count}} annotations from \"{{title}}\". Add them to this PDF's markup, or replace it entirely?",
+         "mismatch": "This markup was made for a PDF with a different number of pages, so some marks may not line up.",
+         "add": "Add to existing",
+         "replace": "Replace all"
+      }
    },
    "Tabs": {
       "untitled": "Untitled character",
@@ -614,7 +621,12 @@
       "pdf": {
          "importing": "Importing PDF…",
          "storageHigh": "Storage is getting full. You can free space from Reclaim space in Settings.",
-         "exported": "PDF exported."
+         "exported": "PDF exported.",
+         "markupExported": "Annotations exported.",
+         "noAnnotations": "No annotations to export.",
+         "markupApplied": "Markup applied.",
+         "markupInvalid": "That file isn't PDF markup.",
+         "markupPageOverflow": "This markup references page {{page}}, but the PDF has only {{count}} pages."
       },
       "link": {
          "targetNotFound": "That link's target no longer exists.",
@@ -765,6 +777,8 @@
          "exportNote": "Export Note",
          "importNote": "Import Note",
          "exportNoteMarkdown": "Export as Markdown",
+         "exportPdf": "Export PDF",
+         "exportPdfAnnotations": "Export annotations",
          "exportMarkdownWarningTitle": "Export without images?",
          "exportMarkdownWarningDescription": "Images are stored locally and won't appear when this file is opened somewhere else. Export anyway?",
          "exportMarkdownWarningConfirm": "Export",
@@ -896,6 +910,7 @@
          "moveItemTitle": "Moving an Item through the Drawer",
          "moveUp": "Back",
          "export": "Export",
+         "exportAnnotations": "Export annotations",
          "exportFull": "Export your entire Drawer",
          "import": "Import a file into the current Folder",
          "confirm": "Confirm",
@@ -1593,11 +1608,13 @@
          "newCharacter": "New: Character",
          "newBoard": "New: Board",
          "newNote": "New: Note",
-         "toggleNoteOutline": "Toggle note outline",
-         "jumpToSection": "Jump to section...",
-         "insertLink": "Insert link...",
-         "pdfToggleMarkup": "Toggle markup mode",
-         "pdfToggleComments": "Toggle comments panel",
+         "toggleNoteOutline": "Toggle: Note Outline",
+         "jumpToSection": "Jump: Section...",
+         "insertLink": "Insert: Link...",
+         "pdfToggleMarkup": "Toggle: Markup Mode",
+         "pdfToggleComments": "Toggle: Comments Panel",
+         "pdfApplyMarkup": "Apply: PDF Markup",
+         "pdfExportMarkup": "Export: PDF Annotations",
          "closeTab": "Close: Current Tab",
          "nextTab": "Switch: Next Tab",
          "prevTab": "Switch: Previous Tab",

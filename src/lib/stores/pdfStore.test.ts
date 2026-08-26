@@ -77,6 +77,31 @@ describe('pdf store annotations', () => {
       expect(useStore.getState().doc?.annotations).toEqual({});
    });
 
+   it('setAnnotations replaces the whole map and persists on flush', async () => {
+      const useStore = await seedStore(400);
+      const next: Record<string, PdfAnnotation> = { b1: { ...ink, id: 'b1', page: 2 }, b2: { ...ink, id: 'b2', page: 3 } };
+      useStore.getState().actions.setAnnotations(next);
+      expect(useStore.getState().doc?.annotations).toEqual(next);
+
+      await useStore.getState().actions.flush();
+      expect(await rowAnnotations()).toEqual(next);
+   });
+
+   it('setAnnotations is bracketed into one undo step by the caller', async () => {
+      const useStore = await seedStore(400);
+      const { beginHistory, addAnnotation, setAnnotations, commitHistory, undo } = useStore.getState().actions;
+
+      addAnnotation(ink); // a pre-existing mark
+      beginHistory();
+      setAnnotations({ b1: { ...ink, id: 'b1', page: 2 } });
+      commitHistory();
+      expect(useStore.getState().undoStack).toHaveLength(1);
+
+      // One undo restores the pre-apply map wholesale.
+      undo();
+      expect(useStore.getState().doc?.annotations).toEqual({ a1: ink });
+   });
+
    it('flush writes through to the row and the linked drawer item, then resolves', async () => {
       const useStore = await seedStore(400);
       useStore.getState().actions.addAnnotation(ink);

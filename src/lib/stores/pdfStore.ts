@@ -169,6 +169,8 @@ export interface PdfState {
       setAllAnnotationsVisible: (visible: boolean) => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
+      /** Replaces the whole annotation map and debounce-persists it (a bulk apply). No-op before the document is ready. */
+      setAnnotations: (annotations: Record<string, PdfAnnotation>) => void;
       /** Merges a patch onto an existing annotation (discriminant + id untouched) and debounce-persists it. No-op if absent. */
       updateAnnotation: (id: string, patch: PdfAnnotationPatch) => void;
       /** Removes an annotation and debounce-persists the change. No-op if absent. */
@@ -326,6 +328,14 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                const { doc } = get();
                if (!doc) return;
                const next: PdfDocument = { ...doc, annotations: { ...(doc.annotations ?? {}), [annotation.id]: annotation } };
+               set({ doc: next });
+               debouncedSave.run(next);
+            },
+
+            setAnnotations: (annotations) => {
+               const { doc } = get();
+               if (!doc) return;
+               const next: PdfDocument = { ...doc, annotations };
                set({ doc: next });
                debouncedSave.run(next);
             },

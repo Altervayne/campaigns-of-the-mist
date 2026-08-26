@@ -15,8 +15,10 @@ import { PdfPageCanvas } from './PdfPageCanvas';
 import { PdfToolbar } from './PdfToolbar';
 import { PdfMarkupToolbar } from './PdfMarkupToolbar';
 import { PdfCommentsPanel } from './PdfCommentsPanel';
+import { PdfMarkupApplyDialog } from './PdfMarkupApplyDialog';
 
 // -- Local Imports --
+import { usePdfMarkupApply } from './usePdfMarkupApply';
 import { usePdfContainerWidth } from './usePdfContainerWidth';
 import { usePdfDefaultAspect } from './usePdfDefaultAspect';
 import { usePdfZoom } from './usePdfZoom';
@@ -419,6 +421,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const scrollToSection = useCallback(() => {}, []);
    const onLinkActivate = useNoteLinkActivation(linkHost, scrollToSection);
 
+   // Applying a shared markup file onto this open pdf: the palette command opens the picker (via the store
+   // bridge), and the Add/Replace choice lands as one undo step.
+   const { fileInputRef: markupInputRef, onFileChange: onMarkupFileChange, pending: markupApplyPending, apply: applyMarkupChoice, cancel: cancelMarkupApply } = usePdfMarkupApply(store);
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
@@ -682,6 +688,14 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   onFitPage={fitPage}
                />
             </div>
+            {/* Markup-apply plumbing: a hidden picker the palette command opens, plus the Add/Replace dialog. */}
+            <input ref={markupInputRef} type="file" accept=".cotm" className="hidden" onChange={onMarkupFileChange} />
+            <PdfMarkupApplyDialog
+               pending={markupApplyPending}
+               onAdd={() => applyMarkupChoice('add')}
+               onReplace={() => applyMarkupChoice('replace')}
+               onCancel={cancelMarkupApply}
+            />
          </div>
       </PdfMarkupContext.Provider>
    );

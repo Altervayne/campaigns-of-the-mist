@@ -14,6 +14,7 @@ import { SidebarSubmenuToggles } from './sidebar/SidebarSubmenuToggles';
 import { SidebarPlayAreaActions } from './sidebar/SidebarPlayAreaActions';
 import { SidebarBoardActions } from './sidebar/SidebarBoardActions';
 import { SidebarNoteActions } from './sidebar/SidebarNoteActions';
+import { SidebarPdfActions } from './sidebar/SidebarPdfActions';
 import { SidebarMainMenuActions } from './sidebar/SidebarMainMenuActions';
 import { SidebarBottomActions } from './sidebar/SidebarBottomActions';
 import { SidebarFileInputs } from './sidebar/SidebarFileInputs';
@@ -76,6 +77,8 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
       handleExportCharacter,
       handleExportBoard,
       handleExportNote,
+      handleExportPdf,
+      handleExportPdfAnnotations,
       handleWorkspaceFileSelected,
       handleCharacterFileSelected,
       handleBoardFileSelected,
@@ -168,6 +171,14 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
                      onExportNoteMarkdown={onExportNoteMarkdown}
                      noteImportInputRef={noteImportInputRef}
                      noteUpdateInputRef={noteUpdateInputRef}
+                  />
+               }
+
+               { activeWindow === 'PDF' &&
+                  <SidebarPdfActions
+                     isCollapsed={isCollapsed}
+                     onExportPdf={handleExportPdf}
+                     onExportAnnotations={handleExportPdfAnnotations}
                   />
                }
 

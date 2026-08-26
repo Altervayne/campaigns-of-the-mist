@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 
 // -- Utils Imports --
 import { deriveExportHandle, exportPdfBytes, exportToFile, generateExportFilename, toExportableItemContent } from '@/lib/utils/export-import';
+import { exportPdfMarkup } from '@/lib/pdf/pdfMarkupTransfer';
+import { hasAnnotations } from '@/lib/pdf/annotations';
 
 // -- Type Imports --
 import type { TFunction } from 'i18next';
@@ -31,6 +33,26 @@ export async function exportDrawerItem(item: Pick<DrawerItem, 'content' | 'type'
       toast.success(t('Notifications.drawer.itemExported'));
    } catch (error) {
       console.error('Drawer item export failed:', error);
+      toast.error(t('Notifications.general.exportError'));
+   }
+}
+
+/** Whether a drawer item is a PDF carrying markup - the gate for the "export annotations" action. */
+export function canExportPdfMarkup(item: Pick<DrawerItem, 'content' | 'type'>): boolean {
+   return item.type === 'PDF' && hasAnnotations(item.content as PdfDocument);
+}
+
+/**
+ * Exports a PDF drawer item's ANNOTATIONS as a bytes-free `.cotm` markup file (no PDF bytes, the
+ * licensing-safe share path) and toasts. No-op for a non-PDF item.
+ */
+export function exportDrawerItemMarkup(item: Pick<DrawerItem, 'content' | 'type' | 'name'>, t: TFunction): void {
+   if (item.type !== 'PDF') return;
+   try {
+      exportPdfMarkup(item.content as PdfDocument, item.name);
+      toast.success(t('Notifications.pdf.markupExported'));
+   } catch (error) {
+      console.error('PDF markup export failed:', error);
       toast.error(t('Notifications.general.exportError'));
    }
 }

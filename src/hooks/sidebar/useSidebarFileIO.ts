@@ -6,7 +6,10 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 // -- Utils Imports --
-import { exportCharacterSheet, exportToFile, generateExportFilename, importFromFile, readFileAsText } from '@/lib/utils/export-import';
+import { exportCharacterSheet, exportPdfBytes, exportToFile, generateExportFilename, importFromFile, readFileAsText } from '@/lib/utils/export-import';
+import { exportPdfMarkup } from '@/lib/pdf/pdfMarkupTransfer';
+import { hasAnnotations } from '@/lib/pdf/annotations';
+import { getActivePdfStore } from '@/lib/pdf/pdfStoreRegistry';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { harmonizeData } from '@/lib/harmonization';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
@@ -209,6 +212,34 @@ export function useSidebarFileIO({ onImportNoteMarkdownFile }: UseSidebarFileIOA
    };
 
    const handleExportNote = () => exportActiveNote(tNotifications);
+
+   // The raw original file, straight from the pdf asset store; annotations ride the separate markup export.
+   const handleExportPdf = async () => {
+      const doc = getActivePdfStore()?.getState().doc;
+      if (!doc) return;
+      try {
+         await exportPdfBytes(doc, doc.title);
+         toast.success(tNotifications('Notifications.pdf.exported'));
+      } catch {
+         toast.error(tNotifications('Notifications.general.exportError'));
+      }
+   };
+
+   // The markup-only file. An unmarked PDF has nothing to write, so it reports rather than downloading empty.
+   const handleExportPdfAnnotations = () => {
+      const doc = getActivePdfStore()?.getState().doc;
+      if (!doc) return;
+      if (!hasAnnotations(doc)) {
+         toast(tNotifications('Notifications.pdf.noAnnotations'));
+         return;
+      }
+      try {
+         exportPdfMarkup(doc, doc.title);
+         toast.success(tNotifications('Notifications.pdf.markupExported'));
+      } catch {
+         toast.error(tNotifications('Notifications.general.exportError'));
+      }
+   };
 
    const handleNoteFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -422,6 +453,8 @@ export function useSidebarFileIO({ onImportNoteMarkdownFile }: UseSidebarFileIOA
       handleExportCharacter,
       handleExportBoard,
       handleExportNote,
+      handleExportPdf,
+      handleExportPdfAnnotations,
 
       // Import + update-pick change handlers.
       handleWorkspaceFileSelected,

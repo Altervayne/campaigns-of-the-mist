@@ -48,7 +48,14 @@
       "annotatedBadge": "[TO COMPLETE]",
       "visibility": "[TO COMPLETE]",
       "allAnnotations": "[TO COMPLETE]",
-      "ink": "[TO COMPLETE]"
+      "ink": "[TO COMPLETE]",
+      "apply": {
+         "title": "[TO COMPLETE]",
+         "body": "[TO COMPLETE]",
+         "mismatch": "[TO COMPLETE]",
+         "add": "[TO COMPLETE]",
+         "replace": "[TO COMPLETE]"
+      }
    },
    "Tabs": {
       "untitled": "Personnage sans nom",
@@ -614,7 +621,12 @@
       "pdf": {
          "importing": "[TO COMPLETE]",
          "storageHigh": "[TO COMPLETE]",
-         "exported": "[TO COMPLETE]"
+         "exported": "[TO COMPLETE]",
+         "markupExported": "[TO COMPLETE]",
+         "noAnnotations": "[TO COMPLETE]",
+         "markupApplied": "[TO COMPLETE]",
+         "markupInvalid": "[TO COMPLETE]",
+         "markupPageOverflow": "[TO COMPLETE]"
       },
       "link": {
          "targetNotFound": "La cible de ce lien n'existe plus.",
@@ -765,6 +777,8 @@
          "exportNote": "Exporter la Note",
          "importNote": "Importer une Note",
          "exportNoteMarkdown": "Exporter en Markdown",
+         "exportPdf": "[TO COMPLETE]",
+         "exportPdfAnnotations": "[TO COMPLETE]",
          "exportMarkdownWarningTitle": "Exporter sans les images ?",
          "exportMarkdownWarningDescription": "Les images sont stockées localement et ne pourront pas apparaître lorsque ce fichier sera ouvert ailleurs. Exporter quand même ?",
          "exportMarkdownWarningConfirm": "Exporter",
@@ -896,6 +910,7 @@
          "moveItemTitle": "Déplacement d'un Objet dans le Tiroir",
          "moveUp": "Retour",
          "export": "Exporter",
+         "exportAnnotations": "[TO COMPLETE]",
          "exportFull": "Exporter votre Tiroir entier",
          "import": "Importer un fichier dans le Dossier actif",
          "confirm": "Confirmer",
@@ -1598,6 +1613,8 @@
          "insertLink": "Insérer un lien...",
          "pdfToggleMarkup": "[TO COMPLETE]",
          "pdfToggleComments": "[TO COMPLETE]",
+         "pdfApplyMarkup": "[TO COMPLETE]",
+         "pdfExportMarkup": "[TO COMPLETE]",
          "closeTab": "Fermer : Onglet Actuel",
          "nextTab": "Changer : Onglet Suivant",
          "prevTab": "Changer : Onglet Précédent",

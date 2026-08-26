@@ -17,6 +17,8 @@ import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Me
 // -- Utils Imports --
 import { exportCharacterSheet, exportDrawer, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
 import { exportFullBackup } from '@/lib/backup/fullBackup';
+import { exportPdfMarkup } from '@/lib/pdf/pdfMarkupTransfer';
+import { hasAnnotations } from '@/lib/pdf/annotations';
 
 // -- Store and Hook Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
@@ -78,7 +80,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    const character = useCharacterStore((state) => state.character);
    const { resetCharacter, addPortrait } = useCharacterActions();
    const { setSideBySideView, toggleDiceTray, toggleNoteOutline, toggleLayersPanel, toggleNavigator } = useAppSettingsActions();
-   const { setSettingsOpen, setSettingsInitialSection, requestBoardAction, requestDrawerImport } = useAppGeneralStateActions();
+   const { setSettingsOpen, setSettingsInitialSection, requestBoardAction, requestDrawerImport, requestPdfMarkupApply } = useAppGeneralStateActions();
 
    // Deep-link the hub to a section (What's new / About / Learn), mirroring the sidebar doors.
    const openSettingsSection = (section: string) => {
@@ -153,6 +155,18 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
          const fileName = generateExportFilename('NEUTRAL', 'FULL_BOARD', board.name);
          await exportToFile(board, 'FULL_BOARD', 'NEUTRAL', fileName, embedded);
          toast.success(tNotifications('Notifications.board.exported'));
+      } catch {
+         toast.error(tNotifications('Notifications.general.exportError'));
+      }
+   };
+
+   // Export the active pdf's ANNOTATIONS as a bytes-free markup file (no PDF bytes) - the licensing-safe share path.
+   const handleExportPdfMarkup = () => {
+      const doc = activePdf?.getState().doc;
+      if (!doc) return;
+      try {
+         exportPdfMarkup(doc, doc.title);
+         toast.success(tNotifications('Notifications.pdf.markupExported'));
       } catch {
          toast.error(tNotifications('Notifications.general.exportError'));
       }
@@ -262,6 +276,12 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       ...(activePdf ? [
          { id: 'pdfToggleMarkup', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleMarkup'), keywords: ['pdf', 'markup', 'annotate', 'draw', 'mark', 'notes'], icon: Pencil, group: t('CommandPalette.groups.pdf'), action: () => { const state = activePdf.getState(); state.actions.setMarkupMode(state.markupMode === 'markup' ? 'read' : 'markup'); } },
          { id: 'pdfToggleComments', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleComments'), keywords: ['pdf', 'comments', 'notes', 'panel', 'annotations'], icon: MessagesSquare, group: t('CommandPalette.groups.pdf'), action: () => activePdf.getState().actions.toggleCommentsPanel() },
+         // Apply a shared markup file onto this pdf; the reader opens the picker + Add/Replace dialog.
+         { id: 'pdfApplyMarkup', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfApplyMarkup'), keywords: ['pdf', 'apply', 'markup', 'annotations', 'import', 'marks', 'share'], icon: Import, group: t('CommandPalette.groups.pdf'), action: requestPdfMarkupApply },
+         // Export this pdf's annotations as a bytes-free share file; only when there's markup to share.
+         ...(hasAnnotations(activePdf.getState().doc) ? [
+            { id: 'pdfExportMarkup', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfExportMarkup'), keywords: ['pdf', 'export', 'markup', 'annotations', 'share', 'marks'], icon: Highlighter, group: t('CommandPalette.groups.pdf'), action: handleExportPdfMarkup },
+         ] : []),
       ] : []),
 
       // #################################

@@ -447,7 +447,7 @@ export async function exportToFile(item: ExportableContent, type: ExportableItem
 };
 
 /** Triggers a browser download of a blob: object URL, synthetic click, revoke. */
-function triggerBlobDownload(fileName: string, blob: Blob): void {
+export function triggerBlobDownload(fileName: string, blob: Blob): void {
    const url = URL.createObjectURL(blob);
 
    const a = document.createElement('a');

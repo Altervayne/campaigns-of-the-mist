@@ -10,11 +10,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 
 // -- Icon Imports --
-import { MoreHorizontal, Pencil, Trash2, Move, Upload } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Move, Upload, Highlighter } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { exportDrawerItem } from '@/lib/drawer/exportDrawerItem';
+import { canExportPdfMarkup, exportDrawerItem, exportDrawerItemMarkup } from '@/lib/drawer/exportDrawerItem';
 import { DRAG_TYPES } from '@/lib/constants/dragDrop';
 
 // -- Hook Imports --
@@ -34,6 +34,11 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
    const handleExport = async (e: React.MouseEvent) => {
       e.stopPropagation();
       await exportDrawerItem(item, t);
+   };
+
+   const handleExportMarkup = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      exportDrawerItemMarkup(item, t);
    };
 
    return (
@@ -58,6 +63,9 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
                            <DropdownMenuItem onClick={onRename} className="cursor-pointer"><Pencil className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.rename')}</span></DropdownMenuItem>
                            <DropdownMenuItem onClick={onMove} className="cursor-pointer"><Move className="mr-2 h-4 w-4" /><span>{t('Common.move')}</span></DropdownMenuItem>
                            <DropdownMenuItem onClick={handleExport} className="cursor-pointer"><Upload className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.export')}</span></DropdownMenuItem>
+                           {canExportPdfMarkup(item) && (
+                              <DropdownMenuItem onClick={handleExportMarkup} className="cursor-pointer"><Highlighter className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.exportAnnotations')}</span></DropdownMenuItem>
+                           )}
                            <DropdownMenuItem onClick={onDelete} className="text-destructive cursor-pointer"><Trash2 className="mr-2 h-4 w-4" /><span>{t('Drawer.Actions.delete')}</span></DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>

@@ -101,6 +101,11 @@ interface AppGeneralState {
    // `requestDrawerImport` also opens the drawer as the side panel so the responder is mounted.
    pendingDrawerImport: boolean;
 
+   // A one-shot request the open pdf reader consumes and clears: open its markup-apply file picker. The
+   // picker + Add/Replace dialog live in the reader, so the palette's "Apply PDF markup" command signals
+   // through here (the command is pdf-scoped, so the reader is already mounted).
+   pendingPdfMarkupApply: boolean;
+
    // Nav requests the mobile page consumes against its own local setters and drains (mirrors
    // `pendingBoardAction`). The mobile shell keeps its nav state component-local, above the store the
    // tutorial runner can reach, so a drive signals through here. It is a QUEUE, not a slot: one arrival
@@ -153,6 +158,10 @@ interface AppGeneralState {
       requestDrawerImport: () => void;
       clearDrawerImport: () => void;
 
+      // Pending pdf markup apply (open the reader's markup-apply file picker)
+      requestPdfMarkupApply: () => void;
+      clearPdfMarkupApply: () => void;
+
       // Pending mobile nav actions + the write-only landing-position mirror
       requestMobileNavAction: (action: MobileNavAction) => void;
       clearMobileNavActions: () => void;
@@ -196,6 +205,9 @@ export const useAppGeneralStateStore = create<AppGeneralState>((set) => ({
 
    // Pending drawer import
    pendingDrawerImport: false,
+
+   // Pending pdf markup apply
+   pendingPdfMarkupApply: false,
 
    // Pending mobile nav actions + landing-position mirror
    pendingMobileNavActions: [],
@@ -243,6 +255,11 @@ export const useAppGeneralStateStore = create<AppGeneralState>((set) => ({
       // responder is mounted whether the drawer was closed or expanded, then flags the request.
       requestDrawerImport: () => set({ pendingDrawerImport: true, isDrawerOpen: true, isDrawerExpanded: false, isDrawerReceded: false }),
       clearDrawerImport: () => set({ pendingDrawerImport: false }),
+
+      // Pending pdf markup apply. The reader owns the picker + dialog and is already mounted (the command
+      // is pdf-scoped), so this just flags the request.
+      requestPdfMarkupApply: () => set({ pendingPdfMarkupApply: true }),
+      clearPdfMarkupApply: () => set({ pendingPdfMarkupApply: false }),
 
       // Pending mobile nav actions + landing-position mirror. Requests APPEND: a step's arrival dispatches
       // its axes one after another in the same tick, and every one of them has to reach the page.
