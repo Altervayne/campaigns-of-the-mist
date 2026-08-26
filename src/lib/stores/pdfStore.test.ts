@@ -10,8 +10,10 @@ import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { DRAWER_ROOT_PARENT_ID } from '@/lib/drawer/drawerRecords';
 
 // -- Type Imports --
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { PdfDocument } from '@/lib/types/pdf';
 import type { PdfAnnotation, PdfInk } from '@/lib/types/pdfAnnotation';
+import type { SearchMatch } from './pdfStore';
 import type { DrawerItemRecord } from '@/lib/drawer/drawerRecords';
 
 /*
@@ -370,6 +372,175 @@ describe('pdf hydrate placeholder / error branch discipline', () => {
       expect(useStore.getState().doc?.pageCount).toBe(24); // the supplied file's count wins
       expect(useStore.getState().currentPage).toBe(7); // seeded from the kept lastPage
       expect(useStore.getState().doc?.annotations).toEqual({ a1: ink }); // annotations survive the repair
+   });
+});
+
+/** Lets an incremental scan finish: its per-page awaits and any macrotask yield drain within this window. */
+function settleSearch(): Promise<void> {
+   return new Promise((resolve) => setTimeout(resolve, 20));
+}
+
+/** A fake proxy that serves one text run per page and a scale-1 viewport, enough for the search scan. */
+function makeSearchProxy(pageText: Record<number, string>): PDFDocumentProxy {
+   return {
+      getPage: (pageNumber: number) =>
+         Promise.resolve({
+            getTextContent: () =>
+               Promise.resolve({ items: [{ str: pageText[pageNumber] ?? '', transform: [10, 0, 0, 10, 20, 80], width: 40, height: 10 }], styles: {}, lang: null }),
+            getViewport: () => ({ transform: [1, 0, 0, -1, 0, 100], width: 200, height: 100 }),
+         }),
+   } as unknown as PDFDocumentProxy;
+}
+
+/** Seeds a ready store with a 4-page searchable document and a fake proxy over it. */
+async function seedSearchStore(currentPage: number) {
+   const useStore = await seedStore(400);
+   const proxy = makeSearchProxy({ 1: 'alpha', 2: 'beta bravo', 3: 'alpha gamma', 4: 'delta' });
+   useStore.setState({ proxy, currentPage });
+   return useStore;
+}
+
+const matchesAt = (pages: number[]): SearchMatch[] => pages.map((page) => ({ page, start: 0, length: 5 }));
+
+describe('pdf store search scan', () => {
+   it('setSearchQuery sweeps every page and lands page-ordered matches, ending done', async () => {
+      const useStore = await seedSearchStore(3); // scan order 3,1,2,4 - but matches stay page-ordered
+      useStore.getState().actions.setSearchQuery('alpha');
+      expect(useStore.getState().searchStatus).toBe('scanning');
+
+      await settleSearch();
+      const { searchMatches, searchStatus, searchScanned } = useStore.getState();
+      expect(searchStatus).toBe('done');
+      expect(searchScanned).toBe(4);
+      expect(searchMatches).toEqual([{ page: 1, start: 0, length: 5 }, { page: 3, start: 0, length: 5 }]);
+   });
+
+   it('an empty query clears matches and returns to idle', async () => {
+      const useStore = await seedSearchStore(1);
+      useStore.getState().actions.setSearchQuery('alpha');
+      await settleSearch();
+      expect(useStore.getState().searchMatches).toHaveLength(2);
+
+      useStore.getState().actions.setSearchQuery('');
+      expect(useStore.getState().searchStatus).toBe('idle');
+      expect(useStore.getState().searchMatches).toEqual([]);
+      expect(useStore.getState().searchActiveIndex).toBe(-1);
+      expect(useStore.getState().searchScanned).toBe(0);
+   });
+
+   it('a superseding query cancels the prior scan, leaving no late writes from it', async () => {
+      const useStore = await seedSearchStore(1);
+      // Kick 'alpha' (would match pages 1 and 3), then immediately supersede with 'delta' (page 4 only).
+      useStore.getState().actions.setSearchQuery('alpha');
+      useStore.getState().actions.setSearchQuery('delta');
+
+      await settleSearch();
+      const { searchMatches, searchStatus, searchScanned } = useStore.getState();
+      expect(searchStatus).toBe('done');
+      expect(searchScanned).toBe(4);
+      expect(searchMatches).toEqual([{ page: 4, start: 0, length: 5 }]); // no alpha hit leaked in
+   });
+
+   it('dispose cancels an in-flight scan, leaving no late match writes', async () => {
+      const useStore = await seedSearchStore(1);
+      useStore.getState().actions.setSearchQuery('alpha');
+      useStore.getState().actions.dispose();
+
+      await settleSearch();
+      expect(useStore.getState().searchStatus).toBe('idle'); // back to initial
+      expect(useStore.getState().searchMatches).toEqual([]);
+   });
+
+   it('closeSearch hides the bar and clears the query, matches, and scan', async () => {
+      const useStore = await seedSearchStore(1);
+      useStore.getState().actions.openSearch();
+      useStore.getState().actions.setSearchQuery('alpha');
+      await settleSearch();
+      expect(useStore.getState().searchOpen).toBe(true);
+
+      useStore.getState().actions.closeSearch();
+      expect(useStore.getState().searchOpen).toBe(false);
+      expect(useStore.getState().searchQuery).toBe('');
+      expect(useStore.getState().searchMatches).toEqual([]);
+      expect(useStore.getState().searchStatus).toBe('idle');
+   });
+
+   it('clearSearch resets the search but leaves the bar open', async () => {
+      const useStore = await seedSearchStore(1);
+      useStore.getState().actions.openSearch();
+      useStore.getState().actions.setSearchQuery('alpha');
+      await settleSearch();
+
+      useStore.getState().actions.clearSearch();
+      expect(useStore.getState().searchOpen).toBe(true); // bar stays
+      expect(useStore.getState().searchQuery).toBe('');
+      expect(useStore.getState().searchMatches).toEqual([]);
+      expect(useStore.getState().searchActiveIndex).toBe(-1);
+      expect(useStore.getState().searchStatus).toBe('idle');
+      expect(useStore.getState().searchScanned).toBe(0);
+   });
+});
+
+describe('pdf store match navigation', () => {
+   it('nextMatch from none seeds the first match at or after the current page, then wraps', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchMatches: matchesAt([1, 3, 5]), currentPage: 3, searchActiveIndex: -1 });
+      const { nextMatch } = useStore.getState().actions;
+
+      nextMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(1); // page 3
+      nextMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(2);
+      nextMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(0); // wraps
+   });
+
+   it('nextMatch from none falls back to the first match when none is at or after the page', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchMatches: matchesAt([1, 3, 5]), currentPage: 9, searchActiveIndex: -1 });
+      useStore.getState().actions.nextMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(0);
+   });
+
+   it('prevMatch from none seeds the last match at or before the current page, then wraps', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchMatches: matchesAt([1, 3, 5]), currentPage: 3, searchActiveIndex: -1 });
+      const { prevMatch } = useStore.getState().actions;
+
+      prevMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(1); // page 3
+      prevMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(0);
+      prevMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(2); // wraps backward
+   });
+
+   it('prevMatch from none falls back to the last match when none is at or before the page', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchMatches: matchesAt([3, 5, 7]), currentPage: 1, searchActiveIndex: -1 });
+      useStore.getState().actions.prevMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(2);
+   });
+
+   it('nextMatch and prevMatch are no-ops with no matches', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchMatches: [], searchActiveIndex: -1 });
+      useStore.getState().actions.nextMatch();
+      useStore.getState().actions.prevMatch();
+      expect(useStore.getState().searchActiveIndex).toBe(-1);
+   });
+
+   it('dispose resets search state back to initial', async () => {
+      const useStore = await seedStore(400);
+      useStore.setState({ searchOpen: true, searchQuery: 'x', searchMatches: matchesAt([1]), searchActiveIndex: 0, searchStatus: 'done', searchScanned: 4 });
+      useStore.getState().actions.dispose();
+      const state = useStore.getState();
+      expect(state.searchOpen).toBe(false);
+      expect(state.searchQuery).toBe('');
+      expect(state.searchMatches).toEqual([]);
+      expect(state.searchActiveIndex).toBe(-1);
+      expect(state.searchStatus).toBe('idle');
+      expect(state.searchScanned).toBe(0);
    });
 });
 

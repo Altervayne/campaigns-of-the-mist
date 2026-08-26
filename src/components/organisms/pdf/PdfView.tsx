@@ -19,6 +19,7 @@ import { PdfNavPanel } from './PdfNavPanel';
 import { PdfMarkupApplyDialog } from './PdfMarkupApplyDialog';
 import { PdfRepairState } from './PdfRepairState';
 import { PdfSelectionActionBar } from './PdfSelectionActionBar';
+import { PdfFindBar } from './PdfFindBar';
 
 // -- Local Imports --
 import { usePdfMarkupApply } from './usePdfMarkupApply';
@@ -40,11 +41,13 @@ import { cn } from '@/lib/utils';
 import { annotationBounds, clampTranslation, filterVisibleAnnotations, groupAnnotationsByPage, isAnnotationVisible, listComments, resizeHandleAtPoint, resizeRect, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
 import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
 import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
+import { getPageTextIndex } from '@/lib/pdf/pdfPageTextIndex';
+import { matchToQuads } from '@/lib/pdf/textLayerGeometry';
 import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
 import type { NoteHostContext } from '@/lib/portals/linkTarget';
-import type { PdfStore, PdfTool } from '@/lib/stores/pdfStore';
+import type { PdfStore, PdfTool, SearchMatch } from '@/lib/stores/pdfStore';
 import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
 import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -65,6 +68,9 @@ const RENDER_SETTLE_MS = 400;
 
 /** Stable empty slice for a page with no annotations, so an unmarked page's prop ref never changes across zooms. */
 const NO_ANNOTATIONS: PdfAnnotation[] = [];
+
+/** Stable empty slice for a page with no search matches, so an unmatched page's prop ref stays put across zooms. */
+const NO_MATCHES: SearchMatch[] = [];
 
 /** The eraser's grab floor in box px; per-ink reach grows past it with the stroke width. */
 const ERASER_HIT_FLOOR = 8;
@@ -129,7 +135,13 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const navPanelOpen = useStore(store, (state) => state.navPanelOpen);
    const navPanelTab = useStore(store, (state) => state.navPanelTab);
    const annotationVisibility = useStore(store, (state) => state.annotationVisibility);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setNavPanelOpen, toggleNavPanel, setNavPanelTab, setAnnotationTypeVisible, setAllAnnotationsVisible } = store.getState().actions;
+   const searchOpen = useStore(store, (state) => state.searchOpen);
+   const searchQuery = useStore(store, (state) => state.searchQuery);
+   const searchMatches = useStore(store, (state) => state.searchMatches);
+   const searchActiveIndex = useStore(store, (state) => state.searchActiveIndex);
+   const searchStatus = useStore(store, (state) => state.searchStatus);
+   const searchScanned = useStore(store, (state) => state.searchScanned);
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setNavPanelOpen, toggleNavPanel, setNavPanelTab, setAnnotationTypeVisible, setAllAnnotationsVisible, openSearch, closeSearch, setSearchQuery, nextMatch, prevMatch } = store.getState().actions;
 
    // The comment card highlighted + scrolled-to in the panel; ephemeral UI, reset on remount (a tab switch).
    const [focusedCommentId, setFocusedCommentId] = useState<string | null>(null);
@@ -473,6 +485,26 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    // Every comment across the document, ordered for the panel; re-refs only when a mark is added or removed.
    const comments = useMemo(() => listComments(annotations), [annotations]);
 
+   // Matches bucketed per page (like byPage), so each page gets only its own slice; unmatched pages fall to the
+   // stable NO_MATCHES ref below, so a wheel-zoom never re-renders 491 pages. Re-refs only as the scan grows.
+   const searchByPage = useMemo(() => {
+      const map = new Map<number, SearchMatch[]>();
+      for (const match of searchMatches) {
+         const bucket = map.get(match.page);
+         if (bucket) bucket.push(match);
+         else map.set(match.page, [match]);
+      }
+      return map;
+   }, [searchMatches]);
+
+   // The active match object (shared by reference with its per-page slice), or null when none is active.
+   const activeMatch = searchActiveIndex >= 0 ? searchMatches[searchActiveIndex] ?? null : null;
+
+   const toggleSearch = useCallback(() => {
+      if (store.getState().searchOpen) closeSearch();
+      else openSearch();
+   }, [store, closeSearch, openSearch]);
+
    // The selected mark's own ink, or null when nothing is selected; drives the toolbar's recolor swatch.
    const selectedColor = selectedId ? annotations?.[selectedId]?.color ?? null : null;
 
@@ -518,6 +550,30 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          setPage(clamped);
       },
       [pageCount, scrollToPage, setPage],
+   );
+
+   // Scrolls a match into the upper third of the viewport: land its page top first, then resolve the match's
+   // first-quad Y (cached index, so fast) and offset into the box. The box always reserves height, so the math
+   // is valid the moment the page mounts.
+   const scrollToMatch = useCallback(
+      async (match: SearchMatch) => {
+         scrollToPage(match.page);
+         setPage(match.page);
+         const scroller = scrollRef.current;
+         if (!scroller) return;
+         try {
+            const index = await getPageTextIndex(proxy, match.page);
+            const first = matchToQuads(index, match.start, match.length)[0];
+            if (!first) return;
+            const box = scroller.querySelector<HTMLElement>(`[data-page="${match.page}"]`);
+            if (!box) return;
+            const boxHeight = box.getBoundingClientRect().height;
+            scroller.scrollTop += first.y * boxHeight - scroller.clientHeight * 0.3;
+         } catch {
+            // No text index for the page: the page-top scroll already landed.
+         }
+      },
+      [proxy, scrollToPage, setPage],
    );
 
    // The content point at the viewport center, as a fraction of the scroll extent - tracked live so a zoom holds
@@ -606,6 +662,29 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       return () => document.removeEventListener('keydown', onKeyDown);
    }, [zoomIn, zoomOut, resetZoom, store]);
 
+   // Scroll the active match into view whenever it changes. Reads the match off the store (not the deps) so a
+   // scan growing the match list mid-search never re-triggers a scroll - only a cursor move does.
+   useEffect(() => {
+      if (searchActiveIndex < 0) return;
+      const match = store.getState().searchMatches[searchActiveIndex];
+      if (match) void scrollToMatch(match);
+   }, [searchActiveIndex, scrollToMatch, store]);
+
+   // Ctrl/Cmd + F opens the find bar (capture phase, so it beats the browser's own find). Mounted only while a
+   // pdf tab is - this surface only mounts then. Left alone when focus is inside a dialog over the reader, so a
+   // dialog's own find isn't stolen. Separate from the reader keys above, which bail on any modifier.
+   useEffect(() => {
+      const onKeyDown = (event: KeyboardEvent) => {
+         if (event.key !== 'f' || event.altKey || !(event.ctrlKey || event.metaKey)) return;
+         const active = document.activeElement;
+         if (active && active.closest('[role="dialog"]')) return;
+         event.preventDefault();
+         store.getState().actions.openSearch();
+      };
+      document.addEventListener('keydown', onKeyDown, true);
+      return () => document.removeEventListener('keydown', onKeyDown, true);
+   }, [store]);
+
    return (
       <PdfMarkupContext.Provider value={markup}>
          <div className="absolute inset-0 bg-muted/40">
@@ -649,6 +728,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                               defaultAspect={defaultAspect}
                               isVisible={visible.has(pageNumber)}
                               annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
+                              searchMatches={searchByPage.get(pageNumber) ?? NO_MATCHES}
+                              activeSearchMatch={activeMatch?.page === pageNumber ? activeMatch : null}
                               registerPage={registerPage}
                            />
                         ))}
@@ -677,6 +758,23 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   </div>
                </div>
             </div>
+            {/* Floating find bar over the top-center of the visible pages; mounted only while search is open. */}
+            {searchOpen ? (
+               <PdfFindBar
+                  navPanelOpen={navPanelOpen}
+                  commentsPanelOpen={commentsPanelOpen}
+                  query={searchQuery}
+                  status={searchStatus}
+                  scanned={searchScanned}
+                  pageCount={pageCount}
+                  matchCount={searchMatches.length}
+                  activeIndex={searchActiveIndex}
+                  onQueryChange={setSearchQuery}
+                  onNext={nextMatch}
+                  onPrev={prevMatch}
+                  onClose={closeSearch}
+               />
+            ) : null}
             {/* Floating toolbars: when a side panel is open, shrink this positioned wrapper from that edge by the
                 panel width (right for comments, left for nav) so the centered pills stay over the VISIBLE pages. It
                 must be `left`/`right` (the wrapper's own edges), not padding - an absolute child's containing block
@@ -704,6 +802,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   zoom={zoom}
                   navPanelOpen={navPanelOpen}
                   onToggleNav={toggleNavPanel}
+                  searchOpen={searchOpen}
+                  onToggleSearch={toggleSearch}
                   markupMode={markupMode}
                   onToggleMarkup={toggleMarkup}
                   commentsPanelOpen={commentsPanelOpen}

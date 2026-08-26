@@ -4,12 +4,14 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 // -- Component Imports --
 import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { PdfAnnotationLayer } from './PdfAnnotationLayer';
+import { PdfSearchLayer } from './PdfSearchLayer';
 import { PdfTextLayer } from './PdfTextLayer';
 import { PdfPageInteractionLayer } from './PdfPageInteractionLayer';
 import { PdfCommentLayer } from './PdfCommentLayer';
 import { PdfSelectionLayer } from './PdfSelectionLayer';
 
 // -- Type Imports --
+import type { SearchMatch } from '@/lib/stores/pdfStore';
 import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 
@@ -39,13 +41,17 @@ interface PdfPageCanvasProps {
    isVisible: boolean;
    /** This page's annotations, painted over the canvas. */
    annotations: PdfAnnotation[];
+   /** This page's search matches, painted between the annotations and the text layer. */
+   searchMatches: SearchMatch[];
+   /** The active search match when it lands on this page, else null; painted stronger. */
+   activeSearchMatch: SearchMatch | null;
    /** Registers the page box with the viewport observers. */
    registerPage: (pageNumber: number, el: HTMLElement | null) => void;
 }
 
 // Memoized: during a wheel-zoom only the column's CSS zoom changes, so with the render width held steady these
 // props don't, and 491 pages skip re-rendering entirely.
-export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, annotations, registerPage }: PdfPageCanvasProps) {
+export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, annotations, searchMatches, activeSearchMatch, registerPage }: PdfPageCanvasProps) {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [aspect, setAspect] = useState(defaultAspect);
    const [rendering, setRendering] = useState(false);
@@ -124,6 +130,8 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
              re-render runs; the backing pixels are set imperatively once that render blits in. */}
          {isVisible ? <canvas ref={canvasRef} className="block" style={{ width, height: Math.round(width * aspect) }} /> : null}
          {isVisible && annotations.length > 0 ? <PdfAnnotationLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
+         {/* Search-match tint above the annotation marks, below the text layer (so matched text stays selectable). */}
+         {isVisible && searchMatches.length > 0 ? <PdfSearchLayer proxy={proxy} pageNumber={pageNumber} width={width} height={Math.round(width * aspect)} matches={searchMatches} activeMatch={activeSearchMatch} /> : null}
          {/* Selectable text over the page; selectable in read mode, inert in markup mode (the capture layer owns the drag). */}
          {isVisible ? <PdfTextLayer proxy={proxy} pageNumber={pageNumber} width={width} isVisible={isVisible} /> : null}
          {/* Markup capture sits above the marks; context-driven, so it needs no props and returns null in read mode. */}

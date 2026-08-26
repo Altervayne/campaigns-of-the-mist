@@ -6,6 +6,8 @@ import { getPdf, savePdfLastPage, savePdfToLinkedDrawerItem } from '@/lib/pdf/pd
 import { recordToPdfDocument } from '@/lib/pdf/pdfRecords';
 import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
+import { getPageTextIndex } from '@/lib/pdf/pdfPageTextIndex';
+import { findMatches, foldText } from '@/lib/pdf/textLayerGeometry';
 
 // -- Store Imports --
 import { useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
@@ -70,6 +72,36 @@ export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment' | 'select';
 
 /** The active tab of the left navigation panel. */
 export type PdfNavTab = 'outline' | 'thumbnails';
+
+/** One in-document search hit: the 1-based `page` and the match's folded-text span. */
+export interface SearchMatch {
+   page: number;
+   start: number;
+   length: number;
+}
+
+/** The scan lifecycle: idle before a query, scanning while pages are read, done when the sweep completes. */
+export type PdfSearchStatus = 'idle' | 'scanning' | 'done';
+
+/** Scan order: the current page first (so nearby hits surface fast), then every other page ascending. */
+function searchScanOrder(currentPage: number, pageCount: number): number[] {
+   const first = Math.min(Math.max(currentPage, 1), pageCount);
+   const order = [first];
+   for (let page = 1; page <= pageCount; page += 1) {
+      if (page !== first) order.push(page);
+   }
+   return order;
+}
+
+/** Flattens per-page match buckets into one page-ascending list (matches within a page stay left-to-right). */
+function flattenMatchesByPage(byPage: Map<number, SearchMatch[]>): SearchMatch[] {
+   const out: SearchMatch[] = [];
+   for (const page of [...byPage.keys()].sort((a, b) => a - b)) out.push(...byPage.get(page)!);
+   return out;
+}
+
+/** How many pages a scan reads before yielding a macrotask, so a long book never blocks a paint. */
+const SEARCH_YIELD_EVERY = 16;
 
 /** The pen's default ink: a legible rose on white paper. */
 const DEFAULT_PEN_COLOR = '#e11d48';
@@ -138,6 +170,18 @@ export interface PdfState {
    undoStack: Array<Record<string, PdfAnnotation>>;
    /** Redo history: annotation maps popped by {@link PdfState.actions.undo}. Cleared by any fresh mutation. Ephemeral. */
    redoStack: Array<Record<string, PdfAnnotation>>;
+   /** The find bar's visibility; ephemeral, defaults closed. Search state is pure view state, never persisted. */
+   searchOpen: boolean;
+   /** The current query text; ephemeral. Folded before matching so it is script- and spacing-stable. */
+   searchQuery: string;
+   /** All matches, page-ascending then left-to-right; ephemeral. Grown incrementally as the scan sweeps pages. */
+   searchMatches: SearchMatch[];
+   /** The active match's index into {@link searchMatches}, or -1 when none is active; ephemeral. */
+   searchActiveIndex: number;
+   /** The scan lifecycle; ephemeral. */
+   searchStatus: PdfSearchStatus;
+   /** How many pages the current scan has read, for a "scanning N" indicator; ephemeral. */
+   searchScanned: number;
    status: PdfStatus;
    actions: {
       /**
@@ -217,12 +261,28 @@ export interface PdfState {
        * before reaping the row, so the last stroke lands and no stale timer can fire late. Awaitable.
        */
       flush: () => Promise<void>;
+      /** Opens the find bar. Ephemeral view state. */
+      openSearch: () => void;
+      /** Closes the find bar and clears the query, matches, and any in-flight scan. Ephemeral. */
+      closeSearch: () => void;
+      /**
+       * Sets the query and (re)starts the scan: cancels any in-flight scan, then - if the folded query is
+       * non-empty - sweeps pages current-first, publishing page-ordered matches incrementally. An empty
+       * folded query just clears the matches. Debounce belongs to the caller; this starts immediately.
+       */
+      setSearchQuery: (query: string) => void;
+      /** Advances the active match with wrap; from none, seeds the first match at/after the current page. No-op with no matches. */
+      nextMatch: () => void;
+      /** Retreats the active match with wrap; from none, seeds the last match at/before the current page. No-op with no matches. */
+      prevMatch: () => void;
+      /** Clears the query, matches, and scan (leaving the find bar open). Ephemeral. */
+      clearSearch: () => void;
       /** Tears down the pdf.js document and resets to the initial state. Idempotent. */
       dispose: () => void;
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'navPanelOpen' | 'navPanelTab' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'navPanelOpen' | 'navPanelTab' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'searchOpen' | 'searchQuery' | 'searchMatches' | 'searchActiveIndex' | 'searchStatus' | 'searchScanned' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -243,6 +303,12 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    annotationVisibility: { ink: true, highlight: true, comment: true },
    undoStack: [],
    redoStack: [],
+   searchOpen: false,
+   searchQuery: '',
+   searchMatches: [],
+   searchActiveIndex: -1,
+   searchStatus: 'idle',
+   searchScanned: 0,
    status: 'idle',
 };
 
@@ -273,6 +339,42 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
       // reference even when the starting map is `undefined`. Closure state, not reactive (like `debouncedSave`).
       let pendingSnapshot: Record<string, PdfAnnotation> | null = null;
       let pendingBaseline: Record<string, PdfAnnotation> | undefined;
+
+      // Cancel token for the in-flight search scan. Bumped whenever a scan should abort (new query, close,
+      // clear, dispose); a running scan compares its captured id against this and bails once superseded.
+      // Closure state, not reactive (like `pendingSnapshot`).
+      let searchRunId = 0;
+
+      /**
+       * The cancelable incremental scan: sweeps pages current-first, buckets matches by page, and publishes
+       * a page-ordered list + a scanned count after each page. Bails the moment its run is superseded, so no
+       * late write from an aborted query can land. Yields a macrotask periodically so a long book never
+       * blocks a paint.
+       */
+      const runSearch = async (query: string, runId: number) => {
+         const { proxy, doc, currentPage } = get();
+         if (!proxy || !doc) return;
+         const foldedQuery = foldText(query);
+         const byPage = new Map<number, SearchMatch[]>();
+         let scanned = 0;
+         for (const page of searchScanOrder(currentPage, doc.pageCount)) {
+            if (runId !== searchRunId) return;
+            try {
+               const index = await getPageTextIndex(proxy, page);
+               if (runId !== searchRunId) return;
+               const hits = findMatches(index.folded, foldedQuery);
+               if (hits.length > 0) byPage.set(page, hits.map((hit) => ({ page, start: hit.start, length: hit.length })));
+            } catch {
+               // A page that fails to parse is counted and skipped; the index cache evicts it for a later retry.
+               if (runId !== searchRunId) return;
+            }
+            scanned += 1;
+            set({ searchMatches: flattenMatchesByPage(byPage), searchScanned: scanned });
+            if (scanned % SEARCH_YIELD_EVERY === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+         }
+         if (runId !== searchRunId) return;
+         set({ searchStatus: 'done' });
+      };
 
       return {
          ...initialState,
@@ -461,10 +563,63 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                }
             },
 
+            openSearch: () => set({ searchOpen: true }),
+
+            closeSearch: () => {
+               searchRunId += 1;
+               set({ searchOpen: false, searchQuery: '', searchMatches: [], searchActiveIndex: -1, searchStatus: 'idle', searchScanned: 0 });
+            },
+
+            setSearchQuery: (query) => {
+               // Supersede any in-flight scan before this one starts, so its late writes are ignored.
+               searchRunId += 1;
+               const runId = searchRunId;
+               if (foldText(query).length === 0) {
+                  set({ searchQuery: query, searchMatches: [], searchActiveIndex: -1, searchStatus: 'idle', searchScanned: 0 });
+                  return;
+               }
+               set({ searchQuery: query, searchMatches: [], searchActiveIndex: -1, searchStatus: 'scanning', searchScanned: 0 });
+               void runSearch(query, runId);
+            },
+
+            nextMatch: () => {
+               const { searchMatches, searchActiveIndex, currentPage } = get();
+               if (searchMatches.length === 0) return;
+               if (searchActiveIndex === -1) {
+                  const seeded = searchMatches.findIndex((match) => match.page >= currentPage);
+                  set({ searchActiveIndex: seeded === -1 ? 0 : seeded });
+                  return;
+               }
+               set({ searchActiveIndex: (searchActiveIndex + 1) % searchMatches.length });
+            },
+
+            prevMatch: () => {
+               const { searchMatches, searchActiveIndex, currentPage } = get();
+               if (searchMatches.length === 0) return;
+               if (searchActiveIndex === -1) {
+                  let seeded = -1;
+                  for (let i = searchMatches.length - 1; i >= 0; i -= 1) {
+                     if (searchMatches[i].page <= currentPage) {
+                        seeded = i;
+                        break;
+                     }
+                  }
+                  set({ searchActiveIndex: seeded === -1 ? searchMatches.length - 1 : seeded });
+                  return;
+               }
+               set({ searchActiveIndex: (searchActiveIndex - 1 + searchMatches.length) % searchMatches.length });
+            },
+
+            clearSearch: () => {
+               searchRunId += 1;
+               set({ searchQuery: '', searchMatches: [], searchActiveIndex: -1, searchStatus: 'idle', searchScanned: 0 });
+            },
+
             dispose: () => {
                const { loadingTask } = get();
                if (loadingTask) void loadingTask.destroy();
                pendingSnapshot = null;
+               searchRunId += 1;
                set({ ...initialState });
             },
          },

@@ -52,6 +52,16 @@
       },
       "selection": {
          "copy": "Copy"
+      },
+      "search": {
+         "toggle": "Search",
+         "placeholder": "Search this PDF",
+         "close": "Close search",
+         "prev": "Previous match",
+         "next": "Next match",
+         "count": "{{current}} / {{total}}",
+         "scanning": "Searching… {{scanned}} / {{total}}",
+         "noResults": "No results"
       }
    },
    "PdfMarkup": {
@@ -1661,6 +1671,7 @@
          "pdfToggleMarkup": "Toggle: Markup Mode",
          "pdfToggleComments": "Toggle: Comments Panel",
          "pdfToggleNav": "Toggle: PDF Navigation",
+         "pdfFind": "Search: This PDF",
          "pdfApplyMarkup": "Apply: PDF Markup",
          "pdfExportMarkup": "Export: PDF Annotations",
          "closeTab": "Close: Current Tab",

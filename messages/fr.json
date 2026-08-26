@@ -52,6 +52,16 @@
       },
       "selection": {
          "copy": "[TO COMPLETE]"
+      },
+      "search": {
+         "toggle": "[TO COMPLETE]",
+         "placeholder": "[TO COMPLETE]",
+         "close": "[TO COMPLETE]",
+         "prev": "[TO COMPLETE]",
+         "next": "[TO COMPLETE]",
+         "count": "[TO COMPLETE]",
+         "scanning": "[TO COMPLETE]",
+         "noResults": "[TO COMPLETE]"
       }
    },
    "PdfMarkup": {
@@ -1661,6 +1671,7 @@
          "pdfToggleMarkup": "[TO COMPLETE]",
          "pdfToggleComments": "[TO COMPLETE]",
          "pdfToggleNav": "[TO COMPLETE]",
+         "pdfFind": "[TO COMPLETE]",
          "pdfApplyMarkup": "[TO COMPLETE]",
          "pdfExportMarkup": "[TO COMPLETE]",
          "closeTab": "Fermer : Onglet Actuel",
