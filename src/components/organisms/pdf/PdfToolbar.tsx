@@ -3,7 +3,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ChevronLeft, ChevronRight, MessagesSquare, Minus, MoveHorizontal, Pencil, Plus, Scan } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessagesSquare, Minus, MoveHorizontal, PanelLeft, Pencil, Plus, Scan } from 'lucide-react';
 
 // -- Component Imports --
 import { PdfVisibilityMenu } from './PdfVisibilityMenu';
@@ -25,6 +25,8 @@ interface PdfToolbarProps {
    current: number;
    total: number;
    zoom: number;
+   navPanelOpen: boolean;
+   onToggleNav: () => void;
    markupMode: PdfMarkupMode;
    onToggleMarkup: () => void;
    commentsPanelOpen: boolean;
@@ -43,13 +45,29 @@ interface PdfToolbarProps {
    onFitPage: () => void;
 }
 
-export function PdfToolbar({ current, total, zoom, markupMode, onToggleMarkup, commentsPanelOpen, onToggleComments, annotationVisibility, onSetTypeVisible, onSetAllVisible, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
+export function PdfToolbar({ current, total, zoom, navPanelOpen, onToggleNav, markupMode, onToggleMarkup, commentsPanelOpen, onToggleComments, annotationVisibility, onSetTypeVisible, onSetAllVisible, onPrev, onNext, onJump, onZoomIn, onZoomOut, onResetZoom, onFitWidth, onFitPage }: PdfToolbarProps) {
    const { t } = useTranslation();
 
    return (
       <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
          <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-card/95 px-1.5 py-1 text-card-foreground shadow-md backdrop-blur-sm">
-            {/* Markup toggle: leads the bar; the nav/zoom groups never move. */}
+            {/* Nav-panel toggle leads the bar, then the markup toggle; the page/zoom groups never move. */}
+            <button
+               type="button"
+               title={t('PdfView.nav.toggle')}
+               aria-label={t('PdfView.nav.toggle')}
+               aria-pressed={navPanelOpen}
+               onClick={onToggleNav}
+               className={cn(
+                  'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded text-card-foreground hover:bg-muted',
+                  navPanelOpen && 'bg-muted text-primary',
+               )}
+            >
+               <PanelLeft className="h-4 w-4" />
+            </button>
+
+            <Divider />
+
             <button
                type="button"
                title={markupMode === 'markup' ? t('PdfMarkup.read') : t('PdfMarkup.markup')}

@@ -15,6 +15,7 @@ import { PdfPageCanvas } from './PdfPageCanvas';
 import { PdfToolbar } from './PdfToolbar';
 import { PdfMarkupToolbar } from './PdfMarkupToolbar';
 import { PdfCommentsPanel } from './PdfCommentsPanel';
+import { PdfNavPanel } from './PdfNavPanel';
 import { PdfMarkupApplyDialog } from './PdfMarkupApplyDialog';
 import { PdfRepairState } from './PdfRepairState';
 
@@ -123,8 +124,10 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const highlightColor = useStore(store, (state) => state.highlightColor);
    const commentColor = useStore(store, (state) => state.commentColor);
    const commentsPanelOpen = useStore(store, (state) => state.commentsPanelOpen);
+   const navPanelOpen = useStore(store, (state) => state.navPanelOpen);
+   const navPanelTab = useStore(store, (state) => state.navPanelTab);
    const annotationVisibility = useStore(store, (state) => state.annotationVisibility);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setAnnotationTypeVisible, setAllAnnotationsVisible } = store.getState().actions;
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setNavPanelOpen, toggleNavPanel, setNavPanelTab, setAnnotationTypeVisible, setAllAnnotationsVisible } = store.getState().actions;
 
    // The comment card highlighted + scrolled-to in the panel; ephemeral UI, reset on remount (a tab switch).
    const [focusedCommentId, setFocusedCommentId] = useState<string | null>(null);
@@ -604,6 +607,26 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
             {/* Scroller + panel share a flex row so the panel PUSHES the pages (the scroller shrinks and the
                 probe inside it re-measures, re-fitting the pages) rather than covering them. */}
             <div className="flex h-full">
+               {/* The nav panel mirrors the comments panel but on the LEFT: its width animates 0 <-> w-80 so it
+                   slides the pages over rather than snapping; its content is pinned left and clipped. `inert`
+                   while closed keeps the still-mounted panel out of tab order. */}
+               <div
+                  className={cn('relative h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out', navPanelOpen ? 'w-80' : 'w-0')}
+                  inert={!navPanelOpen}
+               >
+                  <div className="absolute inset-y-0 left-0 w-80">
+                     <PdfNavPanel
+                        proxy={proxy}
+                        pageCount={pageCount}
+                        currentPage={currentPage}
+                        defaultAspect={defaultAspect}
+                        tab={navPanelTab}
+                        onTabChange={setNavPanelTab}
+                        onJump={jumpToPage}
+                        onClose={() => setNavPanelOpen(false)}
+                     />
+                  </div>
+               </div>
                <div ref={scrollRef} className="min-w-0 flex-1 overflow-auto overscroll-contain bg-background px-4 py-6">
                   {/* Zero-height full-width probe: measures the scroller's content width independent of the page
                       column, which can grow wider than the container when zoomed. */}
@@ -649,10 +672,11 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   </div>
                </div>
             </div>
-            {/* Floating toolbars: when the panel is open, shrink this positioned wrapper from the right by the panel
-                width so the centered pills stay over the VISIBLE pages. It must be `right` (the wrapper's width), not
-                padding - an absolute child's containing block is the padding box, so padding wouldn't move it. */}
-            <div className={cn('pointer-events-none absolute bottom-0 left-0 top-0 transition-[right] duration-200 ease-out', commentsPanelOpen ? 'right-88' : 'right-0')}>
+            {/* Floating toolbars: when a side panel is open, shrink this positioned wrapper from that edge by the
+                panel width (right for comments, left for nav) so the centered pills stay over the VISIBLE pages. It
+                must be `left`/`right` (the wrapper's own edges), not padding - an absolute child's containing block
+                is the padding box, so padding wouldn't move it. */}
+            <div className={cn('pointer-events-none absolute bottom-0 top-0 transition-[left,right] duration-200 ease-out', navPanelOpen ? 'left-80' : 'left-0', commentsPanelOpen ? 'right-88' : 'right-0')}>
                {markupMode === 'markup' ? (
                   <PdfMarkupToolbar
                      tool={tool}
@@ -673,6 +697,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                   current={currentPage}
                   total={pageCount}
                   zoom={zoom}
+                  navPanelOpen={navPanelOpen}
+                  onToggleNav={toggleNavPanel}
                   markupMode={markupMode}
                   onToggleMarkup={toggleMarkup}
                   commentsPanelOpen={commentsPanelOpen}

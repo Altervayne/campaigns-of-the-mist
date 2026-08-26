@@ -40,7 +40,16 @@
       "zoomReset": "[TO COMPLETE]",
       "zoomPercent": "[TO COMPLETE]",
       "fitWidth": "[TO COMPLETE]",
-      "fitPage": "[TO COMPLETE]"
+      "fitPage": "[TO COMPLETE]",
+      "nav": {
+         "title": "[TO COMPLETE]",
+         "outline": "[TO COMPLETE]",
+         "thumbnails": "[TO COMPLETE]",
+         "outlineEmpty": "[TO COMPLETE]",
+         "toggle": "[TO COMPLETE]",
+         "close": "[TO COMPLETE]",
+         "pageLabel": "[TO COMPLETE]"
+      }
    },
    "PdfMarkup": {
       "markup": "[TO COMPLETE]",
@@ -1647,6 +1656,7 @@
          "insertLink": "Insérer un lien...",
          "pdfToggleMarkup": "[TO COMPLETE]",
          "pdfToggleComments": "[TO COMPLETE]",
+         "pdfToggleNav": "[TO COMPLETE]",
          "pdfApplyMarkup": "[TO COMPLETE]",
          "pdfExportMarkup": "[TO COMPLETE]",
          "closeTab": "Fermer : Onglet Actuel",

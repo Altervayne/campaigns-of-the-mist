@@ -68,6 +68,9 @@ export type PdfMarkupMode = 'read' | 'markup';
 /** The armed markup tool while in markup mode. */
 export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment' | 'select';
 
+/** The active tab of the left navigation panel. */
+export type PdfNavTab = 'outline' | 'thumbnails';
+
 /** The pen's default ink: a legible rose on white paper. */
 const DEFAULT_PEN_COLOR = '#e11d48';
 
@@ -118,6 +121,10 @@ export interface PdfState {
    commentColor: string;
    /** The comments-list panel visibility; ephemeral, defaults closed. The toolbar and palette both toggle it. */
    commentsPanelOpen: boolean;
+   /** The left navigation panel (outline + thumbnails) visibility; ephemeral, defaults closed. Toolbar and palette toggle it. */
+   navPanelOpen: boolean;
+   /** The active navigation-panel tab; ephemeral, defaults to the outline. */
+   navPanelTab: PdfNavTab;
    /**
     * Per-kind annotation visibility; ephemeral, defaults all-visible. A hidden kind is neither painted nor
     * hit-tested (you can't touch what you can't see) - view-only, the marks themselves stay on the document.
@@ -166,6 +173,12 @@ export interface PdfState {
       setCommentsPanelOpen: (open: boolean) => void;
       /** Flips the comments-list panel visibility. Ephemeral. */
       toggleCommentsPanel: () => void;
+      /** Sets the navigation-panel visibility. Ephemeral. */
+      setNavPanelOpen: (open: boolean) => void;
+      /** Flips the navigation-panel visibility. Ephemeral. */
+      toggleNavPanel: () => void;
+      /** Selects the active navigation-panel tab. Ephemeral. */
+      setNavPanelTab: (tab: PdfNavTab) => void;
       /** Shows or hides one annotation kind in the reader. Ephemeral view state, never persisted. */
       setAnnotationTypeVisible: (kind: PdfAnnotationKind, visible: boolean) => void;
       /** Shows or hides all three annotation kinds at once. Ephemeral. */
@@ -209,7 +222,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'navPanelOpen' | 'navPanelTab' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -225,6 +238,8 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
    commentColor: DEFAULT_COMMENT_COLOR,
    commentsPanelOpen: false,
+   navPanelOpen: false,
+   navPanelTab: 'outline',
    annotationVisibility: { ink: true, highlight: true, comment: true },
    undoStack: [],
    redoStack: [],
@@ -337,6 +352,12 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setCommentsPanelOpen: (open) => set({ commentsPanelOpen: open }),
 
             toggleCommentsPanel: () => set((state) => ({ commentsPanelOpen: !state.commentsPanelOpen })),
+
+            setNavPanelOpen: (open) => set({ navPanelOpen: open }),
+
+            toggleNavPanel: () => set((state) => ({ navPanelOpen: !state.navPanelOpen })),
+
+            setNavPanelTab: (tab) => set({ navPanelTab: tab }),
 
             setAnnotationTypeVisible: (kind, visible) =>
                set((state) => ({ annotationVisibility: { ...state.annotationVisibility, [kind]: visible } })),

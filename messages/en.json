@@ -40,7 +40,16 @@
       "zoomReset": "Reset zoom",
       "zoomPercent": "{{percent}}%",
       "fitWidth": "Fit width",
-      "fitPage": "Fit page"
+      "fitPage": "Fit page",
+      "nav": {
+         "title": "PDF Navigation",
+         "outline": "Outline",
+         "thumbnails": "Thumbnails",
+         "outlineEmpty": "This PDF has no outline.",
+         "toggle": "PDF Navigation",
+         "close": "Close navigation",
+         "pageLabel": "Page {{page}}"
+      }
    },
    "PdfMarkup": {
       "markup": "Mark up",
@@ -1647,6 +1656,7 @@
          "insertLink": "Insert: Link...",
          "pdfToggleMarkup": "Toggle: Markup Mode",
          "pdfToggleComments": "Toggle: Comments Panel",
+         "pdfToggleNav": "Toggle: PDF Navigation",
          "pdfApplyMarkup": "Apply: PDF Markup",
          "pdfExportMarkup": "Export: PDF Annotations",
          "closeTab": "Close: Current Tab",
