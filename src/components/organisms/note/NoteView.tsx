@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { useStore } from 'zustand';
+import toast from 'react-hot-toast';
 
 // -- Custom Hooks --
 import { useInputDebouncer } from '@/hooks/useInputDebouncer';
@@ -26,6 +27,11 @@ import { NoteEditor } from '@/components/organisms/note/NoteEditor';
 import { NoteToolbar } from '@/components/organisms/note/NoteToolbar';
 import { NoteTableContextMenu } from '@/components/organisms/note/NoteTableContextMenu';
 import { NoteOutline } from '@/components/organisms/note/NoteOutline';
+import { NoteRePointDialog } from '@/components/organisms/note/NoteRePointDialog';
+
+// -- Portals Imports --
+import { countNoteBodyLinks, rePointableTargetId } from '@/lib/portals/rePoint';
+import { rePointNoteLinks } from '@/lib/portals/rePointOps';
 
 // -- Cover Sizing --
 import { COVER_DEFAULT_WIDTH_PCT, clampCoverWidth, clampCoverAspect } from '@/components/molecules/note/noteCoverClasses';
@@ -45,7 +51,8 @@ import type { TableController } from '@/components/organisms/note/live/tableWidg
 import type { NoteMode } from '@/components/organisms/note/NoteToolbar';
 import type { NoteTableContextMenuHandle } from '@/components/organisms/note/NoteTableContextMenu';
 import type { NoteCover } from '@/lib/types/board';
-import type { NoteHostContext } from '@/lib/portals/linkTarget';
+import type { NoteHostContext, LinkTarget } from '@/lib/portals/linkTarget';
+import type { LinkInsertTarget } from '@/lib/portals/buildLinkToken';
 
 /*
  * The Note tab surface: the document editor on the paper sheet. It reads the ACTIVE NOTE instance (never the
@@ -196,6 +203,26 @@ function NoteSurface() {
       if (heading) jumpToHeading(heading);
    }, [jumpToHeading]);
    const onLinkActivate = useNoteLinkActivation(host, scrollToSection);
+
+   // Broken-link re-point: a dead chip's popover opens the picker with the gone target's `oldId` + how many of
+   // this note's links point at it. The pick runs the buffer-safe op, which syncs the open note so the chips go
+   // live. Reads the current note off the store so the handlers stay stable across body edits.
+   const [rePointing, setRePointing] = useState<{ oldId: string; count: number } | null>(null);
+   const onRePoint = useCallback((target: LinkTarget) => {
+      const oldId = rePointableTargetId(target);
+      const current = store.getState().note;
+      if (!oldId || !current) return;
+      setRePointing({ oldId, count: countNoteBodyLinks(current.body, oldId) });
+   }, [store]);
+   const applyRePoint = useCallback(async (newTarget: LinkInsertTarget) => {
+      if (!rePointing) return;
+      const { oldId, count } = rePointing;
+      const current = store.getState().note;
+      if (!current) { setRePointing(null); return; }
+      await rePointNoteLinks(current.id, oldId, newTarget);
+      toast.success(t('NoteView.linkRepair.toastDone', { count }));
+      setRePointing(null);
+   }, [rePointing, store, t]);
 
    // The insert-link picker (owned here so the toolbar button AND the palette open the SAME popover). The
    // palette opener flips to Live first (you can't insert into read-only Reading), then opens it. A non-null
@@ -407,7 +434,7 @@ function NoteSurface() {
                         placeholder={t('NoteView.bodyPlaceholder')}
                      />
                   ) : note.title.trim() || note.body.trim() || cover ? (
-                     <NoteDocument title={note.title} body={note.body} cover={cover} onLinkActivate={onLinkActivate} />
+                     <NoteDocument title={note.title} body={note.body} cover={cover} onLinkActivate={onLinkActivate} onRePoint={onRePoint} />
                   ) : (
                      <p className="text-base text-paper-foreground/50">
                         {t('NoteView.emptyPreview')}
@@ -420,6 +447,12 @@ function NoteSurface() {
                </div>
             </div>
          </div>
+
+         {/* Broken-link re-point picker: opened from a dead chip's popover in Reading; the pick rewrites this
+             note's links to the gone target through the buffer-safe op. */}
+         {rePointing && (
+            <NoteRePointDialog count={rePointing.count} onPick={applyRePoint} onClose={() => setRePointing(null)} />
+         )}
       </main>
    );
 }

@@ -128,6 +128,15 @@
          "remove": "Supprimer le lien"
       },
       "linkDead": "Cible introuvable",
+      "linkRepair": {
+         "brokenTitle": "[TO COMPLETE]",
+         "brokenBody": "[TO COMPLETE]",
+         "rePoint": "[TO COMPLETE]",
+         "pickerHeader_one": "[TO COMPLETE]",
+         "pickerHeader_other": "[TO COMPLETE]",
+         "toastDone_one": "[TO COMPLETE]",
+         "toastDone_other": "[TO COMPLETE]"
+      },
       "toolbar": {
          "insertTable": "Insérer un tableau",
          "tableSize": "Choisissez une taille de tableau",

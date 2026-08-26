@@ -23,6 +23,7 @@ import { NoteCover } from './note/NoteCover';
 // -- Type Imports --
 import type { Components } from 'react-markdown';
 import type { MentionSegment } from '@/lib/challenge/parseMentions';
+import type { LinkTarget } from '@/lib/portals/linkTarget';
 import type { NoteCover as NoteCoverData } from '@/lib/types/board';
 
 /*
@@ -65,6 +66,8 @@ interface NoteDocumentProps {
    onMentionClick?: (segment: MentionSegment) => void;
    /** Resolves an internal link (`#section` / `cotm://...`) on click; omit for a display-only render (chips stay inert). */
    onLinkActivate?: (href: string) => void;
+   /** Opens the re-point flow for a dead, re-pointable link chip; omit (board/mobile) to keep the plain dead-chip behavior. */
+   onRePoint?: (target: LinkTarget) => void;
    /**
     * Board-tile variant: sizes the title + cover with the CONTAINER (the tile), not the viewport, so a note
     * reads cleanly at ~260px and scales up on resize. Opt-in only - the full-page Reading render omits it and
@@ -74,7 +77,7 @@ interface NoteDocumentProps {
    className?: string;
 }
 
-export function NoteDocument({ title, body, cover, onMentionClick, onLinkActivate, compact, className }: NoteDocumentProps) {
+export function NoteDocument({ title, body, cover, onMentionClick, onLinkActivate, onRePoint, compact, className }: NoteDocumentProps) {
    const { t } = useTranslation();
    const heading = title?.trim();
    // Display-only: break a table off a text line one `\n` below it (GFM would else absorb the text as a cell).
@@ -83,8 +86,8 @@ export function NoteDocument({ title, body, cover, onMentionClick, onLinkActivat
    // chip resolves against the same headings the outline does).
    const headings = useMemo(() => extractHeadings(renderedBody), [renderedBody]);
    const components = useMemo(
-      () => ({ ...docMarkdownComponents, ...noteImageComponent, ...linkComponents(onLinkActivate, headings, t('NoteView.linkDead')), ...mentionComponents(onMentionClick) }),
-      [onLinkActivate, onMentionClick, headings, t],
+      () => ({ ...docMarkdownComponents, ...noteImageComponent, ...linkComponents(onLinkActivate, headings, t('NoteView.linkDead'), onRePoint), ...mentionComponents(onMentionClick) }),
+      [onLinkActivate, onRePoint, onMentionClick, headings, t],
    );
    // Heading anchors: emit `id={slug}` on each rendered heading, matched by SOURCE OFFSET (in the rendered body,
    // which is what react-markdown parses) against `extractHeadings`, so the id === the outline rail's slug.

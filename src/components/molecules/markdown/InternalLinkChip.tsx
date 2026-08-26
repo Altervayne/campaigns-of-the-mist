@@ -1,12 +1,18 @@
 // -- React Imports --
-import { Hash, Link2, Link2Off } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Hash, Link2, Link2Off, Wrench } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { getItemTypeIconComponent } from '@/lib/utils/drawer-icons';
 
+// -- Component Imports --
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 // -- Portals Imports --
 import { chooseLinkIcon } from '@/lib/portals/linkMetadata';
+import { rePointableTargetId } from '@/lib/portals/rePoint';
 
 // -- Hook Imports --
 import { useLinkMetadata } from '@/hooks/useLinkMetadata';
@@ -68,8 +74,12 @@ export function linkChipFallbackLabel(target: LinkTarget): string {
  * shared tint; a plain click resolves the link (never navigates the anchor) while the pointerdown guard keeps
  * a tap on a draggable surface (a board tile) from starting a drag. An empty label renders the target's
  * resolved name; a confirmed-missing target renders the dead chip with a "target not found" tooltip.
+ *
+ * When `onRePoint` is supplied and the dead target is re-pointable (an entity/element, not a section), the dead
+ * chip becomes a "Broken link" popover trigger instead: its button re-points the note's links to that target.
+ * Without `onRePoint` (the board tile, the mobile surface) a dead chip keeps the tooltip + activate behavior.
  */
-export function InternalLinkChip({ target, href, headings, authorLabel, deadTooltip, onActivate, children }: {
+export function InternalLinkChip({ target, href, headings, authorLabel, deadTooltip, onActivate, onRePoint, children }: {
    target: LinkTarget;
    href: string;
    headings: NoteHeading[];
@@ -78,6 +88,8 @@ export function InternalLinkChip({ target, href, headings, authorLabel, deadTool
    /** The localized "target not found" tooltip for a dead chip. */
    deadTooltip: string;
    onActivate?: (href: string) => void;
+   /** Opens the note re-point flow for a dead, re-pointable target; omit to keep the plain dead-chip behavior. */
+   onRePoint?: (target: LinkTarget) => void;
    children: ReactNode;
 }) {
    const metadata = useLinkMetadata(target, headings);
@@ -85,6 +97,18 @@ export function InternalLinkChip({ target, href, headings, authorLabel, deadTool
    // `iconForChoice` returns one of a handful of stable, module-level lucide components - it never constructs a
    // component - so static-components is a false positive here (same as `CardRenderer`).
    const Icon = iconForChoice(chooseLinkIcon(target, metadata));
+   const inner = (
+      <>
+         {/* eslint-disable-next-line react-hooks/static-components */}
+         <Icon className={INTERNAL_LINK_ICON} aria-hidden />
+         <span className={cn(dead && INTERNAL_LINK_TEXT_DEAD)}>{authorLabel ? children : metadata?.displayName ?? linkChipFallbackLabel(target)}</span>
+      </>
+   );
+
+   if (dead && onRePoint && rePointableTargetId(target) !== undefined) {
+      return <BrokenLinkChip target={target} deadTooltip={deadTooltip} onRePoint={onRePoint}>{inner}</BrokenLinkChip>;
+   }
+
    return (
       <a
          href={href}
@@ -96,9 +120,53 @@ export function InternalLinkChip({ target, href, headings, authorLabel, deadTool
             onActivate?.(href);
          }}
       >
-         {/* eslint-disable-next-line react-hooks/static-components */}
-         <Icon className={INTERNAL_LINK_ICON} aria-hidden />
-         <span className={cn(dead && INTERNAL_LINK_TEXT_DEAD)}>{authorLabel ? children : metadata?.displayName ?? linkChipFallbackLabel(target)}</span>
+         {inner}
       </a>
+   );
+}
+
+/**
+ * A dead chip that re-points instead of dead-ending: the exact dead visual as a Radix popover trigger, opening a
+ * small "Broken link" card with a Re-point action. Chrome on app-theme tokens; the pointerdown guard on BOTH the
+ * trigger and the content keeps a board tile from treating the interaction as a drag/deselect.
+ */
+function BrokenLinkChip({ target, deadTooltip, onRePoint, children }: {
+   target: LinkTarget;
+   deadTooltip: string;
+   onRePoint: (target: LinkTarget) => void;
+   children: ReactNode;
+}) {
+   const { t } = useTranslation();
+   const [open, setOpen] = useState(false);
+   return (
+      <Popover open={open} onOpenChange={setOpen}>
+         <PopoverTrigger asChild>
+            <button
+               type="button"
+               className={cn('pointer-events-auto cursor-pointer', INTERNAL_LINK_CHIP, INTERNAL_LINK_CHIP_DEAD)}
+               title={deadTooltip}
+               onPointerDown={(event) => event.stopPropagation()}
+            >
+               {children}
+            </button>
+         </PopoverTrigger>
+         <PopoverContent
+            align="start"
+            sideOffset={6}
+            className="w-64 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md"
+            onPointerDown={(event) => event.stopPropagation()}
+         >
+            <p className="text-sm font-medium">{t('NoteView.linkRepair.brokenTitle')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('NoteView.linkRepair.brokenBody')}</p>
+            <button
+               type="button"
+               onClick={() => { setOpen(false); onRePoint(target); }}
+               className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+               <Wrench className="h-3.5 w-3.5" aria-hidden />
+               {t('NoteView.linkRepair.rePoint')}
+            </button>
+         </PopoverContent>
+      </Popover>
    );
 }

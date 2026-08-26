@@ -55,6 +55,12 @@ export interface NoteState {
       updateTitle: (title: string) => void;
       /** Updates the body in memory and debounce-persists it; marks the note dirty. */
       updateBody: (body: string) => void;
+      /**
+       * Replaces the body with a programmatic link re-point, re-arming persistence with the new snapshot so a
+       * pending pre-rewrite save can't fire stale and clobber it. Leaves the dirty flag and Ctrl/Cmd+Z routing
+       * untouched: a link re-point mirrored on the saved copy is not a user edit.
+       */
+      applyLinkRewrite: (body: string) => void;
       /** Sets a fresh note-level cover (hash + box width/aspect) in memory and debounce-persists it; marks the note dirty. */
       setCover: (cover: NoteCover) => void;
       /** Patches the current cover's box (width and/or aspect) in memory and debounce-persists it; marks the note dirty. No-op with no cover. */
@@ -201,6 +207,16 @@ export function createNoteStore(options: { saveDebounceMs?: number } = {}) {
                const next = { ...note, body };
                markDirty();
                set({ note: next });
+               debouncedSave.run(next);
+            },
+
+            applyLinkRewrite: (body) => {
+               const note = get().note;
+               if (!note) return;
+               const next = { ...note, body };
+               set({ note: next });
+               // Re-arm the debounce with the rewritten snapshot: it replaces any pending pre-rewrite save (which
+               // would reintroduce the dead link) and still persists the buffer's own edits on the trailing edge.
                debouncedSave.run(next);
             },
 

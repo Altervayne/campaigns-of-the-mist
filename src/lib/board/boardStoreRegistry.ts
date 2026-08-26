@@ -40,6 +40,14 @@ export function getOrCreateBoardInstance(id: string): BoardStore {
 }
 
 /**
+ * The instance for `id`, or `undefined` when the id is not registered. Never creates one, so a caller can
+ * inspect a board's liveness (open vs closed) without materializing an empty instance.
+ */
+export function peekBoardInstance(id: string): BoardStore | undefined {
+   return registry.get(id);
+}
+
+/**
  * The currently active board store instance, or `null` when no board tab is active
  * (e.g. a character tab or the menu). Never creates an instance.
  */

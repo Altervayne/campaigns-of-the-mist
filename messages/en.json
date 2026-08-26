@@ -128,6 +128,15 @@
          "remove": "Remove link"
       },
       "linkDead": "Target not found",
+      "linkRepair": {
+         "brokenTitle": "Broken link",
+         "brokenBody": "This link's target is gone.",
+         "rePoint": "Re-point…",
+         "pickerHeader_one": "Re-point {{count}} link in this note",
+         "pickerHeader_other": "Re-point {{count}} links in this note",
+         "toastDone_one": "Re-pointed {{count}} link.",
+         "toastDone_other": "Re-pointed {{count}} links."
+      },
       "toolbar": {
          "insertTable": "Insert table",
          "tableSize": "Pick a table size",

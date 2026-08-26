@@ -10,6 +10,7 @@ import { InternalLinkChip } from './InternalLinkChip';
 // -- Type Imports --
 import type { ReactNode } from 'react';
 import type { Components } from 'react-markdown';
+import type { LinkTarget } from '@/lib/portals/linkTarget';
 import type { NoteHeading } from '@/lib/notes/noteOutline';
 
 /*
@@ -35,9 +36,15 @@ function childrenToText(children: ReactNode): string {
 /**
  * The `a` override for the note reading renderer. `onLinkActivate` runs an internal link; omit it for
  * display-only. `headings` (this note's outline) resolves a `#section` chip's liveness + name; `deadTooltip`
- * labels a confirmed-missing target.
+ * labels a confirmed-missing target. `onRePoint` (the tab host only) turns a dead chip into a re-point popover;
+ * omit it and a dead chip keeps the plain tooltip + activate behavior.
  */
-export function linkComponents(onLinkActivate: ((href: string) => void) | undefined, headings: NoteHeading[], deadTooltip: string): Components {
+export function linkComponents(
+   onLinkActivate: ((href: string) => void) | undefined,
+   headings: NoteHeading[],
+   deadTooltip: string,
+   onRePoint?: (target: LinkTarget) => void,
+): Components {
    return {
       a: ({ href, children }) => {
          const raw = href ?? '';
@@ -50,7 +57,7 @@ export function linkComponents(onLinkActivate: ((href: string) => void) | undefi
             );
          }
          return (
-            <InternalLinkChip target={target} href={raw} headings={headings} authorLabel={childrenToText(children).trim()} deadTooltip={deadTooltip} onActivate={onLinkActivate}>
+            <InternalLinkChip target={target} href={raw} headings={headings} authorLabel={childrenToText(children).trim()} deadTooltip={deadTooltip} onActivate={onLinkActivate} onRePoint={onRePoint}>
                {children}
             </InternalLinkChip>
          );
