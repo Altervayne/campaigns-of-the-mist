@@ -216,11 +216,14 @@ async function writeFolderSubtree(folder: Folder, storedParentId: string, order:
 
 /**
  * Maps a stored item record back to the nested {@link DrawerItem} export shape. A PDF is emitted as a byteless
- * STUB - its bytes-pointer nulled - so the tree carries a placeholder (id + title + pages + annotations survive,
- * the raw file does not); it imports as a placeholder awaiting a file, keeping `cotm://pdf/<id>` links alive.
+ * STUB - its bytes-pointer and derived cover nulled - so the tree carries a placeholder (id + title + pages +
+ * annotations survive, the raw file and its re-derivable cover do not); it imports as a placeholder awaiting a
+ * file, keeping `cotm://pdf/<id>` links alive, and the cover re-derives on first drawer view once a file is supplied.
  */
 function toNestedItem(record: DrawerItemRecord): DrawerItem {
-   const content = record.type === 'PDF' ? { ...(record.content as PdfDocument), assetHash: null } : record.content;
+   const content = record.type === 'PDF'
+      ? { ...(record.content as PdfDocument), assetHash: null, coverAssetHash: null }
+      : record.content;
    return { id: record.id, game: record.game, type: record.type, name: record.name, content };
 }
 

@@ -8,7 +8,8 @@ import type { PdfDocument } from '@/lib/types/pdf';
 /*
  * Resolves the drawer content behind a board's PDF portals so an export can carry a byteless STUB the bare
  * portal id can't. A portal to a pdf names it by id; on another machine that id resolves to nothing, so we
- * embed the pdf's drawer content with `assetHash: null` (the raw bytes never travel) and let the importer
+ * embed the pdf's drawer content with `assetHash: null` + `coverAssetHash: null` (neither the raw bytes nor the
+ * re-derivable cover travel) and let the importer
  * materialize a placeholder. The preserved id keeps the portal alive - it lands on the repair state, not a
  * dead link.
  */
@@ -30,7 +31,7 @@ export async function collectBoardReferencedPdfs(board: Board): Promise<Record<s
       if (resolved[pdfId]) continue; // already embedded via an earlier portal
 
       const source = await findEntityDrawerItem('pdf', pdfId);
-      if (source) resolved[pdfId] = { ...(source.content as PdfDocument), assetHash: null };
+      if (source) resolved[pdfId] = { ...(source.content as PdfDocument), assetHash: null, coverAssetHash: null };
    }
 
    return resolved;

@@ -4,6 +4,8 @@ import { listAllItemContents } from '@/lib/drawer/drawerRepository';
 import { listAllBoardItems } from '@/lib/board/boardRepository';
 import { listAllNotes } from '@/lib/notes/noteRepository';
 import { listStencils } from '@/lib/assets/stencilRepository';
+import { listAllPdfs } from '@/lib/pdf/pdfRepository';
+import { isPdfContent } from '@/lib/pdf/collectReferencedPdfHashes';
 import { collectFromNote } from '@/lib/notes/noteAssets';
 
 // -- Type Imports --
@@ -51,6 +53,9 @@ function collectFromItemContent(content: DrawerItemContent, into: Set<string>): 
       collectFromNote(content as Note, into);
    } else if ('details' in content) {
       collectFromCard(content as Card, into);
+   } else if (isPdfContent(content) && content.coverAssetHash) {
+      // A saved PDF's page-1 cover is an image asset; without this its cover is reclaimed after the grace.
+      into.add(content.coverAssetHash);
    }
    // Trackers hold no asset references.
 }
@@ -99,10 +104,10 @@ function collectFromStencil(stencil: StencilRecord, into: Set<string>): void {
 
 /**
  * Collects every asset hash currently referenced anywhere in stored data: every
- * character's cards, every drawer item whose content is a card / character / note, every
+ * character's cards, every drawer item whose content is a card / character / note / PDF cover, every
  * board's image items, every WORKING note's inline images (the `notes` table - an open
- * note's images aren't in the drawer until it is saved), and every stencil library entry's
- * owned mask asset.
+ * note's images aren't in the drawer until it is saved), every WORKING pdf's cover (an open pdf's
+ * cover isn't on the drawer copy until it is saved), and every stencil library entry's owned mask asset.
  *
  * @returns The set of referenced hashes. Anything in the asset store NOT in this
  *   set is an orphan candidate for the sweep (subject to the grace window).
@@ -110,12 +115,13 @@ function collectFromStencil(stencil: StencilRecord, into: Set<string>): void {
 export async function collectReferencedAssetHashes(): Promise<Set<string>> {
    const referenced = new Set<string>();
 
-   const [characterRecords, itemContents, boardItems, notes, stencils] = await Promise.all([
+   const [characterRecords, itemContents, boardItems, notes, stencils, workingPdfs] = await Promise.all([
       listCharacters(),
       listAllItemContents(),
       listAllBoardItems(),
       listAllNotes(),
       listStencils(),
+      listAllPdfs(),
    ]);
 
    for (const record of characterRecords) collectFromCharacter(record.character, referenced);
@@ -123,6 +129,8 @@ export async function collectReferencedAssetHashes(): Promise<Set<string>> {
    for (const item of boardItems) collectFromBoardItem(item, referenced);
    for (const note of notes) collectFromNote(note, referenced);
    for (const stencil of stencils) collectFromStencil(stencil, referenced);
+   // A working pdf's cover isn't reachable through the drawer item until saved, so walk the `pdfDocs` rows.
+   for (const pdf of workingPdfs) if (pdf.coverAssetHash) referenced.add(pdf.coverAssetHash);
 
    return referenced;
 }

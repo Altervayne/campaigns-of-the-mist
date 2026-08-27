@@ -12,8 +12,8 @@ import type { PdfDocument } from '@/lib/types/pdf';
  * record; the picker offers every OTHER real file (never a placeholder, never the item being repaired).
  */
 
-const real = (id: string): PdfDocument => ({ id, title: id, assetHash: `hash-${id}`, pageCount: 4 });
-const placeholder = (id: string): PdfDocument => ({ id, title: id, assetHash: null, pageCount: 4 });
+const real = (id: string): PdfDocument => ({ id, title: id, assetHash: `hash-${id}`, coverAssetHash: null, pageCount: 4 });
+const placeholder = (id: string): PdfDocument => ({ id, title: id, assetHash: null, coverAssetHash: null, pageCount: 4 });
 
 describe('isPlaceholderPdf', () => {
    it('flags a null-hash record and clears a real one', () => {

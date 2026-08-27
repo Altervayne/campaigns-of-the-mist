@@ -19,7 +19,7 @@ import { StoryTagTrackerCard } from '@/components/organisms/trackers/StoryTagTra
 import { CharacterSheetPreview } from '@/components/molecules/CharacterSheetPreview';
 import { StoryThemeTrackerCard } from '@/components/organisms/trackers/StoryThemeTracker';
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
-import { PdfPreview } from '@/components/organisms/drawer/PdfPreview';
+import { PdfPreview, PdfPreviewBadges } from '@/components/organisms/drawer/PdfPreview';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
@@ -29,22 +29,15 @@ import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
 // -- Utils Imports --
 import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
-import { getGameVisual } from '@/lib/constants/gameVisuals';
+import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 import { boardContentBounds, itemCenter } from '@/lib/board/boardMiniMap';
 
 // -- Type Imports --
-import type { ReactElement } from 'react';
-import type { DrawerItem, Folder as FolderType, GameSystem } from '@/lib/types/drawer';
+import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
 import type { Board, ConnectionBoardContent, Journal, Note, PinBoardContent, PostItBoardContent, PostItNote, ZoneBoardContent } from '@/lib/types/board';
 import type { RollTableContent } from '@/lib/rolltable/types';
 import type { PdfDocument } from '@/lib/types/pdf';
 
-/** The game glyph element (resolved in this module helper, not in render); neutral items have none. */
-function gameGlyph(game: GameSystem): ReactElement | null {
-   if (game === 'NEUTRAL') return null;
-   const Icon = getGameVisual(game).Icon;
-   return <Icon className="h-4 w-4 shrink-0" />;
-}
 
 
 
@@ -372,7 +365,7 @@ export function DrawerItemPreview({
          }
 
          if (type === 'PDF') {
-            return <PdfPreview pdf={content as PdfDocument} />;
+            return <PdfPreview pdf={content as PdfDocument} drawerItemId={item.id} />;
          }
       }
 
@@ -383,8 +376,6 @@ export function DrawerItemPreview({
       );
    };
 
-   // The game glyph (null for NEUTRAL items, which carry no game badge).
-   const glyph = gameGlyph(item.game);
    // The stage wears the type's own surface and the fill matches its silhouette (cover vs contain); game
    // cards additionally upscale to fill the stage width.
    const { stageClassName, fit, allowUpscale } = drawerPreviewStage(item.type);
@@ -403,10 +394,14 @@ export function DrawerItemPreview({
                <Icon className="h-3.5 w-3.5" />
             </span>
          </IconTooltip>
-         {glyph && <IconTooltip label={t(`Drawer.Types.${item.game}`)}>{glyph}</IconTooltip>}
+         {item.game !== 'NEUTRAL' && <IconTooltip label={t(`Drawer.Types.${item.game}`)}><GameBadge game={item.game} /></IconTooltip>}
          <ItemDateLabel type={item.type} createdAt={item.createdAt} updatedAt={item.updatedAt} className="truncate" />
       </>
    );
+
+   // PDF chips ride the stage at native size (never the scaled cover), so they stay legible however small
+   // the card scales; the other types carry their meta inside the preview.
+   const stageOverlay = !deferred && item.type === 'PDF' ? <PdfPreviewBadges pdf={item.content as PdfDocument} /> : undefined;
 
    // Deferred: the stage shows a shimmer placeholder (mirroring the search skeleton) at the same
    // footprint, so nothing reflows when the real content swaps in on scroll.
@@ -419,6 +414,7 @@ export function DrawerItemPreview({
          name={item.name}
          meta={meta}
          accentBar={accent.bar}
+         stageOverlay={stageOverlay}
          headerAction={headerAction}
          headerActionLeft={headerActionLeft}
       >

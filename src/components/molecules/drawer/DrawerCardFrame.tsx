@@ -24,6 +24,7 @@ export function DrawerCardFrame({
    name,
    meta,
    accentBar,
+   stageOverlay,
    headerAction,
    headerActionLeft = false,
    rootRef,
@@ -35,6 +36,9 @@ export function DrawerCardFrame({
    name: ReactNode;
    meta?: ReactNode;
    accentBar?: string;
+   // Chrome painted over the stage at native size, ABOVE the scaled FitToBox content (e.g. a PDF's metadata
+   // chips), so it stays legible however small the card scales. Positions itself against the stage box.
+   stageOverlay?: ReactNode;
    headerAction?: ReactNode;
    headerActionLeft?: boolean;
    // Attaches to the card root, so a lazy caller can observe the frame's own node without an extra wrapper.
@@ -45,10 +49,11 @@ export function DrawerCardFrame({
       <div ref={rootRef} className={cn('flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm transition-[transform,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-px', accentBar && 'relative overflow-hidden')}>
          {/* A thin identity spine over the left padding, behind the content, full height. */}
          {accentBar && <span aria-hidden className={cn('absolute inset-y-0 left-0 w-[3px]', accentBar)} />}
-         <div className={cn('aspect-[4/3] w-full overflow-hidden rounded-md', stageClassName)}>
+         <div className={cn('relative aspect-[4/3] w-full overflow-hidden rounded-md', stageClassName)}>
             <FitToBox fit={fit} allowUpscale={allowUpscale} className="pointer-events-none h-full w-full">
                {children}
             </FitToBox>
+            {stageOverlay}
          </div>
 
          <div className={cn('flex items-center gap-2', headerActionLeft && 'flex-row-reverse')}>

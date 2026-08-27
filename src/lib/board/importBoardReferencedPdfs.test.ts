@@ -32,7 +32,7 @@ function makeEnsureFolder(name = FOLDER): () => Promise<string> {
 }
 
 function pdfDoc(id: string, assetHash: string | null = 'hash-real'): PdfDocument {
-   return { id, title: `Book ${id}`, assetHash, pageCount: 42, annotations: { a1: ink } };
+   return { id, title: `Book ${id}`, assetHash, coverAssetHash: null, pageCount: 42, annotations: { a1: ink } };
 }
 
 /** A portal board item pointing at a pdf by id. */

@@ -48,7 +48,7 @@ describe('pdf repository', () => {
 
       const doc = await repository.loadPdf(record.id);
 
-      expect(doc).toEqual({ id: record.id, title: 'Rulebook', assetHash: 'hash-a', pageCount: 42 });
+      expect(doc).toEqual({ id: record.id, title: 'Rulebook', assetHash: 'hash-a', coverAssetHash: null, pageCount: 42 });
       expect(await repository.loadPdf('missing')).toBeUndefined();
    });
 
@@ -69,7 +69,7 @@ describe('pdf repository', () => {
    });
 
    it('importPdf materializes an aggregate into the working table', async () => {
-      const doc: PdfDocument = { id: 'pdf-1', title: 'Imported', assetHash: 'hash-b', pageCount: 7 };
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Imported', assetHash: 'hash-b', coverAssetHash: null, pageCount: 7 };
 
       await repository.importPdf(doc, 'item-1');
 
@@ -83,7 +83,7 @@ describe('pdf repository', () => {
    });
 
    it('importPdf defaults a missing drawer link to null', async () => {
-      await repository.importPdf({ id: 'pdf-2', title: 'Unlinked', assetHash: 'hash-c', pageCount: 3 }, null);
+      await repository.importPdf({ id: 'pdf-2', title: 'Unlinked', assetHash: 'hash-c', coverAssetHash: null, pageCount: 3 }, null);
       expect((await repository.getPdf('pdf-2'))?.drawerItemId).toBeNull();
    });
 
@@ -97,7 +97,7 @@ describe('pdf repository', () => {
 
    it('recordToPdfDocument copies annotations onto the aggregate', async () => {
       const annotations = sampleAnnotations();
-      await repository.importPdf({ id: 'pdf-ann', title: 'Marked', assetHash: 'hash-d', pageCount: 5, annotations }, null);
+      await repository.importPdf({ id: 'pdf-ann', title: 'Marked', assetHash: 'hash-d', coverAssetHash: null, pageCount: 5, annotations }, null);
 
       const doc = await repository.loadPdf('pdf-ann');
       expect(doc?.annotations).toEqual(annotations);
@@ -105,7 +105,7 @@ describe('pdf repository', () => {
 
    it('importPdf carries annotations into the working row', async () => {
       const annotations = sampleAnnotations();
-      await repository.importPdf({ id: 'pdf-imp', title: 'Marked', assetHash: 'hash-e', pageCount: 3, annotations }, 'item-x');
+      await repository.importPdf({ id: 'pdf-imp', title: 'Marked', assetHash: 'hash-e', coverAssetHash: null, pageCount: 3, annotations }, 'item-x');
 
       expect((await repository.getPdf('pdf-imp'))?.annotations).toEqual(annotations);
    });
@@ -122,12 +122,12 @@ describe('savePdfToLinkedDrawerItem', () => {
    }
 
    it('writes annotations to BOTH the row and the linked drawer item content', async () => {
-      await repository.importPdf({ id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 4 }, 'item-1');
-      await seedDrawerItem('item-1', { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 4 });
+      await repository.importPdf({ id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 }, 'item-1');
+      await seedDrawerItem('item-1', { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 });
 
       const annotations = sampleAnnotations();
       const result = await repository.savePdfToLinkedDrawerItem(
-         { id: 'pdf-1', title: 'Book (annotated)', assetHash: 'hash-a', pageCount: 4, annotations },
+         { id: 'pdf-1', title: 'Book (annotated)', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4, annotations },
          'item-1',
       );
 
@@ -139,11 +139,11 @@ describe('savePdfToLinkedDrawerItem', () => {
    });
 
    it('saves the row but reports no link when the drawer item is gone (dangling link)', async () => {
-      await repository.importPdf({ id: 'pdf-2', title: 'Book', assetHash: 'hash-b', pageCount: 2 }, 'item-missing');
+      await repository.importPdf({ id: 'pdf-2', title: 'Book', assetHash: 'hash-b', coverAssetHash: null, pageCount: 2 }, 'item-missing');
 
       const annotations = sampleAnnotations();
       const result = await repository.savePdfToLinkedDrawerItem(
-         { id: 'pdf-2', title: 'Book', assetHash: 'hash-b', pageCount: 2, annotations },
+         { id: 'pdf-2', title: 'Book', assetHash: 'hash-b', coverAssetHash: null, pageCount: 2, annotations },
          'item-missing',
       );
 
@@ -153,7 +153,7 @@ describe('savePdfToLinkedDrawerItem', () => {
 
    it('does not resurrect an absent row', async () => {
       const result = await repository.savePdfToLinkedDrawerItem(
-         { id: 'gone', title: 'Nope', assetHash: 'hash-c', pageCount: 1, annotations: sampleAnnotations() },
+         { id: 'gone', title: 'Nope', assetHash: 'hash-c', coverAssetHash: null, pageCount: 1, annotations: sampleAnnotations() },
          null,
       );
 
@@ -174,7 +174,7 @@ describe('repairPdf', () => {
 
    it('fills assetHash + pageCount on BOTH copies, keeping id/title/annotations/lastPage', async () => {
       const annotations = sampleAnnotations();
-      const placeholder: PdfDocument = { id: 'pdf-1', title: 'Kept Title', assetHash: null, pageCount: 12, annotations, lastPage: 5 };
+      const placeholder: PdfDocument = { id: 'pdf-1', title: 'Kept Title', assetHash: null, coverAssetHash: null, pageCount: 12, annotations, lastPage: 5 };
       await repository.importPdf(placeholder, 'item-1');
       await seedDrawerItem('item-1', placeholder);
 
@@ -197,8 +197,8 @@ describe('repairPdf', () => {
    });
 
    it('lets the supplied file win the page count over the stub', async () => {
-      await repository.importPdf({ id: 'pdf-2', title: 'Stub', assetHash: null, pageCount: 8 }, 'item-2');
-      await seedDrawerItem('item-2', { id: 'pdf-2', title: 'Stub', assetHash: null, pageCount: 8 });
+      await repository.importPdf({ id: 'pdf-2', title: 'Stub', assetHash: null, coverAssetHash: null, pageCount: 8 }, 'item-2');
+      await seedDrawerItem('item-2', { id: 'pdf-2', title: 'Stub', assetHash: null, coverAssetHash: null, pageCount: 8 });
 
       await repository.repairPdf('pdf-2', 'hash-real', 200);
 
@@ -207,7 +207,7 @@ describe('repairPdf', () => {
    });
 
    it('fills the row even when the drawer link is dangling', async () => {
-      await repository.importPdf({ id: 'pdf-3', title: 'Orphan', assetHash: null, pageCount: 3 }, 'item-missing');
+      await repository.importPdf({ id: 'pdf-3', title: 'Orphan', assetHash: null, coverAssetHash: null, pageCount: 3 }, 'item-missing');
 
       await repository.repairPdf('pdf-3', 'hash-real', 3);
 

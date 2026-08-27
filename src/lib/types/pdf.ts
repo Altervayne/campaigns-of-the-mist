@@ -12,6 +12,11 @@ export interface PdfDocument {
    title: string;
    /** Pointer into the `pdfAssets` store (SHA-256 of the raw PDF bytes). `null` ⇔ no bytes yet (placeholder awaiting a file). */
    assetHash: string | null;
+   /**
+    * Pointer into the image `assets` store (a webp cover rendered from page 1, clean). `null` ⇔ no cover yet:
+    * a placeholder awaiting a file, or a pre-cover pdf the drawer preview backfills once on first view.
+    */
+   coverAssetHash: string | null;
    /** Page count, parsed once at import. */
    pageCount: number;
    /** Markup annotations keyed by annotation id, each carrying its own `page`. Absent until the first is drawn. */

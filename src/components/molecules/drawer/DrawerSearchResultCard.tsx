@@ -1,6 +1,6 @@
 // -- React Imports --
 import { useTranslation } from 'react-i18next';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 // -- DnD Imports --
 import { DragStaticWrapper } from '@/components/dnd';
@@ -12,7 +12,7 @@ import { useResultDraggable } from '@/hooks/drawer/useResultDraggable';
 
 // -- Utils Imports --
 import { getItemTypeIcon } from '@/lib/utils/drawer-icons';
-import { getGameVisual } from '@/lib/constants/gameVisuals';
+import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 
 // -- Component Imports --
 import { DrawerItemPreview } from '@/components/organisms/drawer/DrawerItemPreview';
@@ -22,7 +22,6 @@ import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 import { DrawerResultMenu } from '@/components/molecules/drawer/DrawerResultMenu';
 
 // -- Type Imports --
-import type { GameSystem } from '@/lib/types/drawer';
 import type { DrawerItemRecord } from '@/lib/drawer/drawerRecords';
 import type { DrawerItemSummary } from '@/lib/drawer/drawerRepository';
 import type { DrawerSearchResultEntryProps } from '@/components/molecules/drawer/DrawerSearchResultEntry';
@@ -39,12 +38,6 @@ import type { DrawerSearchResultEntryProps } from '@/components/molecules/drawer
  * themselves (a plain draggable, not a SortableContext member).
  */
 
-/** The game glyph element (resolved in this module helper, not in render); neutral items have none. */
-function gameGlyph(game: GameSystem): ReactElement | null {
-   if (game === 'NEUTRAL') return null;
-   const Icon = getGameVisual(game).Icon;
-   return <Icon className="h-4 w-4 shrink-0" />;
-}
 
 /**
  * A card-footprint placeholder matching {@link DrawerItemPreview}: the preview area shimmers (or shows a
@@ -54,12 +47,11 @@ function gameGlyph(game: GameSystem): ReactElement | null {
  */
 function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerItemSummary; menu: ReactNode; removed?: boolean }) {
    const { t } = useTranslation();
-   const glyph = gameGlyph(summary.game);
    const meta = (
       <>
          {/* Hover labels name the indicator icons (type + game), so they aren't a guess. */}
          <IconTooltip label={t(`Drawer.filters.itemType.${summary.type}`)}>{getItemTypeIcon(summary.type)}</IconTooltip>
-         {glyph && <IconTooltip label={t(`Drawer.Types.${summary.game}`)}>{glyph}</IconTooltip>}
+         {summary.game !== 'NEUTRAL' && <IconTooltip label={t(`Drawer.Types.${summary.game}`)}><GameBadge game={summary.game} /></IconTooltip>}
          <ItemDateLabel type={summary.type} createdAt={summary.createdAt} updatedAt={summary.updatedAt} className="truncate" />
       </>
    );

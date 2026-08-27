@@ -8,7 +8,7 @@ import { hasAnnotations } from './annotations';
 import type { PdfDocument } from '@/lib/types/pdf';
 
 function doc(annotations?: PdfDocument['annotations']): PdfDocument {
-   return { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash', pageCount: 42, annotations };
+   return { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash', coverAssetHash: null, pageCount: 42, annotations };
 }
 
 describe('hasAnnotations', () => {

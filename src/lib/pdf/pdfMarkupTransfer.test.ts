@@ -26,7 +26,7 @@ const ink: PdfInk = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdA
 const comment: PdfComment = { id: 'c1', kind: 'comment', page: 3, color: '#f59e0b', createdAt: 2, rect: { x: 0.1, y: 0.1, w: 0.2, h: 0.2 }, body: 'a note' };
 
 function docWith(annotations: Record<string, PdfAnnotation>, pageCount = 10): PdfDocument {
-   return { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash', pageCount, annotations };
+   return { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash', coverAssetHash: null, pageCount, annotations };
 }
 
 /**

@@ -1,16 +1,19 @@
 // -- Local Imports --
 import { loadPdfjs } from './pdfjsLoader';
+import { renderPdfCoverBlob } from './pdfCover';
 
 /*
- * Reads a PDF file's metadata for import: the page count and a display title. Phase-2 import
- * needs only these, so the document is parsed and immediately destroyed. The viewer parses the
- * same bytes separately and keeps its own document alive.
+ * Reads a PDF file's metadata for import: the page count, a display title, and a page-1 cover. The document
+ * is parsed once (cover rendered while it is open) and immediately destroyed. The viewer parses the same
+ * bytes separately and keeps its own document alive.
  */
 
-/** The page count and display title parsed from a PDF file. */
+/** The page count, display title, and page-1 cover parsed from a PDF file. */
 export interface ParsedPdfMeta {
    pageCount: number;
    title: string;
+   /** A rendered webp cover of page 1, or null when the render failed (import still proceeds, glyph shows). */
+   coverBlob: Blob | null;
 }
 
 /** The filename with a trailing `.pdf` (any case) stripped, the title fallback. */
@@ -33,7 +36,9 @@ export async function parsePdfFile(file: File): Promise<ParsedPdfMeta> {
       const { info } = await doc.getMetadata();
       const metaTitle = (info as { Title?: unknown } | undefined)?.Title;
       const title = typeof metaTitle === 'string' && metaTitle.trim() ? metaTitle : filenameTitle(file.name);
-      return { pageCount, title };
+      // Best-effort while the document is open; a null cover leaves the drawer glyph, never fails the import.
+      const coverBlob = await renderPdfCoverBlob(doc);
+      return { pageCount, title, coverBlob };
    } finally {
       // Tearing down the loading task releases the document and its worker transport.
       await loadingTask.destroy();

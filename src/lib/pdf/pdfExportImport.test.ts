@@ -25,7 +25,7 @@ async function storeFixture() {
 }
 
 function pdfContent(hash: string): PdfDocument {
-   return { id: 'pdf-1', title: 'Rulebook', assetHash: hash, pageCount: 42 };
+   return { id: 'pdf-1', title: 'Rulebook', assetHash: hash, coverAssetHash: null, pageCount: 42 };
 }
 
 /**

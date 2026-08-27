@@ -18,11 +18,12 @@ import type { PdfDocument } from '@/lib/types/pdf';
  */
 
 /** Creates a new pdf row from a freshly imported asset and returns the stored record. */
-export async function createPdf(input: { title: string; assetHash: string; pageCount: number }): Promise<PdfRecord> {
+export async function createPdf(input: { title: string; assetHash: string; pageCount: number; coverAssetHash?: string | null }): Promise<PdfRecord> {
    const record: PdfRecord = {
       id: cuid(),
       title: input.title,
       assetHash: input.assetHash,
+      coverAssetHash: input.coverAssetHash ?? null,
       pageCount: input.pageCount,
       updatedAt: Date.now(),
       drawerItemId: null,
@@ -105,6 +106,27 @@ export function savePdfLastPage(id: string, page: number, drawerItemId: string |
 }
 
 /**
+ * Persists a lazily-derived page-1 cover, out of band from the annotation autosave: in ONE transaction,
+ * write `coverAssetHash` onto the working row (when open) AND, when linked, onto the drawer copy's content.
+ * The cover is derived immutable art, so it leaves `updatedAt` alone (mirrors {@link savePdfLastPage}).
+ * Both writes are keyed independently - a drawer preview backfills without the pdf being open, and an open
+ * reader keeps lockstep so its next autosave can't clobber the cover. Missing rows are no-ops.
+ */
+export function patchPdfCover(pdfId: string, drawerItemId: string | null, coverAssetHash: string): Promise<void> {
+   return db.transaction('rw', [db.pdfDocs, db.items], async () => {
+      await db.pdfDocs.update(pdfId, { coverAssetHash });
+
+      if (drawerItemId) {
+         const existingItem = await db.items.get(drawerItemId);
+         if (existingItem) {
+            const content = existingItem.content as PdfDocument;
+            await db.items.update(drawerItemId, { content: { ...content, coverAssetHash } });
+         }
+      }
+   });
+}
+
+/**
  * Repairs a placeholder pdf: in ONE transaction, fills the missing bytes-pointer + page count on the
  * working row AND, when linked, on the drawer copy's content, flipping both out of placeholder in
  * lockstep. The supplied file is authoritative, so its `pageCount` wins over the stub's remembered
@@ -147,6 +169,7 @@ export async function importPdf(doc: PdfDocument, drawerItemId: string | null): 
       id: doc.id,
       title: doc.title,
       assetHash: doc.assetHash,
+      coverAssetHash: doc.coverAssetHash ?? null,
       pageCount: doc.pageCount,
       annotations: doc.annotations,
       lastPage: doc.lastPage,

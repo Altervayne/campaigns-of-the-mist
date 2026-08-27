@@ -21,6 +21,8 @@ export interface PdfRecord {
    title: string;
    /** Pointer into `pdfAssets` (the dedup key). `null` ⇔ no bytes yet (placeholder awaiting a file). */
    assetHash: string | null;
+   /** Pointer into the image `assets` store (a webp page-1 cover). `null` ⇔ no cover (placeholder or not-yet-rendered). */
+   coverAssetHash: string | null;
    /** Page count, parsed once at import. */
    pageCount: number;
    /** Markup annotations keyed by annotation id. Optional, non-indexed: old rows read as `undefined`. */
@@ -41,6 +43,8 @@ export function recordToPdfDocument(record: PdfRecord): PdfDocument {
       id: record.id,
       title: record.title,
       assetHash: record.assetHash,
+      // Old rows predate the field and read as undefined; normalize to the null "no cover" state.
+      coverAssetHash: record.coverAssetHash ?? null,
       pageCount: record.pageCount,
       annotations: record.annotations,
       lastPage: record.lastPage,

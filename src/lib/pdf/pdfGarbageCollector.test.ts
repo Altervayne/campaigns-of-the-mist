@@ -35,7 +35,7 @@ function seedPdfAsset(hash: string, ageMs: number, byteSize = 1000): Promise<str
 
 /** Stores a drawer `PDF` item whose content references `assetHash`, so that hash counts as referenced. */
 function referenceViaDrawerItem(itemId: string, assetHash: string): Promise<string> {
-   const content: PdfDocument = { id: itemId, title: 'Rulebook', assetHash, pageCount: 42 };
+   const content: PdfDocument = { id: itemId, title: 'Rulebook', assetHash, coverAssetHash: null, pageCount: 42 };
    const record = {
       id: itemId,
       name: 'Rulebook',
@@ -56,6 +56,7 @@ function referenceViaWorkingRow(id: string, assetHash: string): Promise<string> 
       id,
       title: 'Open PDF',
       assetHash,
+      coverAssetHash: null,
       pageCount: 42,
       updatedAt: Date.now(),
       drawerItemId: null,
@@ -66,7 +67,7 @@ function referenceViaWorkingRow(id: string, assetHash: string): Promise<string> 
 
 /** Stores a byteless PLACEHOLDER drawer `PDF` item (null hash), which references no blob. */
 function placeholderDrawerItem(itemId: string): Promise<string> {
-   const content: PdfDocument = { id: itemId, title: 'Awaiting file', assetHash: null, pageCount: 42 };
+   const content: PdfDocument = { id: itemId, title: 'Awaiting file', assetHash: null, coverAssetHash: null, pageCount: 42 };
    const record = {
       id: itemId,
       name: 'Awaiting file',
@@ -87,6 +88,7 @@ function placeholderWorkingRow(id: string): Promise<string> {
       id,
       title: 'Awaiting file',
       assetHash: null,
+      coverAssetHash: null,
       pageCount: 42,
       updatedAt: Date.now(),
       drawerItemId: null,

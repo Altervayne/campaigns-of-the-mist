@@ -143,12 +143,42 @@ function seedBoardCardReference(id: string, sourceDrawerItemId: string, lastKnow
    });
 }
 
+/** Adds a drawer `PDF` item whose content carries (or not) a page-1 cover asset. */
+function seedPdfDrawerItem(id: string, assetHash: string | null, coverAssetHash: string | null) {
+   return drawerDatabase.items.add({
+      id,
+      name: id,
+      parentFolderId: 'root',
+      order: 0,
+      game: 'NEUTRAL',
+      type: 'PDF',
+      createdAt: 0,
+      updatedAt: 0,
+      content: { id, title: id, assetHash, coverAssetHash, pageCount: 42 },
+   } as unknown as Parameters<typeof drawerDatabase.items.add>[0]);
+}
+
+/** Adds a working `pdfDocs` row carrying (or not) a page-1 cover asset. */
+function seedWorkingPdf(id: string, assetHash: string | null, coverAssetHash: string | null) {
+   return drawerDatabase.pdfDocs.add({
+      id,
+      title: id,
+      assetHash,
+      coverAssetHash,
+      pageCount: 42,
+      updatedAt: 0,
+      drawerItemId: null,
+      schemaVersion: 1,
+   });
+}
+
 beforeEach(async () => {
    await drawerDatabase.characters.clear();
    await drawerDatabase.items.clear();
    await drawerDatabase.boardItems.clear();
    await drawerDatabase.notes.clear();
    await drawerDatabase.stencils.clear();
+   await drawerDatabase.pdfDocs.clear();
 });
 
 describe('collectReferencedAssetHashes', () => {
@@ -336,5 +366,31 @@ describe('collectReferencedAssetHashes', () => {
       const referenced = await collectReferencedAssetHashes();
 
       expect(referenced.has('bbbb444455556666')).toBe(true);
+   });
+
+   it('finds a saved PDF item\'s cover asset (so the image GC keeps the cover)', async () => {
+      await seedPdfDrawerItem('pdf-item', 'pdf-bytes-hash', 'cover-saved');
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('cover-saved')).toBe(true);
+   });
+
+   it('finds a working pdfDocs row\'s cover asset (an open pdf\'s cover isn\'t on the drawer copy yet)', async () => {
+      await seedWorkingPdf('pdf-open', 'pdf-bytes-hash', 'cover-working');
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.has('cover-working')).toBe(true);
+   });
+
+   it('ignores a PDF with no cover (null) and a placeholder PDF (null bytes, null cover)', async () => {
+      await seedPdfDrawerItem('pdf-nocover', 'pdf-bytes-hash', null);
+      await seedPdfDrawerItem('pdf-placeholder', null, null);
+      await seedWorkingPdf('pdf-open-nocover', 'pdf-bytes-hash', null);
+
+      const referenced = await collectReferencedAssetHashes();
+
+      expect(referenced.size).toBe(0);
    });
 });

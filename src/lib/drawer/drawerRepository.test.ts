@@ -361,13 +361,15 @@ describe('tree / bulk operations', () => {
 
    it('exports a PDF item as a byteless stub, keeping its id + title + pages + annotations', async () => {
       const ink: PdfAnnotation = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 };
-      const pdf: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash-real', pageCount: 42, annotations: { a1: ink } };
+      const pdf: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: 'hash-real', coverAssetHash: 'cover-real', pageCount: 42, annotations: { a1: ink } };
       const folder = await repository.createFolder({ name: 'Books', parentFolderId: null });
       await repository.createItem({ name: 'Rulebook', game: 'NEUTRAL', type: 'PDF', content: pdf, parentFolderId: folder.id });
 
       const tree = await repository.exportFolderAsNestedTree(folder.id);
       const exported = tree.items[0].content as PdfDocument;
       expect(exported.assetHash).toBeNull();
+      // The derived cover is re-derivable and dropped from the export, so import re-derives it lazily.
+      expect(exported.coverAssetHash).toBeNull();
       expect(exported.id).toBe('pdf-1');
       expect(exported.title).toBe('Rulebook');
       expect(exported.pageCount).toBe(42);
@@ -376,7 +378,7 @@ describe('tree / bulk operations', () => {
 
    it('re-imports a stubbed PDF as a placeholder: same id + annotations, null hash, no pdfAssets row', async () => {
       const ink: PdfAnnotation = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 };
-      const stub: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: null, pageCount: 42, annotations: { a1: ink } };
+      const stub: PdfDocument = { id: 'pdf-1', title: 'Rulebook', assetHash: null, coverAssetHash: null, pageCount: 42, annotations: { a1: ink } };
       const nested = makeFolder('orig-folder', 'Books', [
          { id: 'wrap-1', game: 'NEUTRAL', type: 'PDF', name: 'Rulebook', content: stub as unknown as DrawerItemContent },
       ]);

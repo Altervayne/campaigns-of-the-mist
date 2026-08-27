@@ -16,6 +16,7 @@ import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
 import { hashBytes } from '@/lib/assets/processImage';
 import { storePdfAsset } from '@/lib/pdf/pdfAssetRepository';
+import { storePdfCover } from '@/lib/pdf/pdfCover';
 import { parsePdfFile } from '@/lib/pdf/parsePdf';
 import { estimateStorageUsage, STORAGE_SOFT_CAP_BYTES } from '@/lib/assets/assetGarbageCollector';
 
@@ -73,10 +74,12 @@ export function useDrawerFileImport(currentFolderId: string | null) {
          if (name.endsWith('.pdf')) {
             const toastId = toast.loading(tNotifications('Notifications.pdf.importing'));
             try {
-               const { pageCount, title } = await parsePdfFile(file);
+               const { pageCount, title, coverBlob } = await parsePdfFile(file);
                const hash = await hashBytes(await file.arrayBuffer());
                await storePdfAsset({ hash, blob: file, mimeType: 'application/pdf', byteSize: file.size });
-               const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, pageCount };
+               // Best-effort cover: a store failure leaves a null hash and the drawer glyph, never the import.
+               const coverAssetHash = coverBlob ? await storePdfCover(coverBlob).catch(() => null) : null;
+               const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, coverAssetHash, pageCount };
                await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
                toast.success(tNotifications('Notifications.drawer.importSuccess'), { id: toastId });
                // PDFs are the first tens-of-MB item, so a few rulebooks approach the soft cap. A gentle,

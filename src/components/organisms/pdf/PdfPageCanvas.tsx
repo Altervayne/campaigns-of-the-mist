@@ -39,6 +39,9 @@ interface PdfPageCanvasProps {
    defaultAspect: number;
    /** Whether the page is near enough the viewport to render its canvas. */
    isVisible: boolean;
+   /** While the column is mid-scale (a panel toggle / unsettled zoom), the text layer is dropped so its
+    *  hundreds of spans don't reflow every frame; it's transparent, so this is invisible. */
+   suppressTextLayer: boolean;
    /** This page's annotations, painted over the canvas. */
    annotations: PdfAnnotation[];
    /** This page's search matches, painted between the annotations and the text layer. */
@@ -51,7 +54,7 @@ interface PdfPageCanvasProps {
 
 // Memoized: during a wheel-zoom only the column's CSS zoom changes, so with the render width held steady these
 // props don't, and 491 pages skip re-rendering entirely.
-export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, annotations, searchMatches, activeSearchMatch, registerPage }: PdfPageCanvasProps) {
+export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, width, defaultAspect, isVisible, suppressTextLayer, annotations, searchMatches, activeSearchMatch, registerPage }: PdfPageCanvasProps) {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [aspect, setAspect] = useState(defaultAspect);
    const [rendering, setRendering] = useState(false);
@@ -132,8 +135,9 @@ export const PdfPageCanvas = memo(function PdfPageCanvas({ proxy, pageNumber, wi
          {isVisible && annotations.length > 0 ? <PdfAnnotationLayer annotations={annotations} width={width} height={Math.round(width * aspect)} /> : null}
          {/* Search-match tint above the annotation marks, below the text layer (so matched text stays selectable). */}
          {isVisible && searchMatches.length > 0 ? <PdfSearchLayer proxy={proxy} pageNumber={pageNumber} width={width} height={Math.round(width * aspect)} matches={searchMatches} activeMatch={activeSearchMatch} /> : null}
-         {/* Selectable text over the page; selectable in read mode, inert in markup mode (the capture layer owns the drag). */}
-         {isVisible ? <PdfTextLayer proxy={proxy} pageNumber={pageNumber} width={width} isVisible={isVisible} /> : null}
+         {/* Selectable text over the page; selectable in read mode, inert in markup mode (the capture layer owns the drag).
+             Dropped while the column scales, so its spans don't reflow each animation frame (it's transparent). */}
+         {isVisible && !suppressTextLayer ? <PdfTextLayer proxy={proxy} pageNumber={pageNumber} width={width} isVisible={isVisible} /> : null}
          {/* Markup capture sits above the marks; context-driven, so it needs no props and returns null in read mode. */}
          {isVisible ? <PdfPageInteractionLayer pageNumber={pageNumber} width={width} height={Math.round(width * aspect)} /> : null}
          {/* Comment anchors + editors sit topmost; inert in markup mode (the capture layer below owns the gesture). */}

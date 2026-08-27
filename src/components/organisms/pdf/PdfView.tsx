@@ -583,6 +583,13 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const renderWidth = useSettledWidth(effectivePageWidth, RENDER_SETTLE_MS);
    const columnZoom = renderWidth > 0 ? effectivePageWidth / renderWidth : 1;
 
+   // True while the live page width differs from the settled render width - a panel toggle (its width animates,
+   // shrinking the scroller frame by frame) or an in-flight zoom before it settles. The column CSS-zooms to
+   // cover that delta; the transparent text layer (hundreds of positioned spans per page) is dropped until the
+   // width settles, so it never reflows across the animation. It's invisible, so dropping it shows nothing, and
+   // the search overlay rides its cached quads meanwhile - so a big panel resize scales smoothly, not choppily.
+   const scaling = renderWidth > 0 && renderWidth !== effectivePageWidth;
+
    // Scrolls a page's box to the top of the scroller. Shared by mount-restore and the toolbar jump / prev / next.
    const scrollToPage = useCallback(
       (page: number) => {
@@ -779,6 +786,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                               width={renderWidth}
                               defaultAspect={defaultAspect}
                               isVisible={visible.has(pageNumber)}
+                              suppressTextLayer={scaling}
                               annotations={byPage.get(pageNumber) ?? NO_ANNOTATIONS}
                               searchMatches={searchByPage.get(pageNumber) ?? NO_MATCHES}
                               activeSearchMatch={activeMatch?.page === pageNumber ? activeMatch : null}

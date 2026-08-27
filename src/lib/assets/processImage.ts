@@ -9,7 +9,7 @@
  * isolation. The full pipeline is exercised in-browser once the consumer lands.
  */
 
-/** Longest edge (px) the processed image is clamped to; never upscaled past the source. */
+/** Default longest edge (px) the processed image is clamped to; never upscaled past the source. */
 const MAX_EDGE_PX = 1024;
 /** Quality passed to the webp encoder (0-1). A starting value, to be tuned later. */
 const WEBP_QUALITY = 0.82;
@@ -44,11 +44,11 @@ export async function hashBytes(buffer: ArrayBuffer): Promise<string> {
       .join('');
 }
 
-/** Computes target dimensions so the longest edge is <= `MAX_EDGE_PX`, never upscaling. */
-function fitWithinMaxEdge(width: number, height: number): { width: number; height: number } {
+/** Computes target dimensions so the longest edge is <= `maxEdge`, never upscaling. */
+function fitWithinMaxEdge(width: number, height: number, maxEdge: number): { width: number; height: number } {
    const longest = Math.max(width, height);
-   if (longest <= MAX_EDGE_PX) return { width, height };
-   const scale = MAX_EDGE_PX / longest;
+   if (longest <= maxEdge) return { width, height };
+   const scale = maxEdge / longest;
    return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
 
@@ -66,19 +66,26 @@ function canvasToWebpBlob(canvas: OffscreenCanvas | HTMLCanvasElement): Promise<
    });
 }
 
+/** Options for {@link processImage}. */
+export interface ProcessImageOptions {
+   /** Longest-edge clamp (px). Defaults to `MAX_EDGE_PX`; a thumbnail consumer (a PDF cover) passes a smaller cap. */
+   maxEdge?: number;
+}
+
 /**
- * Decodes `file`, scales it so the longest edge is at most `MAX_EDGE_PX` (without
- * upscaling), re-encodes it as webp, and content-hashes the resulting bytes.
+ * Decodes `file`, scales it so the longest edge is at most `maxEdge` (default `MAX_EDGE_PX`,
+ * never upscaling), re-encodes it as webp, and content-hashes the resulting bytes.
  *
  * The hash keys on what is actually stored (the processed webp), so two visually
  * identical sources that processed to the same bytes dedup to one asset.
  *
  * @param file - The source image blob (any decodable image type).
+ * @param options - Optional processing overrides (e.g. a smaller `maxEdge` for a thumbnail).
  * @returns The processed, hashed webp ready to store.
  */
-export async function processImage(file: Blob): Promise<ProcessedImage> {
+export async function processImage(file: Blob, options: ProcessImageOptions = {}): Promise<ProcessedImage> {
    const bitmap = await createImageBitmap(file);
-   const { width, height } = fitWithinMaxEdge(bitmap.width, bitmap.height);
+   const { width, height } = fitWithinMaxEdge(bitmap.width, bitmap.height, options.maxEdge ?? MAX_EDGE_PX);
 
    const canvas: OffscreenCanvas | HTMLCanvasElement =
       typeof OffscreenCanvas !== 'undefined'

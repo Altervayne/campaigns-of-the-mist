@@ -1,11 +1,11 @@
 // -- React Imports --
-import type { ReactElement, ReactNode, Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
-import { getGameVisual } from '@/lib/constants/gameVisuals';
+import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 
 // -- Component Imports --
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
@@ -23,12 +23,6 @@ import type { GeneralItemType, GameSystem } from '@/lib/types/drawer';
  * both edges. Like the rich card, the type / game glyphs carry a styled tooltip naming them.
  */
 
-/** The game glyph element (resolved in this module helper, not in render); neutral items have none. */
-function gameGlyph(game: GameSystem): ReactElement | null {
-   if (game === 'NEUTRAL') return null;
-   const Icon = getGameVisual(game).Icon;
-   return <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />;
-}
 
 interface DrawerListRowProps {
    type: GeneralItemType;
@@ -41,7 +35,6 @@ interface DrawerListRowProps {
 
 export function DrawerListRow({ type, name, game, createdAt, updatedAt, className }: DrawerListRowProps) {
    const { t } = useTranslation();
-   const glyph = gameGlyph(game);
    const accent = getItemIdentityAccent(type, game);
    // A stable module-level lucide component; static-components is a false positive (same as the card meta).
    const Icon = getItemTypeIconComponent(type);
@@ -56,7 +49,7 @@ export function DrawerListRow({ type, name, game, createdAt, updatedAt, classNam
             </span>
          </IconTooltip>
          <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
-         {glyph && <IconTooltip label={t(`Drawer.Types.${game}`)}>{glyph}</IconTooltip>}
+         {game !== 'NEUTRAL' && <IconTooltip label={t(`Drawer.Types.${game}`)}><GameBadge game={game} /></IconTooltip>}
          <ItemDateLabel
             type={type}
             createdAt={createdAt}

@@ -221,8 +221,8 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
          >
             {/* Folder side-nav. Internal spacing/padding mirrors the side-panel Drawer's folder section
                 (p-2 pt-0; the inter-folder rhythm comes from the reorder slots, not a flat gap), so the
-                two read identically; only the column chrome (w-64, border, bg-popover) is Library-specific. */}
-            <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-r-2 border-border bg-popover p-2 pt-0">
+                two read identically; only the column chrome (w-80, border, bg-popover) is Library-specific. */}
+            <aside className="flex w-80 shrink-0 flex-col overflow-y-auto border-r-2 border-border bg-popover p-2 pt-0">
                {/* Breadcrumb moved to the header's full-width row; the side-nav starts at Back / the folders. */}
                {currentFolderId && (
                   // `data-drawer-back` makes this a Back hit-area for the drag dwell (read live by the

@@ -39,7 +39,7 @@ export async function rehydrateBoardReferencedPdfs(
          name: pdf.title,
          game: 'NEUTRAL',
          type: 'PDF',
-         content: { ...pdf, assetHash: null },
+         content: { ...pdf, assetHash: null, coverAssetHash: null },
          parentFolderId: await ensureFolder(),
       });
    }

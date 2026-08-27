@@ -19,7 +19,7 @@ import type { PdfDocument } from '@/lib/types/pdf';
  * `pageCount` and none of the other content kinds' discriminants (a character's `cards`, a
  * board's `items`, a note's `body`, a card's `details`), so the shape alone identifies it.
  */
-function isPdfContent(content: DrawerItemContent): content is PdfDocument {
+export function isPdfContent(content: DrawerItemContent): content is PdfDocument {
    return (
       typeof (content as PdfDocument).assetHash === 'string' &&
       typeof (content as PdfDocument).pageCount === 'number' &&

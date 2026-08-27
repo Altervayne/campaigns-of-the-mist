@@ -39,7 +39,7 @@ const ink: PdfInk = { id: 'a1', kind: 'ink', page: 1, color: '#e11d48', createdA
 
 /** Imports a working row + a linked drawer item, then seeds a store instance's live doc without touching pdf.js. */
 async function seedStore(saveDebounceMs: number) {
-   const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 4 };
+   const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 };
    await repository.importPdf(doc, 'item-1');
    const item: DrawerItemRecord = {
       id: 'item-1', name: 'Book', parentFolderId: DRAWER_ROOT_PARENT_ID, order: 0,
@@ -308,7 +308,7 @@ describe('pdf last-page persistence', () => {
 
 describe('pdf hydrate restores the reading position', () => {
    it('seeds currentPage from the stored lastPage', async () => {
-      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', pageCount: 24, lastPage: 20 };
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 24, lastPage: 20 };
       await repository.importPdf(doc, 'item-1');
 
       const useStore = createPdfStore();
@@ -319,7 +319,7 @@ describe('pdf hydrate restores the reading position', () => {
    });
 
    it('falls back to page 1 when no lastPage is stored', async () => {
-      const doc: PdfDocument = { id: 'pdf-2', title: 'Book', assetHash: 'hash-a', pageCount: 24 };
+      const doc: PdfDocument = { id: 'pdf-2', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 24 };
       await repository.importPdf(doc, null);
 
       const useStore = createPdfStore();
@@ -331,7 +331,7 @@ describe('pdf hydrate restores the reading position', () => {
 
 describe('pdf hydrate placeholder / error branch discipline', () => {
    it('a null-hash record lands on placeholder without fetching a blob', async () => {
-      const doc: PdfDocument = { id: 'pdf-ph', title: 'Book', assetHash: null, pageCount: 12, annotations: { a1: ink } };
+      const doc: PdfDocument = { id: 'pdf-ph', title: 'Book', assetHash: null, coverAssetHash: null, pageCount: 12, annotations: { a1: ink } };
       await repository.importPdf(doc, 'item-ph');
       vi.mocked(getPdfBlob).mockClear();
 
@@ -345,7 +345,7 @@ describe('pdf hydrate placeholder / error branch discipline', () => {
    });
 
    it('a real hash whose blob is missing lands on error, not placeholder', async () => {
-      const doc: PdfDocument = { id: 'pdf-lost', title: 'Book', assetHash: 'hash-gone', pageCount: 12 };
+      const doc: PdfDocument = { id: 'pdf-lost', title: 'Book', assetHash: 'hash-gone', coverAssetHash: null, pageCount: 12 };
       await repository.importPdf(doc, null);
       vi.mocked(getPdfBlob).mockResolvedValueOnce(undefined);
 
@@ -356,7 +356,7 @@ describe('pdf hydrate placeholder / error branch discipline', () => {
    });
 
    it('re-hydrating a repaired placeholder loads the file in place, landing on lastPage', async () => {
-      const doc: PdfDocument = { id: 'pdf-fix', title: 'Book', assetHash: null, pageCount: 12, lastPage: 7, annotations: { a1: ink } };
+      const doc: PdfDocument = { id: 'pdf-fix', title: 'Book', assetHash: null, coverAssetHash: null, pageCount: 12, lastPage: 7, annotations: { a1: ink } };
       await repository.importPdf(doc, 'item-fix');
 
       const useStore = createPdfStore();
