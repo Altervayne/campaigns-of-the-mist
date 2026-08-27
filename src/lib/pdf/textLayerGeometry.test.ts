@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 // -- Unit Under Test --
-import { buildPageTextIndex, findMatches, foldText, matchToQuads } from './textLayerGeometry';
+import { buildPageTextIndex, findMatches, foldText, foldWithMap, matchToQuads } from './textLayerGeometry';
 
 // -- Type Imports --
 import type { PageTextIndex, RawTextItem } from './textLayerGeometry';
@@ -43,6 +43,48 @@ describe('foldText', () => {
    });
 });
 
+describe('foldWithMap', () => {
+   // The folded string must stay byte-identical to foldText so the store's match offsets keep meaning.
+   const fixtures = ['Fire BALL', 'Café Éclair', 'naïve', 'STRAßE', 'a \t\n  b', '  lead', 'trail  ', ''];
+
+   it('folds byte-identically to foldText across the fold fixtures', () => {
+      for (const s of fixtures) expect(foldWithMap(s).folded).toBe(foldText(s));
+   });
+
+   it('maps each folded char to its raw index for a plain ascii run', () => {
+      const { folded, map } = foldWithMap('Fire');
+      expect(folded).toBe('fire');
+      expect(map).toEqual([0, 1, 2, 3]);
+   });
+
+   it('maps a precomposed accent back to its single source char', () => {
+      // 'é' is one code unit that folds to 'e'; the next char keeps its own raw index.
+      const { folded, map } = foldWithMap('éa');
+      expect(folded).toBe('ea');
+      expect(map).toEqual([0, 1]);
+   });
+
+   it('maps a decomposed accent past its combining mark', () => {
+      // 'e' + combining acute (2 code units): the mark folds away, so 'x' after it points at raw index 2.
+      const { folded, map } = foldWithMap('éx');
+      expect(folded).toBe('ex');
+      expect(map).toEqual([0, 2]);
+   });
+
+   it('maps a collapsed whitespace run to the first whitespace char', () => {
+      const { folded, map } = foldWithMap('a \t\n  b');
+      expect(folded).toBe('a b');
+      // 'a'->0, the single space->1 (first of the run), 'b'->6 (after four collapsed ws chars).
+      expect(map).toEqual([0, 1, 6]);
+   });
+
+   it('maps a leading collapsed space to its own raw index', () => {
+      const { folded, map } = foldWithMap('  x');
+      expect(folded).toBe(' x');
+      expect(map).toEqual([0, 2]);
+   });
+});
+
 describe('buildPageTextIndex', () => {
    it('maps a single run to its normalized rect', () => {
       const index = buildPageTextIndex([run('Fire', 80)], VT, VW, VH);
@@ -50,7 +92,8 @@ describe('buildPageTextIndex', () => {
       expect(index.items).toHaveLength(1);
       expect(index.items[0].start).toBe(0);
       expect(index.items[0].end).toBe(4);
-      expect(index.items[0].rect).toEqual({ x: 0.1, y: 0.1, w: 0.2, h: 0.1 });
+      // Baseline device y 0.2; box seated a 0.8 ascent above it -> top 0.12, one fontHeight (0.1) tall.
+      expect(index.items[0].rect).toEqual({ x: 0.1, y: 0.12, w: 0.2, h: 0.1 });
    });
 
    it('separates adjacent runs with one space owned by neither span', () => {
@@ -58,8 +101,8 @@ describe('buildPageTextIndex', () => {
       expect(index.folded).toBe('fire ball');
       expect(index.items[0]).toMatchObject({ start: 0, end: 4 });
       expect(index.items[1]).toMatchObject({ start: 5, end: 9 });
-      // The second run drops one line (baseline 60 -> device top 0.3).
-      expect(index.items[1].rect).toEqual({ x: 0.1, y: 0.3, w: 0.2, h: 0.1 });
+      // The second run drops one line (baseline 60 -> device baseline 0.4, box top 0.32).
+      expect(index.items[1].rect).toEqual({ x: 0.1, y: 0.32, w: 0.2, h: 0.1 });
    });
 
    it('does not double-space when the previous run already ends in whitespace', () => {
@@ -117,28 +160,28 @@ describe('matchToQuads', () => {
       expect(quads).toHaveLength(1);
       expect(quads[0].x).toBeCloseTo(0.15, 10);
       expect(quads[0].w).toBeCloseTo(0.1, 10);
-      expect(quads[0].y).toBe(0.1);
+      expect(quads[0].y).toBe(0.12);
       expect(quads[0].h).toBe(0.1);
    });
 
    it('covers a whole run when the match spans its full span', () => {
       // 'ball' is offsets [5,9): the whole second run.
       const quads = matchToQuads(index, 5, 4);
-      expect(quads).toEqual([{ x: 0.1, y: 0.3, w: 0.2, h: 0.1 }]);
+      expect(quads).toEqual([{ x: 0.1, y: 0.32, w: 0.2, h: 0.1 }]);
    });
 
    it('emits one quad per run for a match spanning multiple runs', () => {
       // 'fire ball' spans both runs; the separator space belongs to neither.
       const quads = matchToQuads(index, 0, 9);
       expect(quads).toEqual([
-         { x: 0.1, y: 0.1, w: 0.2, h: 0.1 },
-         { x: 0.1, y: 0.3, w: 0.2, h: 0.1 },
+         { x: 0.1, y: 0.12, w: 0.2, h: 0.1 },
+         { x: 0.1, y: 0.32, w: 0.2, h: 0.1 },
       ]);
    });
 
    it('skips a run the match only touches at a zero-width boundary', () => {
       // A match ending exactly at run 0's end (offset 4) never enters run 1; the separator is at [4,5).
       const quads = matchToQuads(index, 0, 4);
-      expect(quads).toEqual([{ x: 0.1, y: 0.1, w: 0.2, h: 0.1 }]);
+      expect(quads).toEqual([{ x: 0.1, y: 0.12, w: 0.2, h: 0.1 }]);
    });
 });

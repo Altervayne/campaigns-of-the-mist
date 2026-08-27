@@ -4,11 +4,13 @@ import { memo, useEffect, useRef } from 'react';
 // -- Loader / Cache Imports --
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
 import { getPageTextContent } from '@/lib/pdf/pdfTextContent';
+import { registerTextLayer, unregisterTextLayer } from '@/lib/pdf/pdfTextLayerRegistry';
 
 // -- Context Imports --
 import { usePdfMarkup } from '@/lib/pdf/PdfMarkupContext';
 
 // -- Type Imports --
+import type { TextLayerHandle } from '@/lib/pdf/pdfTextLayerRegistry';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 /*
@@ -49,6 +51,7 @@ export const PdfTextLayer = memo(function PdfTextLayer({ proxy, pageNumber, widt
       }
       let cancelled = false;
       let textLayer: { cancel: () => void } | null = null;
+      let handle: TextLayerHandle | null = null;
 
       void (async () => {
          try {
@@ -65,6 +68,10 @@ export const PdfTextLayer = memo(function PdfTextLayer({ proxy, pageNumber, widt
             const tl = new pdfjs.TextLayer({ textContentSource: textContent, container, viewport });
             textLayer = tl;
             await tl.render();
+            if (cancelled) return;
+            // Publish the rendered spans so the search overlay can paint over the exact glyph rects.
+            handle = { textDivs: tl.textDivs, itemsStr: tl.textContentItemsStr };
+            registerTextLayer(proxy, pageNumber, handle);
          } catch {
             // A cancelled build (unmount / re-fit) rejects here; nothing to surface.
          }
@@ -73,6 +80,7 @@ export const PdfTextLayer = memo(function PdfTextLayer({ proxy, pageNumber, widt
       return () => {
          cancelled = true;
          textLayer?.cancel();
+         if (handle) unregisterTextLayer(proxy, pageNumber, handle);
          container.replaceChildren();
       };
    }, [isVisible, proxy, pageNumber, width]);

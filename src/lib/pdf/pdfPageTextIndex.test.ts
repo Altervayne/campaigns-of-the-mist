@@ -44,7 +44,7 @@ describe('getPageTextIndex', () => {
 
       const index = await first;
       expect(index.folded).toBe('fire');
-      expect(index.items[0].rect).toEqual({ x: 0.1, y: 0.1, w: 0.2, h: 0.1 });
+      expect(index.items[0].rect).toEqual({ x: 0.1, y: 0.12, w: 0.2, h: 0.1 });
       expect(calls.get(1)).toBe(1);
    });
 
