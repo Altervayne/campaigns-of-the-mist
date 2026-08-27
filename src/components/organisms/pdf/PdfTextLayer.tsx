@@ -25,7 +25,8 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
  * free between settles.
  *
  * Read mode leaves the layer selectable (the I-beam is the whole discoverability story); markup mode
- * makes it inert so the capture layer owns every drag.
+ * makes it inert so the capture layer owns every drag - except the Text highlighter, which selects text
+ * to snap its highlights, so the layer stays selectable while it is armed.
  */
 
 interface PdfTextLayerProps {
@@ -39,7 +40,7 @@ interface PdfTextLayerProps {
 }
 
 export const PdfTextLayer = memo(function PdfTextLayer({ proxy, pageNumber, width, isVisible }: PdfTextLayerProps) {
-   const { mode } = usePdfMarkup();
+   const { mode, tool, highlightMode } = usePdfMarkup();
    const containerRef = useRef<HTMLDivElement>(null);
 
    useEffect(() => {
@@ -85,8 +86,9 @@ export const PdfTextLayer = memo(function PdfTextLayer({ proxy, pageNumber, widt
       };
    }, [isVisible, proxy, pageNumber, width]);
 
-   // Read mode: selectable. Markup mode: inert, so the capture layer below owns every drag.
-   const selectable = mode === 'read';
+   // Selectable in read mode, and while the Text highlighter is armed so its selection drives the highlight.
+   // Otherwise inert, so the capture layer below owns every drag.
+   const selectable = mode === 'read' || (mode === 'markup' && tool === 'highlight' && highlightMode === 'text');
    return (
       <div
          ref={containerRef}

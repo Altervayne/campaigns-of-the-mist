@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 
 // -- Type Imports --
 import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
-import type { PdfMarkupMode, PdfTool } from '@/lib/stores/pdfStore';
+import type { PdfHighlightMode, PdfMarkupMode, PdfTool } from '@/lib/stores/pdfStore';
 import type { PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
@@ -20,6 +20,8 @@ import type { PdfRect } from '@/lib/types/pdfAnnotation';
 export interface PdfMarkupContextValue {
    mode: PdfMarkupMode;
    tool: PdfTool;
+   /** The highlighter's sub-mode; `text` hands the drag to the text layer, `region` keeps the freehand rect. */
+   highlightMode: PdfHighlightMode;
    penColor: string;
    /** Pen width in the selector's world px; the layer normalizes it to a page-width fraction at commit. */
    penWidth: number;
@@ -81,6 +83,7 @@ export interface PdfMarkupContextValue {
 const READ_ONLY_VALUE: PdfMarkupContextValue = {
    mode: 'read',
    tool: 'pen',
+   highlightMode: 'text',
    penColor: '#e11d48',
    penWidth: 3,
    highlightColor: '#fde047',

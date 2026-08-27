@@ -131,6 +131,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const penColor = useStore(store, (state) => state.penColor);
    const penWidth = useStore(store, (state) => state.penWidth);
    const highlightColor = useStore(store, (state) => state.highlightColor);
+   const highlightMode = useStore(store, (state) => state.highlightMode);
    const commentColor = useStore(store, (state) => state.commentColor);
    const commentsPanelOpen = useStore(store, (state) => state.commentsPanelOpen);
    const navPanelOpen = useStore(store, (state) => state.navPanelOpen);
@@ -142,7 +143,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    const searchActiveIndex = useStore(store, (state) => state.searchActiveIndex);
    const searchStatus = useStore(store, (state) => state.searchStatus);
    const searchScanned = useStore(store, (state) => state.searchScanned);
-   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setNavPanelOpen, toggleNavPanel, setNavPanelTab, setAnnotationTypeVisible, setAllAnnotationsVisible, openSearch, closeSearch, setSearchQuery, nextMatch, prevMatch } = store.getState().actions;
+   const { setPage, setMarkupMode, setTool, setPenColor, setPenWidth, setHighlightColor, setHighlightMode, setCommentColor, setCommentsPanelOpen, toggleCommentsPanel, setNavPanelOpen, toggleNavPanel, setNavPanelTab, setAnnotationTypeVisible, setAllAnnotationsVisible, openSearch, closeSearch, setSearchQuery, nextMatch, prevMatch } = store.getState().actions;
 
    // The comment card highlighted + scrolled-to in the panel; ephemeral UI, reset on remount (a tab switch).
    const [focusedCommentId, setFocusedCommentId] = useState<string | null>(null);
@@ -485,10 +486,23 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
       window.getSelection()?.removeAllRanges();
    }, [store]);
 
+   // The Text highlighter is drag-to-release: while it is armed, a pointer release over the reader mints the
+   // highlight from the live selection. `highlightSelection` no-ops on a collapsed or out-of-reader selection,
+   // so a stray click is safe. The floating bar stays hidden in markup mode - there's no button to press here.
+   useEffect(() => {
+      if (!(markupMode === 'markup' && tool === 'highlight' && highlightMode === 'text')) return;
+      const scroller = scrollRef.current;
+      if (!scroller) return;
+      const onMouseUp = () => highlightSelection();
+      scroller.addEventListener('mouseup', onMouseUp);
+      return () => scroller.removeEventListener('mouseup', onMouseUp);
+   }, [markupMode, tool, highlightMode, highlightSelection]);
+
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
          mode: markupMode,
          tool,
+         highlightMode,
          penColor,
          penWidth,
          highlightColor,
@@ -512,7 +526,7 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          beginHistory,
          commitHistory,
       }),
-      [markupMode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, setCommentBody, deleteComment, selectedId, flashCommentId, focusedCommentId, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory],
+      [markupMode, tool, highlightMode, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, setCommentBody, deleteComment, selectedId, flashCommentId, focusedCommentId, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory],
    );
 
    // Grouped per page after dropping hidden kinds, so the layers paint only visible marks (no per-layer change).
@@ -828,6 +842,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                      onPenWidthChange={setPenWidth}
                      highlightColor={highlightColor}
                      onHighlightColorChange={setHighlightColor}
+                     highlightMode={highlightMode}
+                     onHighlightModeChange={setHighlightMode}
                      commentColor={commentColor}
                      onCommentColorChange={setCommentColor}
                      selectedColor={selectedColor}

@@ -544,6 +544,28 @@ describe('pdf store match navigation', () => {
    });
 });
 
+describe('pdf store highlight mode', () => {
+   it('defaults to text', async () => {
+      const useStore = await seedStore(400);
+      expect(useStore.getState().highlightMode).toBe('text');
+   });
+
+   it('setHighlightMode switches the sub-mode', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.setHighlightMode('region');
+      expect(useStore.getState().highlightMode).toBe('region');
+      useStore.getState().actions.setHighlightMode('text');
+      expect(useStore.getState().highlightMode).toBe('text');
+   });
+
+   it('dispose resets the sub-mode back to text', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.setHighlightMode('region');
+      useStore.getState().actions.dispose();
+      expect(useStore.getState().highlightMode).toBe('text');
+   });
+});
+
 describe('pdf store annotation visibility', () => {
    it('defaults every kind visible', async () => {
       const useStore = await seedStore(400);

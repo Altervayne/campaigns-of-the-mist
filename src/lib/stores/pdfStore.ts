@@ -70,6 +70,9 @@ export type PdfMarkupMode = 'read' | 'markup';
 /** The armed markup tool while in markup mode. */
 export type PdfTool = 'pen' | 'eraser' | 'highlight' | 'comment' | 'select';
 
+/** The highlighter's sub-mode: `text` snaps to real text via selection, `region` is a freehand rect. */
+export type PdfHighlightMode = 'text' | 'region';
+
 /** The active tab of the left navigation panel. */
 export type PdfNavTab = 'outline' | 'thumbnails';
 
@@ -149,6 +152,8 @@ export interface PdfState {
    penWidth: number;
    /** The highlighter's fill hex; ephemeral. Real hex - user content on white paper. */
    highlightColor: string;
+   /** The highlighter's sub-mode; ephemeral, defaults to `text` so the highlighter snaps to real text. */
+   highlightMode: PdfHighlightMode;
    /** The comment region's outline/fill hex; ephemeral. Real hex - user content on white paper. */
    commentColor: string;
    /** The comments-list panel visibility; ephemeral, defaults closed. The toolbar and palette both toggle it. */
@@ -211,6 +216,8 @@ export interface PdfState {
       setPenWidth: (width: number) => void;
       /** Sets the highlighter's fill hex. Ephemeral. */
       setHighlightColor: (color: string) => void;
+      /** Sets the highlighter's sub-mode (text vs. region). Ephemeral. */
+      setHighlightMode: (mode: PdfHighlightMode) => void;
       /** Sets the comment region's hex. Ephemeral. */
       setCommentColor: (color: string) => void;
       /** Sets the comments-list panel visibility. Ephemeral. */
@@ -282,7 +289,7 @@ export interface PdfState {
    };
 }
 
-const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'commentColor' | 'commentsPanelOpen' | 'navPanelOpen' | 'navPanelTab' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'searchOpen' | 'searchQuery' | 'searchMatches' | 'searchActiveIndex' | 'searchStatus' | 'searchScanned' | 'status'> = {
+const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 'loadingTask' | 'currentPage' | 'jumpSeq' | 'zoom' | 'markupMode' | 'tool' | 'penColor' | 'penWidth' | 'highlightColor' | 'highlightMode' | 'commentColor' | 'commentsPanelOpen' | 'navPanelOpen' | 'navPanelTab' | 'annotationVisibility' | 'undoStack' | 'redoStack' | 'searchOpen' | 'searchQuery' | 'searchMatches' | 'searchActiveIndex' | 'searchStatus' | 'searchScanned' | 'status'> = {
    pdfId: null,
    doc: null,
    drawerItemId: null,
@@ -296,6 +303,7 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    penColor: DEFAULT_PEN_COLOR,
    penWidth: DEFAULT_PEN_WIDTH,
    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+   highlightMode: 'text',
    commentColor: DEFAULT_COMMENT_COLOR,
    commentsPanelOpen: false,
    navPanelOpen: false,
@@ -448,6 +456,8 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setPenWidth: (width) => set({ penWidth: width }),
 
             setHighlightColor: (color) => set({ highlightColor: color }),
+
+            setHighlightMode: (mode) => set({ highlightMode: mode }),
 
             setCommentColor: (color) => set({ commentColor: color }),
 

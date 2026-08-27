@@ -54,7 +54,7 @@ interface PdfPageInteractionLayerProps {
 }
 
 export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageInteractionLayerProps) {
-   const { mode, tool, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory } = usePdfMarkup();
+   const { mode, tool, highlightMode, penColor, penWidth, highlightColor, commentColor, commitInk, commitHighlight, commitComment, eraseAt, commentAtPoint, focusComment, select, selectAt, translateSelected, resizeHandleAt, resizeSelected, beginHistory, commitHistory } = usePdfMarkup();
 
    // The in-flight pen stroke's normalized points, plus its preview mirror (state so only this layer repaints).
    const pointsRef = useRef<number[] | null>(null);
@@ -73,7 +73,9 @@ export function PdfPageInteractionLayer({ pageNumber, width, height }: PdfPageIn
    // on a handle reshapes rather than drags.
    const resizeRef = useRef<{ handle: ResizeHandle; lastX: number; lastY: number } | null>(null);
 
-   if (mode !== 'markup') return null;
+   // The Text highlighter steps aside so the text layer owns the drag; every other tool (and Region highlight)
+   // still captures here.
+   if (mode !== 'markup' || (tool === 'highlight' && highlightMode === 'text')) return null;
 
    const isRectTool = tool === 'highlight' || tool === 'comment';
 

@@ -2,7 +2,7 @@
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Eraser, Highlighter, MessageSquare, MousePointer2, Pen } from 'lucide-react';
+import { Eraser, Highlighter, MessageSquare, MousePointer2, Pen, SquareDashed, Type } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -12,7 +12,7 @@ import { StrokeWidthSelector } from '@/components/molecules/board/draw/StrokeWid
 import { InkColorControl } from '@/components/molecules/board/draw/InkColorControl';
 
 // -- Type Imports --
-import type { PdfTool } from '@/lib/stores/pdfStore';
+import type { PdfHighlightMode, PdfTool } from '@/lib/stores/pdfStore';
 import type { ReactNode } from 'react';
 
 /*
@@ -31,6 +31,8 @@ interface PdfMarkupToolbarProps {
    onPenWidthChange: (width: number) => void;
    highlightColor: string;
    onHighlightColorChange: (color: string) => void;
+   highlightMode: PdfHighlightMode;
+   onHighlightModeChange: (mode: PdfHighlightMode) => void;
    commentColor: string;
    onCommentColorChange: (color: string) => void;
    /** The selected mark's ink while the select tool is armed, or null when nothing is selected. */
@@ -38,7 +40,7 @@ interface PdfMarkupToolbarProps {
    onRecolorSelected: (color: string) => void;
 }
 
-export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange, highlightColor, onHighlightColorChange, commentColor, onCommentColorChange, selectedColor, onRecolorSelected }: PdfMarkupToolbarProps) {
+export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChange, penWidth, onPenWidthChange, highlightColor, onHighlightColorChange, highlightMode, onHighlightModeChange, commentColor, onCommentColorChange, selectedColor, onRecolorSelected }: PdfMarkupToolbarProps) {
    const { t } = useTranslation();
 
    return (
@@ -75,6 +77,15 @@ export function PdfMarkupToolbar({ tool, onToolChange, penColor, onPenColorChang
             ) : null}
             {tool === 'highlight' ? (
                <>
+                  <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+                  <div className="flex items-center gap-0.5" role="group" aria-label={t('PdfMarkup.highlightMode')}>
+                     <ToolButton title={t('PdfMarkup.highlightText')} active={highlightMode === 'text'} onClick={() => onHighlightModeChange('text')}>
+                        <Type className="h-4 w-4" />
+                     </ToolButton>
+                     <ToolButton title={t('PdfMarkup.highlightRegion')} active={highlightMode === 'region'} onClick={() => onHighlightModeChange('region')}>
+                        <SquareDashed className="h-4 w-4" />
+                     </ToolButton>
+                  </div>
                   <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
                   <InkColorControl color={highlightColor} title={t('PdfMarkup.highlightColor')} onApply={(color) => color && onHighlightColorChange(color)} />
                </>
