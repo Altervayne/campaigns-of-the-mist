@@ -14,13 +14,15 @@ import { FitToBox } from '@/components/molecules/drawer/FitToBox';
  *
  * `children` is the per-type preview, fit into the stage by FitToBox: `cover` for portrait/square content
  * (fills the width, bleeds off the faded bottom), `contain` for landscape content (centered as its own
- * canvas). The shell stays app-token chrome; the stage bg is the one seam that carries type identity.
+ * canvas). The shell stays app-token chrome; the stage bg and the optional `accentBar` spine are the only
+ * seams that carry type identity.
  */
 export function DrawerCardFrame({
    stageClassName,
    fit,
    name,
    meta,
+   accentBar,
    headerAction,
    headerActionLeft = false,
    children,
@@ -29,12 +31,15 @@ export function DrawerCardFrame({
    fit: 'cover' | 'contain';
    name: ReactNode;
    meta?: ReactNode;
+   accentBar?: string;
    headerAction?: ReactNode;
    headerActionLeft?: boolean;
    children: ReactNode;
 }) {
    return (
-      <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm transition-[transform,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-px">
+      <div className={cn('flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm transition-[transform,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-px', accentBar && 'relative overflow-hidden')}>
+         {/* A thin identity spine over the left padding, behind the content, full height. */}
+         {accentBar && <span aria-hidden className={cn('absolute inset-y-0 left-0 w-[3px]', accentBar)} />}
          <div className={cn('aspect-[4/3] w-full overflow-hidden rounded-md', stageClassName)}>
             <FitToBox fit={fit} className="pointer-events-none h-full w-full">
                {children}

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
-import { getItemTypeIcon } from '@/lib/utils/drawer-icons';
+import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
 import { getGameVisual } from '@/lib/constants/gameVisuals';
 
 // -- Component Imports --
@@ -42,10 +42,19 @@ interface DrawerListRowProps {
 export function DrawerListRow({ type, name, game, createdAt, updatedAt, className }: DrawerListRowProps) {
    const { t } = useTranslation();
    const glyph = gameGlyph(game);
+   const accent = getItemIdentityAccent(type, game);
+   // A stable module-level lucide component; static-components is a false positive (same as the card meta).
+   const Icon = getItemTypeIconComponent(type);
    return (
       <div className={cn('flex min-h-8 items-center gap-2 rounded p-1.5 pr-2', className)}>
-         {/* Tooltips name the otherwise-unlabelled indicator icons (type + game). */}
-         <IconTooltip label={t(`Drawer.filters.itemType.${type}`)}>{getItemTypeIcon(type)}</IconTooltip>
+         {/* A leading identity tile carries per-type recognition down a long list; tooltips name the
+             otherwise-unlabelled indicator icons (type + game). */}
+         <IconTooltip label={t(`Drawer.filters.itemType.${type}`)}>
+            <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', accent.badge)}>
+               {/* eslint-disable-next-line react-hooks/static-components */}
+               <Icon className="h-4 w-4" />
+            </span>
+         </IconTooltip>
          <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
          {glyph && <IconTooltip label={t(`Drawer.Types.${game}`)}>{glyph}</IconTooltip>}
          <ItemDateLabel

@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 
 // -- Icon Imports --
-import { Folder, MoreHorizontal, Pencil, Trash2, Move, GripVertical, Upload } from 'lucide-react';
+import { Folder, MoreHorizontal, Pencil, Trash2, Move, GripVertical, Upload, ChevronRight } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -82,37 +82,46 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                         <span className="touch-target flex shrink-0 cursor-grab" {...dragAttributes} {...dragListeners}>
                            <GripVertical className="h-5 w-5 text-muted-foreground" />
                         </span>
-                        <Folder className="h-6 w-6 shrink-0 text-muted-foreground"/>
+                        {/* Folders use the app `accent` token, not a per-type identity color - they hold
+                            mixed types, so the filled tile just reads "enterable container". */}
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                           <Folder className="h-4 w-4" />
+                        </span>
                         {/* A long name wraps to two lines (then ellipsis) rather than truncating on one; the
                             row grows to fit. Full name on hover. Short names are unaffected. */}
                         <span title={folder.name} className="min-w-0 line-clamp-2 font-medium text-sm">{folder.name}</span>
                      </div>
 
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()} className="cursor-pointer">
-                           <Button variant="ghost" size="icon" className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ${DRAWER_MENU_TRIGGER_CLASS}`}>
-                              <MoreHorizontal className="h-4 w-4" />
-                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(); }} className="cursor-pointer">
-                              <Pencil className="mr-2 h-4 w-4" />
-                              <span>{t('Drawer.Actions.rename')}</span>
-                           </DropdownMenuItem>
-                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMove(); }} className="cursor-pointer">
-                              <Move className="mr-2 h-4 w-4" />
-                              <span>{t('Common.move')}</span>
-                           </DropdownMenuItem>
-                           <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
-                              <Upload className="mr-2 h-4 w-4" />
-                              <span>{t('Drawer.Actions.export')}</span>
-                           </DropdownMenuItem>
-                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-destructive cursor-pointer">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>{t('Drawer.Actions.delete')}</span>
-                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                     </DropdownMenu>
+                     {/* The chevron signals "enterable" at rest and cedes its slot to the actions menu on
+                         hover, so the two never fight for the trailing space. */}
+                     <div className="relative flex size-6 shrink-0 items-center justify-center">
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-opacity group-hover:opacity-0" />
+                        <DropdownMenu>
+                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()} className="cursor-pointer">
+                              <Button variant="ghost" size="icon" className={`absolute inset-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ${DRAWER_MENU_TRIGGER_CLASS}`}>
+                                 <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                           </DropdownMenuTrigger>
+                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(); }} className="cursor-pointer">
+                                 <Pencil className="mr-2 h-4 w-4" />
+                                 <span>{t('Drawer.Actions.rename')}</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMove(); }} className="cursor-pointer">
+                                 <Move className="mr-2 h-4 w-4" />
+                                 <span>{t('Common.move')}</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
+                                 <Upload className="mr-2 h-4 w-4" />
+                                 <span>{t('Drawer.Actions.export')}</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-destructive cursor-pointer">
+                                 <Trash2 className="mr-2 h-4 w-4" />
+                                 <span>{t('Drawer.Actions.delete')}</span>
+                              </DropdownMenuItem>
+                           </DropdownMenuContent>
+                        </DropdownMenu>
+                     </div>
                   </div>
                </DragStaticWrapper>
             </div>

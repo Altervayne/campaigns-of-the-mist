@@ -25,7 +25,7 @@ import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
 // -- Utils Imports --
-import { getItemTypeIcon } from '@/lib/utils/drawer-icons';
+import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
 import { getGameVisual } from '@/lib/constants/gameVisuals';
 import { boardContentBounds, itemCenter } from '@/lib/board/boardMiniMap';
 
@@ -379,11 +379,21 @@ export function DrawerItemPreview({
    const glyph = gameGlyph(item.game);
    // The stage wears the type's own surface and the fill matches its silhouette (cover vs contain).
    const { stageClassName, fit } = drawerPreviewStage(item.type);
+   // The type's identity accent tints the meta glyph and paints the card's left spine.
+   const accent = getItemIdentityAccent(item.type, item.game);
+   // A stable module-level lucide component; static-components is a false positive here.
+   const Icon = getItemTypeIconComponent(item.type);
 
    // Each indicator icon gets a hover label naming it - the type and the game - so they're not a guess.
    const meta = (
       <>
-         <IconTooltip label={t(`Drawer.filters.itemType.${item.type}`)}>{getItemTypeIcon(item.type)}</IconTooltip>
+         <IconTooltip label={t(`Drawer.filters.itemType.${item.type}`)}>
+            {/* Solid identity badge (fixed color + white glyph), so the color reads the same on any theme. */}
+            <span className={cn('flex size-5 shrink-0 items-center justify-center rounded', accent.badge)}>
+               {/* eslint-disable-next-line react-hooks/static-components */}
+               <Icon className="h-3.5 w-3.5" />
+            </span>
+         </IconTooltip>
          {glyph && <IconTooltip label={t(`Drawer.Types.${item.game}`)}>{glyph}</IconTooltip>}
          <ItemDateLabel type={item.type} createdAt={item.createdAt} updatedAt={item.updatedAt} className="truncate" />
       </>
@@ -395,6 +405,7 @@ export function DrawerItemPreview({
          fit={fit}
          name={item.name}
          meta={meta}
+         accentBar={accent.bar}
          headerAction={headerAction}
          headerActionLeft={headerActionLeft}
       >
