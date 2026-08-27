@@ -57,7 +57,7 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
             <DragStaticWrapper isBeingDragged={isBeingDragged}>
                <div ref={revealRef} className={cn('relative group/item rounded-lg data-[state=open]:bg-muted', isRevealed && 'motion-safe:animate-drawer-reveal')}>
                   <div {...dragAttributes} {...dragListeners} className="cursor-grab">
-                     <DrawerItemPreview item={item} />
+                     <DrawerItemPreview item={item} lazy />
                   </div>
                   <div className="absolute top-1 right-1 z-10">
                      <DropdownMenu>

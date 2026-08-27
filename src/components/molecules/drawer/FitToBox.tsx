@@ -16,14 +16,15 @@ import { cn } from '@/lib/utils';
  * bottom out to transparent so a portrait/square preview bleeds off the bottom edge, revealing the stage
  * behind. The fade is to transparent (no color token), so it can't break in a dark or custom theme.
  *
- * `cover` scale is capped at 1: content never magnifies, only down-scales or renders 1:1. Document
- * previews author large (PREVIEW_PAGE) and shrink into a dense thumbnail; fixed-size card previews render
- * as-is rather than being blown up past their natural size.
+ * `cover` scale is capped at 1 by default: content never magnifies, only down-scales or renders 1:1.
+ * Document previews author large (PREVIEW_PAGE) and shrink into a dense thumbnail. `allowUpscale` lifts the
+ * cap so a small fixed-size card fills the stage width, its tall body cropping off the bottom; a bottom
+ * scrim melts that crop into the `bg-card` stage so it reads as a soft fade-out, not a hard cut.
  */
 
 const COVER_FADE = 'linear-gradient(to bottom, #000 70%, transparent)';
 
-export function FitToBox({ children, className, fit = 'contain' }: { children: ReactNode; className?: string; fit?: 'contain' | 'cover' }) {
+export function FitToBox({ children, className, fit = 'contain', allowUpscale = false }: { children: ReactNode; className?: string; fit?: 'contain' | 'cover'; allowUpscale?: boolean }) {
    const boxRef = useRef<HTMLDivElement>(null);
    const contentRef = useRef<HTMLDivElement>(null);
    const [scale, setScale] = useState(1);
@@ -41,14 +42,15 @@ export function FitToBox({ children, className, fit = 'contain' }: { children: R
          const contentWidth = content.offsetWidth;
          const contentHeight = content.offsetHeight;
          if (boxWidth && boxHeight && contentWidth && contentHeight) {
-            setScale(cover ? Math.min(boxWidth / contentWidth, 1) : Math.min(boxWidth / contentWidth, boxHeight / contentHeight));
+            const coverScale = allowUpscale ? boxWidth / contentWidth : Math.min(boxWidth / contentWidth, 1);
+            setScale(cover ? coverScale : Math.min(boxWidth / contentWidth, boxHeight / contentHeight));
          }
       };
       const observer = new ResizeObserver(measure);
       observer.observe(box);
       observer.observe(content);
       return () => observer.disconnect();
-   }, [cover]);
+   }, [cover, allowUpscale]);
 
    return (
       <div ref={boxRef} className={cn('relative flex overflow-hidden', cover ? 'items-start justify-start' : 'items-center justify-center', className)}>
@@ -63,6 +65,10 @@ export function FitToBox({ children, className, fit = 'contain' }: { children: R
          >
             {children}
          </div>
+         {/* Fade-out scrim for an upscaled card cropping past the stage: the bottom melts into `bg-card`. */}
+         {cover && allowUpscale && (
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-card via-card/50 to-transparent" />
+         )}
       </div>
    );
 }

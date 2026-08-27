@@ -2,6 +2,9 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// -- Hook Imports --
+import { useInView } from '@/hooks/useInView';
+
 // -- Icon Imports --
 import { Folder, GripVertical, LayoutGrid, NotebookText } from 'lucide-react';
 
@@ -97,16 +100,15 @@ function JournalPreview({ journal }: { journal: Journal }) {
 
          {/* Top page: parchment with a bound masthead, then page 1's clipped Markdown (or a placeholder). */}
          <div className="absolute inset-0 flex flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
-            {/* Masthead: the binding strip that identifies a journal - glyph, label, page count. */}
-            <div className="shrink-0 flex items-center gap-2 border-b-2 border-paper-border px-2.5 py-2">
-               <NotebookText className="h-4 w-4 shrink-0 text-paper-foreground/70" />
+            {/* Masthead: the journal's header band, on the paper header color (bg-paper-primary), matching the
+                real journal's title bar so the preview reads as the same document. */}
+            <div className="shrink-0 flex items-center gap-2 border-b border-paper-border bg-paper-primary px-2.5 py-2 text-paper-primary-foreground">
+               <NotebookText className="h-4 w-4 shrink-0" />
                <span className="truncate text-sm font-semibold uppercase tracking-wide">{t('Drawer.Types.JOURNAL')}</span>
-               <span className="ml-auto shrink-0 text-[11px] text-paper-foreground/60">
+               <span className="ml-auto shrink-0 text-[11px] text-paper-primary-foreground/70">
                   {t('Drawer.Types.journalPageCount', { count: pageCount })}
                </span>
             </div>
-            {/* Stitched hairline under the binding, for a bound-cover feel. */}
-            <div className="h-px shrink-0 bg-paper-border/50" />
 
             <div className="min-h-0 flex-1 overflow-hidden p-2.5 text-sm leading-snug">
                {firstText.trim() ? (
@@ -292,19 +294,28 @@ export function FolderPreview({ folder }: { folder: FolderType }) {
  *   callers omit it and the title row keeps its original single-element layout.
  * @param headerActionLeft - Places `headerAction` on the left of the title
  *   instead of the right, to follow left-handed placement on mobile.
+ * @param lazy - Defers the heavy stage content until the card scrolls into view,
+ *   bounding render cost in a big folder. The shell (name + meta) mounts
+ *   immediately and the stage reserves its size, so DnD geometry and layout are
+ *   unaffected. The drag overlay, mobile, and search cards omit it (immediate).
  */
 export function DrawerItemPreview({
    item,
    headerAction,
    headerActionLeft = false,
+   lazy = false,
 }: {
    // Browse passes a dated `DrawerItemRecord`; the drag overlay / mobile may pass a nested item without
    // dates (the date label then renders nothing), so the date fields are optional here.
    item: DrawerItem & { createdAt?: number; updatedAt?: number };
    headerAction?: ReactNode;
    headerActionLeft?: boolean;
+   lazy?: boolean;
 }) {
    const { t } = useTranslation();
+   // Latched visibility gate; the ref lands on the card root (via DrawerCardFrame) only when lazy.
+   const { ref, hasBeenVisible } = useInView<HTMLDivElement>();
+   const deferred = lazy && !hasBeenVisible;
 
    const renderSnapshot = () => {
       const { content, type, game } = item;
@@ -317,7 +328,10 @@ export function DrawerItemPreview({
          if ('cardType' in content) {
             const Component = resolveCardComponent(type, game);
             if (Component) {
-               return <Component card={content} isDrawerPreview />;
+               // The full static card at its own natural width; cover-fill upscales it to fill the stage,
+               // top-anchored, and the tall body crops off the faded bottom - the thumbnail reads the art,
+               // name, and top content.
+               return <Component card={content} isSnapshot />;
             }
          }
 
@@ -371,8 +385,9 @@ export function DrawerItemPreview({
 
    // The game glyph (null for NEUTRAL items, which carry no game badge).
    const glyph = gameGlyph(item.game);
-   // The stage wears the type's own surface and the fill matches its silhouette (cover vs contain).
-   const { stageClassName, fit } = drawerPreviewStage(item.type);
+   // The stage wears the type's own surface and the fill matches its silhouette (cover vs contain); game
+   // cards additionally upscale to fill the stage width.
+   const { stageClassName, fit, allowUpscale } = drawerPreviewStage(item.type);
    // The type's identity accent tints the meta glyph and paints the card's left spine.
    const accent = getItemIdentityAccent(item.type, item.game);
    // A stable module-level lucide component; static-components is a false positive here.
@@ -393,17 +408,21 @@ export function DrawerItemPreview({
       </>
    );
 
+   // Deferred: the stage shows a shimmer placeholder (mirroring the search skeleton) at the same
+   // footprint, so nothing reflows when the real content swaps in on scroll.
    return (
       <DrawerCardFrame
-         stageClassName={stageClassName}
-         fit={fit}
+         rootRef={lazy ? ref : undefined}
+         stageClassName={deferred ? 'animate-pulse bg-muted/40' : stageClassName}
+         fit={deferred ? 'contain' : fit}
+         allowUpscale={deferred ? undefined : allowUpscale}
          name={item.name}
          meta={meta}
          accentBar={accent.bar}
          headerAction={headerAction}
          headerActionLeft={headerActionLeft}
       >
-         {renderSnapshot()}
+         {deferred ? null : renderSnapshot()}
       </DrawerCardFrame>
    );
 };

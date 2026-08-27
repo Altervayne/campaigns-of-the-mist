@@ -71,7 +71,7 @@ interface CardFlipWrapperProps {
  * ```
  */
 export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperProps>(
-  ({ effectiveViewMode, isDrawerPreview, isBoardEmbed = false, useVerticalStack, card, isRevealed, revealHandlers,
+  ({ effectiveViewMode, isDrawerPreview, isBoardEmbed = false, isSnapshot = false, useVerticalStack, card, isRevealed, revealHandlers,
      isEditing, dragAttributes, dragListeners, cardTheme, onExport, onCycleViewMode,
      onFlip, onDelete, onEditCard, cardFront, cardBack }, ref) => {
 
@@ -79,7 +79,8 @@ export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperP
     // side-by-side would overflow the fixed-width box, so the board stacks vertically (useVerticalStack).
     const viewMode = isBoardEmbed ? (card.viewMode ?? 'FLIP') : effectiveViewMode;
 
-    if (viewMode === 'SIDE_BY_SIDE' && !isDrawerPreview) {
+    // A snapshot is a single still face: the drawer preview and drag clone never spread side by side.
+    if (viewMode === 'SIDE_BY_SIDE' && !isDrawerPreview && !isSnapshot) {
       return (
         <motion.div ref={ref} {...revealHandlers} className="relative">
           {!isBoardEmbed && (
@@ -118,7 +119,7 @@ export const CardFlipWrapper = React.forwardRef<HTMLDivElement, CardFlipWrapperP
           animate={{ rotateY: card.isFlipped ? 180 : 0 }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         >
-          {!isDrawerPreview && !isBoardEmbed && (
+          {!isDrawerPreview && !isBoardEmbed && !isSnapshot && (
             <ToolbarHandle
               isEditing={isEditing}
               isHovered={isRevealed}

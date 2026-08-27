@@ -2,20 +2,28 @@
 import type { GeneralItemType } from '@/lib/types/common';
 
 /*
- * The single authoring size for every document preview (note, journal, post-it, roll table): a fixed,
- * page-shaped canvas. Rendering large and letting `cover` down-scale keeps text dense and legible instead
- * of magnifying a tiny page up into a few giant words. One shared width means all documents down-scale by
- * the same factor, so density stays uniform cell to cell - previews must not pick their own size.
+ * The single authoring width shared by every document preview. Notes, journals, post-its, roll tables and
+ * the full sheet render page-shaped at this width, so `cover` down-scales them by the same factor and text
+ * density stays uniform cell to cell. Fixed-size game cards opt out - they render at their own natural
+ * width and upscale to fill the stage (see `allowUpscale`).
  */
-export const PREVIEW_PAGE = 'w-[540px] min-h-[600px]';
+export const PREVIEW_PAGE_WIDTH = 'w-[440px]';
+
+/*
+ * The full document authoring size (width + a page-tall floor). Notes, journals, post-its, roll tables and
+ * the full sheet fill this canvas.
+ */
+export const PREVIEW_PAGE = `${PREVIEW_PAGE_WIDTH} min-h-[500px]`;
 
 /*
  * Per-type stage surface + fill for the drawer card: the stage wears the type's own palette so identity
  * reads before a glyph, and the fill matches the preview's silhouette. Portrait/square content cover-fills
  * (its own surface bleeds edge to edge under the fade); landscape content is contained on a canvas stage.
- * Single source for the live preview, so the search skeleton and later identity accents extend one seam.
+ * `allowUpscale` lifts the down-scale cap for fixed-size game cards, so a small card fills the stage width
+ * and crops off the faded bottom. Single source for the live preview, so the search skeleton and later
+ * identity accents extend one seam.
  */
-export function drawerPreviewStage(type: GeneralItemType): { stageClassName: string; fit: 'cover' | 'contain' } {
+export function drawerPreviewStage(type: GeneralItemType): { stageClassName: string; fit: 'cover' | 'contain'; allowUpscale?: boolean } {
    switch (type) {
       // Paper-surfaced documents: the parchment page fills and bleeds off the faded bottom.
       case 'NOTE':
@@ -23,15 +31,19 @@ export function drawerPreviewStage(type: GeneralItemType): { stageClassName: str
       case 'PDF':
          return { stageClassName: 'bg-paper-background', fit: 'cover' };
 
-      // Card-surfaced content (roll tables, character/theme/challenge/image cards, the full character
-      // overview): the stage matches `--card` so the render's own palette carries the identity.
-      case 'ROLL_TABLE':
+      // Fixed-size game cards: upscaled to fill the stage width, cropping off the faded bottom. The stage
+      // matches `--card` so the render's own palette carries the identity and the crop fades into it.
       case 'CHARACTER_CARD':
       case 'CHARACTER_THEME':
       case 'GROUP_THEME':
       case 'LOADOUT_THEME':
       case 'IMAGE_CARD':
       case 'CHALLENGE_CARD':
+         return { stageClassName: 'bg-card', fit: 'cover', allowUpscale: true };
+
+      // Page-authored card-surfaced content (roll table, full character overview): down-scaled like a
+      // document, on the same `--card` stage.
+      case 'ROLL_TABLE':
       case 'FULL_CHARACTER_SHEET':
          return { stageClassName: 'bg-card', fit: 'cover' };
 

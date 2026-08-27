@@ -1,5 +1,5 @@
 // -- React Imports --
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -20,28 +20,33 @@ import { FitToBox } from '@/components/molecules/drawer/FitToBox';
 export function DrawerCardFrame({
    stageClassName,
    fit,
+   allowUpscale,
    name,
    meta,
    accentBar,
    headerAction,
    headerActionLeft = false,
+   rootRef,
    children,
 }: {
    stageClassName?: string;
    fit: 'cover' | 'contain';
+   allowUpscale?: boolean;
    name: ReactNode;
    meta?: ReactNode;
    accentBar?: string;
    headerAction?: ReactNode;
    headerActionLeft?: boolean;
+   // Attaches to the card root, so a lazy caller can observe the frame's own node without an extra wrapper.
+   rootRef?: Ref<HTMLDivElement>;
    children: ReactNode;
 }) {
    return (
-      <div className={cn('flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm transition-[transform,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-px', accentBar && 'relative overflow-hidden')}>
+      <div ref={rootRef} className={cn('flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm transition-[transform,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-px', accentBar && 'relative overflow-hidden')}>
          {/* A thin identity spine over the left padding, behind the content, full height. */}
          {accentBar && <span aria-hidden className={cn('absolute inset-y-0 left-0 w-[3px]', accentBar)} />}
          <div className={cn('aspect-[4/3] w-full overflow-hidden rounded-md', stageClassName)}>
-            <FitToBox fit={fit} className="pointer-events-none h-full w-full">
+            <FitToBox fit={fit} allowUpscale={allowUpscale} className="pointer-events-none h-full w-full">
                {children}
             </FitToBox>
          </div>
