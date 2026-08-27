@@ -7,6 +7,21 @@ export interface PatchNote {
 
 export const patchNotes: PatchNote[] = [
    {
+      version: '2.5.0',
+      content: `
+### ✨ Features
+* **📄 PDF Workspace**: PDFs can now be imported into Campaigns of the Mist, and opened into a full PDF reader workspace with integration all across the app.
+  * **Full PDF reader**: A continuous PDF reader you can scroll through the pages in, with pages that render *as you scroll*, rather than all immediately at once. Stress tested with the LitM Core Book !
+  * **A PDF navigation panel**: A full panel with an outline to access every section the PDF explicitly declares, and a quick to scroll through pages list with thumbnails to find what you need at a glance.
+  * **Portals compatibility**: You can link to a specific page of a PDF in any portal in the app, whether it's on Boards or Notes.
+  * **Annotations**: You can markup your PDF with highlights, comments and scribbles, your annotations are exportable on their own.
+  * **Respectful of Licensing**: CotM will not include the full PDF files in full exports that reference them. Instead, a new system allows you to repair broken portals by re-pointing them at any element in *your* app. Exports *will* include annotations, and they will be applied on the newly selected PDF.
+
+### 🔧 Changes
+The loading indicators across the app have been changed to be a much prettier bespoke loading animation.
+`,
+   },
+   {
       version: '2.4.0',
       content: `
 ### ✨ Features
