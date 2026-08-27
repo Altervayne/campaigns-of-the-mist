@@ -23,8 +23,8 @@ export function drawerPreviewStage(type: GeneralItemType): { stageClassName: str
       case 'PDF':
          return { stageClassName: 'bg-paper-background', fit: 'cover' };
 
-      // Card-surfaced content (roll tables, character/theme/challenge/image cards): the stage
-      // matches `--card` so the render's own palette carries the identity.
+      // Card-surfaced content (roll tables, character/theme/challenge/image cards, the full character
+      // overview): the stage matches `--card` so the render's own palette carries the identity.
       case 'ROLL_TABLE':
       case 'CHARACTER_CARD':
       case 'CHARACTER_THEME':
@@ -32,6 +32,7 @@ export function drawerPreviewStage(type: GeneralItemType): { stageClassName: str
       case 'LOADOUT_THEME':
       case 'IMAGE_CARD':
       case 'CHALLENGE_CARD':
+      case 'FULL_CHARACTER_SHEET':
          return { stageClassName: 'bg-card', fit: 'cover' };
 
       // Post-it: the colored sticky fills the stage; the stage itself stays neutral behind the fade.
@@ -40,7 +41,6 @@ export function drawerPreviewStage(type: GeneralItemType): { stageClassName: str
 
       // Landscape canvases: contained and centered, the small margin reading as the surface behind.
       case 'FULL_BOARD':
-      case 'FULL_CHARACTER_SHEET':
          return { stageClassName: 'bg-popover/40', fit: 'contain' };
 
       // Short-wide trackers and any unavailable placeholder: contained on a neutral stage.

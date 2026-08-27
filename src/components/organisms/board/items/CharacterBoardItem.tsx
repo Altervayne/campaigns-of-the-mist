@@ -10,7 +10,7 @@ import { getOrCreateInstance } from '@/lib/character/characterStoreRegistry';
 import { useTabManagerActions, useTabManagerStore } from '@/lib/character/tabManagerStore';
 
 // -- Component Imports --
-import { CharacterBoardOverview } from './CharacterBoardOverview';
+import { CharacterOverviewPanel } from '@/components/organisms/character-sheet/CharacterOverviewPanel';
 
 // -- Type Imports --
 import type { BoardItem, BoardItemContent, CharacterBoardContent } from '@/lib/types/board';
@@ -67,7 +67,7 @@ function LiveCharacterSource({ characterId, sourceDrawerItemId }: { characterId:
    // An open character never dangles. A momentary null (device-flip hydration) shows the quiet panel.
    if (!character) return <LoadingPanel />;
 
-   return <CharacterBoardOverview character={character} onOpen={() => openCharacterTab(character, sourceDrawerItemId)} />;
+   return <CharacterOverviewPanel character={character} onOpen={() => openCharacterTab(character, sourceDrawerItemId)} className="w-full flex-1 rounded-lg shadow-lg" />;
 }
 
 /**
@@ -99,7 +99,7 @@ function DrawerCharacterSource({ item, content, onCacheLastKnown, onDelete }: Ch
    // Not yet loaded (first read in flight, no cache): a quiet app-themed panel placeholder.
    if (!character) return <LoadingPanel />;
 
-   return <CharacterBoardOverview character={character} onOpen={() => openCharacterTab(character, content.sourceDrawerItemId)} />;
+   return <CharacterOverviewPanel character={character} onOpen={() => openCharacterTab(character, content.sourceDrawerItemId)} className="w-full flex-1 rounded-lg shadow-lg" />;
 }
 
 /** A quiet app-themed placeholder shown while the source character is not yet resolved. */

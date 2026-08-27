@@ -17,20 +17,24 @@ import { condensedThemeRows, characterPortraitAssetId, overviewPanelCardClass, r
 import type { Character } from '@/lib/types/character';
 
 /*
- * The read-only character overview shown by a board character element. Unlike the board's chrome
- * (which is app-themed), this element is game CONTENT - a representation of a specific game's
- * character - so it carries that game's look: the panel uses the game card-theme palette (`--card-*`),
- * and each theme row is tinted by its own card type (a Mythos theme vs the Fellowship reads at a
- * glance via a colored, icon-led type badge). An identity header (portrait + name + game + open) tops
- * a condensed row per theme card; it grows AND shrinks to fit its rows via the box's measure.
+ * The shared read-only character overview: a recognizable representation of a specific character used by
+ * both a board character element and the drawer preview. Unlike app chrome, this is game CONTENT, so it
+ * carries the game's look: the panel uses the game card-theme palette (`--card-*`), and each theme row is
+ * tinted by its own card type (a Mythos theme vs the Fellowship reads at a glance via a colored, icon-led
+ * type badge). An identity header (portrait + name + game) tops a condensed row per theme card.
+ *
+ * `onOpen` makes it live: it renders the open button and a double-click-to-open handler. Without it the
+ * panel is fully static and read-only - no button, no handlers - as the drawer needs. Sizing (width, grow,
+ * rounding, shadow) is left to the consumer via `className`, so the board and the drawer frame each own it.
  */
 
-interface CharacterBoardOverviewProps {
+interface CharacterOverviewPanelProps {
    character: Character;
-   onOpen: () => void;
+   onOpen?: () => void;
+   className?: string;
 }
 
-export function CharacterBoardOverview({ character, onOpen }: CharacterBoardOverviewProps) {
+export function CharacterOverviewPanel({ character, onOpen, className }: CharacterOverviewPanelProps) {
    const { t } = useTranslation();
    const portrait = useAssetObjectUrl(characterPortraitAssetId(character));
    const rows = condensedThemeRows(character);
@@ -39,7 +43,7 @@ export function CharacterBoardOverview({ character, onOpen }: CharacterBoardOver
    return (
       <div
          onDoubleClick={onOpen}
-         className={cn(overviewPanelCardClass(character.game), 'flex w-full flex-1 flex-col overflow-hidden rounded-lg border-2 border-card-border bg-card-paper-bg text-card-paper-fg shadow-lg')}
+         className={cn(overviewPanelCardClass(character.game), 'flex flex-col overflow-hidden border-2 border-card-border bg-card-paper-bg text-card-paper-fg', className)}
       >
          {/* Identity header (stands in for the character card; its deep stats stay in the tab). */}
          <div className="relative flex shrink-0 items-center gap-3 border-b border-card-accent bg-card-header-bg p-1 text-card-header-fg">
@@ -48,20 +52,22 @@ export function CharacterBoardOverview({ character, onOpen }: CharacterBoardOver
                   ? <img src={portrait.url} alt="" draggable={false} className="h-full w-full object-cover" />
                   : <User className="h-6 w-6 text-card-paper-fg/50" />}
             </div>
-            <div className="flex min-w-0 flex-col pr-6">
+            <div className={cn('flex min-w-0 flex-col', onOpen && 'pr-6')}>
                <span className="truncate text-sm font-semibold">{character.name || t('BoardView.referenceSourceRemoved')}</span>
                <span className="truncate text-xs text-card-header-fg/80">{t(`Drawer.Types.${character.game}`)}</span>
             </div>
-            <button
-               type="button"
-               title={t('BoardView.openCharacter')}
-               aria-label={t('BoardView.openCharacter')}
-               onPointerDown={(event) => event.stopPropagation()}
-               onClick={onOpen}
-               className="absolute right-1.5 top-1.5 flex cursor-pointer items-center justify-center rounded p-1 text-card-header-fg/80 hover:bg-card-paper-bg/20 hover:text-card-header-fg"
-            >
-               <ExternalLink className="h-4 w-4" />
-            </button>
+            {onOpen && (
+               <button
+                  type="button"
+                  title={t('BoardView.openCharacter')}
+                  aria-label={t('BoardView.openCharacter')}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={onOpen}
+                  className="absolute right-1.5 top-1.5 flex cursor-pointer items-center justify-center rounded p-1 text-card-header-fg/80 hover:bg-card-paper-bg/20 hover:text-card-header-fg"
+               >
+                  <ExternalLink className="h-4 w-4" />
+               </button>
+            )}
          </div>
 
          {/* Condensed theme rows. */}
