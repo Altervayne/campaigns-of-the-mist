@@ -18,6 +18,7 @@ import { DrawerFolderEntry } from '@/components/molecules/drawer/DrawerFolderEnt
 import FolderDropZone from '@/components/molecules/drawer/FolderDropZone';
 import { DrawerItemEntry } from '@/components/molecules/drawer/DrawerItemEntry';
 import { DrawerCompactItemEntry } from '@/components/molecules/drawer/DrawerCompactItemEntry';
+import { DrawerReadyContext } from '@/components/organisms/drawer/DrawerReadyContext';
 import { DrawerSearchResultEntry } from '@/components/molecules/drawer/DrawerSearchResultEntry';
 import { DrawerSearchResultCard } from '@/components/molecules/drawer/DrawerSearchResultCard';
 import { DrawerSortControl } from '@/components/molecules/drawer/DrawerSortControl';
@@ -177,6 +178,9 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
          exit="exit"
          transition={isSettled ? { duration: 0 } : { duration: 0.3, ease: 'easeInOut' }}
       >
+         {/* Rich previews defer until the grow settles (see DrawerReadyContext), so a populated Library
+             expands smoothly and fills content after. */}
+         <DrawerReadyContext.Provider value={isSettled}>
          {/* The Library surface. When receded it slides DOWN (clipped by the overlay above, so off-screen
              with no page scroll) and goes pointer-transparent, but STAYS MOUNTED so the live drag is never
              cancelled and the cursor reaches the revealed workspace. `data-drawer-panel` makes the in-drawer
@@ -419,6 +423,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
                <span className="relative">{t('Drawer.reexpand')}</span>
             </div>
          )}
+         </DrawerReadyContext.Provider>
       </motion.div>
    );
 }

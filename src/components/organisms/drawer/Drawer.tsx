@@ -1,5 +1,5 @@
 // -- React Imports --
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
@@ -35,6 +35,7 @@ import { Breadcrumb } from '@/components/molecules/Breadcrumbs';
 import FolderDropZone from '@/components/molecules/drawer/FolderDropZone';
 import { DrawerHeader } from '@/components/molecules/drawer/DrawerHeader';
 import { DrawerItemsSkeleton } from '@/components/molecules/drawer/DrawerContentSkeleton';
+import { DrawerReadyContext } from '@/components/organisms/drawer/DrawerReadyContext';
 
 // -- Store and Hook Imports --
 import { useDrawerStore } from '@/lib/stores/drawerStore';
@@ -150,6 +151,9 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
       disabled: !currentFolderId,
    });
 
+   // Rich previews stay deferred (cheap shells) until the open animation settles, so a populated drawer
+   // slides in smoothly and fills content after.
+   const [ready, setReady] = useState(false);
 
    return (
       <motion.aside
@@ -162,8 +166,13 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
          // Same easing/duration as the Library grow/shrink, so open/expand/contract/close read as one
          // right-anchored drawer.
          transition={{ duration: 0.3, ease: 'easeInOut' }}
+         // Rich previews defer until the slide-in finishes (see DrawerReadyContext), so a populated drawer
+         // opens smoothly. The open animation runs once, so this flips ready as it lands (a close just
+         // unmounts, resetting ready on the next open).
+         onAnimationComplete={() => { if (!ready) setReady(true); }}
          className="bg-card border-l-2 border-border h-full flex flex-col overflow-hidden"
       >
+         <DrawerReadyContext.Provider value={ready}>
          <div {...getRootProps()} className="relative w-88 h-full">
 
             <div className="relative w-88 h-full">
@@ -436,6 +445,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
             </AnimatePresence>
 
          </div>
+         </DrawerReadyContext.Provider>
       </motion.aside>
    );
 };

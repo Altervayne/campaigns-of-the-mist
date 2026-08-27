@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 // -- Hook Imports --
 import { useInView } from '@/hooks/useInView';
+import { useDrawerReady } from '@/components/organisms/drawer/DrawerReadyContext';
 
 // -- Icon Imports --
 import { Folder, GripVertical, LayoutGrid, NotebookText } from 'lucide-react';
@@ -308,7 +309,10 @@ export function DrawerItemPreview({
    const { t } = useTranslation();
    // Latched visibility gate; the ref lands on the card root (via DrawerCardFrame) only when lazy.
    const { ref, hasBeenVisible } = useInView<HTMLDivElement>();
-   const deferred = lazy && !hasBeenVisible;
+   // Heavy content waits for BOTH: the card is in view AND the drawer's open animation has settled - so a
+   // populated drawer slides in as cheap shells and fills content after, never rendering it mid-animation.
+   const drawerReady = useDrawerReady();
+   const deferred = lazy && (!hasBeenVisible || !drawerReady);
 
    const renderSnapshot = () => {
       const { content, type, game } = item;
