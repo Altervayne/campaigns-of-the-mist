@@ -3,8 +3,11 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Image as ImageIcon, Loader2, Replace, Upload } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Image as ImageIcon, Replace, Upload } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -463,7 +466,7 @@ function PortalImageControl({ assetId, onUploaded }: { assetId: string; onUpload
             disabled={isProcessing}
             className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:border-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-default"
          >
-            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : assetId ? <ImageIcon className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
+            {isProcessing ? <MistSpinner variant="disc" size={16} /> : assetId ? <ImageIcon className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
             <span>{assetId ? t('BoardView.imageChange') : t('BoardView.imageUpload')}</span>
          </button>
          <input ref={fileInputRef} type="file" accept={ACCEPT_IMAGE} className="hidden" onChange={handleFileSelected} />

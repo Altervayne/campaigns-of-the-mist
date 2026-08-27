@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next';
 import type { CSSProperties, ReactNode } from 'react';
 
 // -- Icon Imports --
-import { Bold, Heading, ImagePlus, Italic, Link, List, ListOrdered, Loader2, Minus, PanelTop, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
+import { Bold, Heading, ImagePlus, Italic, Link, List, ListOrdered, Minus, PanelTop, Quote, Redo2, Strikethrough, Table, Undo2 } from 'lucide-react';
+
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Hook Imports --
 import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
@@ -116,7 +119,7 @@ export function MobileNoteEditingBar({
                   <Minus className="h-5 w-5" />
                </EditingBarButton>
                <EditingBarButton label={t('NoteView.insertImage')} onClick={onInsertImage} disabled={isImageProcessing}>
-                  {isImageProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+                  {isImageProcessing ? <MistSpinner variant="disc" size={20} /> : <ImagePlus className="h-5 w-5" />}
                </EditingBarButton>
                {/* Context-aware, never greyed: with a cover it opens the options sheet; without one it adds a cover. */}
                <EditingBarButton label={hasCover ? t('NoteView.cover.label') : t('NoteView.cover.add')} onClick={onCoverButton}>

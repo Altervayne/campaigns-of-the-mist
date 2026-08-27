@@ -3,13 +3,14 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Loader2, RotateCcw, RotateCw, Undo2 } from 'lucide-react';
+import { RotateCcw, RotateCw, Undo2 } from 'lucide-react';
 
 // -- Basic UI Imports --
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { CropSurface } from '@/components/molecules/CropSurface';
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Hook Imports --
 import { useDeviceType } from '@/hooks/useDeviceType';
@@ -112,7 +113,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
                <div className="flex shrink-0 gap-2 border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                   <Button type="button" variant="outline" onClick={onCancel} className="h-11 flex-1 cursor-pointer">{t('Common.cancel')}</Button>
                   <Button type="button" onClick={accept} disabled={!region || isCutting} className="h-11 flex-1 cursor-pointer">
-                     {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                     {isCutting && <MistSpinner variant="disc" size={16} className="mr-1" />}
                      {t('ImageCropper.apply')}
                   </Button>
                </div>
@@ -161,7 +162,7 @@ export function ImageCropperDialog({ imageUrl, bitmap, aspect, onCancel, onCompl
             <DialogFooter className="border-t border-border px-4 py-3">
                <Button type="button" variant="outline" onClick={onCancel} className="cursor-pointer">{t('Common.cancel')}</Button>
                <Button type="button" onClick={accept} disabled={!region || isCutting} className="cursor-pointer">
-                  {isCutting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                  {isCutting && <MistSpinner variant="disc" size={16} className="mr-1" />}
                   {t('ImageCropper.apply')}
                </Button>
             </DialogFooter>

@@ -3,7 +3,10 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Loader2, MoreHorizontal, Trash2, Upload } from 'lucide-react';
+import { MoreHorizontal, Trash2, Upload } from 'lucide-react';
+
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Basic UI Imports --
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
@@ -177,7 +180,7 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
                      className="flex w-full cursor-pointer flex-col items-center gap-1 rounded-md border border-border p-2 text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                   >
                      <span className="flex h-10 w-10 items-center justify-center">
-                        {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+                        {isUploading ? <MistSpinner variant="disc" size={20} /> : <Upload className="h-5 w-5" />}
                      </span>
                      <span className="w-full truncate text-center text-xs">{t('BoardStencil.uploadCustom')}</span>
                   </button>
@@ -190,7 +193,7 @@ export function ImageStencilDialog({ imageUrl, initialSelection, isProcessing, o
             <DialogFooter className="border-t border-border px-4 py-3">
                <Button type="button" variant="outline" onClick={onCancel} className="cursor-pointer">{t('Common.cancel')}</Button>
                <Button type="button" onClick={() => onApply(selection)} disabled={busy} className="cursor-pointer">
-                  {isProcessing && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                  {isProcessing && <MistSpinner variant="disc" size={16} className="mr-1" />}
                   {t('BoardStencil.apply')}
                </Button>
             </DialogFooter>

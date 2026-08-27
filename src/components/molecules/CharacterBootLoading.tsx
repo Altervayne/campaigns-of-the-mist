@@ -1,8 +1,8 @@
 // -- React Imports --
 import { useTranslation } from 'react-i18next';
 
-// -- Icon Imports --
-import { LoaderCircle } from 'lucide-react';
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 /**
  * Full-screen neutral loading shell shown while the active character is read from
@@ -19,8 +19,7 @@ export function CharacterBootLoading() {
          className="flex flex-col items-center justify-center gap-4 bg-background text-muted-foreground"
          style={{ height: '100dvh', width: '100dvw' }}
       >
-         <LoaderCircle className="h-8 w-8 animate-spin" />
-         <span className="text-sm">{t('Loading.boot')}</span>
+         <MistSpinner variant="disc" size={36} tip={t('Loading.boot')} label={t('Loading.boot')} />
       </div>
    );
 }

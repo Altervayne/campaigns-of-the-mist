@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { ChevronLeft, Image as ImageIcon, ImageUp, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Image as ImageIcon, ImageUp, Trash2 } from 'lucide-react';
 
 // -- Basic UI Imports --
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { MobileBottomSheet } from '@/components/mobile/shared/MobileBottomSheet';
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Store and Hook Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
@@ -109,7 +110,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
                >
                   {isLoading ? (
                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        <MistSpinner variant="disc" size={32} className="text-muted-foreground" />
                      </div>
                   ) : url ? (
                      <img
@@ -149,7 +150,7 @@ export default function MobileEditPortrait({ onBack }: MobileEditPortraitProps) 
             {/* Replace + Delete. */}
             <div className="space-y-2 border-t border-border pt-4">
                <Button variant="outline" onClick={openReplacePicker} disabled={isReplacing} className="w-full h-11 cursor-pointer">
-                  {isReplacing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ImageUp className="mr-1 h-4 w-4" />}
+                  {isReplacing ? <MistSpinner variant="disc" size={16} className="mr-1" /> : <ImageUp className="mr-1 h-4 w-4" />}
                   {t('MobileEditPortrait.replaceImage')}
                </Button>
                <Button variant="destructive" onClick={() => setConfirmDelete(true)} className="w-full h-11 cursor-pointer">

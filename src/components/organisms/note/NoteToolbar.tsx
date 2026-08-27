@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 
 // -- Icon Imports --
 import {
-   Bold, BookOpen, ChevronDown, Code, Heading, Image, ImagePlus, Italic, Link, List, ListOrdered, ListTree, Loader2,
+   Bold, BookOpen, ChevronDown, Code, Heading, Image, ImagePlus, Italic, Link, List, ListOrdered, ListTree,
    Minus, PenLine, Quote, Strikethrough, Table, Trash2,
 } from 'lucide-react';
 
@@ -14,6 +14,9 @@ import { cn } from '@/lib/utils';
 
 // -- Basic UI Imports --
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+// -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 
 // -- Hook Imports --
 import { useNoteFormatActions } from '@/hooks/useNoteFormatActions';
@@ -171,7 +174,7 @@ export function NoteToolbar({
                <ToolbarDivider />
                {/* Insert. */}
                <ToolbarButton label={t('NoteView.insertImage')} onClick={onInsertImage} disabled={isImageProcessing} dataTutorial="note-insert-image">
-                  {isImageProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                  {isImageProcessing ? <MistSpinner variant="disc" size={16} /> : <ImagePlus className="h-4 w-4" />}
                </ToolbarButton>
                <TableButton onInsert={insertTable} />
                <LinkButton getEditor={getEditor} open={isLinkPickerOpen} onOpenChange={onLinkPickerOpenChange} editSeed={linkEditSeed} />
@@ -298,7 +301,7 @@ function CoverButton({
    if (!hasCover) {
       return (
          <button type="button" data-tutorial="note-cover-button" onClick={onAdd} disabled={isProcessing} className={triggerClass} title={t('NoteView.cover.add')}>
-            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
+            {isProcessing ? <MistSpinner variant="disc" size={16} /> : <Image className="h-4 w-4" />}
             <span className="hidden md:inline">{t('NoteView.cover.add')}</span>
          </button>
       );
@@ -313,7 +316,7 @@ function CoverButton({
       <Popover open={open} onOpenChange={setOpen}>
          <PopoverTrigger asChild>
             <button type="button" data-tutorial="note-cover-button" disabled={isProcessing} className={triggerClass} title={t('NoteView.cover.label')}>
-               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
+               {isProcessing ? <MistSpinner variant="disc" size={16} /> : <Image className="h-4 w-4" />}
                <span className="hidden md:inline">{t('NoteView.cover.label')}</span>
                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
             </button>

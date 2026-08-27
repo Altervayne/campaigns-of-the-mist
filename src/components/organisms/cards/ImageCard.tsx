@@ -11,13 +11,14 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // -- Icon Imports --
-import { Image as ImageIcon, Loader2, Scaling, Trash2, Upload } from 'lucide-react';
+import { Image as ImageIcon, Scaling, Trash2, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { ACCEPT_IMAGE } from '@/lib/utils/fileAccept';
 
 // -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { ToolbarHandle } from '@/components/molecules/ToolbarHandle';
 
 // -- Store and Hook Imports --
@@ -172,7 +173,7 @@ const ImageCardContent = React.memo(
             <div className="relative h-full w-full bg-muted">
                {showSpinner ? (
                   <div className="flex h-full w-full items-center justify-center">
-                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                     <MistSpinner variant="disc" size={32} className="text-muted-foreground" />
                   </div>
                ) : url ? (
                   <img

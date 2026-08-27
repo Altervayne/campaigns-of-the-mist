@@ -4,9 +4,10 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Image as ImageIcon, ImageOff, Loader2, Palette, Proportions, SaveAll, Upload } from 'lucide-react';
+import { Image as ImageIcon, ImageOff, Palette, Proportions, SaveAll, Upload } from 'lucide-react';
 
 // -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { StyledBoardImage } from './StyledBoardImage';
 import { ImageStylePopover } from './ImageStylePopover';
 import { ImageSizingPopover } from './ImageSizingPopover';
@@ -116,7 +117,7 @@ export function ImageItem({ item, content, isSelected, toolbarSlot, onContentCha
       <div className="relative h-full w-full">
          {showSpinner ? (
             <div className="flex h-full w-full items-center justify-center bg-muted">
-               <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+               <MistSpinner variant="disc" size={28} className="text-muted-foreground" />
             </div>
          ) : url ? (
             <StyledBoardImage url={url} content={shownContent} isMasked={isMasked} />

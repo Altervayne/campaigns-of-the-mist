@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 // -- Icon Imports --
-import { Image as ImageIcon, Loader2, Minus, Plus, Trash2, Upload } from 'lucide-react';
+import { Image as ImageIcon, Minus, Plus, Trash2, Upload } from 'lucide-react';
 
 // -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { MentionMarkdown } from '@/components/molecules/MentionMarkdown';
 
 // -- Store and Hook Imports --
@@ -85,7 +86,7 @@ export function ImagePicker({ assetId, onChange }: { assetId: string | null; onC
       <div className="flex flex-col gap-2">
          <div className="relative w-full overflow-hidden rounded-md border border-border bg-muted" style={{ aspectRatio: CHALLENGE_ART_ASPECT }}>
             {showSpinner ? (
-               <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+               <div className="flex h-full w-full items-center justify-center"><MistSpinner variant="disc" size={24} className="text-muted-foreground" /></div>
             ) : url ? (
                <img src={url} alt="" className="h-full w-full object-cover" />
             ) : (

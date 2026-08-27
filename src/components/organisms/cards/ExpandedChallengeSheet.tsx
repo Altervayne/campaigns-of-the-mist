@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 // -- Icon Imports --
-import { Crosshair, Loader2, Skull, Sparkles, Star, Swords, Tags, Trash2, Upload } from 'lucide-react';
+import { Crosshair, Skull, Sparkles, Star, Swords, Tags, Trash2, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { CHALLENGE_ART_ASPECT } from '@/lib/cards/challengeArt';
 
 // -- Component Imports --
+import { MistSpinner } from '@/components/molecules/MistSpinner';
 import { MentionMarkdown } from '@/components/molecules/MentionMarkdown';
 import { ChallengeTypeSelector } from '@/components/molecules/ChallengeTypeSelector';
 import { AbilityEditRow, AddRowButton, ConsequenceBullet, DifficultyMarks, LimitPill, MightyTagEditRow, MightyTagPill, SpecialEditRow, StatusEditRow, StatusPill, TagEditRow, TagPill, ThreatPill } from '@/components/organisms/cards/challengeCardEditRows';
@@ -169,7 +170,7 @@ export function SheetImageBand({ url, name, isEditing, commitImage }: {
             className={cn(matte, 'w-full cursor-pointer transition-colors hover:bg-card-popover-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-card-accent/50')}
          >
             {isProcessing ? (
-               <Loader2 className="h-6 w-6 animate-spin text-card-paper-fg/50" />
+               <MistSpinner variant="disc" size={24} className="text-card-paper-fg/50" />
             ) : url ? (
                <img src={url} alt={name} title={name} draggable={false} className="h-full w-full object-contain" />
             ) : (
