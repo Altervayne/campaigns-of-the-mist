@@ -33,19 +33,27 @@ interface Container {
 }
 const container = (id: string, data?: Record<string, unknown>): Container => ({ id, data: { current: data } });
 
-/** Builds a collision-detection args object for a drawer-item drag. */
+// This suite runs without a DOM, so the live-geometry reorder resolver (which reads `[data-drawer-items-area]`)
+// reports no reorder: a pointer drag that isn't over a surface/primary zone is treated as a drag-out and
+// yields no collision, while a keyboard drag (no pointer) still falls back to the nearest sibling row.
+
+/**
+ * Builds a collision-detection args object for a drawer-item drag. `keyboard: true` omits
+ * `pointerCoordinates` to model a keyboard drag (which has no pointer).
+ */
 function buildArgs(params: {
    originParent: string | null;
    containers: Container[];
    rects: Array<[string, Rect]>;
    pointer: { x: number; y: number };
+   keyboard?: boolean;
 }) {
    const args = {
       active: { id: 'dragged-item', data: { current: { type: 'drawer-item', parentFolderId: params.originParent } } },
       collisionRect: rect(params.pointer.x - 10, params.pointer.y - 10, 20, 20),
       droppableRects: new Map<string, Rect>(params.rects),
       droppableContainers: params.containers,
-      pointerCoordinates: params.pointer,
+      ...(params.keyboard ? {} : { pointerCoordinates: params.pointer }),
    };
    return args as unknown as Parameters<typeof customCollisionDetection>[0];
 }
@@ -55,30 +63,30 @@ const zoneRect = rect(0, 0, 200, 400);
 const itemRect = rect(0, 50, 200, 40);
 
 describe('customCollisionDetection, drawer item (reorder only; in-drawer moves are resolver-driven)', () => {
-   it('returns the nearest item ROW for a same-folder drop, never the items-area zone', () => {
+   it('falls back to the nearest item ROW for a keyboard reorder, never the items-area zone', () => {
       const result = customCollisionDetection(
          buildArgs({
             originParent: 'dest', // origin === destination folder
             containers: [container(ZONE), container('item-1', { type: 'drawer-item', parentFolderId: 'dest' })],
             rects: [[ZONE, zoneRect], ['item-1', itemRect]],
-            pointer: { x: 100, y: 60 }, // within both the zone and item-1
+            pointer: { x: 100, y: 60 }, // seeds the collisionRect; keyboard drag carries no pointer
+            keyboard: true,
          }),
       );
       expect(result[0]?.id).toBe('item-1');
       expect(result.some((c) => c.id === ZONE)).toBe(false);
    });
 
-   it('still resolves to the item row across folders, the MOVE itself is resolver-driven at drop', () => {
+   it('yields no collision when a pointer drag is not over the items body (drag-out, no reorder/scroll)', () => {
       const result = customCollisionDetection(
          buildArgs({
-            originParent: 'origin', // different from the row's folder
+            originParent: 'dest',
             containers: [container(ZONE), container('item-1', { type: 'drawer-item', parentFolderId: 'dest' })],
             rects: [[ZONE, zoneRect], ['item-1', itemRect]],
-            pointer: { x: 100, y: 60 },
+            pointer: { x: 600, y: 60 }, // out over the workspace, away from the items body
          }),
       );
-      expect(result[0]?.id).toBe('item-1');
-      expect(result.some((c) => c.id === ZONE)).toBe(false);
+      expect(result).toHaveLength(0);
    });
 
    it('returns no collision over an EMPTY folder body (no rows), the resolver lands the drop', () => {
@@ -105,13 +113,14 @@ function buildSavedCharArgs(params: {
    containers: Container[];
    rects: Array<[string, Rect]>;
    pointer: { x: number; y: number };
+   keyboard?: boolean;
 }) {
    const args = {
       active: { id: 'dragged-item', data: { current: { type: 'drawer-item', item: { type: 'FULL_CHARACTER_SHEET' }, parentFolderId: 'dest' } } },
       collisionRect: rect(params.pointer.x - 10, params.pointer.y - 10, 20, 20),
       droppableRects: new Map<string, Rect>(params.rects),
       droppableContainers: params.containers,
-      pointerCoordinates: params.pointer,
+      ...(params.keyboard ? {} : { pointerCoordinates: params.pointer }),
    };
    return args as unknown as Parameters<typeof customCollisionDetection>[0];
 }
@@ -133,12 +142,19 @@ const savedCharRects: Array<[string, Rect]> = [
 ];
 
 describe('customCollisionDetection, saved character (FULL_CHARACTER_SHEET) reorder', () => {
-   it('reorders over the nearest sibling drawer-item, excluding itself', () => {
+   it('falls back to the nearest sibling drawer-item on a keyboard reorder, excluding itself', () => {
       const result = customCollisionDetection(
-         buildSavedCharArgs({ containers: savedCharContainers(), rects: savedCharRects, pointer: { x: 100, y: 120 } }),
+         buildSavedCharArgs({ containers: savedCharContainers(), rects: savedCharRects, pointer: { x: 100, y: 120 }, keyboard: true }),
       );
       expect(result[0]?.id).toBe('item-1');
       expect(result.some((c) => c.id === 'dragged-item')).toBe(false);
+   });
+
+   it('yields no collision when a pointer drag is not over a zone or the items body (drag-out)', () => {
+      const result = customCollisionDetection(
+         buildSavedCharArgs({ containers: savedCharContainers(), rects: savedCharRects, pointer: { x: 900, y: 300 } }),
+      );
+      expect(result).toHaveLength(0);
    });
 
    it('still prefers the play-area (sheet load) over a reorder', () => {

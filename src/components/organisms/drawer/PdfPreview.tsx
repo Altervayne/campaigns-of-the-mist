@@ -30,7 +30,7 @@ export function PdfPreview({ pdf }: { pdf: PdfDocument }) {
    const needsFile = isPlaceholderPdf(pdf);
 
    return (
-      <div className="relative flex h-45 w-45 flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+      <div className="relative flex h-45 w-45 flex-col overflow-hidden bg-paper-background text-paper-foreground">
          {/* Needs-file marker: muted app chrome (not an error) top-LEFT, clear of the annotated badge, so a
              placeholder awaiting its file reads at a glance while the preserved page count reassures. */}
          {needsFile ? (

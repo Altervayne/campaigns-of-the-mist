@@ -19,7 +19,8 @@ import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
 import { PdfPreview } from '@/components/organisms/drawer/PdfPreview';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
-import { FitToBox } from '@/components/molecules/drawer/FitToBox';
+import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
+import { drawerPreviewStage } from '@/components/molecules/drawer/drawerPreviewStage';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
@@ -98,7 +99,7 @@ function JournalPreview({ journal }: { journal: Journal }) {
          )}
 
          {/* Top page: the themed card panel with page 1's clipped Markdown (or a placeholder when empty). */}
-         <div className="absolute inset-0 flex flex-col overflow-hidden rounded-md border border-border bg-card text-card-foreground">
+         <div className="absolute inset-0 flex flex-col overflow-hidden bg-card text-card-foreground">
             <div className="min-h-0 flex-1 overflow-hidden p-2.5 text-sm leading-snug">
                {firstText.trim() ? (
                   <NoteMarkdown content={firstText} />
@@ -138,7 +139,7 @@ function NotePreview({ note }: { note: Note }) {
    const body = typeof note?.body === 'string' ? note.body : '';
 
    return (
-      <div className="flex h-45 w-45 flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+      <div className="flex h-45 w-45 flex-col overflow-hidden bg-paper-background text-paper-foreground">
          {title.trim() ? (
             <div className="shrink-0 border-b border-paper-border px-2.5 py-1.5 text-sm font-semibold truncate">{title}</div>
          ) : null}
@@ -168,7 +169,7 @@ function RollTablePreview({ table }: { table: RollTableContent }) {
    const labels = computeEntryLabels(entries, display);
 
    return (
-      <div className="flex h-45 w-45 flex-col overflow-hidden rounded-md border border-border bg-card text-card-foreground">
+      <div className="flex h-45 w-45 flex-col overflow-hidden bg-card text-card-foreground">
          <div className={cn('shrink-0 truncate border-b border-border px-2 py-1.5 text-sm font-semibold', !title && 'text-muted-foreground/60')}>
             {title || t('BoardView.rollTableTitlePlaceholder')}
          </div>
@@ -278,18 +279,10 @@ function BoardPreview({ board }: { board: Board }) {
 
 export function FolderPreview({ folder }: { folder: FolderType }) {
    return (
-      <div
-            className="flex items-center justify-between gap-2 py-1 pl-1 pr-2 rounded bg-popover/50 border-2 border-border"
-         >
-         <div
-            className="flex h-8 items-center gap-2 truncate "
-         >
-            <GripVertical
-               className="h-5 w-5 shrink-0 text-accent-foreground cursor-grab"
-            />
-            <Folder className="h-6 w-6 shrink-0 text-accent-foreground"/>
-            <span className="truncate font-medium text-sm">{folder.name}</span>
-         </div>
+      <div className="flex items-center gap-2 rounded-md border border-border bg-popover py-1 pl-1 pr-2">
+         <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground cursor-grab" />
+         <Folder className="h-6 w-6 shrink-0 text-muted-foreground" />
+         <span className="truncate font-medium text-sm text-foreground">{folder.name}</span>
       </div>
    );
 }
@@ -384,29 +377,28 @@ export function DrawerItemPreview({
 
    // The game glyph (null for NEUTRAL items, which carry no game badge).
    const glyph = gameGlyph(item.game);
+   // The stage wears the type's own surface and the fill matches its silhouette (cover vs contain).
+   const { stageClassName, fit } = drawerPreviewStage(item.type);
+
+   // Each indicator icon gets a hover label naming it - the type and the game - so they're not a guess.
+   const meta = (
+      <>
+         <IconTooltip label={t(`Drawer.filters.itemType.${item.type}`)}>{getItemTypeIcon(item.type)}</IconTooltip>
+         {glyph && <IconTooltip label={t(`Drawer.Types.${item.game}`)}>{glyph}</IconTooltip>}
+         <ItemDateLabel type={item.type} createdAt={item.createdAt} updatedAt={item.updatedAt} className="truncate" />
+      </>
+   );
 
    return (
-      // Uniform card: a FIXED preview area (every type's preview is fit into it), then the name, then a
-      // meta row (type glyph + game glyph + date). Same footprint regardless of type.
-      <div className="flex flex-col gap-2 rounded-md border-2 border-border bg-card/75 p-2 transition-colors hover:bg-muted">
-         {/* Fixed ASPECT (not a fixed height) so the preview keeps the same proportion in both the narrow
-             side panel and the wider Library cells - a fixed height read wide-short in the roomy panel. */}
-         <FitToBox className="pointer-events-none aspect-[19/10] w-full rounded-md bg-popover/30">
-            {renderSnapshot()}
-         </FitToBox>
-
-         <div className={cn('flex items-center gap-2', headerActionLeft && 'flex-row-reverse')}>
-            <p className="min-w-0 flex-1 truncate px-1 text-sm font-semibold">{item.name}</p>
-            {headerAction}
-         </div>
-
-         {/* Meta: app-themed chrome (the game glyph is content's color via the icon, but the row is muted).
-             Each indicator icon gets a hover label naming it - the type and the game - so they're not a guess. */}
-         <div className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
-            <IconTooltip label={t(`Drawer.filters.itemType.${item.type}`)}>{getItemTypeIcon(item.type)}</IconTooltip>
-            {glyph && <IconTooltip label={t(`Drawer.Types.${item.game}`)}>{glyph}</IconTooltip>}
-            <ItemDateLabel type={item.type} createdAt={item.createdAt} updatedAt={item.updatedAt} className="truncate" />
-         </div>
-      </div>
+      <DrawerCardFrame
+         stageClassName={stageClassName}
+         fit={fit}
+         name={item.name}
+         meta={meta}
+         headerAction={headerAction}
+         headerActionLeft={headerActionLeft}
+      >
+         {renderSnapshot()}
+      </DrawerCardFrame>
    );
 };

@@ -259,8 +259,11 @@ export const customCollisionDetection: CollisionDetection = (args) => {
       const reorderOver = resolveSidePanelItemReorderOver(args);
       if (reorderOver) return reorderOver;
 
-      // Fallback when the cursor isn't over the items body (no DOM, keyboard drag): nearest sibling row,
-      // excluding the active so `over` is always a different row (handleDragEnd no-ops a self drop).
+      // A pointer drag whose cursor is outside the items body is NOT a reorder: dragging the item out of
+      // the drawer must not shuffle rows or auto-scroll the list. Only a keyboard drag (no pointer) falls
+      // back to the nearest sibling row, excluding the active so `over` is always a different row
+      // (handleDragEnd no-ops a self drop).
+      if (args.pointerCoordinates) return [];
       const siblingDroppables = args.droppableContainers.filter(
          (container) => container.data.current?.type === 'drawer-item' && container.id !== args.active.id,
       );
@@ -310,6 +313,10 @@ export const customCollisionDetection: CollisionDetection = (args) => {
       const reorderOver = resolveSidePanelItemReorderOver(args);
       if (reorderOver) return reorderOver;
 
+      // A pointer drag whose cursor is outside the items body is NOT a reorder: dragging the item out of
+      // the drawer must not shuffle rows or auto-scroll the list. Only a keyboard drag (no pointer) falls
+      // back to the nearest sibling row.
+      if (args.pointerCoordinates) return [];
       const itemDroppables = args.droppableContainers.filter((container) => {
          const type = container.data.current?.type as string;
          return type === 'drawer-item' || type === 'sheet-card' || type === 'sheet-tracker';

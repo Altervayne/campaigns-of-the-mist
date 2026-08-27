@@ -37,8 +37,8 @@ function ItemRowSkeleton() {
 
 function ItemCardSkeleton() {
    return (
-      <div className="flex flex-col gap-2 rounded-md border-2 border-border bg-card/75 p-2">
-         <div className={cn(SHIMMER, 'aspect-[19/10] w-full')} />
+      <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-2 shadow-sm">
+         <div className={cn(SHIMMER, 'aspect-[4/3] w-full')} />
          <div className={cn(SHIMMER, 'h-4 w-2/3')} />
          <div className={cn(SHIMMER, 'h-3 w-1/2')} />
       </div>

@@ -16,6 +16,7 @@ import { getGameVisual } from '@/lib/constants/gameVisuals';
 
 // -- Component Imports --
 import { DrawerItemPreview } from '@/components/organisms/drawer/DrawerItemPreview';
+import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 import { DrawerResultMenu } from '@/components/molecules/drawer/DrawerResultMenu';
@@ -54,23 +55,30 @@ function gameGlyph(game: GameSystem): ReactElement | null {
 function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerItemSummary; menu: ReactNode; removed?: boolean }) {
    const { t } = useTranslation();
    const glyph = gameGlyph(summary.game);
+   const meta = (
+      <>
+         {/* Hover labels name the indicator icons (type + game), so they aren't a guess. */}
+         <IconTooltip label={t(`Drawer.filters.itemType.${summary.type}`)}>{getItemTypeIcon(summary.type)}</IconTooltip>
+         {glyph && <IconTooltip label={t(`Drawer.Types.${summary.game}`)}>{glyph}</IconTooltip>}
+         <ItemDateLabel type={summary.type} createdAt={summary.createdAt} updatedAt={summary.updatedAt} className="truncate" />
+      </>
+   );
+
+   // Same frame as a loaded card, so nothing shifts on load: a shimmering stage while fetching, the
+   // removed message once the item is gone. Name + meta are the summary's, available immediately. The
+   // menu floats in the corner (a sibling overlay, as on a loaded card).
    return (
-      <div className="relative flex flex-col gap-2 rounded-md border-2 border-border bg-card/75 p-2">
-         <div className="flex aspect-[19/10] w-full items-center justify-center overflow-hidden rounded-md bg-popover/30">
+      <div className="relative">
+         <DrawerCardFrame
+            stageClassName={removed ? 'bg-popover/30' : 'animate-pulse bg-muted/40'}
+            fit="contain"
+            name={summary.name}
+            meta={meta}
+         >
             {removed
-               ? <p className="px-4 text-center text-xs text-muted-foreground">{t('Drawer.search.unavailable')}</p>
-               : <div className="h-full w-full animate-pulse rounded-md bg-muted/40" />}
-         </div>
-
-         <p className="min-w-0 truncate px-1 text-sm font-semibold">{summary.name}</p>
-
-         <div className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
-            {/* Hover labels name the indicator icons (type + game), so they aren't a guess. */}
-            <IconTooltip label={t(`Drawer.filters.itemType.${summary.type}`)}>{getItemTypeIcon(summary.type)}</IconTooltip>
-            {glyph && <IconTooltip label={t(`Drawer.Types.${summary.game}`)}>{glyph}</IconTooltip>}
-            <ItemDateLabel type={summary.type} createdAt={summary.createdAt} updatedAt={summary.updatedAt} className="truncate" />
-         </div>
-
+               ? <div className="flex h-45 w-45 items-center justify-center px-4 text-center text-xs text-muted-foreground">{t('Drawer.search.unavailable')}</div>
+               : null}
+         </DrawerCardFrame>
          <div className="absolute right-1 top-1 z-10">{menu}</div>
       </div>
    );
