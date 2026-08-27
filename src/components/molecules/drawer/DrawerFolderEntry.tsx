@@ -10,6 +10,7 @@ import { Sortable, DragStaticWrapper } from '@/components/dnd';
 
 // -- Component Imports --
 import { SpringDwellAffordance } from '@/components/molecules/drawer/SpringDwellAffordance';
+import { FolderCountLabel } from '@/components/molecules/drawer/FolderCountLabel';
 
 // -- Basic UI Imports --
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -30,7 +31,7 @@ import type { DrawerFolderRecord } from '@/lib/drawer/drawerRecords';
 
 
 
-export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarget = false, onNavigate, onRename, onDelete, onMove }: { folder: DrawerFolderRecord, parentFolderId: string | null, isOver: boolean, isSpringTarget?: boolean, onNavigate: (id: string) => void, onRename: () => void, onDelete: () => void, onMove: () => void }) {
+export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarget = false, childCounts, onNavigate, onRename, onDelete, onMove }: { folder: DrawerFolderRecord, parentFolderId: string | null, isOver: boolean, isSpringTarget?: boolean, childCounts?: { folderCount: number; itemCount: number }, onNavigate: (id: string) => void, onRename: () => void, onDelete: () => void, onMove: () => void }) {
    const { t } = useTranslation();
 
    // The folder row is now a flat record; reassemble its full subtree from the
@@ -73,7 +74,7 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                   >
                      <SpringDwellAffordance active={isSpringTarget} />
                      <div
-                        className="flex min-h-8 min-w-0 items-center gap-2"
+                        className="flex min-h-8 min-w-0 flex-1 items-center gap-2"
                         onClick={() => onNavigate(folder.id)}
                      >
                         {/* The grip carries the drag listeners on a wrapper span (not the bare SVG) so a
@@ -87,9 +88,15 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                         <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                            <Folder className="h-4 w-4" />
                         </span>
-                        {/* A long name wraps to two lines (then ellipsis) rather than truncating on one; the
-                            row grows to fit. Full name on hover. Short names are unaffected. */}
-                        <span title={folder.name} className="min-w-0 line-clamp-2 font-medium text-sm">{folder.name}</span>
+                        {/* Name over its child count (subfolders + items, non-recursive): stacking keeps the
+                            name at full column width in the narrow Library side-nav, where an inline count
+                            starved it. The count is absent when the caller passes none (e.g. the drag overlay). */}
+                        <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                           <span title={folder.name} className="min-w-0 line-clamp-2 font-medium text-sm">{folder.name}</span>
+                           {childCounts !== undefined && (
+                              <FolderCountLabel folders={childCounts.folderCount} items={childCounts.itemCount} />
+                           )}
+                        </div>
                      </div>
 
                      {/* The chevron signals "enterable" at rest and cedes its slot to the actions menu on

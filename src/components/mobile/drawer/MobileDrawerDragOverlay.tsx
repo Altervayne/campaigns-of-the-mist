@@ -1,7 +1,7 @@
 // -- Component Imports --
 import { DrawerItemPreview } from '@/components/organisms/drawer/DrawerItemPreview';
 import { GameTag } from '@/components/molecules/GameTag';
-import { FolderCountLabel } from '@/components/mobile/shared/FolderCountLabel';
+import { FolderCountLabel } from '@/components/molecules/drawer/FolderCountLabel';
 
 // -- Icon Imports --
 import { Folder as FolderIcon, MoreHorizontal } from 'lucide-react';

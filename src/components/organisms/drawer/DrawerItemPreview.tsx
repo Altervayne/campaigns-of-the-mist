@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Icon Imports --
-import { Folder, GripVertical, LayoutGrid } from 'lucide-react';
+import { Folder, GripVertical, LayoutGrid, NotebookText } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ import { PdfPreview } from '@/components/organisms/drawer/PdfPreview';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
-import { drawerPreviewStage } from '@/components/molecules/drawer/drawerPreviewStage';
+import { drawerPreviewStage, PREVIEW_PAGE } from '@/components/molecules/drawer/drawerPreviewStage';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
@@ -49,17 +49,18 @@ function gameGlyph(game: GameSystem): ReactElement | null {
 const SCHEMATIC_POSTIT_COLOR = '#fde68a';
 
 /**
- * Static preview of a saved post-it: the note's own colored sticky at a fixed footprint, its Markdown
- * clipped, no textarea / color toolbar. The `color` is USER CONTENT (the note the user made), so the
- * stored hex renders as-is with a luminance-derived readable text color - it is NOT washed to a theme
- * token. Everything around it (the preview frame, meta row) stays app-token chrome, handled by the card.
+ * Static preview of a saved post-it: the note's own colored sticky at the large page-width authoring size,
+ * its Markdown clipped, no textarea / color toolbar. The `color` is USER CONTENT (the note the user made),
+ * so the stored hex renders as-is with a luminance-derived readable text color - it is NOT washed to a
+ * theme token. Everything around it (the preview frame, meta row) stays app-token chrome, handled by the
+ * card. The sticky keeps its square shape - the shared width just lets `cover` down-scale the text legible.
  */
 function PostItPreview({ note }: { note: PostItNote }) {
    const { t } = useTranslation();
    const background = note.color ?? SCHEMATIC_POSTIT_COLOR;
    const textColor = readableTextColor(background);
    return (
-      <div className="h-45 w-45 overflow-hidden" style={{ backgroundColor: background, color: textColor }}>
+      <div className="w-[540px] aspect-square overflow-hidden" style={{ backgroundColor: background, color: textColor }}>
          {note.text.trim() ? (
             <div className="h-full w-full overflow-hidden p-2.5">
                <NoteMarkdown content={note.text} />
@@ -74,54 +75,47 @@ function PostItPreview({ note }: { note: PostItNote }) {
 }
 
 /**
- * Static preview of a saved journal: page 1's text on the themed `bg-card` panel, a stacked-pages edge on
- * the right signalling multi-page, a page count, and faint bookmark tab stubs when the journal has any.
- * A journal is CHROME end to end - unlike a post-it there is NO content-color exception, so every surface
- * here is an app token. Guarded: pages/bookmarks are read defensively (an empty or odd journal renders the
+ * Static preview of a saved journal: page 1's text on the PAPER palette (matching a note's parchment),
+ * fronted by a bound masthead - a book glyph, the type name, and the page count - so a journal reads
+ * unmistakably as a notebook and never as a plain note. A faint offset panel behind the page carries the
+ * multi-page depth cue. Guarded: pages are read defensively (an empty or odd journal renders the
  * placeholder rather than throwing) - a preview must never crash.
  */
 function JournalPreview({ journal }: { journal: Journal }) {
    const { t } = useTranslation();
    const pages = Array.isArray(journal?.pages) ? journal.pages : [];
-   const bookmarks = Array.isArray(journal?.bookmarks) ? journal.bookmarks : [];
    const firstText = typeof pages[0]?.text === 'string' ? pages[0].text : '';
    const pageCount = Math.max(pages.length, 1);
    const multiPage = pageCount > 1;
 
    return (
-      <div className="relative w-45 h-45">
-         {/* Stacked-pages edge: faint offset panels behind the top page, only when multi-page. */}
+      <div className={cn('relative', PREVIEW_PAGE)}>
+         {/* Stacked-pages edge: a faint offset paper panel behind the top page, only when multi-page. */}
          {multiPage && (
-            <>
-               <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-md border border-border bg-muted" />
-               <div className="absolute inset-0 translate-x-[3px] translate-y-[3px] rounded-md border border-border bg-card" />
-            </>
+            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-md border border-paper-border bg-paper-background opacity-70" />
          )}
 
-         {/* Top page: the themed card panel with page 1's clipped Markdown (or a placeholder when empty). */}
-         <div className="absolute inset-0 flex flex-col overflow-hidden bg-card text-card-foreground">
+         {/* Top page: parchment with a bound masthead, then page 1's clipped Markdown (or a placeholder). */}
+         <div className="absolute inset-0 flex flex-col overflow-hidden rounded-md border border-paper-border bg-paper-background text-paper-foreground">
+            {/* Masthead: the binding strip that identifies a journal - glyph, label, page count. */}
+            <div className="shrink-0 flex items-center gap-2 border-b-2 border-paper-border px-2.5 py-2">
+               <NotebookText className="h-4 w-4 shrink-0 text-paper-foreground/70" />
+               <span className="truncate text-sm font-semibold uppercase tracking-wide">{t('Drawer.Types.JOURNAL')}</span>
+               <span className="ml-auto shrink-0 text-[11px] text-paper-foreground/60">
+                  {t('Drawer.Types.journalPageCount', { count: pageCount })}
+               </span>
+            </div>
+            {/* Stitched hairline under the binding, for a bound-cover feel. */}
+            <div className="h-px shrink-0 bg-paper-border/50" />
+
             <div className="min-h-0 flex-1 overflow-hidden p-2.5 text-sm leading-snug">
                {firstText.trim() ? (
                   <NoteMarkdown content={firstText} />
                ) : (
-                  <span className="text-xs text-muted-foreground/50">{t('BoardView.journalPlaceholder')}</span>
+                  <span className="text-xs text-paper-foreground/50">{t('BoardView.journalPlaceholder')}</span>
                )}
             </div>
-            {/* Page count, on muted chrome. */}
-            <div className="shrink-0 border-t border-border px-2 py-1 text-[10px] text-muted-foreground">
-               {t('Drawer.Types.journalPageCount', { count: pageCount })}
-            </div>
          </div>
-
-         {/* Bookmark tab stubs: faint chrome tabs at the right edge, capped so a heavily-tabbed journal
-             doesn't overrun the thumbnail. Purely indicative - no labels, no interaction. */}
-         {bookmarks.length > 0 && (
-            <div className="absolute right-0 top-6 flex flex-col items-end gap-1">
-               {bookmarks.slice(0, 3).map((bookmark) => (
-                  <div key={bookmark.id} className="h-2 w-3 rounded-l-sm border border-r-0 border-border bg-muted" />
-               ))}
-            </div>
-         )}
       </div>
    );
 }
@@ -139,7 +133,7 @@ function NotePreview({ note }: { note: Note }) {
    const body = typeof note?.body === 'string' ? note.body : '';
 
    return (
-      <div className="flex h-45 w-45 flex-col overflow-hidden bg-paper-background text-paper-foreground">
+      <div className={cn('flex flex-col overflow-hidden bg-paper-background text-paper-foreground', PREVIEW_PAGE)}>
          {title.trim() ? (
             <div className="shrink-0 border-b border-paper-border px-2.5 py-1.5 text-sm font-semibold truncate">{title}</div>
          ) : null}
@@ -169,7 +163,7 @@ function RollTablePreview({ table }: { table: RollTableContent }) {
    const labels = computeEntryLabels(entries, display);
 
    return (
-      <div className="flex h-45 w-45 flex-col overflow-hidden bg-card text-card-foreground">
+      <div className={cn('flex flex-col overflow-hidden bg-card text-card-foreground', PREVIEW_PAGE)}>
          <div className={cn('shrink-0 truncate border-b border-border px-2 py-1.5 text-sm font-semibold', !title && 'text-muted-foreground/60')}>
             {title || t('BoardView.rollTableTitlePlaceholder')}
          </div>

@@ -54,7 +54,9 @@ export function PdfCommentCard({ comment, isFocused, isEditing, onJump, onStartE
       <div
          ref={ref}
          className={cn(
-            'rounded-lg border border-border bg-card p-2.5 shadow-sm transition-all',
+            // Transition the lift/lean/reflow, NOT the border - animating border-width reads as jank, so the
+            // focused card's thicker accent edge pops in instantly.
+            'rounded-lg border border-border bg-card p-2.5 shadow-sm transition-[transform,box-shadow,margin]',
             isFocused && 'my-3 -translate-x-1.5 border-l-4 shadow-lg motion-safe:animate-[cotm-comment-pop_240ms_ease-out]',
          )}
          style={isFocused ? { borderLeftColor: comment.color } : undefined}

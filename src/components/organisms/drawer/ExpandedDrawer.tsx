@@ -32,6 +32,7 @@ import { useDrawerNavigation } from '@/hooks/drawer/useDrawerNavigation';
 import { useDrawerActionState } from '@/hooks/drawer/useDrawerActionState';
 import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
 import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
+import { useFolderChildCounts } from '@/hooks/drawer/useFolderChildCounts';
 import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 import { useAppSettingsStore, useAppSettingsActions } from '@/lib/stores/appSettingsStore';
 
@@ -100,6 +101,8 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
    // Reorder scaffolding, mirroring the side panel: folder ids for the SortableContext, and the dragged
    // folder's index so the two no-op slots flanking it don't expand.
    const folderIds = useMemo(() => currentFolders.map((f) => f.id), [currentFolders]);
+   // Direct-child counts for the side-nav folder rows (one batched read, live on any drawer mutation).
+   const folderChildCounts = useFolderChildCounts(folderIds);
    const activeFolderIndex = useMemo(
       () => (activeDragId ? currentFolders.findIndex((f) => f.id === activeDragId) : -1),
       [activeDragId, currentFolders],
@@ -219,7 +222,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
             {/* Folder side-nav. Internal spacing/padding mirrors the side-panel Drawer's folder section
                 (p-2 pt-0; the inter-folder rhythm comes from the reorder slots, not a flat gap), so the
                 two read identically; only the column chrome (w-64, border, bg-popover) is Library-specific. */}
-            <aside className="flex w-64 shrink-0 flex-col overflow-y-auto border-r-2 border-border bg-popover p-2 pt-0">
+            <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-r-2 border-border bg-popover p-2 pt-0">
                {/* Breadcrumb moved to the header's full-width row; the side-nav starts at Back / the folders. */}
                {currentFolderId && (
                   // `data-drawer-back` makes this a Back hit-area for the drag dwell (read live by the
@@ -253,6 +256,7 @@ export function ExpandedDrawer({ isItemDragActive, isFolderDragActive, workspace
                               parentFolderId={currentFolderId}
                               isOver={drawerDropTarget?.kind === 'folder' && drawerDropTarget.id === folder.id}
                               isSpringTarget={springTargetId === folder.id}
+                              childCounts={folderChildCounts.get(folder.id)}
                               onNavigate={navigateToFolder}
                               onRename={() => setActiveAction({ id: cuid(), type: 'rename-folder', target: folder })}
                               onDelete={() => setActiveAction({ id: cuid(), type: 'delete-folder', target: folder })}

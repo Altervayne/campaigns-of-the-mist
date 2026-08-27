@@ -15,6 +15,10 @@ import { cn } from '@/lib/utils';
  * canvas with a small margin. `cover` scales to fill the box WIDTH, top-anchored, and masks the clipped
  * bottom out to transparent so a portrait/square preview bleeds off the bottom edge, revealing the stage
  * behind. The fade is to transparent (no color token), so it can't break in a dark or custom theme.
+ *
+ * `cover` scale is capped at 1: content never magnifies, only down-scales or renders 1:1. Document
+ * previews author large (PREVIEW_PAGE) and shrink into a dense thumbnail; fixed-size card previews render
+ * as-is rather than being blown up past their natural size.
  */
 
 const COVER_FADE = 'linear-gradient(to bottom, #000 70%, transparent)';
@@ -37,7 +41,7 @@ export function FitToBox({ children, className, fit = 'contain' }: { children: R
          const contentWidth = content.offsetWidth;
          const contentHeight = content.offsetHeight;
          if (boxWidth && boxHeight && contentWidth && contentHeight) {
-            setScale(cover ? boxWidth / contentWidth : Math.min(boxWidth / contentWidth, boxHeight / contentHeight));
+            setScale(cover ? Math.min(boxWidth / contentWidth, 1) : Math.min(boxWidth / contentWidth, boxHeight / contentHeight));
          }
       };
       const observer = new ResizeObserver(measure);

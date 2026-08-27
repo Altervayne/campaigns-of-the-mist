@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 // -- Component Imports --
 import { Button } from '@/components/ui/button';
 import { MobileBottomSheet } from '@/components/mobile/shared/MobileBottomSheet';
-import { FolderCountLabel } from '@/components/mobile/shared/FolderCountLabel';
+import { FolderCountLabel } from '@/components/molecules/drawer/FolderCountLabel';
 
 // -- Icon Imports --
 import { Folder, Home, ChevronRight } from 'lucide-react';

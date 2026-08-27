@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Folder, MoreHorizontal } from 'lucide-react';
 
 // -- Component Imports --
-import { FolderCountLabel } from '@/components/mobile/shared/FolderCountLabel';
+import { FolderCountLabel } from '@/components/molecules/drawer/FolderCountLabel';
 
 // -- DnD Component Imports --
 import { Sortable, DragStaticWrapper } from '@/components/dnd';

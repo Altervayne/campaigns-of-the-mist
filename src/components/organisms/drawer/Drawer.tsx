@@ -43,6 +43,7 @@ import { useDrawerActionState } from '@/hooks/drawer/useDrawerActionState';
 import { useDrawerFileImport } from '@/hooks/drawer/useDrawerFileImport';
 import { useDrawerMountLoad } from '@/hooks/drawer/useDrawerMountLoad';
 import { useIsDrawerSearchActive, useJumpToSearchResult } from '@/hooks/drawer/useDrawerSearchSurface';
+import { useFolderChildCounts } from '@/hooks/drawer/useFolderChildCounts';
 import { useAppSettingsActions, useAppSettingsStore } from '@/lib/stores/appSettingsStore';
 import { useAppGeneralStateActions, useAppGeneralStateStore } from '@/lib/stores/appGeneralStateStore';
 
@@ -128,6 +129,8 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
 
 
    const folderIds = useMemo(() => currentFolders.map(f => f.id), [currentFolders]);
+   // Direct-child counts for the folder rows (one batched read, live on any drawer mutation).
+   const folderChildCounts = useFolderChildCounts(folderIds);
    // Index of the dragged folder within this view (-1 when an item/nothing is dragged),
    // used to suppress expansion of the two no-op slots flanking it.
    const activeFolderIndex = useMemo(() => {
@@ -279,6 +282,7 @@ export function Drawer({ isDragHovering, activeDragId, isFolderDragActive = fals
                                           parentFolderId={currentFolderId}
                                           isOver={drawerDropTarget?.kind === 'folder' && drawerDropTarget.id === folder.id}
                                           isSpringTarget={springTargetId === folder.id}
+                                          childCounts={folderChildCounts.get(folder.id)}
                                           onNavigate={navigateToFolder}
                                           onRename={() => setActiveAction({ id: cuid(), type: 'rename-folder', target: folder })}
                                           onDelete={() => setActiveAction({ id: cuid(), type: 'delete-folder', target: folder })}
