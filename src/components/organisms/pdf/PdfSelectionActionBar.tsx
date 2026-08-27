@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { Copy } from 'lucide-react';
+import { Copy, Highlighter } from 'lucide-react';
 
 /*
- * The floating action bar over a live text selection (read mode). It carries a single Copy action that
- * writes the selection to the clipboard, toasts, and drops the selection. Positioned fixed in viewport
- * coordinates just above the selection rect and clamped to the viewport edges. Chrome, so it uses theme
- * tokens; the page and its text stay neutral. The Highlight action joins here in a later milestone.
+ * The floating action bar over a live text selection (read mode). It carries Copy - which writes the
+ * selection to the clipboard, toasts, and drops it - and Highlight, which turns the selection into a text
+ * highlight. Positioned fixed in viewport coordinates just above the selection rect and clamped to the
+ * viewport edges. Chrome, so it uses theme tokens; the page and its text stay neutral.
  */
 
 /** Gap above the selection rect, in px. */
@@ -24,9 +24,10 @@ const APPROX_HALF_WIDTH = 48;
 interface PdfSelectionActionBarProps {
    rect: DOMRect;
    text: string;
+   onHighlight: () => void;
 }
 
-export function PdfSelectionActionBar({ rect, text }: PdfSelectionActionBarProps) {
+export function PdfSelectionActionBar({ rect, text, onHighlight }: PdfSelectionActionBarProps) {
    const { t } = useTranslation();
 
    const copy = () => {
@@ -54,6 +55,14 @@ export function PdfSelectionActionBar({ rect, text }: PdfSelectionActionBarProps
             >
                <Copy className="h-3.5 w-3.5" />
                {t('PdfView.selection.copy')}
+            </button>
+            <button
+               type="button"
+               onClick={onHighlight}
+               className="flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded px-2 text-xs font-medium text-card-foreground hover:bg-muted"
+            >
+               <Highlighter className="h-3.5 w-3.5" />
+               {t('PdfView.selection.highlight')}
             </button>
          </div>
       </div>

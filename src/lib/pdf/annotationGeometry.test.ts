@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { annotationBounds, clampTranslation, denormalizePoints, denormalizeRect, filterVisibleAnnotations, groupAnnotationsByPage, isAnnotationVisible, listComments, pdfInkToStrokePaintInput, rectFromCorners, resizeHandleAtPoint, resizeHandlePositions, resizeRect, translatePoints, translateRect } from './annotationGeometry';
 
 // -- Type Imports --
-import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfTextHighlight } from '@/lib/types/pdfAnnotation';
 
 const ink = (id: string, page: number, createdAt: number, extra?: Partial<PdfInk>): PdfInk => ({
    id,
@@ -146,6 +146,28 @@ describe('annotationBounds', () => {
       expect(annotationBounds(mixed.h)).toEqual({ x: 0, y: 0, w: 0.5, h: 0.5 });
       expect(annotationBounds(mixed.c)).toEqual({ x: 0.1, y: 0.1, w: 0.2, h: 0.2 });
    });
+
+   it('spans the union of a text highlight’s quads', () => {
+      const mark: PdfTextHighlight = {
+         id: 'th',
+         page: 1,
+         createdAt: 1,
+         kind: 'textHighlight',
+         color: '#fde047',
+         alpha: 0.35,
+         text: 'two lines',
+         quads: [
+            { x: 0.25, y: 0.25, w: 0.25, h: 0.125 },
+            { x: 0.5, y: 0.5, w: 0.25, h: 0.125 },
+         ],
+      };
+      expect(annotationBounds(mark)).toEqual({ x: 0.25, y: 0.25, w: 0.5, h: 0.375 });
+   });
+
+   it('returns a zero box for a text highlight with no quads', () => {
+      const mark: PdfTextHighlight = { id: 'th', page: 1, createdAt: 1, kind: 'textHighlight', color: '#fde047', alpha: 0.35, text: '', quads: [] };
+      expect(annotationBounds(mark)).toEqual({ x: 0, y: 0, w: 0, h: 0 });
+   });
 });
 
 describe('clampTranslation', () => {
@@ -268,8 +290,8 @@ describe('resizeRect', () => {
 describe('isAnnotationVisible', () => {
    it('reads the flag matching the annotation kind', () => {
       const highlight = mixed.h as PdfHighlight;
-      expect(isAnnotationVisible(highlight, { ink: true, highlight: false, comment: true })).toBe(false);
-      expect(isAnnotationVisible(highlight, { ink: false, highlight: true, comment: false })).toBe(true);
+      expect(isAnnotationVisible(highlight, { ink: true, highlight: false, comment: true, textHighlight: true })).toBe(false);
+      expect(isAnnotationVisible(highlight, { ink: false, highlight: true, comment: false, textHighlight: false })).toBe(true);
    });
 });
 
@@ -277,20 +299,20 @@ describe('filterVisibleAnnotations', () => {
    const all: Record<string, PdfAnnotation> = { i: ink('i', 1, 1), h: mixed.h, c: mixed.c };
 
    it('drops the hidden kind and keeps the visible ones', () => {
-      const kept = filterVisibleAnnotations(all, { ink: false, highlight: true, comment: true });
+      const kept = filterVisibleAnnotations(all, { ink: false, highlight: true, comment: true, textHighlight: true });
       expect(Object.keys(kept ?? {})).toEqual(['h', 'c']);
    });
 
    it('drops everything when all kinds are hidden', () => {
-      expect(filterVisibleAnnotations(all, { ink: false, highlight: false, comment: false })).toEqual({});
+      expect(filterVisibleAnnotations(all, { ink: false, highlight: false, comment: false, textHighlight: false })).toEqual({});
    });
 
    it('keeps everything when all kinds are visible', () => {
-      const kept = filterVisibleAnnotations(all, { ink: true, highlight: true, comment: true });
+      const kept = filterVisibleAnnotations(all, { ink: true, highlight: true, comment: true, textHighlight: true });
       expect(Object.keys(kept ?? {})).toEqual(['i', 'h', 'c']);
    });
 
    it('passes an absent map through untouched', () => {
-      expect(filterVisibleAnnotations(undefined, { ink: true, highlight: true, comment: true })).toBeUndefined();
+      expect(filterVisibleAnnotations(undefined, { ink: true, highlight: true, comment: true, textHighlight: true })).toBeUndefined();
    });
 });

@@ -31,8 +31,9 @@ export function PdfSelectionLayer({ annotations, width, height }: PdfSelectionLa
    const selectedRect = selected ? denormalizeRect(annotationBounds(selected), width, height) : null;
    const flashRect = flashed ? denormalizeRect(annotationBounds(flashed), width, height) : null;
 
-   // Resize handles ride only a rect kind (highlight/comment); ink has no area, so it stays move-only.
-   const handles = selected && selected.kind !== 'ink' ? resizeHandlePositions(annotationBounds(selected), width, height) : null;
+   // Resize handles ride only a rect kind (highlight/comment); ink has no area and a text highlight is frozen
+   // to its text, so both stay handle-free (a text highlight is select/recolor/delete only).
+   const handles = selected && (selected.kind === 'highlight' || selected.kind === 'comment') ? resizeHandlePositions(annotationBounds(selected), width, height) : null;
 
    return (
       <svg className="pointer-events-none absolute inset-0" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>

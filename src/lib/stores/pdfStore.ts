@@ -225,7 +225,7 @@ export interface PdfState {
       setNavPanelTab: (tab: PdfNavTab) => void;
       /** Shows or hides one annotation kind in the reader. Ephemeral view state, never persisted. */
       setAnnotationTypeVisible: (kind: PdfAnnotationKind, visible: boolean) => void;
-      /** Shows or hides all three annotation kinds at once. Ephemeral. */
+      /** Shows or hides every annotation kind at once. Ephemeral. */
       setAllAnnotationsVisible: (visible: boolean) => void;
       /** Adds a markup annotation to the live document and debounce-persists it. No-op before the document is ready. */
       addAnnotation: (annotation: PdfAnnotation) => void;
@@ -300,7 +300,7 @@ const initialState: Pick<PdfState, 'pdfId' | 'doc' | 'drawerItemId' | 'proxy' | 
    commentsPanelOpen: false,
    navPanelOpen: false,
    navPanelTab: 'outline',
-   annotationVisibility: { ink: true, highlight: true, comment: true },
+   annotationVisibility: { ink: true, highlight: true, comment: true, textHighlight: true },
    undoStack: [],
    redoStack: [],
    searchOpen: false,
@@ -464,7 +464,7 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
             setAnnotationTypeVisible: (kind, visible) =>
                set((state) => ({ annotationVisibility: { ...state.annotationVisibility, [kind]: visible } })),
 
-            setAllAnnotationsVisible: (visible) => set({ annotationVisibility: { ink: visible, highlight: visible, comment: visible } }),
+            setAllAnnotationsVisible: (visible) => set({ annotationVisibility: { ink: visible, highlight: visible, comment: visible, textHighlight: visible } }),
 
             addAnnotation: (annotation) => {
                const { doc } = get();

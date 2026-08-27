@@ -42,6 +42,35 @@ describe('PdfAnnotationLayer', () => {
       expect(svg.querySelector('rect[fill-opacity="0.08"]')).toBeNull();
    });
 
+   it('paints one denormalized rect per text-highlight quad', () => {
+      const textHighlight: PdfAnnotation = {
+         id: 'th',
+         page: 1,
+         createdAt: 4,
+         kind: 'textHighlight',
+         color: '#ffcc00',
+         alpha: 0.35,
+         text: 'two lines',
+         quads: [
+            { x: 0.1, y: 0.1, w: 0.2, h: 0.05 },
+            { x: 0.1, y: 0.2, w: 0.3, h: 0.05 },
+         ],
+      };
+      const { container } = render(<PdfAnnotationLayer annotations={[textHighlight]} width={WIDTH} height={HEIGHT} />);
+      const rects = [...container.querySelectorAll('rect[fill-opacity="0.35"]')];
+      expect(rects).toHaveLength(2);
+      // First quad: {0.1,0.1,0.2,0.05} at 200x400 -> {20,40,40,20}.
+      expect(rects[0].getAttribute('x')).toBe('20');
+      expect(rects[0].getAttribute('y')).toBe('40');
+      expect(rects[0].getAttribute('width')).toBe('40');
+      expect(rects[0].getAttribute('height')).toBe('20');
+      expect(rects[0].getAttribute('fill')).toBe('#ffcc00');
+      // Second quad: {0.1,0.2,0.3,0.05} -> {20,80,60,20}.
+      expect(rects[1].getAttribute('x')).toBe('20');
+      expect(rects[1].getAttribute('y')).toBe('80');
+      expect(rects[1].getAttribute('width')).toBe('60');
+   });
+
    it('is inert to pointer input this phase', () => {
       const { container } = render(<PdfAnnotationLayer annotations={annotations} width={WIDTH} height={HEIGHT} />);
       expect(container.querySelector('svg')!.classList.contains('pointer-events-none')).toBe(true);

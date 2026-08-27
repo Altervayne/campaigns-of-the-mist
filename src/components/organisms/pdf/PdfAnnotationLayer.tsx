@@ -5,7 +5,7 @@ import { denormalizeRect, pdfInkToStrokePaintInput } from '@/lib/pdf/annotationG
 import { StrokeShape } from '@/components/organisms/board/items/BoardDrawingItem';
 
 // -- Type Imports --
-import type { PdfAnnotation, PdfHighlight, PdfInk } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfHighlight, PdfInk, PdfTextHighlight } from '@/lib/types/pdfAnnotation';
 
 /*
  * The per-page annotation overlay: one inert SVG covering the page box, painting the highlights and ink
@@ -17,14 +17,16 @@ import type { PdfAnnotation, PdfHighlight, PdfInk } from '@/lib/types/pdfAnnotat
  */
 
 /** Splits a page's annotations into the painted kinds in one pass, keeping the incoming (createdAt) order. */
-function splitByKind(annotations: PdfAnnotation[]): { highlights: PdfHighlight[]; inks: PdfInk[] } {
+function splitByKind(annotations: PdfAnnotation[]): { highlights: PdfHighlight[]; textHighlights: PdfTextHighlight[]; inks: PdfInk[] } {
    const highlights: PdfHighlight[] = [];
+   const textHighlights: PdfTextHighlight[] = [];
    const inks: PdfInk[] = [];
    for (const annotation of annotations) {
       if (annotation.kind === 'highlight') highlights.push(annotation);
+      else if (annotation.kind === 'textHighlight') textHighlights.push(annotation);
       else if (annotation.kind === 'ink') inks.push(annotation);
    }
-   return { highlights, inks };
+   return { highlights, textHighlights, inks };
 }
 
 interface PdfAnnotationLayerProps {
@@ -35,7 +37,7 @@ interface PdfAnnotationLayerProps {
 }
 
 export function PdfAnnotationLayer({ annotations, width, height }: PdfAnnotationLayerProps) {
-   const { highlights, inks } = splitByKind(annotations);
+   const { highlights, textHighlights, inks } = splitByKind(annotations);
    return (
       <svg className="pointer-events-none absolute inset-0" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
          {/* Bottom band: translucent highlight fills sit under everything. */}
@@ -43,6 +45,13 @@ export function PdfAnnotationLayer({ annotations, width, height }: PdfAnnotation
             const rect = denormalizeRect(highlight.rect, width, height);
             return <rect key={highlight.id} x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={3} fill={highlight.color} fillOpacity={highlight.alpha} />;
          })}
+         {/* Text highlights paint one rect per frozen line quad, in the same bottom band as freehand fills. */}
+         {textHighlights.map((mark) =>
+            mark.quads.map((quad, index) => {
+               const rect = denormalizeRect(quad, width, height);
+               return <rect key={`${mark.id}-${index}`} x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={3} fill={mark.color} fillOpacity={mark.alpha} />;
+            }),
+         )}
          {/* Ink paints through the board stroke renderer, denormalized into this box. */}
          {inks.map((ink) => (
             <StrokeShape key={ink.id} stroke={pdfInkToStrokePaintInput(ink, width, height)} />

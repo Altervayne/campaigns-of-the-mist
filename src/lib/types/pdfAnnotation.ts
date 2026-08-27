@@ -51,8 +51,21 @@ export interface PdfComment extends PdfAnnotationBase {
    body: string;
 }
 
+/**
+ * A translucent highlight bound to selected TEXT: `quads` are the per-line glyph rects (each normalized
+ * 0..1 in page space), frozen at creation so the fill sits on the letters at any zoom; `alpha` is the fill
+ * opacity 0..1; `text` is the selected quote, stored for copy/list/export self-description only. Select /
+ * recolor / delete only - a text highlight dragged off its text is nonsense, so it neither moves nor resizes.
+ */
+export interface PdfTextHighlight extends PdfAnnotationBase {
+   kind: 'textHighlight';
+   quads: PdfRect[];
+   alpha: number;
+   text: string;
+}
+
 /** Any PDF markup annotation, discriminated by `kind`. */
-export type PdfAnnotation = PdfInk | PdfHighlight | PdfComment;
+export type PdfAnnotation = PdfInk | PdfHighlight | PdfComment | PdfTextHighlight;
 
 /** The discriminant of a {@link PdfAnnotation}. */
 export type PdfAnnotationKind = PdfAnnotation['kind'];

@@ -41,6 +41,7 @@ import { cn } from '@/lib/utils';
 import { annotationBounds, clampTranslation, filterVisibleAnnotations, groupAnnotationsByPage, isAnnotationVisible, listComments, resizeHandleAtPoint, resizeRect, translatePoints, translateRect } from '@/lib/pdf/annotationGeometry';
 import type { ResizeHandle } from '@/lib/pdf/annotationGeometry';
 import { annotationAtPoint } from '@/lib/pdf/annotationHitTest';
+import { rangeToNormalizedQuads } from '@/lib/pdf/pdfTextRange';
 import { getPageTextIndex } from '@/lib/pdf/pdfPageTextIndex';
 import { matchToQuads } from '@/lib/pdf/textLayerGeometry';
 import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarkupContext';
@@ -49,7 +50,7 @@ import { PdfMarkupContext, type PdfMarkupContextValue } from '@/lib/pdf/PdfMarku
 import type { NoteHostContext } from '@/lib/portals/linkTarget';
 import type { PdfStore, PdfTool, SearchMatch } from '@/lib/stores/pdfStore';
 import { HIGHLIGHT_ALPHA } from '@/lib/stores/pdfStore';
-import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfComment, PdfHighlight, PdfInk, PdfRect, PdfTextHighlight } from '@/lib/types/pdfAnnotation';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 /*
@@ -362,6 +363,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          if (!id) return;
          const mark = store.getState().doc?.annotations?.[id];
          if (!mark) return;
+         // A text highlight is frozen to its text (no points, no rect); it never moves.
+         if (mark.kind === 'textHighlight') return;
          const { dx, dy } = clampTranslation(annotationBounds(mark), dnx, dny);
          if (dx === 0 && dy === 0) return;
          const { updateAnnotation } = store.getState().actions;
@@ -379,7 +382,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          const id = selectedIdRef.current;
          if (!id) return null;
          const mark = store.getState().doc?.annotations?.[id];
-         if (!mark || mark.kind === 'ink' || mark.page !== pageNumber) return null;
+         // Only a rect kind resizes; ink has no area and a text highlight is frozen to its text.
+         if (!mark || mark.kind === 'ink' || mark.kind === 'textHighlight' || mark.page !== pageNumber) return null;
          const px = ((clientX - rect.left) / rect.width) * boxW;
          const py = ((clientY - rect.top) / rect.height) * boxH;
          return resizeHandleAtPoint(annotationBounds(mark), boxW, boxH, px, py, RESIZE_HANDLE_TOLERANCE);
@@ -395,7 +399,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
          const id = selectedIdRef.current;
          if (!id) return;
          const mark = store.getState().doc?.annotations?.[id];
-         if (!mark || mark.kind === 'ink') return;
+         // Only a rect kind reshapes; ink and text highlights carry no rect.
+         if (!mark || (mark.kind !== 'highlight' && mark.kind !== 'comment')) return;
          store.getState().actions.updateAnnotation(id, { rect: resizeRect(mark.rect, handle, dnx, dny, MIN_RESIZE_NORM) });
       },
       [store],
@@ -444,8 +449,41 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
    // bridge), and the Add/Replace choice lands as one undo step.
    const { fileInputRef: markupInputRef, onFileChange: onMarkupFileChange, pending: markupApplyPending, apply: applyMarkupChoice, cancel: cancelMarkupApply } = usePdfMarkupApply(store);
 
-   // The live text selection over the pages, tracked only in read mode; drives the floating Copy bar.
+   // The live text selection over the pages, tracked only in read mode; drives the floating action bar.
    const textSelection = usePdfTextSelection(scrollRef, markupMode === 'read');
+
+   // Turns the live selection into text highlights: one per covered page box, all in one undo step. The
+   // range's client rects are normalized against each mounted page box; a rect lands on the page whose box
+   // holds its center, so a selection spanning several pages splits into one highlight per page. Every
+   // highlight on a multi-page selection carries the FULL selected text as its quote (multi-page
+   // quote-splitting is out of scope); a single-page selection - the common case - carries the exact quote.
+   const highlightSelection = useCallback(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+      const scroller = scrollRef.current;
+      if (!scroller) return;
+      const range = selection.getRangeAt(0);
+      const quote = selection.toString();
+      const created: PdfTextHighlight[] = [];
+      const color = store.getState().highlightColor;
+      for (const box of scroller.querySelectorAll<HTMLElement>('[data-page]')) {
+         const page = Number(box.dataset.page);
+         if (!page) continue;
+         const quads = rangeToNormalizedQuads(range, box).filter((quad) => {
+            const cx = quad.x + quad.w / 2;
+            const cy = quad.y + quad.h / 2;
+            return cx >= 0 && cx <= 1 && cy >= 0 && cy <= 1;
+         });
+         if (quads.length === 0) continue;
+         created.push({ kind: 'textHighlight', id: cuid(), page, color, alpha: HIGHLIGHT_ALPHA, quads, text: quote, createdAt: Date.now() });
+      }
+      if (created.length === 0) return;
+      const actions = store.getState().actions;
+      actions.beginHistory();
+      for (const mark of created) actions.addAnnotation(mark);
+      actions.commitHistory();
+      window.getSelection()?.removeAllRanges();
+   }, [store]);
 
    const markup = useMemo<PdfMarkupContextValue>(
       () => ({
@@ -829,8 +867,8 @@ function PdfReader({ store, proxy, pageCount }: PdfReaderProps) {
                onReplace={() => applyMarkupChoice('replace')}
                onCancel={cancelMarkupApply}
             />
-            {/* Floating Copy bar over a live read-mode selection; fixed in viewport coords (the rect is too). */}
-            {markupMode === 'read' && textSelection ? <PdfSelectionActionBar rect={textSelection.rect} text={textSelection.text} /> : null}
+            {/* Floating action bar over a live read-mode selection; fixed in viewport coords (the rect is too). */}
+            {markupMode === 'read' && textSelection ? <PdfSelectionActionBar rect={textSelection.rect} text={textSelection.text} onHighlight={highlightSelection} /> : null}
          </div>
       </PdfMarkupContext.Provider>
    );

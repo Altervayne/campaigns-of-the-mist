@@ -51,7 +51,8 @@
          "pageLabel": "[TO COMPLETE]"
       },
       "selection": {
-         "copy": "[TO COMPLETE]"
+         "copy": "[TO COMPLETE]",
+         "highlight": "[TO COMPLETE]"
       },
       "search": {
          "toggle": "[TO COMPLETE]",

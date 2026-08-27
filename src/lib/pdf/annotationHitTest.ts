@@ -2,7 +2,7 @@
 import { denormalizePoints, denormalizeRect } from '@/lib/pdf/annotationGeometry';
 
 // -- Type Imports --
-import type { PdfAnnotation } from '@/lib/types/pdfAnnotation';
+import type { PdfAnnotation, PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*
  * Pure hit-testing for the eraser: which annotations sit under a box-pixel point. Kept free of React so
@@ -33,11 +33,23 @@ function inkHitsPoint(boxPoints: number[], px: number, py: number, reach: number
    return false;
 }
 
+/** Grab slack around a text highlight's quads, in box px, so a thin line stays clickable. */
+const TEXT_HIGHLIGHT_TOLERANCE = 2;
+
+/** True when a box-pixel point falls inside any of a text highlight's denormalized quads (padded by `tol`). */
+function textHighlightHitsPoint(quads: PdfRect[], px: number, py: number, boxW: number, boxH: number, tol: number): boolean {
+   for (const quad of quads) {
+      const rect = denormalizeRect(quad, boxW, boxH);
+      if (px >= rect.x - tol && px <= rect.x + rect.w + tol && py >= rect.y - tol && py <= rect.y + rect.h + tol) return true;
+   }
+   return false;
+}
+
 /**
  * The ids of every annotation under the box-pixel point `(px,py)`, topmost first (reverse of the incoming
  * paint order). An ink hits when the point falls within its inked band - half its denormalized width plus a
- * grab margin, floored at `thresholdPx`; a highlight / comment hits when the point sits inside its rect. The
- * caller removes each hit.
+ * grab margin, floored at `thresholdPx`; a text highlight hits when the point sits inside any of its quads;
+ * a highlight / comment hits when the point sits inside its rect. The caller removes each hit.
  */
 export function annotationAtPoint(annotations: PdfAnnotation[], px: number, py: number, boxW: number, boxH: number, thresholdPx: number): string[] {
    const hits: string[] = [];
@@ -46,6 +58,8 @@ export function annotationAtPoint(annotations: PdfAnnotation[], px: number, py: 
       if (annotation.kind === 'ink') {
          const reach = Math.max(thresholdPx, (annotation.width * boxW) / 2 + 6);
          if (inkHitsPoint(denormalizePoints(annotation.points, boxW, boxH), px, py, reach)) hits.push(annotation.id);
+      } else if (annotation.kind === 'textHighlight') {
+         if (textHighlightHitsPoint(annotation.quads, px, py, boxW, boxH, TEXT_HIGHLIGHT_TOLERANCE)) hits.push(annotation.id);
       } else {
          const rect = denormalizeRect(annotation.rect, boxW, boxH);
          if (px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h) hits.push(annotation.id);

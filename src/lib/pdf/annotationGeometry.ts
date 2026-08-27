@@ -67,12 +67,29 @@ export function rectFromCorners(ax: number, ay: number, bx: number, by: number):
    return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) };
 }
 
+/** The union bounding box of a quad list (min origin, max far corner); a zero box for an empty list. */
+function quadsBounds(quads: PdfRect[]): PdfRect {
+   if (quads.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+   let minX = quads[0].x;
+   let minY = quads[0].y;
+   let maxX = quads[0].x + quads[0].w;
+   let maxY = quads[0].y + quads[0].h;
+   for (let i = 1; i < quads.length; i++) {
+      minX = Math.min(minX, quads[i].x);
+      minY = Math.min(minY, quads[i].y);
+      maxX = Math.max(maxX, quads[i].x + quads[i].w);
+      maxY = Math.max(maxY, quads[i].y + quads[i].h);
+   }
+   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
 /**
  * The annotation's normalized bounding box. Ink spans the min/max of its points padded by half the stroke
- * width (so the box clears the inked band); a rect kind is its own rect. Feeds move-clamping and the
- * selection outline.
+ * width (so the box clears the inked band); a text highlight is the union of its quads; a rect kind is its
+ * own rect. Feeds move-clamping and the selection outline.
  */
 export function annotationBounds(annotation: PdfAnnotation): PdfRect {
+   if (annotation.kind === 'textHighlight') return quadsBounds(annotation.quads);
    if (annotation.kind !== 'ink') return annotation.rect;
    const { points, width } = annotation;
    if (points.length < 2) return { x: 0, y: 0, w: 0, h: 0 };

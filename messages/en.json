@@ -51,7 +51,8 @@
          "pageLabel": "Page {{page}}"
       },
       "selection": {
-         "copy": "Copy"
+         "copy": "Copy",
+         "highlight": "Highlight"
       },
       "search": {
          "toggle": "Search",

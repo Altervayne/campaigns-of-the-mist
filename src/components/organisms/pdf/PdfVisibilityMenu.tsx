@@ -16,8 +16,9 @@ import type { PdfAnnotationKind, PdfAnnotationVisibility } from '@/lib/types/pdf
 
 /*
  * The reader's annotation-visibility control: a bar button opening a small menu that temporarily hides
- * each mark kind (ink / highlight / comment), or all at once. Pure view state - nothing is deleted or
- * persisted. Chrome, so theme tokens throughout; the rows echo the markup tools' icons.
+ * each mark kind (ink / highlight / comment), or all at once. The highlight row governs both freehand and
+ * text highlights together. Pure view state - nothing is deleted or persisted. Chrome, so theme tokens
+ * throughout; the rows echo the markup tools' icons.
  */
 
 interface PdfVisibilityMenuProps {
@@ -28,8 +29,8 @@ interface PdfVisibilityMenuProps {
 
 export function PdfVisibilityMenu({ visibility, onSetTypeVisible, onSetAllVisible }: PdfVisibilityMenuProps) {
    const { t } = useTranslation();
-   const allVisible = visibility.ink && visibility.highlight && visibility.comment;
-   const anyVisible = visibility.ink || visibility.highlight || visibility.comment;
+   const allVisible = visibility.ink && visibility.highlight && visibility.comment && visibility.textHighlight;
+   const anyVisible = visibility.ink || visibility.highlight || visibility.comment || visibility.textHighlight;
 
    return (
       <Popover>
@@ -61,11 +62,16 @@ export function PdfVisibilityMenu({ visibility, onSetTypeVisible, onSetAllVisibl
                checked={visibility.ink}
                onToggle={() => onSetTypeVisible('ink', !visibility.ink)}
             />
+            {/* One row for both freehand and text highlights - a user thinks "highlights," not which kind. */}
             <VisibilityRow
                icon={<Highlighter className="h-3.5 w-3.5" />}
                label={t('PdfMarkup.highlight')}
                checked={visibility.highlight}
-               onToggle={() => onSetTypeVisible('highlight', !visibility.highlight)}
+               onToggle={() => {
+                  const next = !visibility.highlight;
+                  onSetTypeVisible('highlight', next);
+                  onSetTypeVisible('textHighlight', next);
+               }}
             />
             <VisibilityRow
                icon={<MessageSquare className="h-3.5 w-3.5" />}
