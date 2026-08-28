@@ -9,12 +9,17 @@ import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
 // -- Board Imports --
 import { boardDropPlacement } from '@/lib/board/boardDropPlacement';
 import { characterElementSpec } from '@/lib/board/embedDrawerItem';
+import { importBoard } from '@/lib/board/boardRepository';
+import { importNote } from '@/lib/notes/noteRepository';
+import { importPdf } from '@/lib/pdf/pdfRepository';
 
 // -- Type Imports --
 import type { DragEndEvent } from '@dnd-kit/core';
 import type { DragEndDeps, DragEndSnapshot, DragEndTarget } from '@/hooks/character-sheet/dnd/dragEndDeps';
+import type { Board, Note } from '@/lib/types/board';
 import type { Character } from '@/lib/types/character';
 import type { DrawerItem } from '@/lib/types/drawer';
+import type { PdfDocument } from '@/lib/types/pdf';
 
 /*
  * The two tab-lane routes: the generous release band, which runs BEFORE the `!over` guard, and the tab
@@ -22,23 +27,37 @@ import type { DrawerItem } from '@/lib/types/drawer';
  */
 
 // ##################################################
-// ###   Generous tab lane (drawer character)     ###
+// ###   Generous tab lane (character / openable) ###
 // ##################################################
-// A character released anywhere in the padded top band opens/focuses its tab,
-// even when @dnd-kit's thin `tab-strip-drop-zone` was missed (so this runs
-// BEFORE the `over` null-guard). The kind guard keeps it character-only.
+// A character, board, note, or pdf released anywhere in the padded top band opens/focuses
+// its tab, even when @dnd-kit's thin `tab-strip-drop-zone` was missed (so this runs BEFORE
+// the `over` null-guard). The kind guard keeps it to items that open as a tab. Board/note/pdf
+// materialize the drawer copy into the working tables first, then focus-or-open by id (mirrors
+// the tab-strip branch of routeDrawerDrag), so an already-open tab's live state is never clobbered.
 export function routeGenerousTabLane(
    event: DragEndEvent,
    { wasOverTabLane, dragKind }: DragEndSnapshot,
-   { openCharacterTab, setContextualGame, contractIfExpanded }: DragEndDeps,
+   { openCharacterTab, openBoardTab, openNoteTab, openPdfTab, setContextualGame, contractIfExpanded }: DragEndDeps,
 ): boolean {
-   if (!wasOverTabLane || dragKind !== 'drawer-character') return false;
+   if (!wasOverTabLane || (dragKind !== 'drawer-character' && dragKind !== 'drawer-openable')) return false;
 
    const draggedItem = event.active.data.current?.item as DrawerItem | undefined;
    if (draggedItem?.type === 'FULL_CHARACTER_SHEET') {
       const characterData = draggedItem.content as Character;
       openCharacterTab(characterData, draggedItem.id); // append-or-focus
       setContextualGame(characterData.game);
+      contractIfExpanded();
+   } else if (draggedItem?.type === 'FULL_BOARD') {
+      const boardData = draggedItem.content as Board;
+      void importBoard(boardData).then(() => openBoardTab(boardData.id));
+      contractIfExpanded();
+   } else if (draggedItem?.type === 'NOTE') {
+      const noteData = draggedItem.content as Note;
+      void importNote(noteData, draggedItem.id).then(() => openNoteTab(noteData.id));
+      contractIfExpanded();
+   } else if (draggedItem?.type === 'PDF') {
+      const pdfData = draggedItem.content as PdfDocument;
+      void importPdf(pdfData, draggedItem.id).then(() => openPdfTab(pdfData.id));
       contractIfExpanded();
    }
    return true;

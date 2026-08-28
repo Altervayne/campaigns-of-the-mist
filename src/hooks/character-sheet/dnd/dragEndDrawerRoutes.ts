@@ -46,7 +46,8 @@ export function routeManualDrawerDrop(
 ): boolean {
    const { active, over } = event;
    const activeIsDrawerMove =
-      dragKind === 'drawer-character' || dragKind === 'drawer-component' || dragKind === 'drawer-folder';
+      dragKind === 'drawer-character' || dragKind === 'drawer-openable' ||
+      dragKind === 'drawer-component' || dragKind === 'drawer-folder';
    if (!activeIsDrawerMove) return false;
 
    const draggedId = active.id.toString();

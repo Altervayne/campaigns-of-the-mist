@@ -15,6 +15,7 @@ import type { LucideIcon } from 'lucide-react';
 /** What is being dragged, classified once at drag start. */
 export type DragKind =
    | 'drawer-character'
+   | 'drawer-openable'
    | 'drawer-component'
    | 'drawer-folder'
    | 'sheet-item'
@@ -98,15 +99,16 @@ export function isWithinTabLane(
 }
 
 /**
- * The generous lane only ever engages for a dragged drawer character, a component,
- * folder, tab, or sheet item passing through the same band must NOT register as a
- * tab-open. This guards the geometry test by drag kind.
+ * The generous lane only ever engages for a dragged drawer character or openable
+ * (board / note / pdf), both of which open onto the tab strip. A component, folder,
+ * tab, or sheet item passing through the same band must NOT register as a tab-open.
+ * This guards the geometry test by drag kind.
  *
  * @param kind - The classified drag kind.
  * @param rect - The strip rect (null when the strip is unmounted).
  * @param x - Cursor clientX.
  * @param y - Cursor clientY.
- * @returns Whether the lane is engaged (always false unless `kind` is a character).
+ * @returns Whether the lane is engaged (always false unless `kind` opens as a tab).
  */
 export function isOverTabLaneFor(
    kind: DragKind,
@@ -114,7 +116,7 @@ export function isOverTabLaneFor(
    x: number,
    y: number,
 ): boolean {
-   if (kind !== 'drawer-character' || !rect) return false;
+   if ((kind !== 'drawer-character' && kind !== 'drawer-openable') || !rect) return false;
    return isWithinTabLane(rect, x, y);
 }
 
@@ -146,6 +148,15 @@ export function deriveDragContext(
       // 'drawer-items' -> null: the item keeps its full overlay for precise reordering.
       return null;
    }
+   if (kind === 'drawer-openable') {
+      // A board / note / pdf opens onto the tab strip or the workspace; it is never a sheet
+      // or board element, so those zones show no glyph.
+      if (isOverTabLane) return 'open-tab';
+      if (overZone === 'play-area') return 'open';
+      if (overZone === 'drawer-nav') return 'drawer-move';
+      // 'drawer-items' -> null: full overlay for reordering among items.
+      return null;
+   }
    if (kind === 'drawer-component') {
       if (overZone === 'sheet') return sheetCompatible ? 'add-to-sheet' : null;
       if (overZone === 'drawer-nav') return 'drawer-move';
@@ -166,8 +177,8 @@ export function deriveDragContext(
 }
 
 /**
- * Whether a dragged DRAWER ITEM (a component or a character item) should be forced
- * into morph mode regardless of whether it has an action descriptor. Drawer items
+ * Whether a dragged DRAWER ITEM (a component, character, or openable item) should be
+ * forced into morph mode regardless of whether it has an action descriptor. Drawer items
  * keep their full card overlay ONLY while the cursor is genuinely inside the drawer
  * items area (for precise reordering); everywhere else they morph to the cursor
  * cluster, showing just the dot + identity when there is no action glyph. Folders
@@ -182,7 +193,7 @@ export function deriveDragContext(
  * @returns Whether to funnel the clone even with no descriptor.
  */
 export function shouldForceMorph(kind: DragKind, overItemsArea: boolean): boolean {
-   if (kind !== 'drawer-component' && kind !== 'drawer-character') return false;
+   if (kind !== 'drawer-component' && kind !== 'drawer-character' && kind !== 'drawer-openable') return false;
    return !overItemsArea;
 }
 

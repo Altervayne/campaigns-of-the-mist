@@ -245,7 +245,8 @@ export function useDragFeedbackLayer({
       // is shown where the (center-only) save could not honor it.
       const moveKind = dragKindRef.current;
       const isDrawerMoveDrag =
-         moveKind === 'drawer-character' || moveKind === 'drawer-component' || moveKind === 'drawer-folder';
+         moveKind === 'drawer-character' || moveKind === 'drawer-openable' ||
+         moveKind === 'drawer-component' || moveKind === 'drawer-folder';
       const nextDropTarget = isDrawerMoveDrag ? hoveredDrawerTargetRef.current : null;
       const nextDropKey = drawerDropTargetKey(nextDropTarget);
       if (nextDropKey !== drawerDropTargetKeyRef.current) {
@@ -257,11 +258,11 @@ export function useDragFeedbackLayer({
       // lights up full-row (not center-only). Recomputed after the hit-test above.
       updateContext();
 
-      // Tab auto-nav: a dragged drawer COMPONENT or sheet item can dwell on a
+      // Tab auto-nav: a dragged drawer COMPONENT, openable, or sheet item can dwell on a
       // background tab to spring-switch the active character mid-drag (then drop on
       // its sheet). Tabs never overlap the drawer, so the drawer target wins ties.
       const kind = dragKindRef.current;
-      const canTabNav = kind === 'drawer-component' || kind === 'sheet-item';
+      const canTabNav = kind === 'drawer-component' || kind === 'drawer-openable' || kind === 'sheet-item';
       let tabTarget = null;
       if (canTabNav && !drawerTarget) {
          const tabAreas: SpringHitArea[] = Array.from(
@@ -288,7 +289,8 @@ export function useDragFeedbackLayer({
       // feed the workspace dwell timer; the actual drop lands on the revealed workspace zone behind.
       const general = useAppGeneralStateStore.getState();
       const kindNow = dragKindRef.current;
-      const isItemDrag = kindNow === 'drawer-character' || kindNow === 'drawer-component';
+      const isItemDrag =
+         kindNow === 'drawer-character' || kindNow === 'drawer-openable' || kindNow === 'drawer-component';
       let workspaceTarget: WorkspaceDwellTarget | null = null;
       if (general.isDrawerExpanded && isItemDrag) {
          const within = (selector: string) => {

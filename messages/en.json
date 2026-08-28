@@ -822,6 +822,7 @@
       "dropToLoadCharacter": "Drop Character Sheet Item here to load the full character. Be careful, this will replace your currently active character.",
       "dropToOpenBoard": "Drop to open board",
       "dropToOpenNote": "Drop to open note",
+      "dropToOpenPdf": "Drop to open PDF",
       "dropToImport": "Drop a file here to import it. A board opens as a new board, a full character replaces your active one, and a card or tracker imports into the loaded character.",
       "cannotDropWrongGame": "Can't drop here, this component is for a different game system.",
       "SidebarMenu": {

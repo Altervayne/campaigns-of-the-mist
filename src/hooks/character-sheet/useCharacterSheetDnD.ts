@@ -139,7 +139,11 @@ export function useCharacterSheetDnD() {
       // strip element for the lane test, and attach the move listener.
       dragKindRef.current = classifyDrag(active);
       // A drawer ITEM drag (not a folder) gets the See-Workspace strip while Expanded.
-      setIsDrawerItemDragActive(dragKindRef.current === 'drawer-character' || dragKindRef.current === 'drawer-component');
+      setIsDrawerItemDragActive(
+         dragKindRef.current === 'drawer-character' ||
+         dragKindRef.current === 'drawer-openable' ||
+         dragKindRef.current === 'drawer-component',
+      );
       // A FOLDER drag shows the reorder drop slots in every drawer view (so a drilled-into folder can host it).
       setIsFolderDragActive(dragKindRef.current === 'drawer-folder');
       tabStripElRef.current = document.querySelector<HTMLElement>('[data-tab-strip]');

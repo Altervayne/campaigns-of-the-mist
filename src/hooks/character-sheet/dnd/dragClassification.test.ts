@@ -31,6 +31,12 @@ describe('classifyDrag', () => {
       expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM, item: { type: 'FULL_CHARACTER_SHEET' } }))).toBe('drawer-character');
    });
 
+   it('classifies a board / note / pdf drawer item as an openable drag', () => {
+      expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM, item: { type: 'FULL_BOARD' } }))).toBe('drawer-openable');
+      expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM, item: { type: 'NOTE' } }))).toBe('drawer-openable');
+      expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM, item: { type: 'PDF' } }))).toBe('drawer-openable');
+   });
+
    it('classifies any other drawer item as a component drag', () => {
       expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM, item: { type: 'CARD' } }))).toBe('drawer-component');
       expect(classifyDrag(makeActive({ type: DRAG_TYPES.DRAWER_ITEM }))).toBe('drawer-component');

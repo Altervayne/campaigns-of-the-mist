@@ -822,6 +822,7 @@
       "dropToLoadCharacter": "Déposez un Objet Fiche de Personnage ici pour charger le personnage entier. Soyez prudent, cette action remplacera votre personnage actif.",
       "dropToOpenBoard": "Déposez pour ouvrir le tableau",
       "dropToOpenNote": "Déposez pour ouvrir la note",
+      "dropToOpenPdf": "[TO COMPLETE]",
       "dropToImport": "Déposez un fichier ici pour l'importer. Un tableau ou une note s'ouvrent comme un nouvel onglet, un personnage remplacera votre personnage actif, et une carte ou un suivi s'importent dans votre zone de jeu.",
       "cannotDropWrongGame": "Impossible de déposer ici, ce composant est pour un autre jeu.",
       "SidebarMenu": {

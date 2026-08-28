@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useDroppable } from '@dnd-kit/core';
 
 // -- Icon Imports --
-import { LayoutGrid, NotebookPen, Upload } from 'lucide-react';
+import { FileType, LayoutGrid, NotebookPen, Upload } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -47,7 +47,8 @@ export function CharacterLoadDropZone({ activeDragItem, isBoardActive = false }:
    const isCharacterDrag = dragType === 'FULL_CHARACTER_SHEET' && !isBoardActive;
    const isBoardDrag = dragType === 'FULL_BOARD';
    const isNoteDrag = dragType === 'NOTE';
-   const isActive = isCharacterDrag || isBoardDrag || isNoteDrag;
+   const isPdfDrag = dragType === 'PDF';
+   const isActive = isCharacterDrag || isBoardDrag || isNoteDrag || isPdfDrag;
 
    const { setNodeRef, isOver } = useDroppable({
       id: 'main-character-drop-zone',
@@ -71,8 +72,8 @@ export function CharacterLoadDropZone({ activeDragItem, isBoardActive = false }:
                   { 'bg-primary/10': isOver }
                )}
             >
-               {isBoardDrag ? <LayoutGrid className="mx-auto h-12 w-12" /> : isNoteDrag ? <NotebookPen className="mx-auto h-12 w-12" /> : <Upload className="mx-auto h-12 w-12" />}
-               <p className="mt-2 font-semibold">{t(isBoardDrag ? 'WorkspacePage.dropToOpenBoard' : isNoteDrag ? 'WorkspacePage.dropToOpenNote' : 'WorkspacePage.dropToLoadCharacter')}</p>
+               {isBoardDrag ? <LayoutGrid className="mx-auto h-12 w-12" /> : isNoteDrag ? <NotebookPen className="mx-auto h-12 w-12" /> : isPdfDrag ? <FileType className="mx-auto h-12 w-12" /> : <Upload className="mx-auto h-12 w-12" />}
+               <p className="mt-2 font-semibold">{t(isBoardDrag ? 'WorkspacePage.dropToOpenBoard' : isNoteDrag ? 'WorkspacePage.dropToOpenNote' : isPdfDrag ? 'WorkspacePage.dropToOpenPdf' : 'WorkspacePage.dropToLoadCharacter')}</p>
             </div>
          )}
       </motion.div>

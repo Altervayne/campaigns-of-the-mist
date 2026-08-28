@@ -70,13 +70,13 @@ export function buildDragIdentity({ kind, active, sheetItem, untitledLabel }: Bu
       return <DragIdentityPill game={character?.game ?? null} label={character?.name?.trim() || untitledLabel} />;
    }
 
-   if (kind === 'drawer-character' || kind === 'drawer-component' || kind === 'drawer-folder') {
+   if (kind === 'drawer-character' || kind === 'drawer-openable' || kind === 'drawer-component' || kind === 'drawer-folder') {
       const item = active.data.current?.item as DrawerItem | Folder | undefined;
       const label = item?.name?.trim();
       if (!label) return null;
       if (kind === 'drawer-character') return <DragIdentityPill game={(item as DrawerItem).game} label={label} />;
       if (kind === 'drawer-folder') return <DragIdentityPill icon={FolderIcon} label={label} />;
-      // drawer-component: lead with its drawer item-type icon.
+      // drawer-component / drawer-openable: lead with its drawer item-type icon.
       return <DragIdentityPill icon={getItemTypeIconComponent((item as DrawerItem).type)} label={label} />;
    }
 

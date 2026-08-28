@@ -40,7 +40,10 @@ export function classifyDrag(active: DragStartEvent['active']): DragKind {
    if (type === DRAG_TYPES.DRAWER_FOLDER) return 'drawer-folder';
    if (type === DRAG_TYPES.DRAWER_ITEM) {
       const item = active.data.current?.item as DrawerItem | undefined;
-      return item?.type === 'FULL_CHARACTER_SHEET' ? 'drawer-character' : 'drawer-component';
+      if (item?.type === 'FULL_CHARACTER_SHEET') return 'drawer-character';
+      // A board / note / pdf opens as its own tab like a character, so it gets the open-feedback layer.
+      if (item?.type === 'FULL_BOARD' || item?.type === 'NOTE' || item?.type === 'PDF') return 'drawer-openable';
+      return 'drawer-component';
    }
    if (typeof type === 'string' && type.startsWith('sheet-')) return 'sheet-item';
    return null;

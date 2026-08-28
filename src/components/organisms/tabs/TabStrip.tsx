@@ -55,14 +55,18 @@ export function TabStrip({ forceDropHighlight = false }: { forceDropHighlight?: 
    const activeTabId = useTabManagerStore((state) => state.activeTabId);
    const [isNewTabDialogOpen, setIsNewTabDialogOpen] = useState(false);
 
-   // Drop target for dragging a FULL_CHARACTER_SHEET drawer item onto the strip to
-   // open/focus it as a tab. Highlight only while a character item hovers (a
-   // non-character item is a no-op and must not read as droppable).
+   // Drop target for dragging an openable drawer item (character sheet / board / note / pdf)
+   // onto the strip to open/focus it as a tab. Highlight only while such an item hovers (any
+   // other drawer item is a no-op here and must not read as droppable).
    const { setNodeRef, isOver, active } = useDroppable({ id: 'tab-strip-drop-zone', data: { type: 'tab-strip' } });
-   const activeIsCharacterItem =
-      active?.data.current?.type === 'drawer-item' &&
-      (active.data.current.item as DrawerItem | undefined)?.type === 'FULL_CHARACTER_SHEET';
-   const showDropHighlight = forceDropHighlight || (isOver && Boolean(activeIsCharacterItem));
+   const activeItemType =
+      active?.data.current?.type === 'drawer-item'
+         ? (active.data.current.item as DrawerItem | undefined)?.type
+         : undefined;
+   const activeIsOpenableItem =
+      activeItemType === 'FULL_CHARACTER_SHEET' || activeItemType === 'FULL_BOARD' ||
+      activeItemType === 'NOTE' || activeItemType === 'PDF';
+   const showDropHighlight = forceDropHighlight || (isOver && activeIsOpenableItem);
 
    // ==================
    //  Overflow scroll UX

@@ -67,6 +67,10 @@ describe('isOverTabLaneFor (drag-kind guard)', () => {
       expect(isOverTabLaneFor('drawer-character', strip, 300, 120)).toBe(true);
    });
 
+   it('engages the lane for an openable (board / note / pdf) in the band', () => {
+      expect(isOverTabLaneFor('drawer-openable', strip, 300, 120)).toBe(true);
+   });
+
    it('does NOT engage for a component drag in the same band', () => {
       expect(isOverTabLaneFor('drawer-component', strip, 300, 120)).toBe(false);
    });
@@ -90,6 +94,19 @@ describe('deriveDragContext (kind + over-zone -> action)', () => {
 
    it('a character over the play area (not the lane) -> open', () => {
       expect(deriveDragContext('drawer-character', 'play-area', false)).toBe('open');
+   });
+
+   it('an openable over the tab lane -> open-tab, over the play area -> open', () => {
+      expect(deriveDragContext('drawer-openable', 'play-area', true)).toBe('open-tab');
+      expect(deriveDragContext('drawer-openable', 'play-area', false)).toBe('open');
+      expect(deriveDragContext('drawer-openable', 'drawer-nav', false)).toBe('drawer-move');
+   });
+
+   it('an openable is never a sheet, board, or items-area add (no glyph)', () => {
+      expect(deriveDragContext('drawer-openable', 'sheet', false)).toBeNull();
+      expect(deriveDragContext('drawer-openable', 'board', false)).toBeNull();
+      expect(deriveDragContext('drawer-openable', 'drawer-items', false)).toBeNull();
+      expect(deriveDragContext('drawer-openable', null, false)).toBeNull();
    });
 
    it('a component over the sheet -> add-to-sheet', () => {
@@ -150,11 +167,13 @@ describe('shouldForceMorph (drawer items morph except in the items area)', () =>
    it('forces morph for a drawer item when NOT geometrically over the items area', () => {
       expect(shouldForceMorph('drawer-component', false)).toBe(true);
       expect(shouldForceMorph('drawer-character', false)).toBe(true);
+      expect(shouldForceMorph('drawer-openable', false)).toBe(true);
    });
 
    it('does NOT force morph while over the items area (full overlay for reordering)', () => {
       expect(shouldForceMorph('drawer-component', true)).toBe(false);
       expect(shouldForceMorph('drawer-character', true)).toBe(false);
+      expect(shouldForceMorph('drawer-openable', true)).toBe(false);
    });
 
    it('never forces morph for folders, sheet items, or tabs', () => {
