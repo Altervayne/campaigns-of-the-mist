@@ -4,6 +4,7 @@ import cuid from 'cuid';
 
 // -- Utils Imports --
 import { reorderList } from '@/lib/utils/drawer';
+import { drawerItemCardTypeClass } from '@/lib/theme/drawerItemCardTypeClass';
 import { reIdImportedFolderTree } from './reIdImportedContent';
 
 // -- Local Imports --
@@ -944,6 +945,9 @@ export interface DrawerItemSummary {
    parentFolderId: string | null;
    createdAt: number;
    updatedAt: number;
+   /** The item's own `.card-type-*` palette class (card-bearing types only), so a content-free list/search
+    *  row can tint its type badge with the card's header color; null for types with no card palette. */
+   cardTypeClass: string | null;
 }
 
 /** Drops the storage fields (`content`/`order`) and translates the root sentinel back to `null`. */
@@ -956,6 +960,7 @@ function toItemSummary(record: DrawerItemRecord): DrawerItemSummary {
       parentFolderId: record.parentFolderId === DRAWER_ROOT_PARENT_ID ? null : record.parentFolderId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      cardTypeClass: drawerItemCardTypeClass(record.type, record.game, record.content),
    };
 }
 

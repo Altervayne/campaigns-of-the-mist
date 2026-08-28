@@ -87,6 +87,7 @@ const summary = (parentFolderId: string | null): DrawerItemSummary => ({
    parentFolderId,
    createdAt: 0,
    updatedAt: 0,
+   cardTypeClass: 'card-type-hero',
 });
 
 const searchFor = (results: DrawerItemSummary[]) => {

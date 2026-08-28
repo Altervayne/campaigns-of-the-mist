@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
+import { cardTypeBadgeStyle } from '@/lib/theme/drawerItemCardTypeClass';
 import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 
 // -- Component Imports --
@@ -31,11 +32,16 @@ interface DrawerListRowProps {
    createdAt?: number;
    updatedAt?: number;
    className?: string;
+   /** The item's own `.card-type-*` palette class, tinting the badge with the card's header color; absent
+    *  (or a type with no palette) falls back to the fixed identity accent. */
+   cardTypeClass?: string | null;
 }
 
-export function DrawerListRow({ type, name, game, createdAt, updatedAt, className }: DrawerListRowProps) {
+export function DrawerListRow({ type, name, game, createdAt, updatedAt, className, cardTypeClass }: DrawerListRowProps) {
    const { t } = useTranslation();
    const accent = getItemIdentityAccent(type, game);
+   // A card-bearing item wears its own palette header color; others keep the fixed accent.
+   const badgeStyle = cardTypeBadgeStyle(cardTypeClass);
    // A stable module-level lucide component; static-components is a false positive (same as the card meta).
    const Icon = getItemTypeIconComponent(type);
    return (
@@ -43,7 +49,7 @@ export function DrawerListRow({ type, name, game, createdAt, updatedAt, classNam
          {/* A leading identity tile carries per-type recognition down a long list; tooltips name the
              otherwise-unlabelled indicator icons (type + game). */}
          <IconTooltip label={t(`Drawer.filters.itemType.${type}`)}>
-            <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', accent.badge)}>
+            <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', !badgeStyle && accent.badge)} style={badgeStyle ?? undefined}>
                {/* eslint-disable-next-line react-hooks/static-components */}
                <Icon className="h-4 w-4" />
             </span>

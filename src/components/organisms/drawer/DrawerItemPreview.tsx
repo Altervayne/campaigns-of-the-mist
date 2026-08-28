@@ -30,6 +30,7 @@ import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
 // -- Utils Imports --
 import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/drawer-icons';
+import { drawerItemCardTypeClass, cardTypeBadgeStyle } from '@/lib/theme/drawerItemCardTypeClass';
 import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 import { boardContentBounds, itemCenter } from '@/lib/board/boardMiniMap';
 
@@ -385,6 +386,9 @@ export function DrawerItemPreview({
    const { stageClassName, fit, allowUpscale } = drawerPreviewStage(item.type);
    // The type's identity accent tints the meta glyph and paints the card's left spine.
    const accent = getItemIdentityAccent(item.type, item.game);
+   // A card-bearing item wears its own palette header color on the badge (mirrors the card, and avoids
+   // doubling the game color already carried by the spine + game badge); others keep the fixed accent.
+   const badgeStyle = cardTypeBadgeStyle(drawerItemCardTypeClass(item.type, item.game, item.content));
    // A stable module-level lucide component; static-components is a false positive here.
    const Icon = getItemTypeIconComponent(item.type);
 
@@ -392,8 +396,8 @@ export function DrawerItemPreview({
    const meta = (
       <>
          <IconTooltip label={t(`Drawer.filters.itemType.${item.type}`)}>
-            {/* Solid identity badge (fixed color + white glyph), so the color reads the same on any theme. */}
-            <span className={cn('flex size-5 shrink-0 items-center justify-center rounded', accent.badge)}>
+            {/* Solid identity badge: the card's palette header color when it has one, else the fixed accent. */}
+            <span className={cn('flex size-5 shrink-0 items-center justify-center rounded', !badgeStyle && accent.badge)} style={badgeStyle ?? undefined}>
                {/* eslint-disable-next-line react-hooks/static-components */}
                <Icon className="h-3.5 w-3.5" />
             </span>

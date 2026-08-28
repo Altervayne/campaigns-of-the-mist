@@ -132,7 +132,7 @@ describe('drawerStore navigation clears the items view (item skeleton)', () => {
 
 describe('drawerStore search', () => {
    const summary = (id: string): DrawerItemSummary => ({
-      id, name: id, type: 'CHARACTER_CARD', game: 'LEGENDS', parentFolderId: null, createdAt: 0, updatedAt: 0,
+      id, name: id, type: 'CHARACTER_CARD', game: 'LEGENDS', parentFolderId: null, createdAt: 0, updatedAt: 0, cardTypeClass: 'card-type-hero',
    });
 
    beforeEach(() => {

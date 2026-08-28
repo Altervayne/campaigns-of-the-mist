@@ -62,6 +62,7 @@ function SummaryRow({ summary, menu }: { summary: DrawerItemSummary; menu: React
             game={summary.game}
             createdAt={summary.createdAt}
             updatedAt={summary.updatedAt}
+            cardTypeClass={summary.cardTypeClass}
          />
       </DrawerListRowFrame>
    );
@@ -84,6 +85,7 @@ function DraggableResultRow({ summary, item, menu }: { summary: DrawerItemSummar
                   game={summary.game}
                   createdAt={summary.createdAt}
                   updatedAt={summary.updatedAt}
+                  cardTypeClass={summary.cardTypeClass}
                />
             </div>
          </DrawerListRowFrame>

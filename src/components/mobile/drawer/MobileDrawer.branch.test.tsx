@@ -112,6 +112,7 @@ const summary = (id: string, name: string): DrawerItemSummary => ({
    parentFolderId: null,
    createdAt: 0,
    updatedAt: 0,
+   cardTypeClass: 'card-type-hero',
 });
 
 const anchors = (name: string) => document.querySelectorAll(`[data-tutorial="${name}"]`);

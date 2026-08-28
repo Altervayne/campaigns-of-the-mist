@@ -156,10 +156,11 @@ const LIGHT_TEXT = '#f5f5f4';
 /**
  * Returns a legible text color for text drawn on `background`, chosen by the background's
  * perceived luminance: dark text on light pastels, light text on dark customs, so a note
- * stays readable on any color. An unparseable color falls back to dark text.
+ * stays readable on any color. Accepts hex or `hsl()` (card palette tokens are hsl); an
+ * unparseable color falls back to dark text.
  */
 export function readableTextColor(background: string): string {
-   const rgb = hexToRgb(background);
+   const rgb = parseColorToRgb(background);
    if (!rgb) return DARK_TEXT;
    const [red, green, blue] = rgb;
    // sRGB-weighted luminance, 0..1; the 0.6 threshold leans toward dark text on pastels.

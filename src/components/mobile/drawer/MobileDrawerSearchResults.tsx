@@ -38,7 +38,7 @@ export default function MobileDrawerSearchResults({ isSearching, results, onOpen
                      onClick={(event) => onOpenResultMenu(summary, event)}
                      className="min-h-11 w-full rounded text-left hover:bg-muted cursor-pointer"
                   >
-                     <DrawerListRow type={summary.type} name={summary.name} game={summary.game} createdAt={summary.createdAt} updatedAt={summary.updatedAt} />
+                     <DrawerListRow type={summary.type} name={summary.name} game={summary.game} createdAt={summary.createdAt} updatedAt={summary.updatedAt} cardTypeClass={summary.cardTypeClass} />
                   </button>
                ))}
             </div>

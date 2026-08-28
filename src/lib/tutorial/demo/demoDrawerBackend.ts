@@ -7,6 +7,7 @@ import { DrawerInvalidOperationError, DrawerNotFoundError } from '@/lib/drawer/d
 
 // -- Utils Imports --
 import { reorderList } from '@/lib/utils/drawer';
+import { drawerItemCardTypeClass } from '@/lib/theme/drawerItemCardTypeClass';
 
 // -- Type Imports --
 import type { DemoDrawerFixture } from './demoDrawer';
@@ -146,6 +147,7 @@ function toItemSummary(record: DrawerItemRecord): DrawerItemSummary {
       parentFolderId: record.parentFolderId === DRAWER_ROOT_PARENT_ID ? null : record.parentFolderId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      cardTypeClass: drawerItemCardTypeClass(record.type, record.game, record.content),
    };
 }
 

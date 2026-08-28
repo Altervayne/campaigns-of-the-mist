@@ -34,6 +34,11 @@ describe('readableTextColor', () => {
       expect(readableTextColor('#7f1d1d')).toBe(LIGHT_TEXT); // a dark red
    });
 
+   it('parses hsl too (card palette tokens are hsl)', () => {
+      expect(readableTextColor('hsl(216 35% 35%)')).toBe(LIGHT_TEXT); // a dark card header
+      expect(readableTextColor('hsl(40 68% 92%)')).toBe(DARK_TEXT);   // a pale card header
+   });
+
    it('falls back to dark text on an unparseable color', () => {
       expect(readableTextColor('not-a-color')).toBe(DARK_TEXT);
    });

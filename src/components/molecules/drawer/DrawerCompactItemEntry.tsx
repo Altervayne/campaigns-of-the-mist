@@ -23,6 +23,7 @@ import { useDrawerRowReveal } from '@/hooks/drawer/useDrawerRowReveal';
 // -- Component Imports --
 import { DrawerListRow, DrawerListRowFrame } from '@/components/molecules/drawer/DrawerListRow';
 import { DRAWER_MENU_TRIGGER_CLASS } from '@/components/molecules/drawer/drawerMenuTrigger';
+import { drawerItemCardTypeClass } from '@/lib/theme/drawerItemCardTypeClass';
 
 // -- Type Imports --
 import type { DrawerItem } from '@/lib/types/drawer';
@@ -80,6 +81,7 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
                         game={item.game}
                         createdAt={item.createdAt}
                         updatedAt={item.updatedAt}
+                        cardTypeClass={drawerItemCardTypeClass(item.type, item.game, item.content)}
                      />
                   </div>
                </DrawerListRowFrame>
