@@ -16,9 +16,15 @@ export const patchNotes: PatchNote[] = [
   * **Portals compatibility**: You can link to a specific page of a PDF in any portal in the app, whether it's on Boards or Notes.
   * **Annotations**: You can markup your PDF with highlights, comments and scribbles, your annotations are exportable on their own.
   * **Respectful of Licensing**: CotM will not include the full PDF files in full exports that reference them. Instead, a new system allows you to repair broken portals by re-pointing them at any element in *your* app. Exports *will* include annotations, and they will be applied on the newly selected PDF.
+* Every workspace now has, if it is saved to the Drawer, a "Find in Drawer" button in the sidebar menu, which will navigate to the workspace's entry in the Drawer. No more needing to remember where it was !
 
 ### 🔧 Changes
-The loading indicators across the app have been changed to be a much prettier bespoke loading animation.
+* The loading indicators across the app have been changed to be a much prettier bespoke loading animation.
+* The drawer has gotten a glow-up ! Rich item previews now display as much richer cards within the drawer. This was long overdue, as the original design was thought for character sheet components only, since we now have a lot more, I thought it was only right to rethink it a bit.
+* Folders and Items in the Drawer are now right-clickable to open the "..." context menu.
+
+### 🐛 Bugfixes
+* Fixed the text caret in the Notes being about one line too high above the placeholder when the Note was empty.
 `,
    },
    {
