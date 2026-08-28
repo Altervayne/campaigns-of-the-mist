@@ -1,4 +1,5 @@
 // -- React Imports --
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -24,7 +25,7 @@ import { PdfPreview, PdfPreviewBadges } from '@/components/organisms/drawer/PdfP
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
-import { drawerPreviewStage, PREVIEW_PAGE } from '@/components/molecules/drawer/drawerPreviewStage';
+import { drawerPreviewStage, PREVIEW_PAGE, PREVIEW_PAGE_WIDTH } from '@/components/molecules/drawer/drawerPreviewStage';
 import { ItemDateLabel } from '@/components/molecules/drawer/ItemDateLabel';
 import { IconTooltip } from '@/components/molecules/drawer/IconTooltip';
 
@@ -33,10 +34,13 @@ import { getItemTypeIconComponent, getItemIdentityAccent } from '@/lib/utils/dra
 import { drawerItemCardTypeClass, cardTypeBadgeStyle } from '@/lib/theme/drawerItemCardTypeClass';
 import { GameBadge } from '@/components/molecules/drawer/GameBadge';
 import { boardContentBounds, itemCenter } from '@/lib/board/boardMiniMap';
+import { boardBackgroundStyle } from '@/lib/board/boardBackgroundStyle';
+import { gridBackground } from '@/lib/board/gridStyle';
+import { hexTile } from '@/lib/board/hexGrid';
 
 // -- Type Imports --
 import type { DrawerItem, Folder as FolderType } from '@/lib/types/drawer';
-import type { Board, ConnectionBoardContent, Journal, Note, PinBoardContent, PostItBoardContent, PostItNote, ZoneBoardContent } from '@/lib/types/board';
+import type { Board, ConnectionBoardContent, Journal, Note, PinBoardContent, PostItBoardContent, PostItNote, Viewport, ZoneBoardContent } from '@/lib/types/board';
 import type { RollTableContent } from '@/lib/rolltable/types';
 import type { PdfDocument } from '@/lib/types/pdf';
 
@@ -177,27 +181,38 @@ function RollTablePreview({ table }: { table: RollTableContent }) {
    );
 }
 
+/** A still viewport for the preview grid: it's decorative surface texture, not aligned to the item scale. */
+const PREVIEW_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
+/** Grid cell size in the board preview's authoring space; scales down with the card. */
+const PREVIEW_GRID_SPACING = 28;
+
+/** The board's hex grid, drawn as a tiling SVG pattern (hex has no CSS form) - mirrors the canvas layer. */
+function BoardPreviewHexGrid({ color }: { color?: string }) {
+   const patternId = useId();
+   const tile = hexTile(PREVIEW_GRID_SPACING);
+   return (
+      <svg className={cn('pointer-events-none absolute inset-0 h-full w-full', !color && 'text-foreground opacity-[0.15]')} aria-hidden>
+         <defs>
+            <pattern id={patternId} patternUnits="userSpaceOnUse" width={tile.width} height={tile.height}>
+               <path d={tile.path} fill="none" stroke={color ?? 'currentColor'} strokeWidth={1} />
+            </pattern>
+         </defs>
+         <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+      </svg>
+   );
+}
+
 /**
- * Cheap board thumbnail: a schematic mini-map. Each item is a small block at its scaled board position
- * (the SVG viewBox IS the content bbox, so a wide board fills the width and a tall one centers as a
- * column), zones are faint regions behind their members, connections are hairlines between block
- * centers. Pure render - no item components, no asset loads - so the LAYOUT is the signal. The item
- * count survives as a subtle corner badge; an empty board keeps the glyph + count.
+ * Board thumbnail: the board's REAL surface - its background fill / texture (or the theme canvas) with its
+ * grid over it - so it reads as an actual board, not a bare diagram. Over that, a schematic of the items:
+ * each a small block at its scaled board position (the SVG viewBox IS the content bbox, so a wide board
+ * fills the width and a tall one centers), zones faint regions, connections hairlines between block centers.
+ * Pure render - no item components, no asset loads - so the surface + LAYOUT are the signal. An empty board
+ * keeps the surface + a centered glyph; the item count rides a corner badge.
  */
 function BoardPreview({ board }: { board: Board }) {
-   const { t } = useTranslation();
-   const itemCount = board.items.filter((item) => item.kind !== 'connection').length;
    const bounds = boardContentBounds(board.items);
-
-   // Empty board: an empty SVG reads as broken, so keep the glyph + count.
-   if (!bounds) {
-      return (
-         <div className="w-62.5 h-25 flex flex-col items-center justify-center gap-2 bg-popover/50 text-muted-foreground rounded-lg p-4 text-center">
-            <LayoutGrid className="h-8 w-8" />
-            <p className="text-xs">{t('Drawer.Types.boardItemCount', { count: itemCount })}</p>
-         </div>
-      );
-   }
+   const grid = board.grid;
 
    const byId = new Map(board.items.map((item) => [item.id, item]));
    const zones = board.items.filter((item) => item.kind === 'zone');
@@ -205,66 +220,87 @@ function BoardPreview({ board }: { board: Board }) {
    const blocks = board.items.filter((item) => item.kind !== 'zone' && item.kind !== 'connection');
 
    return (
-      <div className="relative w-62.5 h-25 overflow-hidden rounded-lg bg-popover/50 p-1 text-foreground">
-         <svg
-            viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
-            preserveAspectRatio="xMidYMid meet"
-            className="h-full w-full"
-         >
-            {/* Zones behind: a faint region in the stored color, or a subtle theme tint when color-less. */}
-            {zones.map((zone) => {
-               const color = (zone.content as ZoneBoardContent).color;
-               return (
-                  <rect
-                     key={zone.id}
-                     x={zone.x} y={zone.y} width={zone.width} height={zone.height} rx={2}
-                     fill={color ?? 'currentColor'} fillOpacity={color ? 0.2 : 0.07}
-                     stroke={color ?? 'currentColor'} strokeOpacity={0.35} strokeWidth={1}
-                     vectorEffect="non-scaling-stroke"
-                  />
-               );
-            })}
+      <div className={cn('relative overflow-hidden bg-background text-foreground aspect-[4/3]', PREVIEW_PAGE_WIDTH)} style={boardBackgroundStyle(board.background)}>
+         {/* Grid echoing the board's own style: CSS backgrounds for dots / lines, an SVG pattern for hex. */}
+         {grid && grid.type !== 'none' && grid.type !== 'hex' && (
+            <div className="pointer-events-none absolute inset-0 text-foreground/15" style={gridBackground(grid, PREVIEW_GRID_SPACING, PREVIEW_VIEWPORT)} />
+         )}
+         {grid?.type === 'hex' && <BoardPreviewHexGrid color={grid.color} />}
 
-            {/* Connections: a hairline from center to center, skipping a deleted endpoint. */}
-            {connections.map((conn) => {
-               const content = conn.content as ConnectionBoardContent;
-               const from = byId.get(content.from);
-               const to = byId.get(content.to);
-               if (!from || !to) return null;
-               const a = itemCenter(from);
-               const b = itemCenter(to);
-               return (
-                  <line
-                     key={conn.id}
-                     x1={a.cx} y1={a.cy} x2={b.cx} y2={b.cy}
-                     stroke={content.style.color} strokeOpacity={0.7} strokeWidth={1}
-                     vectorEffect="non-scaling-stroke"
-                  />
-               );
-            })}
+         {bounds ? (
+            <div className="absolute inset-0 p-6">
+               <svg
+                  viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  className="h-full w-full"
+               >
+                  {/* Zones behind: a faint region in the stored color, or a subtle theme tint when color-less. */}
+                  {zones.map((zone) => {
+                     const color = (zone.content as ZoneBoardContent).color;
+                     return (
+                        <rect
+                           key={zone.id}
+                           x={zone.x} y={zone.y} width={zone.width} height={zone.height} rx={2}
+                           fill={color ?? 'currentColor'} fillOpacity={color ? 0.2 : 0.07}
+                           stroke={color ?? 'currentColor'} strokeOpacity={0.35} strokeWidth={1}
+                           vectorEffect="non-scaling-stroke"
+                        />
+                     );
+                  })}
 
-            {/* Every other item: a block in its content color (post-it / pin) or a neutral theme block. */}
-            {blocks.map((item) => {
-               const ownColor = item.kind === 'post-it'
-                  ? (item.content as PostItBoardContent).data.color ?? SCHEMATIC_POSTIT_COLOR
-                  : item.kind === 'pin'
-                     ? (item.content as PinBoardContent).color
-                     : null;
-               return (
-                  <rect
-                     key={item.id}
-                     x={item.x} y={item.y} width={item.width} height={item.height} rx={2}
-                     fill={ownColor ?? 'currentColor'} fillOpacity={ownColor ? 1 : 0.25}
-                  />
-               );
-            })}
-         </svg>
+                  {/* Connections: a hairline from center to center, skipping a deleted endpoint. */}
+                  {connections.map((conn) => {
+                     const content = conn.content as ConnectionBoardContent;
+                     const from = byId.get(content.from);
+                     const to = byId.get(content.to);
+                     if (!from || !to) return null;
+                     const a = itemCenter(from);
+                     const b = itemCenter(to);
+                     return (
+                        <line
+                           key={conn.id}
+                           x1={a.cx} y1={a.cy} x2={b.cx} y2={b.cy}
+                           stroke={content.style.color} strokeOpacity={0.7} strokeWidth={1}
+                           vectorEffect="non-scaling-stroke"
+                        />
+                     );
+                  })}
 
-         {/* Subtle count badge over the map (app-themed), so the count survives the revamp. */}
-         <span className="absolute bottom-1 right-1 rounded bg-popover/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            {t('Drawer.Types.boardItemCount', { count: itemCount })}
-         </span>
+                  {/* Every other item: a filled block with a hairline edge so it reads on any surface color;
+                      a post-it / pin keeps its own color, anything else a neutral theme block. */}
+                  {blocks.map((item) => {
+                     const ownColor = item.kind === 'post-it'
+                        ? (item.content as PostItBoardContent).data.color ?? SCHEMATIC_POSTIT_COLOR
+                        : item.kind === 'pin'
+                           ? (item.content as PinBoardContent).color
+                           : null;
+                     return (
+                        <rect
+                           key={item.id}
+                           x={item.x} y={item.y} width={item.width} height={item.height} rx={3}
+                           fill={ownColor ?? 'currentColor'} fillOpacity={ownColor ? 1 : 0.28}
+                           stroke="currentColor" strokeOpacity={0.25} strokeWidth={1} vectorEffect="non-scaling-stroke"
+                        />
+                     );
+                  })}
+               </svg>
+            </div>
+         ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+               <LayoutGrid className="h-10 w-10 opacity-50" />
+            </div>
+         )}
       </div>
+   );
+}
+
+/** The board's item count, at native chrome size on the card stage (never scaled down with the thumbnail). */
+function BoardPreviewBadge({ count }: { count: number }) {
+   const { t } = useTranslation();
+   return (
+      <span className="pointer-events-none absolute bottom-2 right-2 z-10 rounded-md bg-popover/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+         {t('Drawer.Types.boardItemCount', { count })}
+      </span>
    );
 }
 
@@ -407,9 +443,15 @@ export function DrawerItemPreview({
       </>
    );
 
-   // PDF chips ride the stage at native size (never the scaled cover), so they stay legible however small
-   // the card scales; the other types carry their meta inside the preview.
-   const stageOverlay = !deferred && item.type === 'PDF' ? <PdfPreviewBadges pdf={item.content as PdfDocument} /> : undefined;
+   // Preview chips ride the stage at native size (never the scaled content), so they stay legible however
+   // small the card scales; the other types carry their meta inside the preview.
+   const stageOverlay = deferred
+      ? undefined
+      : item.type === 'PDF'
+         ? <PdfPreviewBadges pdf={item.content as PdfDocument} />
+         : item.type === 'FULL_BOARD'
+            ? <BoardPreviewBadge count={(item.content as Board).items.filter((boardItem) => boardItem.kind !== 'connection').length} />
+            : undefined;
 
    // Deferred: the stage shows a shimmer placeholder (mirroring the search skeleton) at the same
    // footprint, so nothing reflows when the real content swaps in on scroll.
