@@ -730,7 +730,8 @@
          "actionFailed": "That drawer action could not be completed. Please try again.",
          "legacyBackupDownloaded": "Backup downloaded.",
          "legacyBackupRemoved": "Old drawer backup removed.",
-         "legacyBackupExportFailed": "Backup download failed. The old copy was not removed."
+         "legacyBackupExportFailed": "Backup download failed. The old copy was not removed.",
+         "itemNotInDrawer": "This item is no longer in the Drawer."
       },
       "migration": {
          "legacyDataDownloaded": "Legacy data download sent.",
@@ -2451,6 +2452,7 @@
    },
    "Common": {
       "dragHandle": "Drag to reorder",
+      "findInDrawer": "Find in Drawer",
       "none": "None",
       "moreOptions": "More options",
       "done": "Done",

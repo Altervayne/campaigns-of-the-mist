@@ -188,10 +188,15 @@ vi.mock('@/components/molecules/TabViewLoading', () => ({ TabViewLoading: () => 
 
 const character = (id: string, name: string): CharacterLike => ({ id, name, game: 'LEGENDS' });
 
+// A workspace instance is a zustand store; the surface switch only needs presence, but the sidebar's
+// Find-in-Drawer hook reads its `drawerItemId`, so a minimal store-like stub stands in for a present one.
+const asInstanceStore = (present: object | null) =>
+   present ? { getState: () => ({ drawerItemId: null }), subscribe: () => () => {} } : null;
+
 const setSurface = ({ char = null, board = null, note = null }: { char?: CharacterLike | null; board?: object | null; note?: object | null }) => {
    mocks.character = char;
-   mocks.activeBoard = board;
-   mocks.activeNote = note;
+   mocks.activeBoard = asInstanceStore(board);
+   mocks.activeNote = asInstanceStore(note);
 };
 
 const sheet = () => document.querySelector('[data-tutorial="character-sheet"]');

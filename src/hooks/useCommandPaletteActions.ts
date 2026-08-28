@@ -12,7 +12,7 @@ import { useDeviceType } from '@/hooks/useDeviceType';
 import toast from 'react-hot-toast';
 
 // -- Icon Imports --
-import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeft, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, MessagesSquare, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Search, Image as ImageIcon } from 'lucide-react';
+import { FileUp, FileText, Import, Save, SaveAll, Pencil, Settings, Sparkles, Megaphone, Info, GraduationCap, PanelLeft, PanelLeftOpen, BookOpen, FlipHorizontal, Type, Sun, Moon, Palette, SwatchBook, Undo2, Redo2, FilePlus, ListPlus, ListTree, Dices, UserPlus, LayoutGrid, Layers, Combine, Link, X, ChevronRight, ChevronLeft, Skull, NotebookText, NotebookPen, MousePointer2, Pen, Slash, Waypoints, Pentagon, Shapes, BoxSelect, Eraser, Brush, Highlighter, MessagesSquare, Square, Grip, Grid3x3, Rows3, Columns3, Hexagon, LocateFixed, FolderSearch, DatabaseBackup, ZoomIn, ZoomOut, RotateCcw, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Search, Image as ImageIcon } from 'lucide-react';
 
 // -- Utils Imports --
 import { exportCharacterSheet, exportDrawer, exportToFile, generateExportFilename } from '@/lib/utils/export-import';
@@ -29,6 +29,7 @@ import { DEFAULT_SHEET_ZOOM, stepSheetZoom } from '@/lib/character/sheetZoom';
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
 import { exportEntireDrawerAsNestedTree } from '@/lib/drawer/drawerRepository';
+import { revealDrawerItem } from '@/lib/portals/revealDrawerItem';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
 import { collectBoardEmbeddedEntities } from '@/lib/board/collectBoardEmbeddedEntities';
 import { undoActiveContext, redoActiveContext } from '@/lib/history/undoRouting';
@@ -110,6 +111,9 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    const nextTabId = openTabs.length > 0 ? openTabs[(activeIndex + 1) % openTabs.length]?.id : undefined;
    const prevTabId = openTabs.length > 0 ? openTabs[(activeIndex - 1 + openTabs.length) % openTabs.length]?.id : undefined;
    const hasActiveTab = activeTabId !== null;
+
+   // Reveal the active workspace's saved drawer entry (open + navigate + pulse); a deleted item toasts.
+   const findInDrawer = (drawerItemId: string) => void revealDrawerItem(drawerItemId, { onMissing: () => toast.error(tNotifications('Notifications.drawer.itemNotInDrawer')) });
 
    const handleExportCharacter = async () => {
       if (!character) {
@@ -260,6 +264,21 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // (note scope). Markdown IMPORT rides the existing "Import Note" picker (routed by extension), so
       // it has no separate command.
       { id: 'exportNoteMarkdown', scope: 'note', label: t('CommandPalette.commands.exportNoteMarkdown'), keywords: ['export', 'note', 'markdown', 'md', 'text'], icon: FileUp, group: t('CommandPalette.groups.export'), action: onExportNoteMarkdown },
+
+      // Find-in-Drawer: jump to the active workspace's saved drawer entry. Each is gated on that workspace
+      // having a saved id (mirroring the toolbar buttons); the active-tab scope keeps only the relevant one visible.
+      ...(character?.drawerItemId ? [
+         { id: 'findCharacterInDrawer', scope: 'character' as const, label: t('Common.findInDrawer'), keywords: ['find', 'locate', 'reveal', 'drawer', 'folder', 'character'], icon: FolderSearch, group: t('Common.characterSheet'), action: () => { if (character.drawerItemId) findInDrawer(character.drawerItemId); } },
+      ] : []),
+      ...(activeNote?.getState().drawerItemId ? [
+         { id: 'findNoteInDrawer', scope: 'note' as const, label: t('Common.findInDrawer'), keywords: ['find', 'locate', 'reveal', 'drawer', 'folder', 'note'], icon: FolderSearch, group: t('CommandPalette.groups.note'), action: () => { const id = activeNote.getState().drawerItemId; if (id) findInDrawer(id); } },
+      ] : []),
+      ...(activePdf?.getState().drawerItemId ? [
+         { id: 'findPdfInDrawer', scope: 'pdf' as const, label: t('Common.findInDrawer'), keywords: ['find', 'locate', 'reveal', 'drawer', 'folder', 'pdf'], icon: FolderSearch, group: t('CommandPalette.groups.pdf'), action: () => { const id = activePdf.getState().drawerItemId; if (id) findInDrawer(id); } },
+      ] : []),
+      ...(getActiveBoardStore()?.getState().drawerItemId ? [
+         { id: 'findBoardInDrawer', scope: 'board' as const, label: t('Common.findInDrawer'), keywords: ['find', 'locate', 'reveal', 'drawer', 'folder', 'board'], icon: FolderSearch, group: t('CommandPalette.groups.tools'), action: () => { const id = getActiveBoardStore()?.getState().drawerItemId; if (id) findInDrawer(id); } },
+      ] : []),
 
       // #######################
       // ###   NOTE GROUP    ###

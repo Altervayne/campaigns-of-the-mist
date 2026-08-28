@@ -4,11 +4,16 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+
+// -- Icon Imports --
+import { FolderSearch } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
 
 // -- Component Imports --
+import { SidebarButton } from '../molecules/SidebarButton';
 import { SidebarHeader } from './sidebar/SidebarHeader';
 import { SidebarSubmenuToggles } from './sidebar/SidebarSubmenuToggles';
 import { SidebarPlayAreaActions } from './sidebar/SidebarPlayAreaActions';
@@ -24,6 +29,7 @@ import { SidebarUpdateDialogs } from './sidebar/SidebarUpdateDialogs';
 import { useCharacterActions, useCharacterStore } from '@/lib/stores/characterStore';
 import { useTabManagerActions } from '@/lib/character/tabManagerStore';
 import { useSaveToDrawer } from '@/hooks/useSaveToDrawer';
+import { useFindInDrawer } from '@/hooks/useFindInDrawer';
 import { useSidebarFileIO } from '@/hooks/sidebar/useSidebarFileIO';
 
 // -- Type Imports --
@@ -36,6 +42,8 @@ interface SidebarMenuProps {
    isDrawerOpen: boolean;
    isCollapsed: boolean;
    activeWindow: ActiveWindow;
+   /** The active workspace's saved drawer item id (null = unsaved / menu); gates the Find-in-Drawer button. */
+   findInDrawerItemId: string | null;
    onExportNoteMarkdown: () => void;
    onImportNoteMarkdownFile: (file: File) => Promise<void>;
    onToggleEditing: () => void;
@@ -46,8 +54,11 @@ interface SidebarMenuProps {
    onOpenHelp: () => void;
 }
 
-export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow, onExportNoteMarkdown, onImportNoteMarkdownFile, onToggleEditing, onToggleDrawer, onToggleCollapse, onOpenSettings, onOpenWhatsNew, onOpenHelp }: SidebarMenuProps) {
-   const { t: tNotifications } = useTranslation();
+export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow, findInDrawerItemId, onExportNoteMarkdown, onImportNoteMarkdownFile, onToggleEditing, onToggleDrawer, onToggleCollapse, onOpenSettings, onOpenWhatsNew, onOpenHelp }: SidebarMenuProps) {
+   const { t } = useTranslation();
+
+   // One standardized Find-in-Drawer affordance for every workspace: shown only when the active one is saved.
+   const { canFindInDrawer, findInDrawer } = useFindInDrawer(findInDrawerItemId);
 
    const character = useCharacterStore((state) => state.character);
    const { resetCharacter } = useCharacterActions();
@@ -102,7 +113,7 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
    const handleResetCharacter = () => {
       resetCharacter();
-      toast.success(tNotifications('Notifications.character.reset'));
+      toast.success(t('Notifications.character.reset'));
    };
 
    const handleOpenMenu = () => {
@@ -135,6 +146,19 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
             {/* Context-specific scrollable buttons */}
             <div className="flex flex-col grow w-full min-h-0 overflow-y-auto overscroll-contain">
                <SidebarSubmenuToggles isCollapsed={isCollapsed} isDrawerOpen={isDrawerOpen} onToggleDrawer={onToggleDrawer} />
+
+               {/* Standardized across every workspace (always this slot, by the Drawer toggle): jump to the
+                   active workspace's saved drawer entry. Absent when the workspace is unsaved. */}
+               {canFindInDrawer && (
+                  <motion.section layout transition={{ duration: 0.2 }} className={cn(
+                     "flex flex-col items-center gap-2 py-2 bg-popover border-b border-border",
+                     isCollapsed ? "px-0" : "px-2"
+                  )}>
+                     <SidebarButton isCollapsed={isCollapsed} onClick={findInDrawer} Icon={FolderSearch}>
+                        {t('Common.findInDrawer')}
+                     </SidebarButton>
+                  </motion.section>
+               )}
 
                { activeWindow === 'PLAY_AREA' &&
                   <SidebarPlayAreaActions

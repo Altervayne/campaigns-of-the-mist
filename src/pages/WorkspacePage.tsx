@@ -41,6 +41,7 @@ import { TabViewLoading } from '@/components/molecules/TabViewLoading';
 
 // -- Store and Hook Imports --
 import { useCharacterStore, useCharacterActions } from '@/lib/stores/characterStore';
+import { useActiveWorkspaceDrawerItemId } from '@/hooks/useActiveWorkspaceDrawerItemId';
 import { useActiveBoardInstance } from '@/lib/board/ActiveBoardStoreContext';
 import { useActiveNoteInstance } from '@/lib/notes/ActiveNoteStoreContext';
 import { useActivePdfInstance } from '@/lib/pdf/ActivePdfStoreContext';
@@ -73,6 +74,8 @@ function DesktopWorkspacePage() {
    const activeBoard = useActiveBoardInstance();
    const activeNote = useActiveNoteInstance();
    const activePdf = useActivePdfInstance();
+   // The active workspace's saved drawer item, if any - drives the sidebar's single Find-in-Drawer button.
+   const findInDrawerItemId = useActiveWorkspaceDrawerItemId({ note: activeNote, pdf: activePdf, board: activeBoard });
    const isBootHydrating = useIsBootHydrating();
    const { updateCharacterName, addStatus, addStoryTag, addPortrait, addJournal } = useCharacterActions();
 
@@ -229,6 +232,7 @@ function DesktopWorkspacePage() {
                   isDrawerOpen={isDrawerOpen}
                   isCollapsed={isSidebarCollapsed}
                   activeWindow={activeWindow}
+                  findInDrawerItemId={findInDrawerItemId}
                   onExportNoteMarkdown={exportActiveNoteAsMarkdown}
                   onImportNoteMarkdownFile={importMarkdownFile}
                   onToggleEditing={() => setIsEditing(!isEditing)}

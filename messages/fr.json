@@ -730,7 +730,8 @@
          "actionFailed": "Cette action n'a pas pu être complétée. Veuillez tenter à nouveau.",
          "legacyBackupDownloaded": "Sauvegarde téléchargée.",
          "legacyBackupRemoved": "Sauvegarde de l'ancien tiroir supprimée.",
-         "legacyBackupExportFailed": "Téléchargement de la sauvegarde échouée. L'ancienne copie n'a pas été supprimée."
+         "legacyBackupExportFailed": "Téléchargement de la sauvegarde échouée. L'ancienne copie n'a pas été supprimée.",
+         "itemNotInDrawer": "[TO COMPLETE]"
       },
       "migration": {
          "legacyDataDownloaded": "Données anciennes téléchargées avec succès.",
@@ -2451,6 +2452,7 @@
    },
    "Common": {
       "dragHandle": "Glisser pour réorganiser",
+      "findInDrawer": "[TO COMPLETE]",
       "none": "Aucun",
       "moreOptions": "Plus d'options",
       "done": "Valider",
