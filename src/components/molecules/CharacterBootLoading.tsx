@@ -19,7 +19,8 @@ export function CharacterBootLoading() {
          className="flex flex-col items-center justify-center gap-4 bg-background text-muted-foreground"
          style={{ height: '100dvh', width: '100dvw' }}
       >
-         <MistSpinner variant="disc" size={36} tip={t('Loading.boot')} label={t('Loading.boot')} />
+         {/* First paint of the whole app: the logo filled with living mist, at full size. */}
+         <MistSpinner variant="logo" size={132} tip={t('Loading.boot')} label={t('Loading.boot')} />
       </div>
    );
 }

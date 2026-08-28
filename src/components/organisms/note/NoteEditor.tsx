@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 // -- CodeMirror Imports --
 import { EditorState } from '@codemirror/state';
-import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view';
+import { EditorView, keymap, placeholder as cmPlaceholder, drawSelection } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, undoDepth, redoDepth } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { Strikethrough, Table } from '@lezer/markdown';
@@ -147,6 +147,10 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
                // doesn't, so `~~text~~` never styles and a table block never renders as a grid in Live.
                markdown({ extensions: [Strikethrough, Table] }),
                syntaxHighlighting(paperHighlight),
+               // CM draws the caret + selection (the paper theme already styles `.cm-cursor` /
+               // `.cm-selectionBackground`). Without it the native caret is used, which sits half a line high
+               // over the empty-doc placeholder (an `inline-block` widget) until the first keypress.
+               drawSelection(),
                EditorView.lineWrapping,
                paperTheme,
                placeholder ? cmPlaceholder(placeholder) : [],
