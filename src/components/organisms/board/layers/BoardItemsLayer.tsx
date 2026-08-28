@@ -17,7 +17,7 @@ import { BoardConnectionsLayer } from '../BoardConnectionsLayer';
 import { BoardGroupToolbar } from '../BoardGroupToolbar';
 import { BoardStrokeStyleToolbarSlot } from './BoardStrokeStyleToolbarSlot';
 import { BoardTransformOverlay } from '../BoardTransformOverlay';
-import { StrokeShape } from '../items/BoardDrawingItem';
+import { StrokeShape } from '@/components/molecules/drawing/StrokeShape';
 import { zoneTitleBarHeight } from '@/lib/board/zoneHeader';
 import { SnapOverlay } from './SnapOverlay';
 
@@ -26,10 +26,10 @@ import type { BoardState } from '@/lib/stores/boardStore';
 import type { ActiveTool, BoardItem, BoardItemContent, BrushKind, ConnectionStyle, Viewport } from '@/lib/types/board';
 import type { AlignEdge, DistributeAxis } from '@/lib/board/boardAlign';
 import type { Point } from '@/lib/board/boardConnections';
-import type { WorldRect } from '@/lib/board/drawingStyle';
-import type { Mat } from '@/lib/board/strokeTransform';
-import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/board/strokeStyle';
-import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
+import type { WorldRect } from '@/lib/drawing/strokeGeometry';
+import type { Mat } from '@/lib/drawing/strokeTransform';
+import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/drawing/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/drawing/strokeStructure';
 import type { DistanceBadge, GuideSegment, Rect as SnapRect } from '@/lib/board/boardSnapping';
 
 /** Rebuilds a connection's content with a new style, preserving its endpoints. The style carries

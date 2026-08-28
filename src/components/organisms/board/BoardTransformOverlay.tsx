@@ -1,8 +1,9 @@
 // -- Utils Imports --
-import { pointsBounds, strokePaint, type WorldRect } from '@/lib/board/drawingStyle';
+import { pointsBounds, type WorldRect } from '@/lib/drawing/strokeGeometry';
+import { strokePaint } from '@/lib/drawing/strokePaint';
 import { groupToolbarZIndex } from '@/lib/board/boardLayering';
-import { applyMatrixToPoints, IDENTITY, type Mat } from '@/lib/board/strokeTransform';
-import { HANDLE_GRIP_PX, MIN_HANDLE_BOX_PX, ROTATE_KNOB_PX, ROTATE_STALK_PX, handleAnchors, handleLayoutBox, type HandleId } from '@/lib/board/strokeHandles';
+import { applyMatrixToPoints, IDENTITY, type Mat } from '@/lib/drawing/strokeTransform';
+import { HANDLE_GRIP_PX, MIN_HANDLE_BOX_PX, ROTATE_KNOB_PX, ROTATE_STALK_PX, handleAnchors, handleLayoutBox, type HandleId } from '@/lib/drawing/strokeHandles';
 
 // -- Type Imports --
 import type { BoardItem, Stroke } from '@/lib/types/board';

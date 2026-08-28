@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 // -- Utils Imports --
 import { centerViewport } from '@/lib/board/boardCoordinates';
 import { isMergeableSelection } from '@/lib/board/layersReorder';
-import { isAppendTool } from '@/lib/board/drawingStyle';
+import { isAppendTool } from '@/lib/drawing/strokePaint';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';

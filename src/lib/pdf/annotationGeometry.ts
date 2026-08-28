@@ -1,5 +1,5 @@
 // -- Type Imports --
-import type { StrokePaintInput } from '@/lib/board/drawingStyle';
+import type { StrokePaintInput } from '@/lib/drawing/strokePaint';
 import type { PdfAnnotation, PdfAnnotationVisibility, PdfComment, PdfInk, PdfRect } from '@/lib/types/pdfAnnotation';
 
 /*

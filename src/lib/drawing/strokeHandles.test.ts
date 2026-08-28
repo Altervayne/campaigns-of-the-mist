@@ -6,8 +6,8 @@ import { handleAnchors, handleLayoutBox, handleMatrix, pickHandle, type HandleId
 import { applyMatrixToPoints } from './strokeTransform';
 
 // -- Type Imports --
-import type { WorldRect } from './drawingStyle';
-import type { Point } from './boardConnections';
+import type { WorldRect } from './strokeGeometry';
+import type { Point } from '@/lib/geometry/point';
 
 /*
  * The free-transform box's handle geometry + the handle->matrix mapping. The gesture wiring (the cursor layer)

@@ -5,7 +5,7 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import cuid from 'cuid';
 
 // -- Utils Imports --
-import { duplicateStrokes, reorderStrokes, type StrokeReorder } from '@/lib/board/strokeStructure';
+import { duplicateStrokes, reorderStrokes, type StrokeReorder } from '@/lib/drawing/strokeStructure';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';

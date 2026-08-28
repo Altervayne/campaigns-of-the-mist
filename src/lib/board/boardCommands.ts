@@ -1,6 +1,7 @@
 // -- Local Imports --
 import { BoardNotFoundError } from './boardErrors';
-import { appendStrokeToDrawing, mergeDrawings, rebasePoints, recomputeDrawingBoxRotated, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany } from './drawingStyle';
+import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxRotated, recomputeDrawingBoxWithout, recomputeDrawingBoxWithoutMany } from './drawingBox';
+import { rebasePoints } from '@/lib/drawing/strokeGeometry';
 import {
    addItem,
    deleteItem,

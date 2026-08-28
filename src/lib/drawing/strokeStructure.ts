@@ -5,7 +5,7 @@
  */
 
 // -- Type Imports --
-import type { Stroke } from '@/lib/types/board';
+import type { Stroke } from './types';
 
 /** Local-frame nudge for a duplicated stroke, so its copy lands visibly beside the original (matches items). */
 export const STROKE_DUPLICATE_OFFSET = 16;

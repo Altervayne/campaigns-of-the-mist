@@ -2,7 +2,7 @@
 import { denormalizeRect, pdfInkToStrokePaintInput } from '@/lib/pdf/annotationGeometry';
 
 // -- Component Imports --
-import { StrokeShape } from '@/components/organisms/board/items/BoardDrawingItem';
+import { StrokeShape } from '@/components/molecules/drawing/StrokeShape';
 
 // -- Type Imports --
 import type { PdfAnnotation, PdfHighlight, PdfInk, PdfTextHighlight } from '@/lib/types/pdfAnnotation';

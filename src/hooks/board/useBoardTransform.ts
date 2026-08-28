@@ -2,13 +2,13 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type RefObject, type SetStateAction } from 'react';
 
 // -- Utils Imports --
-import { pointsBounds, strokeHitsPoint, strokeIntersectsRect, type WorldRect } from '@/lib/board/drawingStyle';
+import { pointsBounds, strokeHitsPoint, strokeIntersectsRect, type WorldRect } from '@/lib/drawing/strokeGeometry';
 import { rotateVec } from '@/lib/board/boardRotation';
-import { applyMatrixToPoints, flip, translate, type Mat } from '@/lib/board/strokeTransform';
+import { applyMatrixToPoints, flip, translate, type Mat } from '@/lib/drawing/strokeTransform';
 
 // -- Custom Hooks --
 import { useStrokeStructureEditing } from './useStrokeStructureEditing';
-import { HANDLE_HIT_PX, MIN_HANDLE_BOX_PX, ROTATE_STALK_PX, handleLayoutBox, handleMatrix, pickHandle, type HandleId } from '@/lib/board/strokeHandles';
+import { HANDLE_HIT_PX, MIN_HANDLE_BOX_PX, ROTATE_STALK_PX, handleLayoutBox, handleMatrix, pickHandle, type HandleId } from '@/lib/drawing/strokeHandles';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';

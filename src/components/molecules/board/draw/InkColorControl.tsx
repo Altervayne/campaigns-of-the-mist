@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
-import { strokeColorToCss } from '@/lib/board/drawingStyle';
+import { strokeColorToCss } from '@/lib/drawing/strokePaint';
 import { CONNECTION_PALETTE } from '@/lib/board/boardConnections';
 import { pushRecentColor, readRecentColors } from '@/lib/recentColors';
 

@@ -2,7 +2,7 @@
 import { createContext, useContext } from 'react';
 
 // -- Type Imports --
-import type { StrokeStylePatch } from './strokeStyle';
+import type { StrokeStylePatch } from '@/lib/drawing/strokeStyle';
 
 /*
  * React Context carrying a LIVE, uncommitted style edit for the transform tool's selection, so a drawing

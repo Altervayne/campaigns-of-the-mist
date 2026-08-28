@@ -10,7 +10,7 @@
  */
 
 // -- Utils Imports --
-import { rotateVec, type Vec2 } from './boardRotation';
+import { rotateVec, type Vec2 } from '@/lib/geometry/vector';
 
 /** A 2D affine matrix's six live cells, SVG order: `matrix(a, b, c, d, e, f)`. */
 export type Mat = [number, number, number, number, number, number];

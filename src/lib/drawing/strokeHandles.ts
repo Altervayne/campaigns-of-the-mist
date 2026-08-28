@@ -12,12 +12,12 @@
  */
 
 // -- Utils Imports --
-import { ROTATE_SNAP_DEG, pointerAngleDeg, snapAngle } from './boardRotation';
+import { ROTATE_SNAP_DEG, pointerAngleDeg, snapAngle } from '@/lib/geometry/vector';
 import { rotate, scale, skew, type Mat } from './strokeTransform';
 
 // -- Type Imports --
-import type { WorldRect } from './drawingStyle';
-import type { Point } from './boardConnections';
+import type { WorldRect } from './strokeGeometry';
+import type { Point } from '@/lib/geometry/point';
 
 /** On-screen sizing for the handles (px, counter-scaled by zoom to a constant world size). */
 export const HANDLE_GRIP_PX = 10;

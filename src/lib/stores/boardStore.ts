@@ -26,7 +26,7 @@ import {
 import { connectionsReferencing } from '@/lib/board/boardConnections';
 import { normalizeAngle } from '@/lib/board/boardRotation';
 import { byZThenId, flattenBoardOrder, repairBoardZ } from '@/lib/board/boardTree';
-import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxRotated, recomputeDrawingBoxWithoutMany } from '@/lib/board/drawingStyle';
+import { appendStrokeToDrawing, mergeDrawings, recomputeDrawingBoxRotated, recomputeDrawingBoxWithoutMany } from '@/lib/board/drawingBox';
 import { zoneContaining } from '@/lib/board/zoneMembership';
 
 // -- Store Imports --

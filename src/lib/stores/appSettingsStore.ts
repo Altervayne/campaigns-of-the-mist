@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 // -- Utils Imports --
-import { DEFAULT_STROKE_WIDTH } from '@/lib/board/drawingStyle';
+import { DEFAULT_STROKE_WIDTH } from '@/lib/drawing/constants';
 import { latestPatchNotesVersion } from '@/lib/patch-notes';
 import { latestAnnouncementId } from '@/lib/announcements';
 

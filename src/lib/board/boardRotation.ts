@@ -9,8 +9,16 @@
  * is framework-free and unit-tested.
  */
 
+// -- Utils Imports --
+import { ROTATE_SNAP_DEG, pointerAngleDeg, rotateVec, snapAngle, type Vec2 } from '@/lib/geometry/vector';
+
 // -- Type Imports --
 import type { BoardItemKind } from '@/lib/types/board';
+
+// The generic vector/angle primitives now live in the neutral geometry home (drawing + board share them);
+// re-exported so existing `@/lib/board/boardRotation` importers keep working.
+export { ROTATE_SNAP_DEG, pointerAngleDeg, rotateVec, snapAngle };
+export type { Vec2 };
 
 /** The free-form kinds that expose a rotate handle; everything structured stays un-rotatable. */
 const ROTATABLE_KINDS: ReadonlySet<BoardItemKind> = new Set<BoardItemKind>(['post-it', 'image', 'text', 'drawing']);
@@ -20,31 +28,12 @@ export function isRotatableKind(kind: BoardItemKind): boolean {
    return ROTATABLE_KINDS.has(kind);
 }
 
-/** The Shift-snap increment for the rotate gesture, in degrees. */
-export const ROTATE_SNAP_DEG = 15;
-
-/** A 2D point / vector. */
-export interface Vec2 {
-   x: number;
-   y: number;
-}
-
 /** A positioned box in world coords. */
 export interface BoxRect {
    x: number;
    y: number;
    width: number;
    height: number;
-}
-
-/** The pointer's angle about a center, in degrees (atan2 in a y-down frame, matching CSS rotate). */
-export function pointerAngleDeg(centerX: number, centerY: number, pointerX: number, pointerY: number): number {
-   return (Math.atan2(pointerY - centerY, pointerX - centerX) * 180) / Math.PI;
-}
-
-/** Snaps an angle to the nearest multiple of `step` (degrees). */
-export function snapAngle(deg: number, step: number): number {
-   return Math.round(deg / step) * step;
 }
 
 /** Wraps an angle into `[0, 360)`. */
@@ -61,14 +50,6 @@ export function rotatedTopExtra(width: number, height: number, deg: number): num
    const rad = (deg * Math.PI) / 180;
    const halfHeight = Math.abs((width / 2) * Math.sin(rad)) + Math.abs((height / 2) * Math.cos(rad));
    return halfHeight - height / 2;
-}
-
-/** Rotates a vector by `deg` degrees (local -> world under a center-origin CSS `rotate(deg)`). */
-export function rotateVec(v: Vec2, deg: number): Vec2 {
-   const rad = (deg * Math.PI) / 180;
-   const cos = Math.cos(rad);
-   const sin = Math.sin(rad);
-   return { x: v.x * cos - v.y * sin, y: v.x * sin + v.y * cos };
 }
 
 /** Per-axis lower bounds for a rotated resize. */

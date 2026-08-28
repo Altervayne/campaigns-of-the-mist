@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type PointerEv
 import cuid from 'cuid';
 
 // -- Utils Imports --
-import { ERASER_RADIUS, isLineDegenerate, makeStroke, MIN_LINE_LENGTH, pointsBounds, rebasePoints, regularPolygonVertices, shapeBoxCorners, snapAngle, strokeHitsPoint } from '@/lib/board/drawingStyle';
+import { ERASER_RADIUS, MIN_LINE_LENGTH } from '@/lib/drawing/constants';
+import { isLineDegenerate, pointsBounds, rebasePoints, regularPolygonVertices, shapeBoxCorners, snapAngle, strokeHitsPoint } from '@/lib/drawing/strokeGeometry';
+import { makeStroke } from '@/lib/drawing/strokeFactory';
 import { nextScopeZ } from '@/lib/board/boardTree';
 import { EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseContext';
 import { isEditableTarget } from '@/lib/utils/textEntry';

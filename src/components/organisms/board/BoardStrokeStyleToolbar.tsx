@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowDownToLine, ArrowUpToLine, Copy, FlipHorizontal, FlipVertical, Trash2 } from 'lucide-react';
 
 // -- Utils Imports --
-import { MIXED } from '@/lib/board/strokeStyle';
+import { MIXED } from '@/lib/drawing/strokeStyle';
 
 // -- Component Imports --
 import { InkColorControl } from '@/components/molecules/board/draw/InkColorControl';
@@ -15,8 +15,8 @@ import { BrushToggleGroup } from '@/components/molecules/board/draw/BrushToggleG
 import { StrokeFillToggle } from '@/components/molecules/board/draw/StrokeFillToggle';
 
 // -- Type Imports --
-import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/board/strokeStyle';
-import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
+import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/drawing/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/drawing/strokeStructure';
 
 /*
  * The Transform tool's contextual STYLE toolbar: a frosted bar floating above the stroke selection's bounding

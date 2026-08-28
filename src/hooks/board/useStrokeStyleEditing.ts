@@ -2,12 +2,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // -- Utils Imports --
-import { applyStylePatchToStrokes, isClosedShape } from '@/lib/board/strokeStyle';
+import { applyStylePatchToStrokes, isClosedShape } from '@/lib/drawing/strokeStyle';
 
 // -- Type Imports --
 import type { BoardState, BoardStore } from '@/lib/stores/boardStore';
 import type { StrokeSelection } from './useBoardTransform';
-import type { StrokeStylePatch } from '@/lib/board/strokeStyle';
+import type { StrokeStylePatch } from '@/lib/drawing/strokeStyle';
 import type { StrokeStylePreview } from '@/lib/board/StrokeStylePreviewContext';
 
 interface UseStrokeStyleEditingArgs {

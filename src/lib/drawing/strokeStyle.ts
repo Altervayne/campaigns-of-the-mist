@@ -6,12 +6,12 @@
  */
 
 // -- Utils Imports --
-import { pointsBounds, type WorldRect } from './drawingStyle';
-import { rotateVec } from './boardRotation';
+import { pointsBounds, type WorldRect } from './strokeGeometry';
+import { rotateVec } from '@/lib/geometry/vector';
 
 // -- Type Imports --
-import type { BrushKind, Stroke } from '@/lib/types/board';
-import type { Point } from './boardConnections';
+import type { BrushKind, Stroke } from './types';
+import type { Point } from '@/lib/geometry/point';
 
 /** Marks a field the selection disagrees on (its strokes hold different values). */
 export const MIXED = 'mixed';

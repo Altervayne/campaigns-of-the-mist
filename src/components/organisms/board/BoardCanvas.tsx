@@ -17,8 +17,8 @@ import { CREATABLE_BY_KIND, type CreatableKind } from '@/lib/creation/creatableR
 import { PendingEraseContext, EMPTY_STROKE_IDS } from '@/lib/board/PendingEraseContext';
 import { DrawingFocusContext } from '@/lib/board/DrawingFocusContext';
 import { StrokeStylePreviewContext } from '@/lib/board/StrokeStylePreviewContext';
-import { foldStrokeStyle, strokesWorldAABB } from '@/lib/board/strokeStyle';
-import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
+import { foldStrokeStyle, strokesWorldAABB } from '@/lib/drawing/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/drawing/strokeStructure';
 import { useBoardBarScroll } from '@/hooks/board/useBoardBarScroll';
 import { useBoardViewport, FIT_PADDING } from '@/hooks/board/useBoardViewport';
 import { useBoardPanKeys } from '@/hooks/board/useBoardPanKeys';

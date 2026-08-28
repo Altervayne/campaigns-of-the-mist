@@ -3,6 +3,7 @@ import { rotateVec } from './boardRotation';
 
 // -- Type Imports --
 import type { BoardItem, ConnectionDash, ConnectionLabelSize, ConnectionMarker, ConnectionMarkerPosition, ConnectionMarkers, ConnectionStyle } from '@/lib/types/board';
+import type { Point } from '@/lib/geometry/point';
 
 /*
  * Pure geometry + lookup for board connections. A connection is a straight line drawn
@@ -11,11 +12,9 @@ import type { BoardItem, ConnectionDash, ConnectionLabelSize, ConnectionMarker, 
  * move or resize. Kept framework-free so the math is unit-testable.
  */
 
-/** A point in world coordinates. */
-export interface Point {
-   x: number;
-   y: number;
-}
+// `Point` now lives in the neutral geometry home (drawing + board share it); re-exported so existing
+// `@/lib/board/boardConnections` importers keep working.
+export type { Point };
 
 /**
  * The minimal placement a connection endpoint reads from an item. `radius` is the corner radius

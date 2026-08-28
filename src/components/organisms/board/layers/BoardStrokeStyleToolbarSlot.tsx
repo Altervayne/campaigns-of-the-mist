@@ -10,8 +10,8 @@ import { BoardStrokeStyleToolbar } from '../BoardStrokeStyleToolbar';
 
 // -- Type Imports --
 import type { Viewport } from '@/lib/types/board';
-import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/board/strokeStyle';
-import type { StrokeStructureOp } from '@/lib/board/strokeStructure';
+import type { StrokeStyleFold, StrokeStylePatch } from '@/lib/drawing/strokeStyle';
+import type { StrokeStructureOp } from '@/lib/drawing/strokeStructure';
 
 interface Bbox {
    x: number;
