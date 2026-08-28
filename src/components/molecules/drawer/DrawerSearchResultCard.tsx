@@ -1,6 +1,7 @@
 // -- React Imports --
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // -- DnD Imports --
 import { DragStaticWrapper } from '@/components/dnd';
@@ -23,7 +24,6 @@ import { DrawerResultMenu } from '@/components/molecules/drawer/DrawerResultMenu
 
 // -- Type Imports --
 import type { DrawerItemRecord } from '@/lib/drawer/drawerRecords';
-import type { DrawerItemSummary } from '@/lib/drawer/drawerRepository';
 import type { DrawerSearchResultEntryProps } from '@/components/molecules/drawer/DrawerSearchResultEntry';
 
 /*
@@ -38,6 +38,19 @@ import type { DrawerSearchResultEntryProps } from '@/components/molecules/drawer
  * themselves (a plain draggable, not a SortableContext member).
  */
 
+/** The result menu (Jump-to / rename / move / delete), controlled so a right-click on the card drives it too. */
+function resultMenu(props: DrawerSearchResultEntryProps, open: boolean, onOpenChange: (open: boolean) => void): ReactNode {
+   return (
+      <DrawerResultMenu
+         open={open}
+         onOpenChange={onOpenChange}
+         onJumpTo={props.onJumpTo}
+         onRename={props.onRename}
+         onMove={props.onMove}
+         onDelete={props.onDelete}
+      />
+   );
+}
 
 /**
  * A card-footprint placeholder matching {@link DrawerItemPreview}: the preview area shimmers (or shows a
@@ -45,8 +58,10 @@ import type { DrawerSearchResultEntryProps } from '@/components/molecules/drawer
  * with no layout pop. The menu floats in the corner (as on a loaded card), so it doesn't shift on load.
  * Not draggable: a skeleton / missing card has no content to embed.
  */
-function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerItemSummary; menu: ReactNode; removed?: boolean }) {
+function ResultCardShell(props: DrawerSearchResultEntryProps & { removed?: boolean }) {
+   const { summary, removed = false } = props;
    const { t } = useTranslation();
+   const [menuOpen, setMenuOpen] = useState(false);
    const meta = (
       <>
          {/* Hover labels name the indicator icons (type + game), so they aren't a guess. */}
@@ -60,7 +75,7 @@ function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerIt
    // removed message once the item is gone. Name + meta are the summary's, available immediately. The
    // menu floats in the corner (a sibling overlay, as on a loaded card).
    return (
-      <div className="relative">
+      <div className="relative" onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}>
          <DrawerCardFrame
             stageClassName={removed ? 'bg-popover/30' : 'animate-pulse bg-muted/40'}
             fit="contain"
@@ -71,7 +86,7 @@ function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerIt
                ? <div className="flex h-45 w-45 items-center justify-center px-4 text-center text-xs text-muted-foreground">{t('Drawer.search.unavailable')}</div>
                : null}
          </DrawerCardFrame>
-         <div className="absolute right-1 top-1 z-10">{menu}</div>
+         <div className="absolute right-1 top-1 z-10">{resultMenu(props, menuOpen, setMenuOpen)}</div>
       </div>
    );
 }
@@ -82,41 +97,39 @@ function ResultCardShell({ summary, menu, removed = false }: { summary: DrawerIt
  * handlers embed it onto a board/sheet with no change. The card body carries the drag listeners; the
  * menu is a sibling overlay (not a descendant), so the menu never starts a drag.
  */
-function DraggableResultCard({ summary, item, menu }: { summary: DrawerItemSummary; item: DrawerItemRecord; menu: ReactNode }) {
+function DraggableResultCard(props: DrawerSearchResultEntryProps & { item: DrawerItemRecord }) {
+   const { summary, item } = props;
    const { attributes, listeners, setNodeRef, isDragging } = useResultDraggable(summary, item);
+   const [menuOpen, setMenuOpen] = useState(false);
 
    return (
       <DragStaticWrapper isBeingDragged={isDragging}>
-         <div ref={setNodeRef} className="relative">
+         <div ref={setNodeRef} className="relative" onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}>
             <div {...attributes} {...listeners} className="cursor-grab">
                <DrawerItemPreview item={item} />
             </div>
-            <div className="absolute right-1 top-1 z-10">{menu}</div>
+            <div className="absolute right-1 top-1 z-10">{resultMenu(props, menuOpen, setMenuOpen)}</div>
          </div>
       </DragStaticWrapper>
    );
 }
 
 /** Mounted only once visible, so the content fetch never fires for an off-screen card. */
-function LoadedResultCard({ summary, onJumpTo, onRename, onDelete, onMove }: DrawerSearchResultEntryProps) {
-   const { item, isMissing } = useDrawerItemContent(summary.id);
-   const menu = <DrawerResultMenu onJumpTo={onJumpTo} onRename={onRename} onMove={onMove} onDelete={onDelete} />;
-
+function LoadedResultCard(props: DrawerSearchResultEntryProps) {
+   const { item, isMissing } = useDrawerItemContent(props.summary.id);
    // Loaded -> the draggable rich card; loading -> shimmer; settled-missing -> the removed card.
-   if (item) return <DraggableResultCard summary={summary} item={item} menu={menu} />;
-   return <ResultCardShell summary={summary} menu={menu} removed={isMissing} />;
+   if (item) return <DraggableResultCard {...props} item={item} />;
+   return <ResultCardShell {...props} removed={isMissing} />;
 }
 
 export function DrawerSearchResultCard(props: DrawerSearchResultEntryProps) {
-   const { summary, onJumpTo, onRename, onDelete, onMove } = props;
    const { ref, hasBeenVisible } = useInView<HTMLDivElement>();
-   const menu = <DrawerResultMenu onJumpTo={onJumpTo} onRename={onRename} onMove={onMove} onDelete={onDelete} />;
 
    return (
       <div ref={ref}>
          {hasBeenVisible
             ? <LoadedResultCard {...props} />
-            : <ResultCardShell summary={summary} menu={menu} />}
+            : <ResultCardShell {...props} />}
       </div>
    );
 }

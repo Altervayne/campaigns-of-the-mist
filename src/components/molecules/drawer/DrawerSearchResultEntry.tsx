@@ -1,4 +1,5 @@
 // -- React Imports --
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 // -- DnD Imports --
@@ -35,14 +36,16 @@ export interface DrawerSearchResultEntryProps {
    onMove: () => void;
 }
 
-/** The hover-revealed result menu (Jump-to / rename / move / delete), built once and floated as the row overlay. */
-function resultMenu({ onJumpTo, onRename, onDelete, onMove }: DrawerSearchResultEntryProps): ReactNode {
+/** The result menu (Jump-to / rename / move / delete), controlled so a right-click on the row drives it too. */
+function resultMenu(props: DrawerSearchResultEntryProps, open: boolean, onOpenChange: (open: boolean) => void): ReactNode {
    return (
       <DrawerResultMenu
-         onJumpTo={onJumpTo}
-         onRename={onRename}
-         onMove={onMove}
-         onDelete={onDelete}
+         open={open}
+         onOpenChange={onOpenChange}
+         onJumpTo={props.onJumpTo}
+         onRename={props.onRename}
+         onMove={props.onMove}
+         onDelete={props.onDelete}
          triggerClassName="opacity-0 transition-opacity group-hover/row:opacity-100"
       />
    );
@@ -53,9 +56,14 @@ function resultMenu({ onJumpTo, onRename, onDelete, onMove }: DrawerSearchResult
  * the same as a loaded row (name/type/game/date all live on the summary), only the drag wiring is absent.
  * No drag handle, no shift on load.
  */
-function SummaryRow({ summary, menu }: { summary: DrawerItemSummary; menu: ReactNode }) {
+function SummaryRow(props: DrawerSearchResultEntryProps) {
+   const { summary } = props;
+   const [menuOpen, setMenuOpen] = useState(false);
    return (
-      <DrawerListRowFrame menu={menu}>
+      <DrawerListRowFrame
+         menu={resultMenu(props, menuOpen, setMenuOpen)}
+         onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}
+      >
          <DrawerListRow
             type={summary.type}
             name={summary.name}
@@ -73,11 +81,17 @@ function SummaryRow({ summary, menu }: { summary: DrawerItemSummary; menu: React
  * (identical to the summary row, so loading -> loaded never shifts); the loaded record only feeds the drag
  * payload. The menu stays a sibling overlay (outside the drag-handle body), so a menu click never drags.
  */
-function DraggableResultRow({ summary, item, menu }: { summary: DrawerItemSummary; item: DrawerItemRecord; menu: ReactNode }) {
+function DraggableResultRow(props: DrawerSearchResultEntryProps & { item: DrawerItemRecord }) {
+   const { summary, item } = props;
    const { attributes, listeners, setNodeRef, isDragging } = useResultDraggable(summary, item);
+   const [menuOpen, setMenuOpen] = useState(false);
    return (
       <DragStaticWrapper isBeingDragged={isDragging}>
-         <DrawerListRowFrame containerRef={setNodeRef} menu={menu}>
+         <DrawerListRowFrame
+            containerRef={setNodeRef}
+            menu={resultMenu(props, menuOpen, setMenuOpen)}
+            onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}
+         >
             <div {...attributes} {...listeners} className="cursor-grab">
                <DrawerListRow
                   type={summary.type}
@@ -96,17 +110,16 @@ function DraggableResultRow({ summary, item, menu }: { summary: DrawerItemSummar
 /** Mounted only once visible, so the content fetch never fires for an off-screen row. */
 function LoadedResultRow(props: DrawerSearchResultEntryProps) {
    const { item } = useDrawerItemContent(props.summary.id);
-   const menu = resultMenu(props);
    // Loaded -> the draggable row; loading / missing -> the plain summary row (nothing to drag).
-   if (item) return <DraggableResultRow summary={props.summary} item={item} menu={menu} />;
-   return <SummaryRow summary={props.summary} menu={menu} />;
+   if (item) return <DraggableResultRow {...props} item={item} />;
+   return <SummaryRow {...props} />;
 }
 
 export function DrawerSearchResultEntry(props: DrawerSearchResultEntryProps) {
    const { ref, hasBeenVisible } = useInView<HTMLDivElement>();
    return (
       <div ref={ref}>
-         {hasBeenVisible ? <LoadedResultRow {...props} /> : <SummaryRow summary={props.summary} menu={resultMenu(props)} />}
+         {hasBeenVisible ? <LoadedResultRow {...props} /> : <SummaryRow {...props} />}
       </div>
    );
 }

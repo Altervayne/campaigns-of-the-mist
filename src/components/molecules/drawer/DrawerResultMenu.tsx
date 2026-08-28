@@ -24,13 +24,16 @@ interface DrawerResultMenuProps {
    onMove: () => void;
    /** Extra classes for the trigger button (the row hides it until hover; the card keeps it visible). */
    triggerClassName?: string;
+   /** Controlled open state, so a right-click on the result can drive the same menu (else uncontrolled). */
+   open?: boolean;
+   onOpenChange?: (open: boolean) => void;
 }
 
-export function DrawerResultMenu({ onJumpTo, onRename, onDelete, onMove, triggerClassName }: DrawerResultMenuProps) {
+export function DrawerResultMenu({ onJumpTo, onRename, onDelete, onMove, triggerClassName, open, onOpenChange }: DrawerResultMenuProps) {
    const { t } = useTranslation();
 
    return (
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
          <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className={`h-6 w-6 shrink-0 cursor-pointer ${DRAWER_MENU_TRIGGER_CLASS} ${triggerClassName ?? ''}`}>
                <MoreHorizontal className="h-4 w-4" />
