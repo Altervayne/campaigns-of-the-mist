@@ -33,6 +33,9 @@ import type { DrawerFolderRecord } from '@/lib/drawer/drawerRecords';
 
 export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarget = false, childCounts, onNavigate, onRename, onDelete, onMove }: { folder: DrawerFolderRecord, parentFolderId: string | null, isOver: boolean, isSpringTarget?: boolean, childCounts?: { folderCount: number; itemCount: number }, onNavigate: (id: string) => void, onRename: () => void, onDelete: () => void, onMove: () => void }) {
    const { t } = useTranslation();
+   // Right-click opens the actions menu (anchored to its trigger); the controlled state lets the context
+   // gesture drive the same menu the "..." button does.
+   const [menuOpen, setMenuOpen] = React.useState(false);
 
    // The folder row is now a flat record; reassemble its full subtree from the
    // repository before exporting it to the nested `.cotm` shape.
@@ -59,11 +62,17 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
          }}
       >
          {({ dragAttributes, dragListeners, isBeingDragged }) => (
-            <div data-folder-id={folder.id} onClick={() => onNavigate(folder.id)}>
+            <div
+               data-folder-id={folder.id}
+               onClick={() => onNavigate(folder.id)}
+               onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}
+            >
                <DragStaticWrapper isBeingDragged={isBeingDragged}>
                   <div
                      className={cn(
-                        "group relative flex items-center justify-between gap-2 py-1 pl-1 pr-2 rounded hover:bg-muted data-[state=open]:bg-muted",
+                        // A folder row is a button, not text: a pointer cursor + no text selection, so a
+                        // drag-select never fights the navigate-on-click.
+                        "group relative flex cursor-pointer select-none items-center justify-between gap-2 py-1 pl-1 pr-2 rounded hover:bg-muted data-[state=open]:bg-muted",
                         {
                            // Full-row "drop INTO this folder" treatment, driven by the resolved
                            // drop target so it matches the full-row drop: a clear ring + fill,
@@ -103,7 +112,7 @@ export function DrawerFolderEntry({ folder, parentFolderId, isOver, isSpringTarg
                          hover, so the two never fight for the trailing space. */}
                      <div className="relative flex size-6 shrink-0 items-center justify-center">
                         <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-opacity group-hover:opacity-0" />
-                        <DropdownMenu>
+                        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()} className="cursor-pointer">
                               <Button variant="ghost" size="icon" className={`absolute inset-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ${DRAWER_MENU_TRIGGER_CLASS}`}>
                                  <MoreHorizontal className="h-4 w-4" />

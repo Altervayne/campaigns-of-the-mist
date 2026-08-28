@@ -1,5 +1,5 @@
 // -- React Imports --
-import type { ReactNode, Ref } from 'react';
+import type { ReactNode, Ref, MouseEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Utils Imports --
@@ -78,14 +78,17 @@ export function DrawerListRowFrame({
    menu,
    containerRef,
    className,
+   onContextMenu,
 }: {
    children: ReactNode;
    menu?: ReactNode;
    containerRef?: Ref<HTMLDivElement>;
    className?: string;
+   // Right-click hook: the caller opens its controlled actions menu, so the row matches the rich card.
+   onContextMenu?: MouseEventHandler<HTMLDivElement>;
 }) {
    return (
-      <div ref={containerRef} className={cn('group/row relative rounded hover:bg-muted data-[state=open]:bg-muted', className)}>
+      <div ref={containerRef} onContextMenu={onContextMenu} className={cn('group/row relative rounded hover:bg-muted data-[state=open]:bg-muted', className)}>
          {children}
          {menu && <div className="absolute inset-y-0 right-1 z-10 flex items-center">{menu}</div>}
       </div>

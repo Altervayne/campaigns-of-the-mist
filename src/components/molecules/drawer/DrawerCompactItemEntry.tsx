@@ -31,6 +31,8 @@ import type { DrawerItem } from '@/lib/types/drawer';
 export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelete, onMove, isPreview = false }: { item: DrawerItem & { createdAt?: number; updatedAt?: number }, parentFolderId?: string | null, onRename?: () => void, onDelete?: () => void, onMove?: () => void, isPreview?: boolean }) {
    const { t } = useTranslation();
    const { ref: revealRef, isRevealed } = useDrawerRowReveal(item.id);
+   // Right-click opens the row's actions menu, matching the rich card.
+   const [menuOpen, setMenuOpen] = React.useState(false);
 
    const handleExport = async (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -53,8 +55,9 @@ export function DrawerCompactItemEntry({ item, parentFolderId, onRename, onDelet
                <DrawerListRowFrame
                   containerRef={revealRef}
                   className={cn(isPreview && 'border-2 border-border bg-muted/50', isRevealed && 'motion-safe:animate-drawer-reveal')}
+                  onContextMenu={!isPreview ? (e) => { e.preventDefault(); setMenuOpen(true); } : undefined}
                   menu={!isPreview &&
-                     <DropdownMenu>
+                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()} className="cursor-pointer">
                            <Button variant="ghost" size="icon" className={`h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover/row:opacity-100 ${DRAWER_MENU_TRIGGER_CLASS}`}>
                               <MoreHorizontal className="h-4 w-4" />

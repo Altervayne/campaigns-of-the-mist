@@ -32,6 +32,9 @@ import type { DrawerItem } from '@/lib/types/drawer';
 export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMove }: { item: DrawerItem & { createdAt?: number; updatedAt?: number }, parentFolderId: string | null, onRename: () => void, onDelete: () => void, onMove: () => void }) {
    const { t } = useTranslation();
    const { ref: revealRef, isRevealed } = useDrawerRowReveal(item.id);
+   // Right-click opens the actions menu (anchored to its trigger), so the context gesture drives the same
+   // menu the "..." button does.
+   const [menuOpen, setMenuOpen] = React.useState(false);
 
    const handleExport = async (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -55,12 +58,16 @@ export function DrawerItemEntry({ item, parentFolderId, onRename, onDelete, onMo
       >
          {({ dragAttributes, dragListeners, isBeingDragged }) => (
             <DragStaticWrapper isBeingDragged={isBeingDragged}>
-               <div ref={revealRef} className={cn('relative group/item rounded-lg data-[state=open]:bg-muted', isRevealed && 'motion-safe:animate-drawer-reveal')}>
+               <div
+                  ref={revealRef}
+                  className={cn('relative group/item rounded-lg data-[state=open]:bg-muted', isRevealed && 'motion-safe:animate-drawer-reveal')}
+                  onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}
+               >
                   <div {...dragAttributes} {...dragListeners} className="cursor-grab">
                      <DrawerItemPreview item={item} lazy />
                   </div>
                   <div className="absolute top-1 right-1 z-10">
-                     <DropdownMenu>
+                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild>
                            <Button variant="ghost" size="icon" className={`h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity cursor-pointer ${DRAWER_MENU_TRIGGER_CLASS}`}>
                               <MoreHorizontal className="h-4 w-4" />
