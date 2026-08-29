@@ -792,6 +792,18 @@ body {
    [data-mist-anim] { animation: none !important; }
 }
 
+/* Workspace picker: the note vignette's caret blink, shown while its write line grows on hover. The other
+   card micro-animations (board line draw, note line width, pdf page turn) are pure hover transitions, so
+   reduced motion snaps them via `motion-reduce:transition-none`; this one keyframe is guarded here. */
+@keyframes cotm-ws-caret {
+   0%, 100% { opacity: 1; }
+   50% { opacity: 0; }
+}
+.cotm-ws-caret { animation: cotm-ws-caret 900ms steps(1, end) infinite; }
+@media (prefers-reduced-motion: reduce) {
+   .cotm-ws-caret { animation: none; }
+}
+
 /* Comment flash: a brief pulse over a comment's region when the comments list jumps to it. A couple of
    opacity beats that settle to nothing, so the box fades out on its own as the flash timer clears it.
    Reduced motion shows the box statically for the same beat (it still appears, just doesn't pulse). */

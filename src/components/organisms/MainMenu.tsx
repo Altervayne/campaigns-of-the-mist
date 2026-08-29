@@ -1,109 +1,71 @@
 // -- React Imports --
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import { motion } from 'framer-motion';
 
-// -- Basic UI Imports --
-import { Button } from '@/components/ui/button';
-
 // -- Component Imports --
 import { TabTypeChooser } from '@/components/molecules/TabTypeChooser';
 
-// -- Icon Imports --
-import { FolderOpen } from 'lucide-react';
-
-// -- Store and Hook Imports --
-import { useAppGeneralStateActions } from '@/lib/stores/appGeneralStateStore';
-
-
-
 const MainMenu: React.FC = () => {
-   const { t: t } = useTranslation();
-   const { setDrawerOpen } = useAppGeneralStateActions();
+   const { t } = useTranslation();
 
-   const handleOpenDrawer = () => {
-      setDrawerOpen(true);
-   };
+   // Bottom scroll cue: shown only while there's more content below the fold.
+   const scrollRef = useRef<HTMLElement>(null);
+   const contentRef = useRef<HTMLDivElement>(null);
+   const [canScrollDown, setCanScrollDown] = useState(false);
+   useEffect(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const update = () => setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+      update();
+      el.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      // Observe the CONTENT (not the fixed-size scroll box) so the cue re-checks when the page reflows.
+      const observer = new ResizeObserver(update);
+      if (contentRef.current) observer.observe(contentRef.current);
+      return () => {
+         el.removeEventListener('scroll', update);
+         window.removeEventListener('resize', update);
+         observer.disconnect();
+      };
+   }, []);
 
    return (
-      <main className="absolute flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-background via-background to-muted/20 overflow-hidden">
-         {/* Wave/Mist Background Layers */}
-         <div className="absolute inset-0 pointer-events-none">
-            {/* Wave Layer 1 - Bottom */}
-            <motion.div
-               className="absolute bottom-0 left-0 right-0 h-96 opacity-10"
-               initial={{ x: 0 }}
-               animate={{ x: [-20, 20, -20] }}
-               transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            >
-               <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
-                  <path
-                     d="M0,50 C300,80 400,20 600,50 C800,80 900,20 1200,50 L1200,120 L0,120 Z"
-                     fill="currentColor"
-                     className="text-muted"
-                  />
-               </svg>
-            </motion.div>
-
-            {/* Wave Layer 2 - Middle */}
-            <motion.div
-               className="absolute bottom-0 left-0 right-0 h-80 opacity-8"
-               initial={{ x: 0 }}
-               animate={{ x: [20, -20, 20] }}
-               transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            >
-               <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
-                  <path
-                     d="M0,60 C250,90 450,30 650,60 C850,90 1000,30 1200,60 L1200,120 L0,120 Z"
-                     fill="currentColor"
-                     className="text-muted/70"
-                  />
-               </svg>
-            </motion.div>
-
-            {/* Wave Layer 3 - Top */}
-            <motion.div
-               className="absolute bottom-0 left-0 right-0 h-64 opacity-6"
-               initial={{ x: 0 }}
-               animate={{ x: [-15, 15, -15] }}
-               transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            >
-               <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
-                  <path
-                     d="M0,70 C200,100 500,40 700,70 C900,100 1050,40 1200,70 L1200,120 L0,120 Z"
-                     fill="currentColor"
-                     className="text-muted/50"
-                  />
-               </svg>
-            </motion.div>
-         </div>
+      <main ref={scrollRef} className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-linear-to-br from-background via-background to-muted/20">
+       {/* Content layer: fills the viewport when short, grows when tall; sits above the mist. */}
+       <div ref={contentRef} className="relative z-10 flex min-h-full w-full flex-col items-center">
 
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col items-center gap-10 p-8 max-w-6xl w-full relative z-10"
+            className="relative z-10 flex w-full max-w-6xl flex-col items-center gap-10 p-8 pt-12"
          >
             {/* Header */}
             <div className="flex flex-col items-center gap-6 text-center">
-               {/* Campaigns of the Mist Logo */}
+               {/* Wordmark banner, masked so it takes the theme foreground colour and reads on any theme. */}
                <motion.div
-                  initial={{ scale: 0.9 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="text-foreground w-36 h-36"
-               >
-                  <svg viewBox="0 0 436.25 433.04" className="w-full h-full">
-                     <path fill="currentColor" d="M332.35,240.7c-29.66-2.96-55.37-5.5-81.81,10.47-17.41,10.51-23.09,29.68-42.34,36.9-7.89,2.96-17.66,5.05-25.15,0l-.47,1.9c10.8,6.92,21.04,11.05,34.03,8.44,23.39-4.69,27.22-26.07,47.09-36.02,30.9-15.47,49.94,2.53,78.83.56,23.07-1.58,47.63-17.44,46.85-42.99-.36-11.95-9.14-25.64-22.31-18.47-9.92,5.41-13.96,14.8-2.86,21.77-31.55,7.1-38.21-25.51-24.18-47.84,21.45-34.15,72.6-34.73,89.4,4.38,21.49,50.03-10.04,113.36-62.32,127.05-17.26,4.53-30.88,2.26-47.86,3.34-35.77,2.28-57.54,28.69-98.25,21.99-112.3-18.47-104.13-226.58-8.98-260.66,31.94-11.44,75.67-3.83,93.44,27.4,4.1,7.19,7.98,23.03,11.95,27.68,5.28,6.2,15.65,1.81,16.8-6.34,1.15-8.16,1.33-41.81.04-50.11-.65-4.13-3.84-5.5-7.02-7.47-22.33-13.83-59.95-22.71-86.13-24.04-115.79-5.84-188.42,96.67-170.33,206.08,15.09,91.23,92.72,137.27,181.76,127.23,19.67-2.23,39.45-10.83,59.05-9.52,6.18.41,13.08,2.57,19.29,2.93,18.59,1.04,35.91-5.32,42.07-24.2-16.87,15.59-36.88-.63-55.53,0-11.64.4-23.16,5.87-33.07,11.39-.84.47-2.43,2.14-3.18.68,9.09-10.01,20.25-19.19,33.79-22.26,21.79-4.94,43.26,5.25,64.77-2.39.92,13.28,4.72,26.95,5.78,40.12.81,10.11,1.38,17.71-10.37,20.52-104.22,13.06-207.66,31.17-311.93,43.76-5.87.57-12.54-5.77-13.89-11.23-14.37-101.29-27.09-202.81-40.8-304.19C6.23,100.8.73,79.28.01,63.16c-.29-6.49,5.08-14.62,11.26-16.51C101.32,34.76,190.82,19.29,280.79,6.93c15.79-2.17,34.64-5.91,50.12-6.88,9.54-.59,16.83,3.95,19.56,13.26,3.97,37.04,7.44,74.16,13.31,110.94-14.59,23.73-46.35,30.31-53.38,60.17-5.91,25.15,4.37,39.94,21.95,56.25l-.02.04ZM396.13,176.92c-9.23-11.03-27.65-8.25-35.75,2.89,3.49-1.04,5.86-4.11,9.31-5.66,4.94-2.23,11.71-2.91,17.05-1.83,3.36.68,6.02,3.97,9.4,4.6ZM410.63,207.37c.49,5.35,0,11.86,0,17.39,0,16.58-23.25,42.88-37.04,50.9-31.24,18.18-68.79,4.33-99.51,24.18l-28.69,19.13c15.32-6.79,27.74-18.56,43.71-24.41,30.74-11.26,61.84-.29,90.94-21.16,22.21-15.92,39.63-45.63,29.62-73.28-2.52.88.86,5.98.97,7.24v.02ZM274.36,281.3c-15.83,3.74-25.74,18.09-39.58,25.64l-7.76,3.34c13.01-1.29,22.56-12.68,32.54-20.12l14.8-8.86h0Z"/>
-                  </svg>
-               </motion.div>
-               <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                  {t('MainMenu.title')}
-               </h1>
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  role="img"
+                  aria-label={t('MainMenu.title')}
+                  className="aspect-[372/144] w-[34rem] max-w-[90%] bg-foreground"
+                  style={{
+                     maskImage: 'url(/icons/banner.svg)',
+                     WebkitMaskImage: 'url(/icons/banner.svg)',
+                     maskRepeat: 'no-repeat',
+                     WebkitMaskRepeat: 'no-repeat',
+                     maskPosition: 'center',
+                     WebkitMaskPosition: 'center',
+                     maskSize: 'contain',
+                     WebkitMaskSize: 'contain',
+                  }}
+               />
                <p className="text-muted-foreground max-w-md">
-                  {t('MainMenu.subtitle')}
+                  {t('MainMenu.welcome')}
                </p>
             </div>
 
@@ -117,35 +79,57 @@ const MainMenu: React.FC = () => {
             >
                <TabTypeChooser />
             </motion.div>
-
-            {/* Open drawer (the only standing action; tab creation is the chooser's job now). */}
-            <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               transition={{ delay: 0.5 }}
-               className="flex flex-col sm:flex-row gap-4"
-            >
-               <Button
-                  onClick={handleOpenDrawer}
-                  variant="outline"
-                  size="lg"
-                  className="cursor-pointer gap-2 px-8 h-12 text-base font-semibold border-2 hover:bg-accent/50 transition-all"
-               >
-                  <FolderOpen className="h-5 w-5" />
-                  {t('MainMenu.openDrawerButton')}
-               </Button>
-            </motion.div>
-
-            {/* Footer hint */}
-            <motion.p
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               transition={{ delay: 0.7 }}
-               className="text-xs text-muted-foreground/70 text-center"
-            >
-               {t('MainMenu.hint')}
-            </motion.p>
          </motion.div>
+       </div>
+
+       {/* Mist: stuck to the bottom of the scrollport so it stays in view at any scroll depth. */}
+       <div className="pointer-events-none sticky bottom-0 z-0 h-0 w-full">
+          <div className="absolute bottom-0 left-0 right-0 h-[34rem] overflow-hidden">
+             {/* Wave Layer 1 - Bottom */}
+             <motion.div
+                className="absolute bottom-0 left-0 right-0 h-[34rem] opacity-[0.12]"
+                initial={{ x: 0 }}
+                animate={{ x: [-20, 20, -20] }}
+                transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+             >
+                <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
+                   <path d="M0,50 C300,80 400,20 600,50 C800,80 900,20 1200,50 L1200,120 L0,120 Z" fill="currentColor" className="text-muted-foreground" />
+                </svg>
+             </motion.div>
+
+             {/* Wave Layer 2 - Middle */}
+             <motion.div
+                className="absolute bottom-0 left-0 right-0 h-[28rem] opacity-[0.09]"
+                initial={{ x: 0 }}
+                animate={{ x: [20, -20, 20] }}
+                transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+             >
+                <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
+                   <path d="M0,60 C250,90 450,30 650,60 C850,90 1000,30 1200,60 L1200,120 L0,120 Z" fill="currentColor" className="text-muted-foreground/70" />
+                </svg>
+             </motion.div>
+
+             {/* Wave Layer 3 - Top */}
+             <motion.div
+                className="absolute bottom-0 left-0 right-0 h-[22rem] opacity-[0.06]"
+                initial={{ x: 0 }}
+                animate={{ x: [-15, 15, -15] }}
+                transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+             >
+                <svg className="absolute bottom-0 w-[110%] h-full -left-[5%]" preserveAspectRatio="none" viewBox="0 0 1200 120">
+                   <path d="M0,70 C200,100 500,40 700,70 C900,100 1050,40 1200,70 L1200,120 L0,120 Z" fill="currentColor" className="text-muted-foreground/50" />
+                </svg>
+             </motion.div>
+          </div>
+       </div>
+
+       {/* Scroll cue: a soft shadow along the bottom edge while more content sits below the fold. */}
+       <div
+          className="pointer-events-none sticky bottom-0 z-20 h-0 w-full transition-opacity duration-300"
+          style={{ opacity: canScrollDown ? 1 : 0 }}
+       >
+          <div className="absolute bottom-0 left-0 right-0 h-20" style={{ background: 'linear-gradient(to top, rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.08) 45%, transparent)' }} />
+       </div>
       </main>
    );
 };

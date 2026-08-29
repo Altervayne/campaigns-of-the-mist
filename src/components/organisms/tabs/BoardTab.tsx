@@ -5,9 +5,6 @@ import { useTranslation } from 'react-i18next';
 // -- Other Library Imports --
 import { useStore } from 'zustand';
 
-// -- Icon Imports --
-import { LayoutGrid } from 'lucide-react';
-
 // -- Component Imports --
 import { TabShell } from './TabShell';
 import { CloseTabDialog } from '@/components/organisms/dialogs/CloseTabDialog';
@@ -52,12 +49,13 @@ export function BoardTab({ tab, isActive }: { tab: OpenTab; isActive: boolean })
       else closeTab(tab.id);
    };
 
+   const BoardIcon = BOARD_VISUAL.Icon;
    const icon = (
       <span
          aria-hidden
          className={cn('flex size-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset ring-white/25', BOARD_VISUAL.gradient)}
       >
-         <LayoutGrid className="h-4 w-4 text-white" />
+         <BoardIcon className="h-4 w-4 text-white" />
       </span>
    );
 

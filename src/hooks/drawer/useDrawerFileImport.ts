@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 // -- Other Library Imports --
 import toast from 'react-hot-toast';
-import cuid from 'cuid';
 
 // -- Hook Imports --
 import { useFileDrop } from '@/hooks/useFileDrop';
@@ -14,10 +13,7 @@ import { deriveDrawerFolderName, exportDrawer, importFromFile, readFileAsText } 
 import { harmonizeData } from '@/lib/harmonization';
 import { noteFromMarkdown } from '@/lib/notes/noteMarkdownFile';
 import { ACCEPT_DRAWER_IMPORT } from '@/lib/utils/fileAccept';
-import { hashBytes } from '@/lib/assets/processImage';
-import { storePdfAsset } from '@/lib/pdf/pdfAssetRepository';
-import { storePdfCover } from '@/lib/pdf/pdfCover';
-import { parsePdfFile } from '@/lib/pdf/parsePdf';
+import { importPdfFile } from '@/lib/pdf/importPdfFile';
 import { estimateStorageUsage, STORAGE_SOFT_CAP_BYTES } from '@/lib/assets/assetGarbageCollector';
 
 // -- Store Imports --
@@ -26,7 +22,6 @@ import { exportEntireDrawerAsNestedTree } from '@/lib/drawer/drawerRepository';
 
 // -- Type Imports --
 import type { Folder as FolderType, DrawerItemContent, Drawer as DrawerType } from '@/lib/types/drawer';
-import type { PdfDocument } from '@/lib/types/pdf';
 
 
 
@@ -74,12 +69,7 @@ export function useDrawerFileImport(currentFolderId: string | null) {
          if (name.endsWith('.pdf')) {
             const toastId = toast.loading(tNotifications('Notifications.pdf.importing'));
             try {
-               const { pageCount, title, coverBlob } = await parsePdfFile(file);
-               const hash = await hashBytes(await file.arrayBuffer());
-               await storePdfAsset({ hash, blob: file, mimeType: 'application/pdf', byteSize: file.size });
-               // Best-effort cover: a store failure leaves a null hash and the drawer glyph, never the import.
-               const coverAssetHash = coverBlob ? await storePdfCover(coverBlob).catch(() => null) : null;
-               const pdfDoc: PdfDocument = { id: cuid(), title, assetHash: hash, coverAssetHash, pageCount };
+               const pdfDoc = await importPdfFile(file);
                await addImportedItem(pdfDoc, 'PDF', 'NEUTRAL', currentFolderId ?? undefined);
                toast.success(tNotifications('Notifications.drawer.importSuccess'), { id: toastId });
                // PDFs are the first tens-of-MB item, so a few rulebooks approach the soft cap. A gentle,

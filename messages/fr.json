@@ -117,7 +117,10 @@
          "newBoardTitle": "Nouveau tableau",
          "newBoardSubtitle": "Une toile infinie",
          "newNoteTitle": "Nouvelle note",
-         "newNoteSubtitle": "Un document markdown"
+         "newNoteSubtitle": "Un document markdown",
+         "newPdfTitle": "[TO COMPLETE]",
+         "newPdfSubtitle": "[TO COMPLETE]",
+         "imagePlaceholder": "[TO COMPLETE]"
       },
       "closeTabDialog": {
          "title": "Fermer cet onglet ?",
@@ -1538,6 +1541,7 @@
    "MainMenu": {
       "title": "Campaigns of the Mist",
       "subtitle": "Bienvenue dans Campaigns of the Mist, veuillez choisir un système de jeu, ou charger un personnage directement.",
+      "welcome": "[TO COMPLETE]",
       "createButton": "Créer un Nouveau Personnage",
       "importButton": "Importer un Personnage depuis un Fichier",
       "settings": "Paramètres",

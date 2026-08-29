@@ -1,5 +1,5 @@
 // -- Icon Imports --
-import { ScrollText, Building2, CircuitBoard, Dices } from 'lucide-react';
+import { ScrollText, Building2, CircuitBoard, Dices, LayoutGrid, NotebookPen, FileType } from 'lucide-react';
 
 // -- Type Imports --
 import type { LucideIcon } from 'lucide-react';
@@ -67,10 +67,14 @@ export function getGameVisual(game: GameSystem | undefined | null): GameVisual {
  * its drag clone, and the New Tab "New Board" card so the three can't drift.
  */
 export const BOARD_VISUAL = {
+   /** The board's glyph, shared by the tab badge, drag clone, and the picker card so they can't drift. */
+   Icon: LayoutGrid,
    /** Coloured icon on a card (the New Tab board card's glyph). */
    accentText: 'text-emerald-500',
    /** The solid wash behind a white board glyph (the tab badge + its drag clone, the chooser card). */
    gradient: 'bg-gradient-to-br from-emerald-500 to-green-600',
+   /** Space-separated RGB triple (emerald-500) for the workspace card's `--accent`. */
+   accentRgb: '16 185 129',
 } as const;
 
 /**
@@ -81,10 +85,14 @@ export const BOARD_VISUAL = {
  * the New Tab "New Note" card so the three can't drift.
  */
 export const NOTE_VISUAL = {
+   /** The note's glyph, shared by the tab badge, drag clone, and the picker card so they can't drift. */
+   Icon: NotebookPen,
    /** Coloured icon on a card (the New Tab note card's glyph). */
    accentText: 'text-slate-400',
    /** The solid wash behind a white note glyph (the tab badge + its drag clone, the chooser card). */
    gradient: 'bg-gradient-to-br from-slate-500 to-stone-600',
+   /** Space-separated RGB triple (slate-400) for the workspace card's `--accent`. */
+   accentRgb: '148 163 184',
 } as const;
 
 /**
@@ -94,10 +102,14 @@ export const NOTE_VISUAL = {
  * NOT a theme token. Shared by the pdf tab badge and its drag clone so the two can't drift.
  */
 export const PDF_VISUAL = {
+   /** The pdf's glyph, shared by the tab badge, drag clone, and the picker card so they can't drift. */
+   Icon: FileType,
    /** Coloured icon on a card. */
    accentText: 'text-red-500',
    /** The solid wash behind a white pdf glyph (the tab badge + its drag clone). */
    gradient: 'bg-gradient-to-br from-red-600 to-rose-700',
+   /** Space-separated RGB triple (a soft rose/red) for the workspace card's `--accent`. */
+   accentRgb: '224 90 90',
 } as const;
 
 /** A selectable game in the MainMenu / New Tab pickers, with its translation keys. */

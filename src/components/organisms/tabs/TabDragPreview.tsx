@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 // -- Icon Imports --
-import { LayoutGrid, NotebookPen, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -84,6 +84,7 @@ function BoardTabPreview({ tab }: { tab: OpenTab }) {
    const instance = useMemo(() => getOrCreateBoardInstance(tab.id), [tab.id]);
    const name = useStore(instance, (state) => state.name);
    const label = name && name.trim().length > 0 ? name : t('Tabs.untitledBoard');
+   const BoardIcon = BOARD_VISUAL.Icon;
 
    return (
       <TabPreviewChip
@@ -93,7 +94,7 @@ function BoardTabPreview({ tab }: { tab: OpenTab }) {
                aria-hidden
                className={cn('ml-2 my-1.5 flex size-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset ring-white/25', BOARD_VISUAL.gradient)}
             >
-               <LayoutGrid className="h-4 w-4 text-white" />
+               <BoardIcon className="h-4 w-4 text-white" />
             </div>
          }
       />
@@ -105,6 +106,7 @@ function NoteTabPreview({ tab }: { tab: OpenTab }) {
    const instance = useMemo(() => getOrCreateNoteInstance(tab.id), [tab.id]);
    const title = useStore(instance, (state) => state.note?.title);
    const label = title && title.trim().length > 0 ? title : t('Common.untitledNote');
+   const NoteIcon = NOTE_VISUAL.Icon;
 
    return (
       <TabPreviewChip
@@ -114,7 +116,7 @@ function NoteTabPreview({ tab }: { tab: OpenTab }) {
                aria-hidden
                className={cn('ml-2 my-1.5 flex size-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset ring-white/25', NOTE_VISUAL.gradient)}
             >
-               <NotebookPen className="h-4 w-4 text-white" />
+               <NoteIcon className="h-4 w-4 text-white" />
             </div>
          }
       />

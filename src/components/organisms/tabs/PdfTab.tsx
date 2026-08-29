@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 // -- Icon Imports --
-import { FileClock, FileType, Highlighter } from 'lucide-react';
+import { FileClock, Highlighter } from 'lucide-react';
 
 // -- Component Imports --
 import { TabShell } from './TabShell';
@@ -49,12 +49,13 @@ export function PdfTab({ tab, isActive }: { tab: OpenTab; isActive: boolean }) {
    const needsFile = useStore(instance, (state) => isPlaceholderPdf(state.doc));
    const label = title && title.trim().length > 0 ? title : t('Tabs.untitledPdf');
 
+   const PdfIcon = PDF_VISUAL.Icon;
    const icon = (
       <span
          aria-hidden
          className={cn('flex size-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset ring-white/25', PDF_VISUAL.gradient)}
       >
-         <FileType className="h-4 w-4 text-white" />
+         <PdfIcon className="h-4 w-4 text-white" />
       </span>
    );
 

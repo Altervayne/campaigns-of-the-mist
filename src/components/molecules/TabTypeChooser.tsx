@@ -1,11 +1,12 @@
 // -- React Imports --
 import { useTranslation } from 'react-i18next';
 
-// -- Icon Imports --
-import { LayoutGrid, NotebookPen } from 'lucide-react';
-
 // -- Component Imports --
 import { GameCard } from '@/components/molecules/GameCard';
+import { WorkspaceCard } from '@/components/molecules/workspace-picker/WorkspaceCard';
+import { BoardVignette } from '@/components/molecules/workspace-picker/BoardVignette';
+import { NoteVignette } from '@/components/molecules/workspace-picker/NoteVignette';
+import { PdfWorkspaceCard } from '@/components/molecules/workspace-picker/PdfWorkspaceCard';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -20,9 +21,11 @@ import { GAME_VISUALS, GAME_CARD_OPTIONS, BOARD_VISUAL, NOTE_VISUAL } from '@/li
 import type { GameSystem } from '@/lib/types/drawer';
 
 /*
- * The shared tab-TYPE chooser: a Character Sheet section (one card per game) and a Board section (one
- * full-width card). One click creates AND activates that tab - no select step, no separate commit.
- * Used by both the landing MainMenu and the New Tab dialog, so the two surfaces never drift.
+ * The shared tab-TYPE chooser: a Character Sheet section (one card per game, on `GameCard`) and a Workspaces
+ * section of premium full-bleed vignette cards (board, note, and a PDF import card). One click creates AND
+ * activates that tab - no select step, no separate commit. Used by both the landing MainMenu and the New
+ * Tab dialog, so the two surfaces never drift. A Maps card slots in beside board/note as a new entry once
+ * the workspace exists.
  */
 
 interface TabTypeChooserProps {
@@ -33,6 +36,9 @@ interface TabTypeChooserProps {
 export function TabTypeChooser({ onChoose }: TabTypeChooserProps) {
    const { t } = useTranslation();
    const { createCharacterTab, createBoardTab, createNoteTab } = useTabManagerActions();
+
+   const BoardIcon = BOARD_VISUAL.Icon;
+   const NoteIcon = NOTE_VISUAL.Icon;
 
    const pickGame = (game: GameSystem) => {
       createCharacterTab(game);
@@ -74,26 +80,27 @@ export function TabTypeChooser({ onChoose }: TabTypeChooserProps) {
             </div>
          </section>
 
-         {/* Workspaces: the board + note, side by side, as the distinct second family of tab types. */}
+         {/* Workspaces: board, note, and PDF as premium vignette cards - the distinct second family of tab types. */}
          <section className="flex flex-col gap-3">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('Tabs.newTabDialog.workspaceType')}</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-               <GameCard
-                  isSelected={false}
-                  onClick={pickBoard}
+               <WorkspaceCard
+                  accentRgb={BOARD_VISUAL.accentRgb}
+                  icon={<BoardIcon className="h-6 w-6" />}
                   title={t('Tabs.newTabDialog.newBoardTitle')}
                   subtitle={t('Tabs.newTabDialog.newBoardSubtitle')}
-                  gradient={BOARD_VISUAL.gradient}
-                  icon={<LayoutGrid className={cn('h-6 w-6', BOARD_VISUAL.accentText)} />}
+                  onClick={pickBoard}
+                  vignette={<BoardVignette />}
                />
-               <GameCard
-                  isSelected={false}
-                  onClick={pickNote}
+               <WorkspaceCard
+                  accentRgb={NOTE_VISUAL.accentRgb}
+                  icon={<NoteIcon className="h-6 w-6" />}
                   title={t('Tabs.newTabDialog.newNoteTitle')}
                   subtitle={t('Tabs.newTabDialog.newNoteSubtitle')}
-                  gradient={NOTE_VISUAL.gradient}
-                  icon={<NotebookPen className={cn('h-6 w-6', NOTE_VISUAL.accentText)} />}
+                  onClick={pickNote}
+                  vignette={<NoteVignette />}
                />
+               <PdfWorkspaceCard onChoose={onChoose} />
             </div>
          </section>
       </div>

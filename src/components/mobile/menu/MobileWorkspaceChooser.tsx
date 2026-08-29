@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MobileMainMenuGameCard } from '@/components/mobile/menu/MobileMainMenuGameCard';
 
 // -- Icon Imports --
-import { Plus, Import, NotebookPen } from 'lucide-react';
+import { Plus, Import } from 'lucide-react';
 
 // -- Utils Imports --
 import { cn } from '@/lib/utils';
@@ -87,6 +87,8 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 		input.click();
 	};
 
+	const NoteWorkspaceIcon = NOTE_VISUAL.Icon;
+
 	// Icon/color/gradient come from the shared GAME_VISUALS, the same source the desktop menu uses,
 	// so every surface stays in sync (and Otherscape is the circuit board).
 	const gameOptions = GAME_CARD_OPTIONS.map(({ game, titleKey, subtitleKey }) => {
@@ -156,7 +158,7 @@ export function MobileWorkspaceChooser({ onCreated, header, footerStyle }: Mobil
 						<MobileMainMenuGameCard
 							title={t('Tabs.newTabDialog.newNoteTitle')}
 							subtitle={t('Tabs.newTabDialog.newNoteSubtitle')}
-							icon={<NotebookPen className={cn('h-6 w-6', NOTE_VISUAL.accentText)} />}
+							icon={<NoteWorkspaceIcon className={cn('h-6 w-6', NOTE_VISUAL.accentText)} />}
 							gradient={NOTE_VISUAL.gradient}
 							isSelected={noteSelected}
 							onClick={() => setNoteSelected(true)}

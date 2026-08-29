@@ -29,14 +29,15 @@ export function NewTabDialog({ isOpen, onOpenChange }: NewTabDialogProps) {
 
    return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-         {/* Wide enough for the three full-size character cards across + the full-width board card. */}
+         {/* Wide enough for the three full-size character cards across + the two-up workspace cards. */}
          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
                <DialogTitle>{t('Tabs.newTabDialog.title')}</DialogTitle>
                <DialogDescription>{t('Tabs.newTabDialog.description')}</DialogDescription>
             </DialogHeader>
 
-            <div className="py-2">
+            {/* Two workspace rows can outgrow a short viewport, so the body scrolls rather than overflowing. */}
+            <div className="max-h-[70vh] overflow-y-auto py-2">
                <TabTypeChooser onChoose={() => onOpenChange(false)} />
             </div>
          </DialogContent>

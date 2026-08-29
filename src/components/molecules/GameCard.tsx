@@ -51,7 +51,7 @@ export const GameCard: React.FC<GameCardProps> = ({ title, subtitle, icon, isSel
 
          <div className="relative z-10 flex flex-col h-full justify-between">
             <div className="flex items-start justify-between">
-               <div className="p-3 rounded-lg bg-background/50 backdrop-blur-sm">{icon}</div>
+               <div className="p-3 rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm">{icon}</div>
                {isSelected && (
                   <motion.div
                      initial={{ scale: 0, rotate: -180 }}

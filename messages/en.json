@@ -117,7 +117,10 @@
          "newBoardTitle": "New board",
          "newBoardSubtitle": "A freeform canvas",
          "newNoteTitle": "New note",
-         "newNoteSubtitle": "A markdown document"
+         "newNoteSubtitle": "A markdown document",
+         "newPdfTitle": "Open a PDF",
+         "newPdfSubtitle": "Drop a file, or browse",
+         "imagePlaceholder": "Import an image"
       },
       "closeTabDialog": {
          "title": "Close this tab?",
@@ -1538,6 +1541,7 @@
    "MainMenu": {
       "title": "Campaigns of the Mist",
       "subtitle": "Welcome to Campaigns of the Mist, please pick a game system, or load a character directly.",
+      "welcome": "Welcome, please create a new workspace or load one from the Drawer to begin.",
       "createButton": "Open New Workspace",
       "importButton": "Create Workspace from File",
       "settings": "Settings",
