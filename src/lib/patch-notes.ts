@@ -9,18 +9,25 @@ export const patchNotes: PatchNote[] = [
    {
       version: '2.5.0',
       content: `
+This one has been in progress for a while, I've been trying to find the best way to integrate PDFs inside the app and shopped around for modules for a while. Redeveloping my own library would've been possibly, but would've taken way too long. I ultimately decided to use pdf.js, since it's clean, permissive, and pretty powerful. So now that it works, here it is !
+I've released quite a lot of things in a row that were just "in progress" features. Expect a slow down starting now, my backlog of started features is almost empty and has only very small polish left so I'm going to start hitting my roadmap again. I've started looking into exporting character sheets as a PDF, so look forward to it !
+
+Without further ado, the patch notes.
+
 ### ✨ Features
 * **📄 PDF Workspace**: PDFs can now be imported into Campaigns of the Mist, and opened into a full PDF reader workspace with integration all across the app.
   * **Full PDF reader**: A continuous PDF reader you can scroll through the pages in, with pages that render *as you scroll*, rather than all immediately at once. Stress tested with the LitM Core Book !
   * **A PDF navigation panel**: A full panel with an outline to access every section the PDF explicitly declares, and a quick to scroll through pages list with thumbnails to find what you need at a glance.
   * **Portals compatibility**: You can link to a specific page of a PDF in any portal in the app, whether it's on Boards or Notes.
   * **Annotations**: You can markup your PDF with highlights, comments and scribbles, your annotations are exportable on their own.
-  * **Respectful of Licensing**: CotM will not include the full PDF files in full exports that reference them. Instead, a new system allows you to repair broken portals by re-pointing them at any element in *your* app. Exports *will* include annotations, and they will be applied on the newly selected PDF.
+  * **Respectful of Licensing**: CotM will not include the PDFs in full exports that reference them. Instead, a new system allows you to repair broken portals by re-pointing them at any element in *your* app. Exports *will* include annotations, and they will be applied on the newly selected PDF. You can, though, if you lose your PDF, re-download it standalone from CotM if you had it saved in your Drawer.
 * Every workspace now has, if it is saved to the Drawer, a "Find in Drawer" button in the sidebar menu, which will navigate to the workspace's entry in the Drawer. No more needing to remember where it was !
 
 ### 🔧 Changes
+* The main menu has gotten a glow-up ! The lone logo has been replaced with a clean, vector-art banner, and the mist waves in the background should pop out more than they used to.
+* The drawer has also gotten a glow-up ! Rich item previews now display as much richer cards within the drawer. This was long overdue, as the original design was thought for character sheet components only, since we now have a lot more, I thought it was only right to rethink it a bit.
+* The workspace type selection cards have been redesigned to be more evocative of what they represent, the board looks like a board, the note looks like a note, and the new PDF looks like a stack of paper !
 * The loading indicators across the app have been changed to be a much prettier bespoke loading animation.
-* The drawer has gotten a glow-up ! Rich item previews now display as much richer cards within the drawer. This was long overdue, as the original design was thought for character sheet components only, since we now have a lot more, I thought it was only right to rethink it a bit.
 * Folders and Items in the Drawer are now right-clickable to open the "..." context menu.
 
 ### 🐛 Bugfixes
