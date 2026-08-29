@@ -916,6 +916,7 @@
          "itemType": {
             "FULL_CHARACTER_SHEET": "Character sheet",
             "CHARACTER_CARD": "Character card",
+            "CHALLENGE_CARD": "Challenge card",
             "CHARACTER_THEME": "Theme",
             "GROUP_THEME": "Group theme",
             "STATUS_TRACKER": "Status",

@@ -38,8 +38,12 @@ export function drawerPreviewStage(type: GeneralItemType): { stageClassName: str
       case 'GROUP_THEME':
       case 'LOADOUT_THEME':
       case 'IMAGE_CARD':
-      case 'CHALLENGE_CARD':
          return { stageClassName: 'bg-card', fit: 'cover', allowUpscale: true };
+
+      // Landscape challenge sheet: contained on the `--card` stage so its whole read view (art + every
+      // section) reads at once, a wide canvas centered with a small margin - not upscaled like a portrait card.
+      case 'CHALLENGE_CARD':
+         return { stageClassName: 'bg-card', fit: 'contain' };
 
       // Page-authored card-surfaced content (roll table, full character overview): down-scaled like a
       // document, on the same `--card` stage.

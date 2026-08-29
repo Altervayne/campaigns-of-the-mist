@@ -22,6 +22,7 @@ import { CharacterSheetPreview } from '@/components/molecules/CharacterSheetPrev
 import { StoryThemeTrackerCard } from '@/components/organisms/trackers/StoryThemeTracker';
 import { NoteMarkdown } from '@/components/molecules/NoteMarkdown';
 import { PdfPreview, PdfPreviewBadges } from '@/components/organisms/drawer/PdfPreview';
+import { ChallengeCardPreview } from '@/components/organisms/drawer/ChallengeCardPreview';
 import { RollTableReadView } from '@/components/organisms/board/items/rolltable/RollTableReadView';
 import { computeEntryLabels, normalizeRollTableContent } from '@/lib/rolltable/rollTableDisplay';
 import { DrawerCardFrame } from '@/components/molecules/drawer/DrawerCardFrame';
@@ -359,6 +360,12 @@ export function DrawerItemPreview({
       // while trackers and full sheets are game-independent. Anything else falls
       // through to the unavailable-preview placeholder below.
       if (game === 'LEGENDS' || game === 'CITY_OF_MIST' || game === 'OTHERSCAPE' || game === 'NEUTRAL') {
+         // Challenge cards read their whole substance off the landscape sheet, so the preview drives that
+         // rich read view rather than the sparse flip front the generic snapshot would render.
+         if ('cardType' in content && content.cardType === 'CHALLENGE_CARD') {
+            return <ChallengeCardPreview card={content} />;
+         }
+
          if ('cardType' in content) {
             const Component = resolveCardComponent(type, game);
             if (Component) {
