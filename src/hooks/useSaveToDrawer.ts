@@ -10,6 +10,7 @@ import { getDrawerItemDisplayPath } from '@/lib/drawer/drawerItemPath';
 import { saveCharacterToLinkedDrawerItem } from '@/lib/character/characterRepository';
 import { getActiveBoardStore } from '@/lib/board/boardStoreRegistry';
 import { getActiveNoteStore } from '@/lib/notes/noteStoreRegistry';
+import { getActivePdfStore } from '@/lib/pdf/pdfStoreRegistry';
 import { stampNoteReferencesDrawerSource } from '@/lib/board/refreezeNoteReferences';
 import { forkBoardToDrawerItem, forkCharacterToDrawerItem, forkNoteToDrawerItem } from '@/lib/saveAs/forkToDrawer';
 
@@ -296,5 +297,59 @@ export function useSaveToDrawer() {
       await firstSaveNoteAs(newItemId);
    };
 
-   return { saveCharacterToDrawer, saveCharacterAsToDrawer, saveBoardToDrawer, saveBoardAsToDrawer, saveNoteToDrawer, saveNoteAsToDrawer };
+   const savePdfToDrawer = async () => {
+      const store = getActivePdfStore();
+      if (!store) return;
+      const { pdfId, drawerItemId } = store.getState();
+      if (!pdfId) return;
+
+      if (drawerItemId) {
+         try {
+            // Plain-save the linked drawer copy; annotations already autosave, so this flushes intent.
+            const result = await store.getState().actions.saveToDrawer();
+            if (result?.linkedItemUpdated) {
+               await reloadCurrentFolder();
+               const itemPath = await getDrawerItemDisplayPath(drawerItemId);
+               toast.success(`${tNotifications('Notifications.pdf.saved')} ${itemPath}`);
+            } else {
+               // Dangling link: keep this pdf's identity + link a fresh drawer item (see the character note).
+               await firstSavePdfAs(cuid());
+               toast(tNotifications('Notifications.pdf.linkedItemMissing'));
+            }
+         } catch {
+            toast.error(tNotifications('Notifications.drawer.actionFailed'));
+         }
+      } else {
+         await firstSavePdfAs(cuid());
+      }
+   };
+
+   /** First-save / dangling-link path: keep the pdf's id, link it to a fresh drawer item. A PDF is read-only, so there is no fork. */
+   const firstSavePdfAs = async (newItemId: string) => {
+      const store = getActivePdfStore();
+      if (!store) return;
+      const { pdfId, doc } = store.getState();
+      if (!pdfId || !doc) return;
+
+      // Link the working pdf to a new drawer item id (also flushes annotations + reading position);
+      // the returned aggregate seeds the drawer item content.
+      const aggregate = await store.getState().actions.linkToDrawerItem(newItemId);
+      if (!aggregate) return;
+
+      if (!isDrawerOpen) {
+         setDrawerOpen(true);
+      }
+
+      // A PDF is game-agnostic -> a NEUTRAL drawer item; the naming window finalizes it.
+      initiateItemDrop({
+         game: 'NEUTRAL',
+         type: 'PDF',
+         content: aggregate,
+         defaultName: doc.title,
+         presetId: newItemId,
+         parentFolderId: drawerCurrentFolderId ?? undefined,
+      });
+   };
+
+   return { saveCharacterToDrawer, saveCharacterAsToDrawer, saveBoardToDrawer, saveBoardAsToDrawer, saveNoteToDrawer, saveNoteAsToDrawer, savePdfToDrawer };
 }

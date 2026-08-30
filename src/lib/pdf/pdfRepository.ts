@@ -83,6 +83,14 @@ export function savePdfToLinkedDrawerItem(doc: PdfDocument, drawerItemId: string
    });
 }
 
+/** Links a working pdf to a fresh drawer item id and returns its aggregate to seed the drawer copy. */
+export async function linkPdfToDrawerItem(id: string, drawerItemId: string): Promise<PdfDocument> {
+   await db.pdfDocs.update(id, { drawerItemId, updatedAt: Date.now() });
+   const record = await db.pdfDocs.get(id);
+   if (!record) throw new Error(`pdf ${id} not found`);
+   return recordToPdfDocument(record);
+}
+
 /**
  * Persists ONLY the reading position, out of band from the annotation autosave: in ONE transaction,
  * write `lastPage` onto the working row and - when linked - onto the drawer copy's content. View

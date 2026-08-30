@@ -680,6 +680,8 @@
          "updated": "Note updated from file."
       },
       "pdf": {
+         "saved": "PDF saved to",
+         "linkedItemMissing": "The linked drawer save no longer exists, so the PDF was saved as a new item.",
          "importing": "Importing PDF…",
          "storageHigh": "Storage is getting full. You can free space from Reclaim space in Settings.",
          "exported": "PDF exported.",
@@ -842,6 +844,7 @@
          "exportNote": "Export Note",
          "importNote": "Import Note",
          "exportNoteMarkdown": "Export as Markdown",
+         "savePdfToDrawer": "Save PDF",
          "exportPdf": "Export PDF",
          "exportPdfAnnotations": "Export annotations",
          "applyPdfAnnotations": "Apply annotations",
@@ -1701,6 +1704,7 @@
          "saveCharacterToDrawer": "Save: Character to Drawer",
          "exportBoard": "Export: Board",
          "saveBoardToDrawer": "Save: Board to Drawer",
+         "savePdfToDrawer": "Save: PDF to Drawer",
          "saveItemToDrawer": "Save: Selected Item to Drawer",
          "saveItemToDrawerAs": "Save: Selected Item to Drawer As...",
          "exportDrawer": "Export: Full Drawer",

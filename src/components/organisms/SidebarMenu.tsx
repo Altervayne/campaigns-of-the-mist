@@ -66,7 +66,7 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
 
    // Save-to-drawer (Save + Save-As, character + board + note) lives in a shared hook so the sidebar and
    // the command palette drive one implementation.
-   const { saveCharacterToDrawer, saveCharacterAsToDrawer, saveBoardToDrawer, saveBoardAsToDrawer, saveNoteToDrawer, saveNoteAsToDrawer } = useSaveToDrawer();
+   const { saveCharacterToDrawer, saveCharacterAsToDrawer, saveBoardToDrawer, saveBoardAsToDrawer, saveNoteToDrawer, saveNoteAsToDrawer, savePdfToDrawer } = useSaveToDrawer();
 
    const {
       characterImportInputRef,
@@ -202,6 +202,7 @@ export function SidebarMenu({ isEditing, isDrawerOpen, isCollapsed, activeWindow
                { activeWindow === 'PDF' &&
                   <SidebarPdfActions
                      isCollapsed={isCollapsed}
+                     onSaveToDrawer={savePdfToDrawer}
                      onExportPdf={handleExportPdf}
                      onExportAnnotations={handleExportPdfAnnotations}
                      onApplyAnnotations={handleApplyPdfMarkup}

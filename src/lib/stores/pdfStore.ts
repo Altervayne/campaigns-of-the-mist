@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 
 // -- Pdf Data Layer Imports --
-import { getPdf, savePdfLastPage, savePdfToLinkedDrawerItem } from '@/lib/pdf/pdfRepository';
+import { getPdf, linkPdfToDrawerItem, savePdfLastPage, savePdfToLinkedDrawerItem } from '@/lib/pdf/pdfRepository';
 import { recordToPdfDocument } from '@/lib/pdf/pdfRecords';
 import { getPdfBlob } from '@/lib/pdf/pdfAssetRepository';
 import { loadPdfjs } from '@/lib/pdf/pdfjsLoader';
@@ -17,6 +17,7 @@ import { createDebouncer } from '@/lib/utils/createDebouncer';
 
 // -- Type Imports --
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
+import type { SavePdfToDrawerResult } from '@/lib/pdf/pdfRepository';
 import type { PdfDocument } from '@/lib/types/pdf';
 import type { PdfAnnotation, PdfAnnotationKind, PdfAnnotationVisibility } from '@/lib/types/pdfAnnotation';
 
@@ -268,6 +269,10 @@ export interface PdfState {
        * before reaping the row, so the last stroke lands and no stale timer can fire late. Awaitable.
        */
       flush: () => Promise<void>;
+      /** Flushes then plain-saves the linked drawer copy. Reports whether a linked item was updated. */
+      saveToDrawer: () => Promise<SavePdfToDrawerResult>;
+      /** Links an unlinked working pdf to a fresh drawer item id (flushing first) and returns its aggregate to seed the copy. */
+      linkToDrawerItem: (drawerItemId: string) => Promise<PdfDocument | null>;
       /** Opens the find bar. Ephemeral view state. */
       openSearch: () => void;
       /** Closes the find bar and clears the query, matches, and any in-flight scan. Ephemeral. */
@@ -571,6 +576,22 @@ export function createPdfStore(options: { saveDebounceMs?: number } = {}) {
                } catch (error) {
                   console.error('Pdf flush failed:', error);
                }
+            },
+
+            saveToDrawer: async () => {
+               const { doc, drawerItemId } = get();
+               if (!doc) return { linkedItemUpdated: false };
+               await get().actions.flush();
+               return savePdfToLinkedDrawerItem(doc, drawerItemId);
+            },
+
+            linkToDrawerItem: async (drawerItemId) => {
+               const { pdfId } = get();
+               if (!pdfId) return null;
+               await get().actions.flush();
+               const aggregate = await linkPdfToDrawerItem(pdfId, drawerItemId);
+               set({ drawerItemId });
+               return aggregate;
             },
 
             openSearch: () => set({ searchOpen: true }),

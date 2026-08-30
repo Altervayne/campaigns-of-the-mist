@@ -93,7 +93,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
    // The jump-to-a-tutorial picker only earns a slot when there's something to start (empty until the real
    // tutorials are authored; the `dev.` scenarios surface it in dev). openTutorials -> hub@learn stays regardless.
    const hasTutorials = getTutorialsForPlatform(deviceType).length > 0;
-   const { saveCharacterToDrawer, saveBoardToDrawer } = useSaveToDrawer();
+   const { saveCharacterToDrawer, saveBoardToDrawer, savePdfToDrawer } = useSaveToDrawer();
    const { createBoardTab, createNoteTab, closeActiveTab, setActiveTab, setTabZoom } = useTabManagerActions();
    const activeNote = useActiveNoteInstance();
    const activePdf = useActivePdfInstance();
@@ -293,6 +293,7 @@ export function useCommandPaletteActions({ onToggleEditMode, onToggleDrawer, onO
       // #####################
       // Gated on an active pdf tab; both drive the active pdf instance's own markup state.
       ...(activePdf ? [
+         { id: 'savePdfToDrawer', scope: 'pdf' as const, label: t('CommandPalette.commands.savePdfToDrawer'), keywords: ['save', 'drawer', 'store', 'persist', 'pdf'], icon: Save, group: t('CommandPalette.groups.export'), action: savePdfToDrawer },
          { id: 'pdfToggleMarkup', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleMarkup'), keywords: ['pdf', 'markup', 'annotate', 'draw', 'mark', 'notes'], icon: Pencil, group: t('CommandPalette.groups.pdf'), action: () => { const state = activePdf.getState(); state.actions.setMarkupMode(state.markupMode === 'markup' ? 'read' : 'markup'); } },
          { id: 'pdfToggleComments', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleComments'), keywords: ['pdf', 'comments', 'notes', 'panel', 'annotations'], icon: MessagesSquare, group: t('CommandPalette.groups.pdf'), action: () => activePdf.getState().actions.toggleCommentsPanel() },
          { id: 'pdfToggleNav', scope: 'pdf' as const, label: t('CommandPalette.commands.pdfToggleNav'), keywords: ['pdf', 'outline', 'thumbnails', 'navigation', 'sidebar', 'panel', 'bookmarks', 'pages', 'contents'], icon: PanelLeft, group: t('CommandPalette.groups.pdf'), action: () => activePdf.getState().actions.toggleNavPanel() },

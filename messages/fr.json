@@ -680,6 +680,8 @@
          "updated": "Note mise à jour depuis un fichier."
       },
       "pdf": {
+         "saved": "[TO COMPLETE]",
+         "linkedItemMissing": "[TO COMPLETE]",
          "importing": "Importation du PDF…",
          "storageHigh": "Le stockage est presque plein. Vous pouvez libérer de l'espace via l'option Libérer de l'espace dans les Paramètres.",
          "exported": "PDF exporté.",
@@ -842,6 +844,7 @@
          "exportNote": "Exporter la Note",
          "importNote": "Importer une Note",
          "exportNoteMarkdown": "Exporter en Markdown",
+         "savePdfToDrawer": "[TO COMPLETE]",
          "exportPdf": "Exporter le PDF",
          "exportPdfAnnotations": "Exporter les annotations",
          "applyPdfAnnotations": "Appliquer les annotations",
@@ -1701,6 +1704,7 @@
          "saveCharacterToDrawer": "Enregistrer : Personnage dans le Tiroir",
          "exportBoard": "Exporter : Tableau",
          "saveBoardToDrawer": "Enregistrer : Tableau dans le Tiroir",
+         "savePdfToDrawer": "[TO COMPLETE]",
          "saveItemToDrawer": "Enregistrer : Élément Sélectionné dans le Tiroir",
          "saveItemToDrawerAs": "Enregistrer : Élément Sélectionné dans le Tiroir sous...",
          "exportDrawer": "Exporter : Tiroir",

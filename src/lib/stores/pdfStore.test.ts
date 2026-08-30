@@ -148,6 +148,51 @@ describe('pdf store annotations', () => {
    });
 });
 
+describe('pdf store save-to-drawer', () => {
+   it('linkToDrawerItem flushes, sets drawerItemId, and returns the aggregate', async () => {
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 };
+      await repository.importPdf(doc, null);
+      const useStore = createPdfStore({ saveDebounceMs: 400 });
+      useStore.setState({ pdfId: 'pdf-1', doc, drawerItemId: null, status: 'ready' });
+      useStore.getState().actions.addAnnotation(ink);
+
+      const aggregate = await useStore.getState().actions.linkToDrawerItem('item-new');
+
+      expect(aggregate?.id).toBe('pdf-1');
+      expect(useStore.getState().drawerItemId).toBe('item-new');
+      expect((await repository.getPdf('pdf-1'))?.drawerItemId).toBe('item-new');
+      expect(await rowAnnotations()).toEqual({ a1: ink }); // the flush landed the mark
+   });
+
+   it('saveToDrawer writes through to the linked drawer item and reports the update', async () => {
+      const useStore = await seedStore(400);
+      useStore.getState().actions.addAnnotation(ink);
+
+      const result = await useStore.getState().actions.saveToDrawer();
+
+      expect(result).toEqual({ linkedItemUpdated: true });
+      expect(await rowAnnotations()).toEqual({ a1: ink });
+      const item = await drawerDatabase.items.get('item-1');
+      expect((item?.content as PdfDocument).annotations).toEqual({ a1: ink });
+   });
+
+   it('saveToDrawer reports no update on a dangling link', async () => {
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 };
+      await repository.importPdf(doc, 'item-gone');
+      const useStore = createPdfStore({ saveDebounceMs: 400 });
+      useStore.setState({ pdfId: 'pdf-1', doc, drawerItemId: 'item-gone', status: 'ready' });
+
+      const result = await useStore.getState().actions.saveToDrawer();
+
+      expect(result).toEqual({ linkedItemUpdated: false });
+   });
+
+   it('saveToDrawer is a no-op without a loaded doc', async () => {
+      const useStore = createPdfStore({ saveDebounceMs: 400 });
+      expect(await useStore.getState().actions.saveToDrawer()).toEqual({ linkedItemUpdated: false });
+   });
+});
+
 describe('pdf store annotation history', () => {
    const inkAt = (id: string): PdfInk => ({ id, kind: 'ink', page: 1, color: '#e11d48', createdAt: 1, points: [0.1, 0.1], width: 0.01 });
 

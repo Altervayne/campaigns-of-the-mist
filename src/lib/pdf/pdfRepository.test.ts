@@ -162,6 +162,22 @@ describe('savePdfToLinkedDrawerItem', () => {
    });
 });
 
+describe('linkPdfToDrawerItem', () => {
+   it('sets the drawer link and returns the aggregate', async () => {
+      const doc: PdfDocument = { id: 'pdf-1', title: 'Book', assetHash: 'hash-a', coverAssetHash: null, pageCount: 4 };
+      await repository.importPdf(doc, null);
+
+      const aggregate = await repository.linkPdfToDrawerItem('pdf-1', 'item-1');
+
+      expect(aggregate).toEqual(doc);
+      expect((await repository.getPdf('pdf-1'))?.drawerItemId).toBe('item-1');
+   });
+
+   it('throws when the row is absent', async () => {
+      await expect(repository.linkPdfToDrawerItem('missing', 'item-1')).rejects.toThrow();
+   });
+});
+
 describe('repairPdf', () => {
    /** Seeds a drawer `PDF` item wrapping the aggregate, mirroring the item the reader opened from. */
    async function seedDrawerItem(id: string, doc: PdfDocument): Promise<void> {
