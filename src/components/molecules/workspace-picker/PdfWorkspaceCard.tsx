@@ -14,6 +14,7 @@ import { useFileDrop } from '@/hooks/useFileDrop';
 
 // -- Utils Imports --
 import { importPdfFile } from '@/lib/pdf/importPdfFile';
+import { importPdf } from '@/lib/pdf/pdfRepository';
 import { estimateStorageUsage, STORAGE_SOFT_CAP_BYTES } from '@/lib/assets/assetGarbageCollector';
 
 // -- Store Imports --
@@ -42,6 +43,10 @@ export function PdfWorkspaceCard({ onChoose }: PdfWorkspaceCardProps) {
       const toastId = toast.loading(t('Notifications.pdf.importing'));
       try {
          const doc = await importPdfFile(file);
+         // The reader hydrates from a working pdfDocs row, so materialize one before opening the tab. It is
+         // unlinked (drawerItemId null): the picker opens a transient reader, not a drawer item, and closing
+         // the tab reaps the row and frees the bytes to the GC.
+         await importPdf(doc, null);
          await openPdfTab(doc.id);
          toast.success(t('Notifications.drawer.importSuccess'), { id: toastId });
          onChoose?.();
